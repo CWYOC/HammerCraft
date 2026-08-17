@@ -1,0 +1,32 @@
+{
+    "applinks": {
+
+        "details": [
+
+            {
+
+                "appIDs": [
+
+                    "YOURTEAMID.com.hammercraft.scanner"
+
+                ],
+
+                "components": [
+
+                    {
+
+                        "/": "/ear-scan/native",
+
+                        "comment":
+                            "Hammer Craft digital ear scanner"
+
+                    }
+
+                ]
+
+            }
+
+        ]
+
+    }
+}

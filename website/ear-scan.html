@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <title>
+        Digital Ear Scan | Hammer Craft
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="ear-scan.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="scan-nav">
+
+    <a
+        href="index.html"
+        class="scan-brand"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+    </a>
+
+
+    <span class="scan-nav-label">
+        DIGITAL FIT / BETA
+    </span>
+
+</header>
+
+
+
+<main>
+
+
+<!-- ===================================================
+     INTRO
+=================================================== -->
+
+<section
+    id="intro"
+    class="scan-screen"
+>
+
+
+    <div class="label">
+        HAMMER CRAFT / EAR SCAN
+    </div>
+
+
+    <h1>
+
+        Scan your ears.
+
+        <em>
+            We'll do the rest.
+        </em>
+
+    </h1>
+
+
+    <p class="lead">
+
+        Use a compatible LiDAR-equipped
+        iPhone or iPad to capture your
+        left and right ear geometry.
+
+    </p>
+
+
+
+    <div class="device-box">
+
+
+        <div class="device-dot"></div>
+
+
+        <div>
+
+            <strong id="deviceTitle">
+                Checking device...
+            </strong>
+
+
+            <p id="deviceText">
+
+                Checking whether this device
+                can launch the scanner.
+
+            </p>
+
+        </div>
+
+
+    </div>
+
+
+
+    <button
+        id="beginButton"
+        class="button"
+    >
+
+        BEGIN
+
+        <span>
+            →
+        </span>
+
+    </button>
+
+
+</section>
+
+
+
+<!-- ===================================================
+     PREPARATION
+=================================================== -->
+
+<section
+    id="prep"
+    class="scan-screen hidden"
+>
+
+
+    <div class="label">
+        01 / PREPARATION
+    </div>
+
+
+    <h2>
+        Before you scan.
+    </h2>
+
+
+
+    <div class="instruction-list">
+
+
+        <article>
+
+            <span>01</span>
+
+            <div>
+
+                <h3>
+                    CLEAR THE EAR
+                </h3>
+
+                <p>
+
+                    Move hair completely away
+                    from the ear and remove
+                    earrings or earphones.
+
+                </p>
+
+            </div>
+
+        </article>
+
+
+
+        <article>
+
+            <span>02</span>
+
+            <div>
+
+                <h3>
+                    GOOD LIGHTING
+                </h3>
+
+                <p>
+
+                    Use bright, even lighting
+                    without strong shadows.
+
+                </p>
+
+            </div>
+
+        </article>
+
+
+
+        <article>
+
+            <span>03</span>
+
+            <div>
+
+                <h3>
+                    ASK SOMEONE TO HELP
+                </h3>
+
+                <p>
+
+                    Another person should move
+                    the phone while you keep
+                    your head still.
+
+                </p>
+
+            </div>
+
+        </article>
+
+
+
+        <article>
+
+            <span>04</span>
+
+            <div>
+
+                <h3>
+                    MOVE SLOWLY
+                </h3>
+
+                <p>
+
+                    Keep approximately 15–25 cm
+                    from the ear and move smoothly.
+
+                </p>
+
+            </div>
+
+        </article>
+
+
+    </div>
+
+
+
+    <button
+        id="readyButton"
+        class="button"
+    >
+
+        I'M READY
+
+        <span>
+            →
+        </span>
+
+    </button>
+
+
+</section>
+
+
+
+<!-- ===================================================
+     LEFT
+=================================================== -->
+
+<section
+    id="left"
+    class="scan-screen hidden"
+>
+
+
+    <div class="label">
+        02 / LEFT EAR
+    </div>
+
+
+    <h2>
+
+        Scan your
+
+        <em>
+            left ear.
+        </em>
+
+    </h2>
+
+
+
+    <div class="scan-layout">
+
+
+        <div class="ear-visual">
+
+            <div class="ring ring1"></div>
+
+            <div class="ring ring2"></div>
+
+
+            <div class="ear-outline">
+                LEFT
+            </div>
+
+        </div>
+
+
+
+        <div class="scan-instructions">
+
+
+            <h3>
+                Capture the entire ear.
+            </h3>
+
+
+            <p>
+
+                Move slowly around the ear
+                while keeping it centred.
+
+            </p>
+
+
+            <ul>
+
+                <li>
+                    Capture the complete outer ear.
+                </li>
+
+                <li>
+                    Capture the concha.
+                </li>
+
+                <li>
+                    Capture from above and below.
+                </li>
+
+                <li>
+                    Keep the head still.
+                </li>
+
+            </ul>
+
+
+            <button
+                id="leftButton"
+                class="button"
+            >
+
+                OPEN LEFT EAR SCANNER
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- ===================================================
+     RIGHT
+=================================================== -->
+
+<section
+    id="right"
+    class="scan-screen hidden"
+>
+
+
+    <div class="label">
+        03 / RIGHT EAR
+    </div>
+
+
+    <h2>
+
+        Scan your
+
+        <em>
+            right ear.
+        </em>
+
+    </h2>
+
+
+
+    <div class="scan-layout">
+
+
+        <div class="ear-visual">
+
+            <div class="ring ring1"></div>
+
+            <div class="ring ring2"></div>
+
+
+            <div class="ear-outline">
+                RIGHT
+            </div>
+
+        </div>
+
+
+
+        <div class="scan-instructions">
+
+
+            <h3>
+                Repeat on the other side.
+            </h3>
+
+
+            <p>
+
+                Use the same slow movement
+                and distance.
+
+            </p>
+
+
+            <ul>
+
+                <li>
+                    Keep the whole ear visible.
+                </li>
+
+                <li>
+                    Capture the concha.
+                </li>
+
+                <li>
+                    Don't cover the LiDAR sensor.
+                </li>
+
+                <li>
+                    Keep the head still.
+                </li>
+
+            </ul>
+
+
+            <button
+                id="rightButton"
+                class="button"
+            >
+
+                OPEN RIGHT EAR SCANNER
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- ===================================================
+     COMPLETE
+=================================================== -->
+
+<section
+    id="complete"
+    class="scan-screen complete hidden"
+>
+
+
+    <div class="complete-icon">
+        ✓
+    </div>
+
+
+    <div class="label">
+        SCAN COMPLETE
+    </div>
+
+
+    <h2>
+        Both ears received.
+    </h2>
+
+
+    <p class="lead">
+
+        Your scans have been sent to
+        Hammer Craft for processing
+        and review.
+
+    </p>
+
+
+    <div class="file-list">
+
+
+        <div>
+
+            <span>
+                LEFT
+            </span>
+
+            <strong>
+                left-ear.stl
+            </strong>
+
+        </div>
+
+
+        <div>
+
+            <span>
+                RIGHT
+            </span>
+
+            <strong>
+                right-ear.stl
+            </strong>
+
+        </div>
+
+
+    </div>
+
+
+    <a
+        href="index.html"
+        class="button"
+    >
+
+        RETURN HOME
+
+        <span>
+            →
+        </span>
+
+    </a>
+
+
+</section>
+
+
+</main>
+
+
+<script src="ear-scan.js"></script>
+
+</body>
+
+</html>
