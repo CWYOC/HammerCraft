@@ -1,5 +1,6 @@
 /* =========================================================
-   HAMMER CRAFT WEBSITE
+   HAMMER CRAFT
+   Bristol Independent Personal Audio
 ========================================================= */
 
 
@@ -8,9 +9,13 @@
 ========================================================= */
 
 * {
+
     margin: 0;
+
     padding: 0;
+
     box-sizing: border-box;
+
 }
 
 
@@ -34,7 +39,9 @@
 
 
 html {
+
     scroll-behavior: smooth;
+
 }
 
 
@@ -53,12 +60,16 @@ body {
 
 
 a {
+
     color: inherit;
+
 }
 
 
 img {
+
     display: block;
+
 }
 
 
@@ -72,7 +83,9 @@ header {
 
     height: 80px;
 
-    padding: 0 6%;
+    padding:
+        0
+        6%;
 
     position: absolute;
 
@@ -118,7 +131,9 @@ header {
 
     height: 40px;
 
-    border: 1px solid var(--dark);
+    border:
+        1px solid
+        var(--dark);
 
     border-radius: 50%;
 
@@ -181,7 +196,9 @@ nav a:not(.nav-button)::after {
 
     background: var(--dark);
 
-    transition: width 0.3s ease;
+    transition:
+        width
+        0.3s ease;
 
 }
 
@@ -195,13 +212,19 @@ nav a:not(.nav-button):hover::after {
 
 .nav-button {
 
-    padding: 13px 20px;
+    padding:
+        13px
+        20px;
 
-    border: 1px solid var(--dark);
+    border:
+        1px solid
+        var(--dark);
 
     transition:
-        background 0.3s,
-        color 0.3s;
+        background
+        0.3s,
+        color
+        0.3s;
 
 }
 
@@ -221,7 +244,9 @@ nav a:not(.nav-button):hover::after {
 
 section {
 
-    padding: 120px 7%;
+    padding:
+        120px
+        7%;
 
 }
 
@@ -231,7 +256,7 @@ section {
 
     color: var(--brown);
 
-    font-size: 11px;
+    font-size: 10px;
 
     font-weight: bold;
 
@@ -241,7 +266,9 @@ section {
 
 
 .section-number {
+
     margin-bottom: 30px;
+
 }
 
 
@@ -272,7 +299,9 @@ section {
 
 
 .small-title {
+
     margin-bottom: 25px;
+
 }
 
 
@@ -341,7 +370,9 @@ section {
 
 .main-button {
 
-    padding: 17px 25px;
+    padding:
+        17px
+        25px;
 
     background: var(--dark);
 
@@ -349,15 +380,17 @@ section {
 
     text-decoration: none;
 
-    font-size: 12px;
+    font-size: 11px;
 
     font-weight: bold;
 
     letter-spacing: 1px;
 
     transition:
-        background 0.3s,
-        transform 0.3s;
+        background
+        0.3s,
+        transform
+        0.3s;
 
 }
 
@@ -366,7 +399,8 @@ section {
 
     background: var(--brown);
 
-    transform: translateY(-2px);
+    transform:
+        translateY(-2px);
 
 }
 
@@ -377,7 +411,9 @@ section {
 
     text-decoration: none;
 
-    border-bottom: 1px solid var(--dark);
+    border-bottom:
+        1px solid
+        var(--dark);
 
     padding-bottom: 5px;
 
@@ -389,7 +425,7 @@ section {
 
 
 /* =========================================================
-   HERO IMAGE
+   HERO LOGO
 ========================================================= */
 
 .hero-image {
@@ -420,7 +456,9 @@ section {
     background: white;
 
     box-shadow:
-        0 40px 100px
+        0
+        40px
+        100px
         rgba(0, 0, 0, 0.08);
 
 }
@@ -434,7 +472,8 @@ section {
 
     object-fit: cover;
 
-    transform: scale(1.12);
+    transform:
+        scale(1.12);
 
 }
 
@@ -443,13 +482,15 @@ section {
 
     position: absolute;
 
-    padding: 12px 16px;
+    padding:
+        12px
+        16px;
 
     background: var(--dark);
 
     color: white;
 
-    font-size: 10px;
+    font-size: 9px;
 
     font-weight: bold;
 
@@ -464,7 +505,8 @@ section {
 
     left: 5%;
 
-    transform: rotate(-8deg);
+    transform:
+        rotate(-8deg);
 
 }
 
@@ -477,24 +519,31 @@ section {
 
     background: var(--brown);
 
-    transform: rotate(7deg);
+    transform:
+        rotate(7deg);
 
 }
 
 
 /* =========================================================
-   INFORMATION STRIP
+   STRIP
 ========================================================= */
 
 .strip {
 
     min-height: 70px;
 
-    padding: 0 5%;
+    padding:
+        0
+        5%;
 
-    border-top: 1px solid var(--line);
+    border-top:
+        1px solid
+        var(--line);
 
-    border-bottom: 1px solid var(--line);
+    border-bottom:
+        1px solid
+        var(--line);
 
     display: flex;
 
@@ -508,7 +557,7 @@ section {
 
     white-space: nowrap;
 
-    font-size: 10px;
+    font-size: 9px;
 
     font-weight: bold;
 
@@ -518,7 +567,9 @@ section {
 
 
 .strip span {
+
     color: var(--brown);
+
 }
 
 
@@ -561,7 +612,7 @@ section {
 
     color: var(--muted);
 
-    font-size: 20px;
+    font-size: 18px;
 
     line-height: 1.75;
 
@@ -569,12 +620,65 @@ section {
 
 
 .story-text p + p {
+
     margin-top: 25px;
+
+}
+
+
+.story-text .story-lead {
+
+    color: var(--dark);
+
+    font-size: 23px;
+
+    font-weight: 600;
+
+}
+
+
+.location-mark {
+
+    margin-top: 45px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid
+        var(--line);
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    color: var(--dark);
+
+    font-size: 9px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
+
+}
+
+
+.location-dot {
+
+    width: 7px;
+
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: var(--brown);
+
 }
 
 
 /* =========================================================
-   FOUR WAYS
+   CRAFT
 ========================================================= */
 
 .craft {
@@ -587,7 +691,9 @@ section {
 
 
 .craft .section-number {
+
     color: var(--brown-light);
+
 }
 
 
@@ -644,15 +750,22 @@ section {
 
     border:
         1px solid
-        rgba(255, 255, 255, 0.15);
+        rgba(
+            255,
+            255,
+            255,
+            0.15
+        );
 
     display: flex;
 
     flex-direction: column;
 
     transition:
-        transform 0.3s,
-        background 0.3s;
+        transform
+        0.3s,
+        background
+        0.3s;
 
 }
 
@@ -661,14 +774,15 @@ section {
 
     background: var(--brown);
 
-    transform: translateY(-8px);
+    transform:
+        translateY(-8px);
 
 }
 
 
 .card-number {
 
-    font-size: 12px;
+    font-size: 11px;
 
     opacity: 0.55;
 
@@ -676,7 +790,9 @@ section {
 
 
 .card-content {
+
     margin-top: auto;
+
 }
 
 
@@ -721,7 +837,7 @@ section {
             0.25
         );
 
-    font-size: 9px;
+    font-size: 8px;
 
     font-weight: bold;
 
@@ -736,7 +852,8 @@ section {
 
 .ai-section {
 
-    background: var(--light-brown);
+    background:
+        var(--light-brown);
 
     display: grid;
 
@@ -812,13 +929,17 @@ section {
 }
 
 
-/* AI FEATURE BOXES */
+/* =========================================================
+   AI FEATURES
+========================================================= */
 
 .ai-features {
 
     margin-top: 55px;
 
-    border-top: 1px solid var(--line);
+    border-top:
+        1px solid
+        var(--line);
 
     display: grid;
 
@@ -843,7 +964,9 @@ section {
 
     padding-left: 25px;
 
-    border-left: 1px solid var(--line);
+    border-left:
+        1px solid
+        var(--line);
 
 }
 
@@ -917,14 +1040,18 @@ section {
     background-image:
 
         linear-gradient(
-            rgba(255,255,255,0.6) 1px,
-            transparent 1px
+            rgba(255,255,255,0.6)
+            1px,
+            transparent
+            1px
         ),
 
         linear-gradient(
             90deg,
-            rgba(255,255,255,0.6) 1px,
-            transparent 1px
+            rgba(255,255,255,0.6)
+            1px,
+            transparent
+            1px
         );
 
     background-size:
@@ -945,9 +1072,20 @@ section {
 }
 
 
-.chart-label {
+.chart-top {
 
     margin-bottom: 35px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+}
+
+
+.chart-label {
 
     color:
         rgba(
@@ -960,6 +1098,17 @@ section {
     font-size: 9px;
 
     letter-spacing: 3px;
+
+}
+
+
+.chart-status {
+
+    color: var(--brown-light);
+
+    font-size: 8px;
+
+    letter-spacing: 2px;
 
 }
 
@@ -1022,9 +1171,9 @@ section {
 }
 
 
-.chart-bottom {
+.frequency-labels {
 
-    margin-top: 30px;
+    margin-top: 10px;
 
     display: flex;
 
@@ -1035,12 +1184,76 @@ section {
             255,
             255,
             255,
-            0.4
+            0.25
+        );
+
+    font-size: 7px;
+
+}
+
+
+.chart-bottom {
+
+    margin-top: 30px;
+
+    display: flex;
+
+    gap: 30px;
+
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.45
         );
 
     font-size: 8px;
 
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+
+}
+
+
+.chart-bottom > div {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+}
+
+
+.legend {
+
+    width: 20px;
+
+    height: 2px;
+
+    display: inline-block;
+
+}
+
+
+.target-legend {
+
+    border-top:
+        2px dashed
+        rgba(
+            255,
+            255,
+            255,
+            0.4
+        );
+
+}
+
+
+.result-legend {
+
+    background: var(--brown-light);
 
 }
 
@@ -1055,7 +1268,9 @@ section {
 
     z-index: 3;
 
-    padding: 12px 16px;
+    padding:
+        12px
+        16px;
 
     background: var(--background);
 
@@ -1067,7 +1282,7 @@ section {
 
     gap: 10px;
 
-    font-size: 9px;
+    font-size: 8px;
 
     font-weight: bold;
 
@@ -1094,7 +1309,9 @@ section {
 ========================================================= */
 
 .models {
+
     background: var(--background);
+
 }
 
 
@@ -1157,6 +1374,8 @@ section {
 }
 
 
+/* MODEL GRID */
+
 .model-grid {
 
     display: grid;
@@ -1169,13 +1388,12 @@ section {
 }
 
 
-/* MODEL IMAGE AREA */
-
 .model-image {
 
     width: 100%;
 
-    aspect-ratio: 4 / 5;
+    aspect-ratio:
+        4 / 5;
 
     position: relative;
 
@@ -1194,7 +1412,9 @@ section {
 
     object-fit: cover;
 
-    transition: transform 0.6s ease;
+    transition:
+        transform
+        0.6s ease;
 
 }
 
@@ -1202,7 +1422,8 @@ section {
 .model-card:hover
 .model-image img {
 
-    transform: scale(1.04);
+    transform:
+        scale(1.04);
 
 }
 
@@ -1219,7 +1440,8 @@ section {
 
     left: 20px;
 
-    background: var(--background);
+    background:
+        var(--background);
 
     display: flex;
 
@@ -1234,7 +1456,30 @@ section {
 }
 
 
-/* MODEL INFORMATION */
+.model-image-label {
+
+    position: absolute;
+
+    right: 20px;
+
+    bottom: 20px;
+
+    padding:
+        9px
+        12px;
+
+    background: var(--dark);
+
+    color: white;
+
+    font-size: 7px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
+
+}
+
 
 .model-info {
 
@@ -1255,7 +1500,7 @@ section {
 
     color: var(--brown);
 
-    font-size: 9px;
+    font-size: 8px;
 
     font-weight: bold;
 
@@ -1279,7 +1524,9 @@ section {
 
     height: 45px;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid
+        var(--line);
 
     border-radius: 50%;
 
@@ -1290,8 +1537,10 @@ section {
     justify-content: center;
 
     transition:
-        background 0.3s,
-        color 0.3s;
+        background
+        0.3s,
+        color
+        0.3s;
 
 }
 
@@ -1327,7 +1576,9 @@ section {
 
     padding-top: 15px;
 
-    border-top: 1px solid var(--line);
+    border-top:
+        1px solid
+        var(--line);
 
     display: flex;
 
@@ -1337,7 +1588,7 @@ section {
 
     color: var(--muted);
 
-    font-size: 8px;
+    font-size: 7px;
 
     font-weight: bold;
 
@@ -1358,7 +1609,12 @@ section {
 
     border:
         1px dashed
-        rgba(0, 0, 0, 0.25);
+        rgba(
+            0,
+            0,
+            0,
+            0.25
+        );
 
     display: flex;
 
@@ -1375,7 +1631,11 @@ section {
 
     height: 80px;
 
-    border: 1px solid var(--line);
+    flex-shrink: 0;
+
+    border:
+        1px solid
+        var(--line);
 
     display: flex;
 
@@ -1395,7 +1655,31 @@ section {
 
 
 .future-model h3 {
-    font-size: 28px;
+
+    font-size: 26px;
+
+}
+
+
+.future-line {
+
+    height: 1px;
+
+    flex: 1;
+
+    background: var(--line);
+
+}
+
+
+.future-text {
+
+    color: var(--muted);
+
+    font-size: 7px;
+
+    letter-spacing: 2px;
+
 }
 
 
@@ -1413,7 +1697,9 @@ section {
 
 
 .engineering .section-number {
+
     color: var(--brown-light);
+
 }
 
 
@@ -1511,7 +1797,7 @@ section {
 
     color: var(--brown-light);
 
-    font-size: 10px;
+    font-size: 9px;
 
 }
 
@@ -1540,6 +1826,110 @@ section {
     font-size: 13px;
 
     line-height: 1.7;
+
+}
+
+
+/* =========================================================
+   BRISTOL SECTION
+========================================================= */
+
+.bristol-section {
+
+    min-height: 600px;
+
+    background: var(--light-brown);
+
+    display: grid;
+
+    grid-template-columns:
+        0.7fr
+        1.3fr;
+
+    gap: 100px;
+
+    align-items: center;
+
+}
+
+
+.bristol-number {
+
+    color:
+        rgba(
+            36,
+            35,
+            33,
+            0.12
+        );
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-size:
+        clamp(
+            55px,
+            7vw,
+            120px
+        );
+
+    line-height: 0.85;
+
+    letter-spacing: -5px;
+
+}
+
+
+.bristol-content {
+
+    max-width: 700px;
+
+}
+
+
+.bristol-content h2 {
+
+    font-size:
+        clamp(
+            55px,
+            6vw,
+            100px
+        );
+
+    line-height: 0.9;
+
+    letter-spacing: -5px;
+
+}
+
+
+.bristol-content h2 span {
+
+    color: var(--brown);
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-style: italic;
+
+    font-weight: normal;
+
+}
+
+
+.bristol-content p {
+
+    max-width: 580px;
+
+    margin-top: 30px;
+
+    color: var(--muted);
+
+    font-size: 16px;
+
+    line-height: 1.75;
 
 }
 
@@ -1631,6 +2021,40 @@ section {
 }
 
 
+.contact-heading > p {
+
+    max-width: 450px;
+
+    margin-top: 30px;
+
+    color: var(--muted);
+
+    font-size: 15px;
+
+    line-height: 1.7;
+
+}
+
+
+.contact-location {
+
+    margin-top: 50px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    font-size: 8px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
+
+}
+
+
 form {
 
     display: grid;
@@ -1652,7 +2076,7 @@ label {
 
     gap: 10px;
 
-    font-size: 10px;
+    font-size: 9px;
 
     font-weight: bold;
 
@@ -1667,11 +2091,15 @@ textarea {
 
     width: 100%;
 
-    padding: 15px 0;
+    padding:
+        15px
+        0;
 
     border: none;
 
-    border-bottom: 1px solid var(--line);
+    border-bottom:
+        1px solid
+        var(--line);
 
     background: transparent;
 
@@ -1690,13 +2118,16 @@ input:focus,
 select:focus,
 textarea:focus {
 
-    border-bottom-color: var(--brown);
+    border-bottom-color:
+        var(--brown);
 
 }
 
 
 textarea {
+
     resize: vertical;
+
 }
 
 
@@ -1713,7 +2144,9 @@ button {
     grid-column:
         1 / -1;
 
-    padding: 18px;
+    padding:
+        18px
+        20px;
 
     border: none;
 
@@ -1723,15 +2156,23 @@ button {
 
     cursor: pointer;
 
-    font-size: 12px;
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    font-size: 11px;
 
     font-weight: bold;
 
     letter-spacing: 1px;
 
     transition:
-        background 0.3s,
-        transform 0.3s;
+        background
+        0.3s,
+        transform
+        0.3s;
 
 }
 
@@ -1740,7 +2181,8 @@ button:hover {
 
     background: var(--brown);
 
-    transform: translateY(-2px);
+    transform:
+        translateY(-2px);
 
 }
 
@@ -1751,9 +2193,13 @@ button:hover {
 
 footer {
 
-    padding: 35px 7%;
+    padding:
+        35px
+        7%;
 
-    border-top: 1px solid var(--line);
+    border-top:
+        1px solid
+        var(--line);
 
     display: flex;
 
@@ -1763,7 +2209,9 @@ footer {
 
     color: var(--muted);
 
-    font-size: 11px;
+    font-size: 9px;
+
+    letter-spacing: 1px;
 
 }
 
@@ -1783,28 +2231,36 @@ footer strong {
 
 @media (max-width: 1050px) {
 
+
     nav {
+
         gap: 18px;
+
     }
 
 
     .hero {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
-        padding-top: 130px;
+        padding-top:
+            130px;
 
     }
 
 
     .hero-image {
+
         margin-top: 30px;
+
     }
 
 
     .story-grid {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
         gap: 40px;
 
@@ -1830,13 +2286,16 @@ footer strong {
 
 
     .craft-heading h2 {
+
         text-align: left;
+
     }
 
 
     .ai-section {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
     }
 
@@ -1878,7 +2337,9 @@ footer strong {
 
 
     .engineering-heading h2 {
+
         text-align: left;
+
     }
 
 
@@ -1891,9 +2352,20 @@ footer strong {
     }
 
 
+    .bristol-section {
+
+        grid-template-columns:
+            1fr;
+
+        gap: 50px;
+
+    }
+
+
     .contact {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
     }
 
@@ -1928,7 +2400,9 @@ footer strong {
 
 
     nav {
+
         display: none;
+
     }
 
 
@@ -1961,7 +2435,9 @@ footer strong {
 
 
     .hero-description {
+
         font-size: 16px;
+
     }
 
 
@@ -1981,6 +2457,17 @@ footer strong {
     }
 
 
+    .tag {
+
+        font-size: 7px;
+
+        padding:
+            9px
+            11px;
+
+    }
+
+
     .strip {
 
         padding:
@@ -1995,25 +2482,38 @@ footer strong {
 
 
     .story-text {
-        font-size: 17px;
+
+        font-size: 16px;
+
+    }
+
+
+    .story-text .story-lead {
+
+        font-size: 20px;
+
     }
 
 
     .cards {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
     }
 
 
     .card {
+
         min-height: 300px;
+
     }
 
 
     .ai-features {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
     }
 
@@ -2024,13 +2524,17 @@ footer strong {
 
         border-left: none;
 
-        border-top: 1px solid var(--line);
+        border-top:
+            1px solid
+            var(--line);
 
     }
 
 
     .ai-feature-number {
+
         margin-bottom: 15px;
+
     }
 
 
@@ -2039,6 +2543,17 @@ footer strong {
         min-height: 420px;
 
         padding: 30px;
+
+    }
+
+
+    .chart-top {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 10px;
 
     }
 
@@ -2052,9 +2567,19 @@ footer strong {
     }
 
 
+    .ai-badge {
+
+        right: 15px;
+
+        bottom: 15px;
+
+    }
+
+
     .model-grid {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
     }
 
@@ -2075,9 +2600,19 @@ footer strong {
     }
 
 
+    .future-line {
+
+        width: 100%;
+
+        flex: none;
+
+    }
+
+
     .engineering-grid {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
     }
 
@@ -2096,9 +2631,19 @@ footer strong {
     }
 
 
+    .bristol-number {
+
+        font-size: 60px;
+
+        letter-spacing: -3px;
+
+    }
+
+
     form {
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
     }
 
