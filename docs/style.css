@@ -4,7 +4,7 @@
 
 
 /* =====================================================
-   RESET
+   GLOBAL
 ===================================================== */
 
 * {
@@ -48,6 +48,8 @@ html {
 
 body {
 
+    padding-top: 82px;
+    
     background: var(--paper);
 
     color: var(--ink);
@@ -58,6 +60,7 @@ body {
         sans-serif;
 
     overflow-x: hidden;
+
 }
 
 
@@ -90,98 +93,55 @@ em {
 
 
 /* =====================================================
-   NAVIGATION
+   HEADER
 ===================================================== */
 
-.nav {
+.site-header {
 
     width: 100%;
 
-    height: 92px;
+    height: 82px;
 
-    padding:
-        0
-        5vw;
+    padding: 0 6%;
 
-    position: sticky;
+    position: fixed;
 
     top: 0;
 
-    z-index: 1000;
+    left: 0;
 
-    background:
-        rgba(
-            241,
-            237,
-            230,
-            0.96
-        );
-
-    backdrop-filter:
-        blur(14px);
-
-    -webkit-backdrop-filter:
-        blur(14px);
-
-    border-bottom:
-        1px solid
-        var(--line);
+    z-index: 9999;
 
     display: flex;
 
     align-items: center;
 
-    justify-content:
-        space-between;
+    justify-content: space-between;
+
+    background: rgba(241, 237, 230, 0.95);
+
+    backdrop-filter: blur(14px);
+
+    -webkit-backdrop-filter: blur(14px);
+
+    border-bottom: 1px solid rgba(37, 35, 33, 0.12);
 
 }
 
 
-
-/* BRAND */
-
-.brand {
+.site-brand {
 
     display: flex;
 
     align-items: center;
 
-    gap: 15px;
+    gap: 12px;
 
     color: var(--ink);
 
     text-decoration: none;
 
-}
-
-
-.logo {
-
-    width: 68px;
-
-    height: 68px;
-
-    object-fit: contain;
-
-    flex-shrink: 0;
-
-}
-
-
-.brand-text {
-
-    display: flex;
-
-    flex-direction: column;
-
-    line-height: 1;
-
-}
-
-
-.brand-name {
-
-    font-size: 14px;
+    font-size: 13px;
 
     font-weight: 700;
 
@@ -190,25 +150,36 @@ em {
 }
 
 
-.brand-sub {
+.brand-circle {
 
-    margin-top: 5px;
+    width: 42px;
+
+    height: 42px;
+
+    border:
+        1px solid
+        var(--ink);
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
 
     color: var(--brown);
 
-    font-size: 8px;
+    font-family:
+        Georgia,
+        serif;
 
-    font-weight: 700;
-
-    letter-spacing: 5px;
+    font-size: 17px;
 
 }
 
 
-
-/* NAV LINKS */
-
-.nav-links {
+.site-nav {
 
     display: flex;
 
@@ -219,48 +190,46 @@ em {
 }
 
 
-.nav-links a {
+.site-nav a {
 
     color: var(--ink);
 
     text-decoration: none;
 
-    font-size: 9px;
+    font-size: 12px;
 
-    font-weight: 700;
-
-    letter-spacing: 1.5px;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease;
+    font-weight: 600;
 
 }
 
 
-.nav-links a:hover {
+.site-nav a:hover {
 
     color: var(--brown);
 
 }
 
 
-.nav-links .nav-highlight {
+.nav-button {
 
     padding:
-        14px
-        19px;
+        13px
+        20px;
 
-    background: var(--ink);
+    border:
+        1px solid
+        var(--ink);
 
-    color: white;
+    transition:
+        0.25s ease;
 
 }
 
 
-.nav-links .nav-highlight:hover {
+.site-nav
+.nav-button:hover {
 
-    background: var(--brown);
+    background: var(--ink);
 
     color: white;
 
@@ -371,14 +340,21 @@ em {
 
     color: var(--ink) !important;
 
-    font-size: 22px !important;
+    font-size:
+        22px !important;
 
-    line-height: 1.5 !important;
+    line-height:
+        1.5 !important;
 
 }
 
 
-.button {
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.primary-button {
 
     min-height: 56px;
 
@@ -387,8 +363,6 @@ em {
     padding:
         0
         23px;
-
-    border: none;
 
     background: var(--ink);
 
@@ -400,10 +374,7 @@ em {
 
     align-items: center;
 
-    justify-content:
-        space-between;
-
-    gap: 45px;
+    justify-content: center;
 
     font-size: 9px;
 
@@ -412,13 +383,15 @@ em {
     letter-spacing: 1.5px;
 
     transition:
-        background 0.25s ease,
-        transform 0.25s ease;
+        background
+        0.25s ease,
+        transform
+        0.25s ease;
 
 }
 
 
-.button:hover {
+.primary-button:hover {
 
     background: var(--brown);
 
@@ -428,164 +401,51 @@ em {
 }
 
 
+.secondary-button {
 
-/* =====================================================
-   HERO
-===================================================== */
+    min-height: 56px;
 
-.hero {
-
-    width: 100%;
-
-    min-height:
-        calc(
-            100vh - 92px
-        );
+    width: fit-content;
 
     padding:
-        70px
-        7vw
-        90px;
-
-    background: var(--paper);
-
-    overflow: hidden;
-
-}
-
-
-.hero-inner {
-
-    width: 100%;
-
-    max-width: 1600px;
-
-    margin: 0 auto;
-
-    display: grid;
-
-    grid-template-columns:
-        minmax(0, 1fr)
-        minmax(380px, 0.85fr);
-
-    gap:
-        clamp(
-            50px,
-            7vw,
-            130px
-        );
-
-    align-items: center;
-
-}
-
-
-
-/* HERO LEFT */
-
-.hero-content {
-
-    min-width: 0;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: flex-start;
-
-}
-
-
-.hero-content
-.section-label {
-
-    margin-bottom: 35px;
-
-}
-
-
-.hero-content h1 {
-
-    margin: 0;
-
-    max-width: 900px;
-
-    font-size:
-        clamp(
-            72px,
-            8vw,
-            135px
-        );
-
-    line-height: 0.84;
-
-    letter-spacing:
-        -0.065em;
-
-    font-weight: 700;
-
-}
-
-
-.hero-content h1 span {
-
-    display: block;
-
-    color: var(--brown);
-
-    font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
-    font-size: 0.87em;
-
-    font-style: italic;
-
-    font-weight: 400;
-
-    letter-spacing:
-        -0.055em;
-
-}
-
-
-.hero-description {
-
-    width: 100%;
-
-    max-width: 560px;
-
-    margin:
-        48px
         0
-        0;
+        23px;
 
-    color: var(--muted);
+    border:
+        1px solid
+        var(--ink);
 
-    font-size: 17px;
+    color: var(--ink);
 
-    line-height: 1.7;
+    text-decoration: none;
 
-}
-
-
-.hero-actions {
-
-    width: 100%;
-
-    margin-top: 38px;
-
-    display: flex;
+    display: inline-flex;
 
     align-items: center;
 
-    gap: 30px;
+    justify-content: center;
+
+    font-size: 9px;
+
+    font-weight: bold;
+
+    letter-spacing: 1.5px;
 
 }
 
 
-.hero-text-link {
+.secondary-button:hover {
+
+    background: var(--brown);
+
+    border-color: var(--brown);
+
+    color: white;
+
+}
+
+
+.text-button {
 
     color: var(--ink);
 
@@ -597,19 +457,144 @@ em {
         1px solid
         var(--ink);
 
-    font-size: 10px;
+    font-size: 13px;
 
-    font-weight: 700;
-
-    letter-spacing: 1px;
-
-    white-space: nowrap;
+    font-weight: 600;
 
 }
 
 
 
-/* HERO RIGHT */
+/* =====================================================
+   BIG ORIGINAL HERO
+===================================================== */
+
+.hero {
+
+    width: 100%;
+
+    min-height: 100vh;
+
+    padding:
+
+        70px
+        7%
+        85px;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        minmax(420px, 0.95fr);
+
+    gap:
+        clamp(
+            60px,
+            7vw,
+            130px
+        );
+
+    align-items: center;
+
+    background: var(--paper);
+
+}
+
+
+.hero-copy {
+
+    min-width: 0;
+
+}
+
+
+.hero-eyebrow {
+
+    margin-bottom: 28px;
+
+    color: var(--brown);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 3px;
+
+}
+
+
+.hero h1 {
+
+    max-width: 780px;
+
+    color: var(--ink);
+
+    font-size:
+        clamp(
+            68px,
+            7vw,
+            120px
+        );
+
+    line-height: 0.88;
+
+    letter-spacing: -0.065em;
+
+    font-weight: 700;
+
+}
+
+
+.hero h1 span {
+
+    display: block;
+
+    color: var(--brown);
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-style: italic;
+
+    font-weight: 400;
+
+}
+
+
+.hero-description {
+
+    max-width: 600px;
+
+    margin-top: 36px;
+
+    color: var(--muted);
+
+    font-size: 17px;
+
+    line-height: 1.75;
+
+}
+
+
+.hero-actions {
+
+    margin-top: 40px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 30px;
+
+}
+
+
+
+/* =====================================================
+   BIG HERO LOGO
+===================================================== */
 
 .hero-visual {
 
@@ -623,17 +608,15 @@ em {
 
     justify-content: center;
 
-    min-width: 0;
-
 }
 
 
-.hero-logo {
+.big-logo-shell {
 
     width:
         min(
             100%,
-            570px
+            620px
         );
 
     aspect-ratio:
@@ -641,47 +624,57 @@ em {
 
     position: relative;
 
-    overflow: hidden;
-
-    background: transparent;
-
     display: flex;
 
     align-items: center;
 
     justify-content: center;
 
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background: #f8f5f0;
+
+    box-shadow:
+        0
+        40px
+        100px
+        rgba(
+            0,
+            0,
+            0,
+            0.08
+        );
+
 }
 
 
-.hero-logo img {
+.big-logo-shell img {
 
-    display: block;
+    width: 100%;
 
-    width: 100% !important;
+    height: 100%;
 
-    height: 100% !important;
-
-    max-width: none !important;
-
-    object-fit: contain !important;
+    object-fit: contain;
 
     object-position: center;
 
+    transform:
+        scale(1.05);
+
 }
 
-
-/* HERO TAGS */
 
 .hero-tag {
 
     position: absolute;
 
-    z-index: 5;
+    z-index: 10;
 
     padding:
-        11px
-        15px;
+        12px
+        16px;
 
     background: var(--ink);
 
@@ -698,35 +691,35 @@ em {
 }
 
 
-.hero-tag-fit {
+.hero-tag-one {
 
-    top: 15%;
+    top: 14%;
 
-    left: -10px;
+    left: -5px;
 
     transform:
-        rotate(-7deg);
+        rotate(-8deg);
 
 }
 
 
-.hero-tag-ai {
+.hero-tag-two {
 
-    right: -10px;
+    right: -5px;
 
     bottom: 15%;
 
     background: var(--brown);
 
     transform:
-        rotate(6deg);
+        rotate(7deg);
 
 }
 
 
 
 /* =====================================================
-   INFORMATION STRIP
+   INFO STRIP
 ===================================================== */
 
 .info-strip {
@@ -836,10 +829,10 @@ em {
 
     display: flex;
 
+    align-items: center;
+
     justify-content:
         space-between;
-
-    align-items: center;
 
 }
 
@@ -962,10 +955,10 @@ em {
 
     display: flex;
 
+    align-items: flex-end;
+
     justify-content:
         space-between;
-
-    align-items: flex-end;
 
 }
 
@@ -992,7 +985,7 @@ em {
 }
 
 
-.model-arrow {
+.model-heading > span {
 
     font-size: 22px;
 
@@ -1110,7 +1103,7 @@ em {
 }
 
 
-.arrow {
+.arrow-link {
 
     color: var(--ink);
 
@@ -1334,7 +1327,8 @@ em {
 
     display: block;
 
-    color: var(--brown-light);
+    color:
+        var(--brown-light);
 
 }
 
@@ -1382,7 +1376,8 @@ em {
 
 .engineering-grid span {
 
-    color: var(--brown-light);
+    color:
+        var(--brown-light);
 
     font-size: 9px;
 
@@ -1474,8 +1469,6 @@ em {
     width: 7px;
 
     height: 7px;
-
-    flex-shrink: 0;
 
     border-radius: 50%;
 
@@ -1663,30 +1656,6 @@ em {
 }
 
 
-.secondary-button {
-
-    background: transparent;
-
-    color: var(--ink);
-
-    border:
-        1px solid
-        var(--ink);
-
-}
-
-
-.secondary-button:hover {
-
-    background: var(--brown);
-
-    border-color: var(--brown);
-
-    color: white;
-
-}
-
-
 
 /* =====================================================
    FOOTER
@@ -1814,98 +1783,281 @@ footer {
    TABLET
 ===================================================== */
 
-@media
-(max-width: 1100px) {
+@media (max-width: 1050px) {
 
+    /* =========================
+       FIXED HEADER
+    ========================= */
+
+    body {
+        padding-top: 82px;
+    }
+
+
+    .site-header {
+        height: 82px;
+
+        padding:
+            0
+            5vw;
+    }
+
+
+    .site-nav {
+        gap: 20px;
+    }
+
+
+    /* =========================
+       HERO
+    ========================= */
 
     .hero {
+        min-height: auto;
+
+        grid-template-columns:
+            1fr;
 
         padding:
             70px
             6vw
-            80px;
+            85px;
 
+        gap: 75px;
     }
 
 
-    .hero-inner {
-
-        grid-template-columns:
-            1fr;
-
-        gap: 80px;
-
-    }
-
-
-    .hero-content {
-
+    .hero-copy {
         max-width: 900px;
+    }
 
+
+    .hero h1 {
+        max-width: 850px;
+
+        font-size:
+            clamp(
+                68px,
+                10vw,
+                105px
+            );
+    }
+
+
+    .hero-description {
+        max-width: 600px;
     }
 
 
     .hero-visual {
+        width: 100%;
 
-        max-width: 650px;
+        max-width: 700px;
 
-        margin: 0 auto;
-
+        margin:
+            0
+            auto;
     }
 
 
-    .hero-logo {
-
+    .big-logo-shell {
         width:
             min(
                 100%,
-                600px
+                650px
             );
-
     }
 
+
+    /* =========================
+       GENERAL TWO COLUMN
+    ========================= */
 
     .two-column {
-
         grid-template-columns:
             1fr;
 
         gap: 50px;
-
     }
 
+
+    /* =========================
+       MODELS
+    ========================= */
+
+    .model-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap:
+            60px
+            25px;
+    }
+
+
+    /* =========================
+       AI
+    ========================= */
 
     .ai-process {
-
         grid-template-columns:
             repeat(
                 2,
-                1fr
+                minmax(0, 1fr)
             );
-
     }
 
+
+    .ai-process article:nth-child(3) {
+        border-left:
+            1px solid
+            var(--dark-line);
+    }
+
+
+    /* =========================
+       ENGINEERING
+    ========================= */
 
     .engineering-grid {
-
         grid-template-columns:
             repeat(
                 2,
-                1fr
+                minmax(0, 1fr)
             );
-
     }
 
 
-    .bristol-main {
+    .engineering-grid article:nth-child(3) {
+        border-left:
+            1px solid
+            var(--dark-line);
+    }
 
+
+    /* =========================
+       BRISTOL
+    ========================= */
+
+    .bristol-main {
         grid-template-columns:
             1fr;
 
         gap: 50px;
-
     }
 
+
+    .bristol-copy {
+        max-width: 700px;
+    }
+
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    .footer-main {
+        gap: 70px;
+    }
+
+}
+
+
+
+/* =====================================================
+   SMALL TABLET
+===================================================== */
+
+@media (max-width: 850px) {
+
+    /* =========================
+       NAVIGATION
+    ========================= */
+
+    .site-nav {
+        gap: 12px;
+    }
+
+
+    .site-nav a:not(.nav-button) {
+        display: none;
+    }
+
+
+    .nav-button {
+        padding:
+            12px
+            17px;
+    }
+
+
+    /* =========================
+       HERO
+    ========================= */
+
+    .hero {
+        padding:
+            65px
+            5vw
+            80px;
+    }
+
+
+    .hero h1 {
+        font-size:
+            clamp(
+                64px,
+                12vw,
+                95px
+            );
+    }
+
+
+    /* =========================
+       MODEL GRID
+    ========================= */
+
+    .model-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .model-card {
+        max-width: 750px;
+    }
+
+
+    /* =========================
+       BRISTOL TOP
+    ========================= */
+
+    .bristol-top {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+
+        gap: 15px;
+    }
+
+
+    /* =========================
+       FINAL CTA
+    ========================= */
+
+    .final-cta h2 {
+        font-size:
+            clamp(
+                58px,
+                11vw,
+                95px
+            );
+    }
 
 }
 
@@ -1915,104 +2067,142 @@ footer {
    MOBILE
 ===================================================== */
 
-@media
-(max-width: 700px) {
+@media (max-width: 700px) {
+
+    /* =========================
+       BODY / FIXED TOOLBAR
+    ========================= */
+
+    body {
+        padding-top: 72px;
+    }
 
 
-    .nav {
+    /* =========================
+       HEADER
+    ========================= */
 
-        height: 78px;
+    .site-header {
+        width: 100%;
+
+        height: 72px;
 
         padding:
             0
             20px;
 
+        position: fixed;
+
+        top: 0;
+        left: 0;
+
+        z-index: 9999;
+
+        background:
+            rgba(
+                241,
+                237,
+                230,
+                0.96
+            );
+
+        backdrop-filter:
+            blur(14px);
+
+        -webkit-backdrop-filter:
+            blur(14px);
+
+        border-bottom:
+            1px solid
+            rgba(
+                37,
+                35,
+                33,
+                0.12
+            );
     }
 
 
-    .logo {
+    .site-brand {
+        gap: 9px;
 
-        width: 54px;
+        font-size: 10px;
 
-        height: 54px;
-
+        letter-spacing: 2px;
     }
 
 
-    .brand-name {
+    .brand-circle {
+        width: 38px;
 
-        font-size: 11px;
+        height: 38px;
 
-        letter-spacing: 3px;
-
+        font-size: 14px;
     }
 
 
-    .brand-sub {
-
-        font-size: 7px;
-
-        letter-spacing: 4px;
-
+    .site-nav {
+        gap: 0;
     }
 
 
-    .nav-links {
-
-        gap: 10px;
-
-    }
-
-
-    .nav-links
-    a:not(.nav-highlight) {
-
+    .site-nav a:not(.nav-button) {
         display: none;
-
     }
 
 
-    .nav-links
-    .nav-highlight {
-
+    .nav-button {
         padding:
-            12px
-            15px;
+            11px
+            14px;
 
+        font-size:
+            8px !important;
     }
 
+
+    /* =========================
+       GENERAL SECTION SPACING
+    ========================= */
 
     .section {
-
         padding:
             75px
             20px;
-
     }
 
 
-    /* HERO */
+    /* =========================
+       HERO
+    ========================= */
 
     .hero {
+        width: 100%;
 
         min-height: auto;
+
+        display: block;
 
         padding:
             60px
             20px
             75px;
-
     }
 
 
-    .hero-inner {
+    .hero-eyebrow {
+        margin-bottom: 22px;
 
-        display: block;
+        font-size: 8px;
 
+        line-height: 1.6;
+
+        letter-spacing: 2px;
     }
 
 
-    .hero-content h1 {
+    .hero h1 {
+        max-width: 100%;
 
         font-size:
             clamp(
@@ -2021,181 +2211,387 @@ footer {
                 82px
             );
 
-        line-height: 0.88;
+        line-height: 0.9;
 
         letter-spacing:
-            -0.06em;
-
+            -0.055em;
     }
 
 
     .hero-description {
+        max-width: 100%;
 
-        margin-top: 35px;
+        margin-top: 30px;
 
         font-size: 15px;
 
+        line-height: 1.7;
     }
 
 
     .hero-actions {
-
         margin-top: 30px;
 
         flex-direction: column;
 
-        align-items: flex-start;
+        align-items:
+            flex-start;
 
         gap: 22px;
+    }
 
+
+    .primary-button {
+        width: 100%;
+
+        min-height: 54px;
     }
 
 
     .hero-visual {
+        width: 100%;
 
-        margin-top: 70px;
-
+        margin-top: 65px;
     }
 
 
-    .hero-logo {
-
+    .big-logo-shell {
         width: 100%;
 
-        max-width: 500px;
+        max-width: 520px;
 
+        margin:
+            0
+            auto;
     }
 
 
     .hero-tag {
-
         padding:
             8px
             10px;
 
         font-size: 6px;
 
+        letter-spacing: 1.5px;
     }
 
 
-    .hero-tag-fit {
-
+    .hero-tag-one {
         left: 0;
 
+        top: 12%;
     }
 
 
-    .hero-tag-ai {
-
+    .hero-tag-two {
         right: 0;
 
+        bottom: 12%;
     }
 
 
-    /* INFO */
+    /* =========================
+       INFO STRIP
+    ========================= */
 
     .info-strip {
-
-        justify-content:
-            flex-start;
+        min-height: 60px;
 
         padding:
             0
             20px;
 
+        justify-content:
+            flex-start;
+
+        gap: 20px;
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling:
+            touch;
     }
 
 
-    /* GENERAL TITLES */
+    /* hide scrollbar */
+
+    .info-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+
+    .info-strip {
+        scrollbar-width: none;
+    }
+
+
+    /* =========================
+       GENERAL TITLES
+    ========================= */
+
+    .two-column {
+        margin-top: 40px;
+
+        grid-template-columns:
+            1fr;
+
+        gap: 45px;
+    }
+
 
     .two-column h2,
     .section-title {
+        font-size:
+            54px;
 
-        font-size: 54px;
+        line-height: 0.94;
 
-        letter-spacing: -4px;
-
+        letter-spacing:
+            -4px;
     }
 
 
-    /* MODELS */
-
-    .model-grid {
-
-        grid-template-columns:
-            1fr;
-
+    .copy p {
+        font-size: 14px;
     }
 
 
-    /* AI */
-
-    .ai-process {
-
-        grid-template-columns:
-            1fr;
-
+    .large-copy {
+        font-size:
+            19px !important;
     }
 
 
-    .ai-process article {
+    /* =========================
+       INTRO
+    ========================= */
 
-        border-left:
-            1px solid
-            var(--dark-line);
+    .made-in-bristol {
+        margin-top: 35px;
 
+        font-size: 7px;
+
+        line-height: 1.6;
     }
 
 
-    /* ENGINEERING */
+    /* =========================
+       SECTION HEADER
+    ========================= */
 
-    .engineering-grid {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
-    .engineering-grid article {
-
-        border-left:
-            1px solid
-            var(--dark-line);
-
-    }
-
-
-    /* BRISTOL */
-
-    .bristol-top {
-
+    .section-header {
         align-items:
             flex-start;
 
         flex-direction:
             column;
 
+        gap: 15px;
+    }
+
+
+    /* =========================
+       MODELS
+    ========================= */
+
+    .model-grid {
+        margin-top: 50px;
+
+        grid-template-columns:
+            1fr;
+
+        gap: 55px;
+    }
+
+
+    .model-image {
+        aspect-ratio:
+            4 / 3;
+    }
+
+
+    .model-heading h3 {
+        font-size: 22px;
+    }
+
+
+    .model-card > p {
+        font-size: 13px;
+    }
+
+
+    .model-specs {
+        gap: 20px;
+
+        font-size: 6px;
+    }
+
+
+    /* =========================
+       CUSTOM
+    ========================= */
+
+    .custom-list article {
+        grid-template-columns:
+            35px
+            1fr
+            25px;
+
+        gap: 12px;
+
+        padding:
+            22px
+            0;
+    }
+
+
+    .custom-list h3 {
+        font-size: 18px;
+    }
+
+
+    .custom-list p {
+        font-size: 12px;
+    }
+
+
+    /* =========================
+       AI
+    ========================= */
+
+    .ai-process {
+        margin-top: 60px;
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .ai-process article {
+        min-height: 220px;
+
+        border-left:
+            1px solid
+            var(--dark-line);
+    }
+
+
+    .ai-process h3 {
+        margin-top: 60px;
+    }
+
+
+    /* =========================
+       DIGITAL FIT
+    ========================= */
+
+    .digital-fit {
+        min-height: auto;
+    }
+
+
+    .development {
+        font-size: 7px;
+    }
+
+
+    /* =========================
+       ENGINEERING
+    ========================= */
+
+    .engineering-heading h2 {
+        font-size:
+            54px;
+
+        letter-spacing:
+            -4px;
+    }
+
+
+    .engineering-grid {
+        margin-top: 50px;
+
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .engineering-grid article {
+        min-height: 230px;
+
+        border-left:
+            1px solid
+            var(--dark-line);
+    }
+
+
+    .engineering-grid h3 {
+        margin-top: 65px;
+
+        font-size: 18px;
+    }
+
+
+    /* =========================
+       BRISTOL
+    ========================= */
+
+    .bristol-top {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+
+        gap: 15px;
+    }
+
+
+    .coordinates {
+        font-size: 12px;
     }
 
 
     .bristol-main {
-
         margin-top: 50px;
 
+        display: block;
     }
 
 
     .bristol-main h2 {
+        font-size:
+            58px;
 
-        font-size: 58px;
+        line-height: 0.9;
 
-        letter-spacing: -4px;
+        letter-spacing:
+            -4px;
+    }
 
+
+    .bristol-copy {
+        margin-top: 45px;
+
+        max-width: 100%;
+    }
+
+
+    .bristol-copy p {
+        font-size: 14px;
+    }
+
+
+    .bristol-copy blockquote {
+        margin-top: 35px;
+
+        font-size: 24px;
     }
 
 
     .bristol-footer {
+        margin-top: 60px;
 
         align-items:
             flex-start;
@@ -2204,50 +2600,195 @@ footer {
             column;
 
         gap: 10px;
-
     }
 
 
-    /* FINAL */
+    /* =========================
+       FINAL CTA
+    ========================= */
 
     .final-cta h2 {
+        font-size:
+            62px;
 
-        font-size: 62px;
+        line-height: 0.88;
 
-        letter-spacing: -5px;
-
+        letter-spacing:
+            -5px;
     }
 
 
     .final-actions {
+        width: 100%;
 
-        flex-direction: column;
+        margin-top: 40px;
 
+        flex-direction:
+            column;
+
+        gap: 12px;
     }
 
 
     .final-actions
-    .button {
+    .primary-button,
 
+    .final-actions
+    .secondary-button {
         width: 100%;
-
     }
 
 
-    /* FOOTER */
+    /* =========================
+       FOOTER
+    ========================= */
+
+    footer {
+        padding:
+            65px
+            20px
+            30px;
+    }
+
 
     .footer-main {
+        min-height: auto;
 
-        flex-direction: column;
+        flex-direction:
+            column;
 
+        gap: 60px;
+    }
+
+
+    .footer-logo {
+        width: 75px;
+    }
+
+
+    .footer-brand h2 {
+        font-size: 70px;
+
+        letter-spacing:
+            -5px;
     }
 
 
     .footer-bottom {
+        margin-top: 70px;
 
-        flex-direction: column;
+        flex-direction:
+            column;
 
+        gap: 12px;
     }
 
+}
+
+
+
+/* =====================================================
+   VERY SMALL PHONES
+===================================================== */
+
+@media (max-width: 430px) {
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    .site-brand {
+        font-size: 9px;
+
+        letter-spacing: 1.5px;
+    }
+
+
+    .brand-circle {
+        width: 34px;
+
+        height: 34px;
+
+        font-size: 12px;
+    }
+
+
+    .nav-button {
+        padding:
+            10px
+            11px;
+
+        font-size:
+            7px !important;
+    }
+
+
+    /* =========================
+       HERO
+    ========================= */
+
+    .hero h1 {
+        font-size:
+            clamp(
+                52px,
+                16vw,
+                68px
+            );
+    }
+
+
+    .hero-description {
+        font-size: 14px;
+    }
+
+
+    .hero-tag {
+        font-size: 5px;
+    }
+
+
+    /* =========================
+       HEADINGS
+    ========================= */
+
+    .two-column h2,
+    .section-title,
+    .engineering-heading h2 {
+        font-size: 48px;
+    }
+
+
+    .bristol-main h2 {
+        font-size: 50px;
+    }
+
+
+    .final-cta h2 {
+        font-size: 52px;
+    }
+
+
+    /* =========================
+       MODELS
+    ========================= */
+
+    .model-heading {
+        align-items:
+            flex-start;
+    }
+
+
+    .model-heading h3 {
+        font-size: 20px;
+    }
+
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    .footer-brand h2 {
+        font-size: 58px;
+    }
 
 }
