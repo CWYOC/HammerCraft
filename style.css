@@ -1,6 +1,5 @@
 /* =========================================================
    HAMMER CRAFT
-   Bristol Independent Personal Audio
 ========================================================= */
 
 
@@ -9,13 +8,9 @@
 ========================================================= */
 
 * {
-
     margin: 0;
-
     padding: 0;
-
     box-sizing: border-box;
-
 }
 
 
@@ -39,9 +34,7 @@
 
 
 html {
-
     scroll-behavior: smooth;
-
 }
 
 
@@ -60,16 +53,13 @@ body {
 
 
 a {
-
     color: inherit;
-
 }
 
 
 img {
-
     display: block;
-
+    max-width: 100%;
 }
 
 
@@ -80,17 +70,13 @@ img {
 header {
 
     width: 100%;
-
     height: 80px;
 
-    padding:
-        0
-        6%;
+    padding: 0 6%;
 
     position: absolute;
 
     top: 0;
-
     left: 0;
 
     z-index: 100;
@@ -231,7 +217,8 @@ nav a:not(.nav-button):hover::after {
 
 .nav-button:hover {
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
     color: white;
 
@@ -254,7 +241,8 @@ section {
 .section-number,
 .small-title {
 
-    color: var(--brown);
+    color:
+        var(--brown);
 
     font-size: 10px;
 
@@ -288,8 +276,8 @@ section {
     display: grid;
 
     grid-template-columns:
-        1fr
-        1fr;
+        minmax(0, 1fr)
+        minmax(0, 1fr);
 
     gap: 80px;
 
@@ -299,9 +287,7 @@ section {
 
 
 .small-title {
-
     margin-bottom: 25px;
-
 }
 
 
@@ -374,9 +360,11 @@ section {
         17px
         25px;
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
-    color: white;
+    color:
+        white;
 
     text-decoration: none;
 
@@ -397,7 +385,8 @@ section {
 
 .main-button:hover {
 
-    background: var(--brown);
+    background:
+        var(--brown);
 
     transform:
         translateY(-2px);
@@ -407,7 +396,8 @@ section {
 
 .text-button {
 
-    color: var(--dark);
+    color:
+        var(--dark);
 
     text-decoration: none;
 
@@ -425,7 +415,7 @@ section {
 
 
 /* =========================================================
-   HERO LOGO
+   HERO IMAGE
 ========================================================= */
 
 .hero-image {
@@ -486,9 +476,11 @@ section {
         12px
         16px;
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
-    color: white;
+    color:
+        white;
 
     font-size: 9px;
 
@@ -517,7 +509,8 @@ section {
 
     bottom: 15%;
 
-    background: var(--brown);
+    background:
+        var(--brown);
 
     transform:
         rotate(7deg);
@@ -526,7 +519,7 @@ section {
 
 
 /* =========================================================
-   STRIP
+   INFORMATION STRIP
 ========================================================= */
 
 .strip {
@@ -567,9 +560,7 @@ section {
 
 
 .strip span {
-
     color: var(--brown);
-
 }
 
 
@@ -582,8 +573,8 @@ section {
     display: grid;
 
     grid-template-columns:
-        1fr
-        1fr;
+        minmax(0, 1fr)
+        minmax(0, 1fr);
 
     gap: 100px;
 
@@ -610,7 +601,8 @@ section {
 
 .story-text {
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 18px;
 
@@ -628,7 +620,8 @@ section {
 
 .story-text .story-lead {
 
-    color: var(--dark);
+    color:
+        var(--dark);
 
     font-size: 23px;
 
@@ -653,7 +646,8 @@ section {
 
     gap: 10px;
 
-    color: var(--dark);
+    color:
+        var(--dark);
 
     font-size: 9px;
 
@@ -670,9 +664,12 @@ section {
 
     height: 7px;
 
+    flex-shrink: 0;
+
     border-radius: 50%;
 
-    background: var(--brown);
+    background:
+        var(--brown);
 
 }
 
@@ -683,16 +680,19 @@ section {
 
 .craft {
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
-    color: white;
+    color:
+        white;
 
 }
 
 
 .craft .section-number {
 
-    color: var(--brown-light);
+    color:
+        var(--brown-light);
 
 }
 
@@ -737,7 +737,7 @@ section {
     display: grid;
 
     grid-template-columns:
-        repeat(4, 1fr);
+        repeat(4, minmax(0, 1fr));
 
 }
 
@@ -772,7 +772,8 @@ section {
 
 .card:hover {
 
-    background: var(--brown);
+    background:
+        var(--brown);
 
     transform:
         translateY(-8px);
@@ -790,9 +791,7 @@ section {
 
 
 .card-content {
-
     margin-top: auto;
-
 }
 
 
@@ -858,8 +857,8 @@ section {
     display: grid;
 
     grid-template-columns:
-        0.9fr
-        1.1fr;
+        minmax(0, 0.9fr)
+        minmax(0, 1.1fr);
 
     gap: 8vw;
 
@@ -888,7 +887,8 @@ section {
 
 .ai-content h2 span {
 
-    color: var(--brown);
+    color:
+        var(--brown);
 
     font-family:
         Georgia,
@@ -907,7 +907,8 @@ section {
 
     margin-top: 24px;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 15px;
 
@@ -920,7 +921,8 @@ section {
 
     margin-top: 40px;
 
-    color: var(--dark);
+    color:
+        var(--dark);
 
     font-size: 20px;
 
@@ -944,7 +946,7 @@ section {
     display: grid;
 
     grid-template-columns:
-        repeat(3, 1fr);
+        repeat(3, minmax(0, 1fr));
 
 }
 
@@ -975,7 +977,8 @@ section {
 
     margin-bottom: 40px;
 
-    color: var(--brown);
+    color:
+        var(--brown);
 
     font-size: 10px;
 
@@ -995,7 +998,8 @@ section {
 
 .ai-feature p {
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 12px;
 
@@ -1018,7 +1022,8 @@ section {
 
     overflow: hidden;
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
     display: flex;
 
@@ -1104,7 +1109,8 @@ section {
 
 .chart-status {
 
-    color: var(--brown-light);
+    color:
+        var(--brown-light);
 
     font-size: 8px;
 
@@ -1162,7 +1168,8 @@ section {
 
     fill: none;
 
-    stroke: #a97950;
+    stroke:
+        #a97950;
 
     stroke-width: 5;
 
@@ -1253,7 +1260,8 @@ section {
 
 .result-legend {
 
-    background: var(--brown-light);
+    background:
+        var(--brown-light);
 
 }
 
@@ -1272,9 +1280,11 @@ section {
         12px
         16px;
 
-    background: var(--background);
+    background:
+        var(--background);
 
-    color: var(--dark);
+    color:
+        var(--dark);
 
     display: flex;
 
@@ -1299,7 +1309,8 @@ section {
 
     border-radius: 50%;
 
-    background: var(--brown);
+    background:
+        var(--brown);
 
 }
 
@@ -1310,7 +1321,8 @@ section {
 
 .models {
 
-    background: var(--background);
+    background:
+        var(--background);
 
 }
 
@@ -1348,7 +1360,8 @@ section {
 
 .models-header h2 span {
 
-    color: var(--brown);
+    color:
+        var(--brown);
 
     font-family:
         Georgia,
@@ -1367,21 +1380,20 @@ section {
 
     margin-bottom: 10px;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     line-height: 1.7;
 
 }
 
 
-/* MODEL GRID */
-
 .model-grid {
 
     display: grid;
 
     grid-template-columns:
-        repeat(3, 1fr);
+        repeat(3, minmax(0, 1fr));
 
     gap: 30px;
 
@@ -1399,7 +1411,8 @@ section {
 
     overflow: hidden;
 
-    background: #e8e2da;
+    background:
+        #e8e2da;
 
 }
 
@@ -1468,9 +1481,11 @@ section {
         9px
         12px;
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
-    color: white;
+    color:
+        white;
 
     font-size: 7px;
 
@@ -1498,7 +1513,8 @@ section {
 
     margin-bottom: 8px;
 
-    color: var(--brown);
+    color:
+        var(--brown);
 
     font-size: 8px;
 
@@ -1548,9 +1564,11 @@ section {
 .model-card:hover
 .model-arrow {
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
-    color: white;
+    color:
+        white;
 
 }
 
@@ -1561,7 +1579,8 @@ section {
 
     margin-top: 16px;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 14px;
 
@@ -1586,7 +1605,8 @@ section {
 
     gap: 10px;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 7px;
 
@@ -1596,8 +1616,6 @@ section {
 
 }
 
-
-/* FUTURE MODEL */
 
 .future-model {
 
@@ -1643,7 +1661,8 @@ section {
 
     justify-content: center;
 
-    color: var(--brown);
+    color:
+        var(--brown);
 
     font-family:
         Georgia,
@@ -1667,14 +1686,16 @@ section {
 
     flex: 1;
 
-    background: var(--line);
+    background:
+        var(--line);
 
 }
 
 
 .future-text {
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 7px;
 
@@ -1689,16 +1710,19 @@ section {
 
 .engineering {
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
-    color: white;
+    color:
+        white;
 
 }
 
 
 .engineering .section-number {
 
-    color: var(--brown-light);
+    color:
+        var(--brown-light);
 
 }
 
@@ -1743,7 +1767,7 @@ section {
     display: grid;
 
     grid-template-columns:
-        repeat(4, 1fr);
+        repeat(4, minmax(0, 1fr));
 
     border-top:
         1px solid
@@ -1795,7 +1819,8 @@ section {
 
 .engineering-item > span {
 
-    color: var(--brown-light);
+    color:
+        var(--brown-light);
 
     font-size: 9px;
 
@@ -1831,82 +1856,154 @@ section {
 
 
 /* =========================================================
-   BRISTOL SECTION
+   FIXED BRISTOL SECTION
 ========================================================= */
 
 .bristol-section {
 
-    min-height: 600px;
+    width: 100%;
 
-    background: var(--light-brown);
+    min-height: auto;
 
-    display: grid;
+    padding:
+        110px
+        7%;
 
-    grid-template-columns:
-        0.7fr
-        1.3fr;
-
-    gap: 100px;
-
-    align-items: center;
+    background:
+        var(--light-brown);
 
 }
 
 
-.bristol-number {
+.bristol-top {
+
+    width: 100%;
+
+    padding-bottom: 25px;
+
+    border-bottom:
+        1px solid
+        rgba(
+            0,
+            0,
+            0,
+            0.15
+        );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 30px;
+
+}
+
+
+.bristol-location {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
 
     color:
-        rgba(
-            36,
-            35,
-            33,
-            0.12
-        );
+        var(--brown);
+
+    font-size: 10px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
+
+}
+
+
+.bristol-location .location-dot {
+
+    width: 7px;
+
+    height: 7px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background:
+        var(--brown);
+
+}
+
+
+.bristol-coordinates {
+
+    color:
+        var(--muted);
 
     font-family:
         Georgia,
         serif;
 
+    font-size: 13px;
+
+    letter-spacing: 1px;
+
+}
+
+
+.bristol-main {
+
+    width: 100%;
+
+    margin-top: 80px;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.1fr)
+        minmax(0, 0.9fr);
+
+    gap: 8vw;
+
+    align-items: start;
+
+}
+
+
+.bristol-title {
+
+    min-width: 0;
+
+}
+
+
+.bristol-title h2 {
+
+    margin: 0;
+
     font-size:
         clamp(
             55px,
             7vw,
-            120px
+            115px
         );
 
-    line-height: 0.85;
+    line-height: 0.88;
 
-    letter-spacing: -5px;
+    letter-spacing: -6px;
 
-}
-
-
-.bristol-content {
-
-    max-width: 700px;
+    overflow-wrap:
+        break-word;
 
 }
 
 
-.bristol-content h2 {
+.bristol-title h2 span {
 
-    font-size:
-        clamp(
-            55px,
-            6vw,
-            100px
-        );
-
-    line-height: 0.9;
-
-    letter-spacing: -5px;
-
-}
-
-
-.bristol-content h2 span {
-
-    color: var(--brown);
+    color:
+        var(--brown);
 
     font-family:
         Georgia,
@@ -1919,17 +2016,114 @@ section {
 }
 
 
-.bristol-content p {
+.bristol-copy {
 
-    max-width: 580px;
+    min-width: 0;
 
-    margin-top: 30px;
+    max-width: 600px;
 
-    color: var(--muted);
+    padding-top: 10px;
+
+}
+
+
+.bristol-copy p {
+
+    color:
+        var(--muted);
 
     font-size: 16px;
 
-    line-height: 1.75;
+    line-height: 1.8;
+
+}
+
+
+.bristol-copy p + p {
+
+    margin-top: 25px;
+
+}
+
+
+.bristol-copy .bristol-lead {
+
+    color:
+        var(--dark);
+
+    font-size: 23px;
+
+    line-height: 1.55;
+
+    font-weight: 600;
+
+}
+
+
+.bristol-copy .bristol-statement {
+
+    margin-top: 45px;
+
+    padding-top: 25px;
+
+    border-top:
+        1px solid
+        rgba(
+            0,
+            0,
+            0,
+            0.15
+        );
+
+    color:
+        var(--brown);
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-size: 27px;
+
+    font-style: italic;
+
+    line-height: 1.4;
+
+}
+
+
+.bristol-footer-line {
+
+    width: 100%;
+
+    margin-top: 90px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid
+        rgba(
+            0,
+            0,
+            0,
+            0.15
+        );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 25px;
+
+    color:
+        var(--muted);
+
+    font-size: 8px;
+
+    font-weight: bold;
+
+    letter-spacing: 2px;
 
 }
 
@@ -1942,9 +2136,11 @@ section {
 
     min-height: 480px;
 
-    background: var(--brown);
+    background:
+        var(--brown);
 
-    color: white;
+    color:
+        white;
 
     display: flex;
 
@@ -1997,8 +2193,8 @@ section {
     display: grid;
 
     grid-template-columns:
-        1fr
-        1fr;
+        minmax(0, 1fr)
+        minmax(0, 1fr);
 
     gap: 100px;
 
@@ -2027,7 +2223,8 @@ section {
 
     margin-top: 30px;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
     font-size: 15px;
 
@@ -2060,8 +2257,8 @@ form {
     display: grid;
 
     grid-template-columns:
-        1fr
-        1fr;
+        minmax(0, 1fr)
+        minmax(0, 1fr);
 
     gap: 25px;
 
@@ -2101,13 +2298,16 @@ textarea {
         1px solid
         var(--line);
 
-    background: transparent;
+    background:
+        transparent;
 
     outline: none;
 
-    color: var(--dark);
+    color:
+        var(--dark);
 
-    font-family: inherit;
+    font-family:
+        inherit;
 
     font-size: 15px;
 
@@ -2125,9 +2325,7 @@ textarea:focus {
 
 
 textarea {
-
     resize: vertical;
-
 }
 
 
@@ -2150,9 +2348,11 @@ button {
 
     border: none;
 
-    background: var(--dark);
+    background:
+        var(--dark);
 
-    color: white;
+    color:
+        white;
 
     cursor: pointer;
 
@@ -2179,7 +2379,8 @@ button {
 
 button:hover {
 
-    background: var(--brown);
+    background:
+        var(--brown);
 
     transform:
         translateY(-2px);
@@ -2207,7 +2408,10 @@ footer {
 
     justify-content: space-between;
 
-    color: var(--muted);
+    gap: 20px;
+
+    color:
+        var(--muted);
 
     font-size: 9px;
 
@@ -2218,7 +2422,8 @@ footer {
 
 footer strong {
 
-    color: var(--dark);
+    color:
+        var(--dark);
 
     letter-spacing: 4px;
 
@@ -2233,9 +2438,7 @@ footer strong {
 
 
     nav {
-
         gap: 18px;
-
     }
 
 
@@ -2251,9 +2454,7 @@ footer strong {
 
 
     .hero-image {
-
         margin-top: 30px;
-
     }
 
 
@@ -2286,9 +2487,7 @@ footer strong {
 
 
     .craft-heading h2 {
-
         text-align: left;
-
     }
 
 
@@ -2337,9 +2536,7 @@ footer strong {
 
 
     .engineering-heading h2 {
-
         text-align: left;
-
     }
 
 
@@ -2352,20 +2549,60 @@ footer strong {
     }
 
 
-    .bristol-section {
-
-        grid-template-columns:
-            1fr;
-
-        gap: 50px;
-
-    }
-
-
     .contact {
 
         grid-template-columns:
             1fr;
+
+    }
+
+}
+
+
+/* =========================================================
+   BRISTOL TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+
+    .bristol-section {
+
+        padding:
+            90px
+            6%;
+
+    }
+
+
+    .bristol-main {
+
+        margin-top: 60px;
+
+        grid-template-columns:
+            1fr;
+
+        gap: 45px;
+
+    }
+
+
+    .bristol-copy {
+
+        max-width:
+            700px;
+
+    }
+
+
+    .bristol-title h2 {
+
+        font-size:
+            clamp(
+                55px,
+                10vw,
+                90px
+            );
 
     }
 
@@ -2474,9 +2711,11 @@ footer strong {
             0
             20px;
 
-        justify-content: flex-start;
+        justify-content:
+            flex-start;
 
-        overflow-x: auto;
+        overflow-x:
+            auto;
 
     }
 
@@ -2631,15 +2870,6 @@ footer strong {
     }
 
 
-    .bristol-number {
-
-        font-size: 60px;
-
-        letter-spacing: -3px;
-
-    }
-
-
     form {
 
         grid-template-columns:
@@ -2663,6 +2893,107 @@ footer strong {
         align-items: flex-start;
 
         gap: 12px;
+
+    }
+
+}
+
+
+/* =========================================================
+   BRISTOL MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+
+    .bristol-section {
+
+        padding:
+            70px
+            20px;
+
+    }
+
+
+    .bristol-top {
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 15px;
+
+    }
+
+
+    .bristol-coordinates {
+
+        font-size: 12px;
+
+    }
+
+
+    .bristol-main {
+
+        margin-top: 50px;
+
+        display: block;
+
+    }
+
+
+    .bristol-title h2 {
+
+        font-size: 55px;
+
+        line-height: 0.92;
+
+        letter-spacing: -4px;
+
+    }
+
+
+    .bristol-copy {
+
+        margin-top: 45px;
+
+        padding-top: 0;
+
+    }
+
+
+    .bristol-copy .bristol-lead {
+
+        font-size: 20px;
+
+    }
+
+
+    .bristol-copy p {
+
+        font-size: 15px;
+
+    }
+
+
+    .bristol-copy .bristol-statement {
+
+        margin-top: 35px;
+
+        font-size: 24px;
+
+    }
+
+
+    .bristol-footer-line {
+
+        margin-top: 60px;
+
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 10px;
 
     }
 
