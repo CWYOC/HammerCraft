@@ -48,17 +48,16 @@ html {
 
 body {
 
-    background:
-        var(--paper);
+    background: var(--paper);
 
-    color:
-        var(--ink);
+    color: var(--ink);
 
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
+    overflow-x: hidden;
 }
 
 
@@ -75,11 +74,11 @@ a {
 
 em {
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-family:
         Georgia,
+        "Times New Roman",
         serif;
 
     font-weight: normal;
@@ -139,7 +138,7 @@ em {
 
 
 
-/* LOGO */
+/* BRAND */
 
 .brand {
 
@@ -149,10 +148,9 @@ em {
 
     gap: 15px;
 
-    text-decoration: none;
+    color: var(--ink);
 
-    color:
-        var(--ink);
+    text-decoration: none;
 
 }
 
@@ -196,8 +194,7 @@ em {
 
     margin-top: 5px;
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-size: 8px;
 
@@ -224,6 +221,8 @@ em {
 
 .nav-links a {
 
+    color: var(--ink);
+
     text-decoration: none;
 
     font-size: 9px;
@@ -241,8 +240,7 @@ em {
 
 .nav-links a:hover {
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
 }
 
@@ -253,23 +251,18 @@ em {
         14px
         19px;
 
-    background:
-        var(--ink);
+    background: var(--ink);
 
-    color:
-        white;
+    color: white;
 
 }
 
 
-.nav-links
-.nav-highlight:hover {
+.nav-links .nav-highlight:hover {
 
-    background:
-        var(--brown);
+    background: var(--brown);
 
-    color:
-        white;
+    color: white;
 
 }
 
@@ -290,8 +283,7 @@ em {
 
 .section-label {
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-size: 9px;
 
@@ -366,8 +358,7 @@ em {
 
     margin-bottom: 24px;
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-size: 15px;
 
@@ -378,14 +369,11 @@ em {
 
 .large-copy {
 
-    color:
-        var(--ink) !important;
+    color: var(--ink) !important;
 
-    font-size:
-        22px !important;
+    font-size: 22px !important;
 
-    line-height:
-        1.5 !important;
+    line-height: 1.5 !important;
 
 }
 
@@ -402,11 +390,9 @@ em {
 
     border: none;
 
-    background:
-        var(--ink);
+    background: var(--ink);
 
-    color:
-        white;
+    color: white;
 
     text-decoration: none;
 
@@ -434,33 +420,10 @@ em {
 
 .button:hover {
 
-    background:
-        var(--brown);
+    background: var(--brown);
 
     transform:
         translateY(-2px);
-
-}
-
-
-.text-link {
-
-    color:
-        var(--ink);
-
-    text-decoration: none;
-
-    padding-bottom: 4px;
-
-    border-bottom:
-        1px solid
-        var(--ink);
-
-    font-size: 10px;
-
-    font-weight: bold;
-
-    letter-spacing: 1px;
 
 }
 
@@ -472,72 +435,133 @@ em {
 
 .hero {
 
+    width: 100%;
+
     min-height:
         calc(
             100vh - 92px
         );
 
     padding:
-        80px
+        70px
         7vw
-        70px;
+        90px;
+
+    background: var(--paper);
+
+    overflow: hidden;
 
 }
 
 
-.hero-grid {
+.hero-inner {
 
-    min-height:
-        calc(
-            100vh - 260px
-        );
+    width: 100%;
+
+    max-width: 1600px;
+
+    margin: 0 auto;
 
     display: grid;
 
     grid-template-columns:
         minmax(0, 1fr)
-        minmax(0, 0.9fr);
+        minmax(380px, 0.85fr);
+
+    gap:
+        clamp(
+            50px,
+            7vw,
+            130px
+        );
 
     align-items: center;
-
-    gap: 7vw;
 
 }
 
 
-.hero-copy h1 {
+
+/* HERO LEFT */
+
+.hero-content {
+
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+}
+
+
+.hero-content
+.section-label {
+
+    margin-bottom: 35px;
+
+}
+
+
+.hero-content h1 {
+
+    margin: 0;
 
     max-width: 900px;
 
     font-size:
         clamp(
-            70px,
+            72px,
             8vw,
             135px
         );
 
     line-height: 0.84;
 
-    letter-spacing: -8px;
+    letter-spacing:
+        -0.065em;
+
+    font-weight: 700;
 
 }
 
 
-.hero-copy h1 em {
+.hero-content h1 span {
 
     display: block;
 
+    color: var(--brown);
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-size: 0.87em;
+
+    font-style: italic;
+
+    font-weight: 400;
+
+    letter-spacing:
+        -0.055em;
+
 }
 
 
-.hero-copy > p {
+.hero-description {
 
-    max-width: 580px;
+    width: 100%;
 
-    margin-top: 40px;
+    max-width: 560px;
 
-    color:
-        var(--muted);
+    margin:
+        48px
+        0
+        0;
+
+    color: var(--muted);
 
     font-size: 17px;
 
@@ -548,7 +572,9 @@ em {
 
 .hero-actions {
 
-    margin-top: 40px;
+    width: 100%;
+
+    margin-top: 38px;
 
     display: flex;
 
@@ -559,12 +585,65 @@ em {
 }
 
 
+.hero-text-link {
 
-/* HERO LOGO */
+    color: var(--ink);
 
-.hero-logo-area {
+    text-decoration: none;
+
+    padding-bottom: 5px;
+
+    border-bottom:
+        1px solid
+        var(--ink);
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    white-space: nowrap;
+
+}
+
+
+
+/* HERO RIGHT */
+
+.hero-visual {
+
+    width: 100%;
 
     position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 0;
+
+}
+
+
+.hero-logo {
+
+    width:
+        min(
+            100%,
+            570px
+        );
+
+    aspect-ratio:
+        1 / 1;
+
+    position: relative;
+
+    overflow: hidden;
+
+    background: transparent;
 
     display: flex;
 
@@ -575,78 +654,55 @@ em {
 }
 
 
-.hero-logo-circle {
+.hero-logo img {
 
-    width:
-        min(
-            520px,
-            42vw
-        );
+    display: block;
 
-    aspect-ratio: 1;
+    width: 100% !important;
 
-    border-radius: 50%;
+    height: 100% !important;
 
-    overflow: hidden;
+    max-width: none !important;
 
-    background: #f8f5f0;
+    object-fit: contain !important;
 
-    box-shadow:
-        0
-        40px
-        100px
-        rgba(
-            0,
-            0,
-            0,
-            0.08
-        );
+    object-position: center;
 
 }
 
 
-.hero-logo-circle img {
+/* HERO TAGS */
 
-    width: 100%;
-
-    height: 100%;
-
-    object-fit: cover;
-
-    transform:
-        scale(1.12);
-
-}
-
-
-.floating-tag {
+.hero-tag {
 
     position: absolute;
 
+    z-index: 5;
+
     padding:
         11px
-        14px;
+        15px;
 
-    background:
-        var(--ink);
+    background: var(--ink);
 
-    color:
-        white;
+    color: white;
 
     font-size: 8px;
 
-    font-weight: bold;
+    font-weight: 700;
 
     letter-spacing: 2px;
+
+    white-space: nowrap;
 
 }
 
 
-.tag-one {
+.hero-tag-fit {
 
-    top: 16%;
+    top: 15%;
 
-    left: 0;
+    left: -10px;
 
     transform:
         rotate(-7deg);
@@ -654,14 +710,13 @@ em {
 }
 
 
-.tag-two {
+.hero-tag-ai {
 
-    right: -2%;
+    right: -10px;
 
-    bottom: 16%;
+    bottom: 15%;
 
-    background:
-        var(--brown);
+    background: var(--brown);
 
     transform:
         rotate(6deg);
@@ -714,8 +769,7 @@ em {
 
 .info-strip i {
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-style: normal;
 
@@ -768,8 +822,7 @@ em {
 
     border-radius: 50%;
 
-    background:
-        var(--brown);
+    background: var(--brown);
 
 }
 
@@ -793,8 +846,7 @@ em {
 
 .section-header > span {
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-size: 8px;
 
@@ -920,8 +972,7 @@ em {
 
 .model-heading small {
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-size: 8px;
 
@@ -954,8 +1005,7 @@ em {
 
     margin-top: 15px;
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-size: 13px;
 
@@ -981,8 +1031,7 @@ em {
 
     gap: 15px;
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-size: 7px;
 
@@ -1032,8 +1081,7 @@ em {
 
 .number {
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-size: 9px;
 
@@ -1053,8 +1101,7 @@ em {
 
     margin-top: 8px;
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-size: 13px;
 
@@ -1065,8 +1112,7 @@ em {
 
 .arrow {
 
-    color:
-        var(--ink);
+    color: var(--ink);
 
     text-decoration: none;
 
@@ -1082,19 +1128,16 @@ em {
 
 .ai {
 
-    background:
-        var(--ink);
+    background: var(--ink);
 
-    color:
-        white;
+    color: white;
 
 }
 
 
 .ai h2 {
 
-    color:
-        white;
+    color: white;
 
 }
 
@@ -1114,8 +1157,7 @@ em {
 
 .ai .large-copy {
 
-    color:
-        white !important;
+    color: white !important;
 
 }
 
@@ -1236,8 +1278,7 @@ em {
         1px solid
         var(--line);
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-size: 9px;
 
@@ -1257,11 +1298,9 @@ em {
 
 .engineering {
 
-    background:
-        var(--ink);
+    background: var(--ink);
 
-    color:
-        white;
+    color: white;
 
 }
 
@@ -1295,8 +1334,7 @@ em {
 
     display: block;
 
-    color:
-        var(--brown-light);
+    color: var(--brown-light);
 
 }
 
@@ -1344,8 +1382,7 @@ em {
 
 .engineering-grid span {
 
-    color:
-        var(--brown-light);
+    color: var(--brown-light);
 
     font-size: 9px;
 
@@ -1421,8 +1458,7 @@ em {
 
     gap: 10px;
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-size: 9px;
 
@@ -1443,16 +1479,14 @@ em {
 
     border-radius: 50%;
 
-    background:
-        var(--brown);
+    background: var(--brown);
 
 }
 
 
 .coordinates {
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-family:
         Georgia,
@@ -1512,8 +1546,7 @@ em {
 
     margin-bottom: 25px;
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-size: 15px;
 
@@ -1532,8 +1565,7 @@ em {
         1px solid
         var(--line);
 
-    color:
-        var(--brown);
+    color: var(--brown);
 
     font-family:
         Georgia,
@@ -1565,8 +1597,7 @@ em {
 
     gap: 25px;
 
-    color:
-        var(--muted);
+    color: var(--muted);
 
     font-size: 7px;
 
@@ -1634,11 +1665,9 @@ em {
 
 .secondary-button {
 
-    background:
-        transparent;
+    background: transparent;
 
-    color:
-        var(--ink);
+    color: var(--ink);
 
     border:
         1px solid
@@ -1649,14 +1678,11 @@ em {
 
 .secondary-button:hover {
 
-    background:
-        var(--brown);
+    background: var(--brown);
 
-    border-color:
-        var(--brown);
+    border-color: var(--brown);
 
-    color:
-        white;
+    color: white;
 
 }
 
@@ -1676,8 +1702,7 @@ footer {
     background:
         #171615;
 
-    color:
-        white;
+    color: white;
 
 }
 
@@ -1790,25 +1815,51 @@ footer {
 ===================================================== */
 
 @media
-(max-width: 1000px) {
+(max-width: 1100px) {
 
 
-    .hero-grid {
+    .hero {
 
-        grid-template-columns:
-            1fr;
-
-        gap: 70px;
+        padding:
+            70px
+            6vw
+            80px;
 
     }
 
 
-    .hero-logo-circle {
+    .hero-inner {
+
+        grid-template-columns:
+            1fr;
+
+        gap: 80px;
+
+    }
+
+
+    .hero-content {
+
+        max-width: 900px;
+
+    }
+
+
+    .hero-visual {
+
+        max-width: 650px;
+
+        margin: 0 auto;
+
+    }
+
+
+    .hero-logo {
 
         width:
             min(
-                600px,
-                80vw
+                100%,
+                600px
             );
 
     }
@@ -1940,28 +1991,47 @@ footer {
     }
 
 
+    /* HERO */
+
     .hero {
 
+        min-height: auto;
+
         padding:
-            65px
+            60px
             20px
-            60px;
+            75px;
 
     }
 
 
-    .hero-copy h1 {
+    .hero-inner {
 
-        font-size: 62px;
+        display: block;
+
+    }
+
+
+    .hero-content h1 {
+
+        font-size:
+            clamp(
+                58px,
+                17vw,
+                82px
+            );
 
         line-height: 0.88;
 
-        letter-spacing: -5px;
+        letter-spacing:
+            -0.06em;
 
     }
 
 
-    .hero-copy > p {
+    .hero-description {
+
+        margin-top: 35px;
 
         font-size: 15px;
 
@@ -1970,22 +2040,34 @@ footer {
 
     .hero-actions {
 
-        align-items:
-            flex-start;
+        margin-top: 30px;
 
         flex-direction: column;
 
+        align-items: flex-start;
+
+        gap: 22px;
+
     }
 
 
-    .hero-logo-circle {
+    .hero-visual {
+
+        margin-top: 70px;
+
+    }
+
+
+    .hero-logo {
 
         width: 100%;
 
+        max-width: 500px;
+
     }
 
 
-    .floating-tag {
+    .hero-tag {
 
         padding:
             8px
@@ -1995,6 +2077,22 @@ footer {
 
     }
 
+
+    .hero-tag-fit {
+
+        left: 0;
+
+    }
+
+
+    .hero-tag-ai {
+
+        right: 0;
+
+    }
+
+
+    /* INFO */
 
     .info-strip {
 
@@ -2008,6 +2106,8 @@ footer {
     }
 
 
+    /* GENERAL TITLES */
+
     .two-column h2,
     .section-title {
 
@@ -2018,6 +2118,8 @@ footer {
     }
 
 
+    /* MODELS */
+
     .model-grid {
 
         grid-template-columns:
@@ -2025,6 +2127,8 @@ footer {
 
     }
 
+
+    /* AI */
 
     .ai-process {
 
@@ -2043,6 +2147,8 @@ footer {
     }
 
 
+    /* ENGINEERING */
+
     .engineering-grid {
 
         grid-template-columns:
@@ -2059,6 +2165,8 @@ footer {
 
     }
 
+
+    /* BRISTOL */
 
     .bristol-top {
 
@@ -2100,6 +2208,8 @@ footer {
     }
 
 
+    /* FINAL */
+
     .final-cta h2 {
 
         font-size: 62px;
@@ -2123,6 +2233,8 @@ footer {
 
     }
 
+
+    /* FOOTER */
 
     .footer-main {
 
