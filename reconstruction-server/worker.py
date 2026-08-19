@@ -1,10 +1,12 @@
 import os
 import shutil
 import time
+
 from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
+
 from dotenv import load_dotenv
 from supabase import create_client
 
@@ -24,8 +26,8 @@ SUPABASE_URL = os.environ[
 ]
 
 
-SUPABASE_SERVICE_ROLE_KEY = os.environ[
-    "SUPABASE_SERVICE_ROLE_KEY"
+SUPABASE_SECRET_KEY = os.environ[
+    "SUPABASE_SECRET_KEY"
 ]
 
 
@@ -43,9 +45,10 @@ WORK_ROOT = Path(
 )
 
 
-RESEND_API_KEY = os.environ[
-    "RESEND_API_KEY"
-]
+RESEND_API_KEY = os.getenv(
+    "RESEND_API_KEY",
+    ""
+)
 
 
 HAMMER_CRAFT_EMAIL = os.getenv(
@@ -54,9 +57,10 @@ HAMMER_CRAFT_EMAIL = os.getenv(
 )
 
 
-EMAIL_FROM = os.environ[
-    "EMAIL_FROM"
-]
+EMAIL_FROM = os.getenv(
+    "EMAIL_FROM",
+    "Hammer Craft Scanner <scans@hammer-craft.co.uk>"
+)
 
 
 POLL_SECONDS = int(
@@ -81,9 +85,13 @@ WORK_ROOT.mkdir(
 )
 
 
+# =========================================================
+# SUPABASE CLIENT
+# =========================================================
+
 supabase = create_client(
     SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY
+    SUPABASE_SECRET_KEY
 )
 
 
@@ -92,6 +100,7 @@ supabase = create_client(
 # =========================================================
 
 def utc_now():
+
     return (
         datetime
         .now(
@@ -148,15 +157,18 @@ def download_side(
         exist_ok=True
     )
 
+
     prefix = (
         f"{user_id}/"
         f"{scan_id}/"
         f"{side}"
     )
 
+
     print(
         f"Listing storage folder: {prefix}"
     )
+
 
     files = (
         supabase
@@ -169,13 +181,18 @@ def download_side(
         )
     )
 
+
     image_files = []
+
 
     for file in files:
 
         name = (
             file.get("name")
-            if isinstance(file, dict)
+            if isinstance(
+                file,
+                dict
+            )
             else getattr(
                 file,
                 "name",
@@ -183,8 +200,10 @@ def download_side(
             )
         )
 
+
         if not name:
             continue
+
 
         if name.lower().endswith(
             (
@@ -192,14 +211,20 @@ def download_side(
                 ".jpeg"
             )
         ):
+
             image_files.append(
                 name
             )
+
+
+    image_files.sort()
+
 
     if (
         len(image_files) <
         MIN_IMAGES_PER_EAR
     ):
+
         raise RuntimeError(
             f"{side} ear only has "
             f"{len(image_files)} images. "
@@ -207,7 +232,6 @@ def download_side(
             f"{MIN_IMAGES_PER_EAR}."
         )
 
-    image_files.sort()
 
     for filename in image_files:
 
@@ -216,10 +240,12 @@ def download_side(
             f"{filename}"
         )
 
+
         print(
             "Downloading:",
             remote_path
         )
+
 
         file_bytes = (
             supabase
@@ -232,18 +258,89 @@ def download_side(
             )
         )
 
+
         local_path = (
             destination /
             filename
         )
 
+
         local_path.write_bytes(
             file_bytes
         )
 
+
     return len(
         image_files
     )
+
+
+# =========================================================
+# UPLOAD FILE TO RESULTS
+# =========================================================
+
+def upload_result_file(
+    user_id,
+    scan_id,
+    filename,
+    local_path,
+    content_type
+):
+
+    local_path = Path(
+        local_path
+    )
+
+
+    storage_path = (
+        f"{user_id}/"
+        f"{scan_id}/"
+        f"results/"
+        f"{filename}"
+    )
+
+
+    print(
+        "Uploading result:",
+        storage_path
+    )
+
+
+    file_bytes = (
+        local_path
+        .read_bytes()
+    )
+
+
+    (
+        supabase
+        .storage
+        .from_(
+            SUPABASE_BUCKET
+        )
+        .upload(
+
+            path=
+                storage_path,
+
+            file=
+                file_bytes,
+
+            file_options={
+                "content-type":
+                    content_type,
+
+                "upsert":
+                    "true"
+            }
+
+        )
+    )
+
+
+    return storage_path
+
+
 # =========================================================
 # UPLOAD STL
 # =========================================================
@@ -255,49 +352,55 @@ def upload_stl(
     local_path
 ):
 
-    local_path = Path(
-        local_path
+    return upload_result_file(
+
+        user_id=
+            user_id,
+
+        scan_id=
+            scan_id,
+
+        filename=
+            f"{side}-ear.stl",
+
+        local_path=
+            local_path,
+
+        content_type=
+            "model/stl"
+
     )
 
-    storage_path = (
-        f"{user_id}/"
-        f"{scan_id}/"
-        f"results/"
-        f"{side}-ear.stl"
+
+# =========================================================
+# UPLOAD RAW PLY
+# =========================================================
+
+def upload_raw_ply(
+    user_id,
+    scan_id,
+    side,
+    local_path
+):
+
+    return upload_result_file(
+
+        user_id=
+            user_id,
+
+        scan_id=
+            scan_id,
+
+        filename=
+            f"{side}-ear-raw.ply",
+
+        local_path=
+            local_path,
+
+        content_type=
+            "application/octet-stream"
+
     )
-
-    print(
-        "Uploading STL:",
-        storage_path
-    )
-
-    file_bytes = (
-        local_path
-        .read_bytes()
-    )
-
-    (
-        supabase
-        .storage
-        .from_(
-            SUPABASE_BUCKET
-        )
-        .upload(
-            path=storage_path,
-
-            file=file_bytes,
-
-            file_options={
-                "content-type":
-                    "model/stl",
-
-                "upsert":
-                    "true"
-            }
-        )
-    )
-
-    return storage_path
 
 
 # =========================================================
@@ -321,6 +424,7 @@ def create_signed_url(
         )
     )
 
+
     if isinstance(
         result,
         dict
@@ -340,7 +444,10 @@ def create_signed_url(
             )
         )
 
+
     return None
+
+
 # =========================================================
 # CUSTOMER PROFILE
 # =========================================================
@@ -367,10 +474,10 @@ def get_customer_profile(
         .execute()
     )
 
-    if (
-        not response.data
-    ):
+
+    if not response.data:
         return {}
+
 
     return response.data[0]
 
@@ -385,15 +492,30 @@ def send_completion_email(
     right_stl_path
 ):
 
+    if not RESEND_API_KEY:
+
+        print(
+            "RESEND_API_KEY is not configured."
+        )
+
+        print(
+            "Skipping completion email."
+        )
+
+        return
+
+
     user_id = scan[
         "user_id"
     ]
+
 
     profile = (
         get_customer_profile(
             user_id
         )
     )
+
 
     customer_name = (
         profile.get(
@@ -403,6 +525,7 @@ def send_completion_email(
         "Hammer Craft Customer"
     )
 
+
     customer_email = (
         profile.get(
             "email"
@@ -411,17 +534,20 @@ def send_completion_email(
         "Unknown"
     )
 
+
     left_url = (
         create_signed_url(
             left_stl_path
         )
     )
 
+
     right_url = (
         create_signed_url(
             right_stl_path
         )
     )
+
 
     html = f"""
     <div style="
@@ -495,7 +621,9 @@ def send_completion_email(
     </div>
     """
 
+
     response = requests.post(
+
         "https://api.resend.com/emails",
 
         headers={
@@ -525,14 +653,19 @@ def send_completion_email(
         },
 
         timeout=30
+
     )
 
+
     response.raise_for_status()
+
 
     print(
         "Completion email sent."
     )
-    # =========================================================
+
+
+# =========================================================
 # PROCESS ONE SIDE
 # =========================================================
 
@@ -546,30 +679,57 @@ def process_side(
         "user_id"
     ]
 
+
     scan_id = scan[
         "id"
     ]
+
 
     side_root = (
         workspace /
         side
     )
 
+
     images_dir = (
         side_root /
         "images"
     )
+
 
     reconstruction_dir = (
         side_root /
         "reconstruction"
     )
 
-    output_stl = (
+
+    results_dir = (
         workspace /
-        "results" /
+        "results"
+    )
+
+
+    results_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+
+    output_stl = (
+        results_dir /
         f"{side}-ear.stl"
     )
+
+
+    raw_copy = (
+        results_dir /
+        f"{side}-ear-raw.ply"
+    )
+
+
+    # =====================================================
+    # DOWNLOAD IMAGES
+    # =====================================================
 
     image_count = (
         download_side(
@@ -580,10 +740,16 @@ def process_side(
         )
     )
 
+
     print(
         f"{side}: "
         f"{image_count} images downloaded."
     )
+
+
+    # =====================================================
+    # PHOTOGRAMMETRY
+    # =====================================================
 
     raw_mesh = (
         reconstruct(
@@ -592,24 +758,81 @@ def process_side(
         )
     )
 
+
     print(
         f"{side}: raw mesh created at "
         f"{raw_mesh}"
     )
 
-    final_stl = (
-        clean_mesh(
-            raw_mesh,
-            output_stl
+
+    # =====================================================
+    # KEEP RAW RECONSTRUCTION
+    # =====================================================
+
+    shutil.copy2(
+        raw_mesh,
+        raw_copy
+    )
+
+
+    print(
+        f"{side}: raw PLY copied to "
+        f"{raw_copy}"
+    )
+
+
+    # =====================================================
+    # UPLOAD RAW PLY
+    # =====================================================
+
+    raw_storage_path = (
+        upload_raw_ply(
+            user_id,
+            scan_id,
+            side,
+            raw_copy
         )
     )
 
+
     print(
-        f"{side}: STL created at "
+        f"{side}: raw PLY uploaded to "
+        f"{raw_storage_path}"
+    )
+
+
+    # =====================================================
+    # REPAIR + SOLIDIFY
+    # =====================================================
+
+    final_stl = (
+        clean_mesh(
+
+            raw_mesh,
+
+            output_stl,
+
+            force_solid=
+                True,
+
+            voxel_resolution=
+                350
+
+        )
+    )
+
+
+    print(
+        f"{side}: solid STL created at "
         f"{final_stl}"
     )
 
-    storage_path = (
+
+    # =====================================================
+    # UPLOAD STL
+    # =====================================================
+
+    stl_storage_path = (
         upload_stl(
             user_id,
             scan_id,
@@ -618,7 +841,22 @@ def process_side(
         )
     )
 
-    return storage_path
+
+    print(
+        f"{side}: STL uploaded to "
+        f"{stl_storage_path}"
+    )
+
+
+    return {
+
+        "stl_path":
+            stl_storage_path,
+
+        "raw_path":
+            raw_storage_path
+
+    }
 
 
 # =========================================================
@@ -633,6 +871,7 @@ def process_scan(
         "id"
     ]
 
+
     print(
         "\n\n############################################"
     )
@@ -646,20 +885,25 @@ def process_scan(
         "############################################\n"
     )
 
+
     workspace = (
         WORK_ROOT /
         scan_id
     )
 
+
     if workspace.exists():
+
         shutil.rmtree(
             workspace
         )
+
 
     workspace.mkdir(
         parents=True,
         exist_ok=True
     )
+
 
     update_scan(
         scan_id,
@@ -669,9 +913,14 @@ def process_scan(
         }
     )
 
+
     try:
 
-        left_path = (
+        # =================================================
+        # LEFT EAR
+        # =================================================
+
+        left_result = (
             process_side(
                 scan,
                 "left",
@@ -679,13 +928,23 @@ def process_scan(
             )
         )
 
-        right_path = (
+
+        # =================================================
+        # RIGHT EAR
+        # =================================================
+
+        right_result = (
             process_side(
                 scan,
                 "right",
                 workspace
             )
         )
+
+
+        # =================================================
+        # DATABASE COMPLETE
+        # =================================================
 
         update_scan(
             scan_id,
@@ -694,34 +953,76 @@ def process_scan(
                     "complete",
 
                 "left_stl_path":
-                    left_path,
+                    left_result[
+                        "stl_path"
+                    ],
 
                 "right_stl_path":
-                    right_path
+                    right_result[
+                        "stl_path"
+                    ]
             }
         )
 
-        send_completion_email(
-            scan,
-            left_path,
-            right_path
+
+        # =================================================
+        # EMAIL
+        # =================================================
+
+        try:
+
+            send_completion_email(
+
+                scan,
+
+                left_result[
+                    "stl_path"
+                ],
+
+                right_result[
+                    "stl_path"
+                ]
+
+            )
+
+        except Exception as email_error:
+
+            print(
+                "WARNING:"
+            )
+
+            print(
+                "STLs completed, but email failed:"
+            )
+
+            print(
+                email_error
+            )
+
+
+        print(
+            "\nSCAN COMPLETE:"
         )
 
         print(
-            "SCAN COMPLETE:",
             scan_id
         )
+
 
     except Exception as error:
 
         print(
-            "SCAN FAILED:",
+            "\nSCAN FAILED:"
+        )
+
+        print(
             scan_id
         )
 
         print(
             error
         )
+
 
         update_scan(
             scan_id,
@@ -730,6 +1031,7 @@ def process_scan(
                     "failed"
             }
         )
+
 
         raise
 
@@ -761,6 +1063,7 @@ def get_pending_scans():
         .execute()
     )
 
+
     return (
         response.data
         or []
@@ -774,24 +1077,48 @@ def get_pending_scans():
 def main():
 
     print(
-        "Hammer Craft Reconstruction Worker"
+        "============================================"
     )
+
+    print(
+        "HAMMER CRAFT RECONSTRUCTION WORKER"
+    )
+
+    print(
+        "============================================"
+    )
+
 
     print(
         "Supabase:",
         SUPABASE_URL
     )
 
+
     print(
         "Bucket:",
         SUPABASE_BUCKET
     )
+
+
+    print(
+        "Work directory:",
+        WORK_ROOT
+    )
+
+
+    print(
+        "Minimum images per ear:",
+        MIN_IMAGES_PER_EAR
+    )
+
 
     print(
         "Polling every",
         POLL_SECONDS,
         "seconds."
     )
+
 
     while True:
 
@@ -801,6 +1128,7 @@ def main():
                 get_pending_scans()
             )
 
+
             if not scans:
 
                 time.sleep(
@@ -808,6 +1136,7 @@ def main():
                 )
 
                 continue
+
 
             for scan in scans:
 
@@ -824,6 +1153,7 @@ def main():
                         error
                     )
 
+
         except KeyboardInterrupt:
 
             print(
@@ -832,6 +1162,7 @@ def main():
 
             break
 
+
         except Exception as error:
 
             print(
@@ -839,10 +1170,12 @@ def main():
                 error
             )
 
+
             time.sleep(
                 POLL_SECONDS
             )
 
 
 if __name__ == "__main__":
+
     main()
