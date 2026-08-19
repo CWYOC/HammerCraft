@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Admin | Hammer Craft
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="admin.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="admin-header">
+
+    <a
+        href="index.html"
+        class="admin-brand"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+    </a>
+
+
+    <div class="admin-header-right">
+
+        <span id="adminEmail">
+            ADMIN
+        </span>
+
+        <button id="adminLogoutButton">
+            LOGOUT
+        </button>
+
+    </div>
+
+</header>
+
+
+
+<main class="admin-page">
+
+
+    <section class="admin-hero">
+
+        <div class="eyebrow">
+            HAMMER CRAFT / INTERNAL
+        </div>
+
+
+        <h1>
+
+            Admin
+
+            <em>
+                dashboard.
+            </em>
+
+        </h1>
+
+
+        <p>
+
+            Customer ear scans,
+            reconstruction jobs and generated
+            STL files.
+
+        </p>
+
+    </section>
+
+
+
+    <section class="admin-stats">
+
+
+        <article>
+
+            <span>
+                TOTAL SCANS
+            </span>
+
+            <strong id="totalScans">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                PROCESSING
+            </span>
+
+            <strong id="processingScans">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                COMPLETE
+            </span>
+
+            <strong id="completeScans">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                FAILED
+            </span>
+
+            <strong id="failedScans">
+                —
+            </strong>
+
+        </article>
+
+
+    </section>
+
+
+
+    <section class="admin-scans">
+
+
+        <div class="admin-section-heading">
+
+
+            <div>
+
+                <div class="eyebrow">
+                    DIGITAL FIT
+                </div>
+
+                <h2>
+                    Ear scans.
+                </h2>
+
+            </div>
+
+
+            <button
+                id="refreshAdminButton"
+                class="refresh-button"
+            >
+                REFRESH
+            </button>
+
+
+        </div>
+
+
+
+        <div
+            id="adminScanList"
+            class="admin-scan-list"
+        >
+
+            <div class="admin-loading">
+                Loading scans...
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js"></script>
+
+<script src="admin.js"></script>
+
+
+</body>
+
+</html>

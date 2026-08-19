@@ -9,7 +9,7 @@ const hcAuth =
 
 
 /* =========================================================
-   HELPERS
+   MESSAGE HELPER
 ========================================================= */
 
 
@@ -20,9 +20,7 @@ function setMessage(
 ) {
 
     if (!element) {
-
         return;
-
     }
 
 
@@ -36,14 +34,21 @@ function setMessage(
 
     if (type) {
 
-        element.classList.add(
-            type
-        );
+        element
+            .classList
+            .add(
+                type
+            );
 
     }
 
 }
 
+
+
+/* =========================================================
+   GET SESSION
+========================================================= */
 
 
 async function getSession() {
@@ -70,6 +75,53 @@ async function getSession() {
 
 
     return data.session;
+
+}
+
+
+
+/* =========================================================
+   CHECK ADMIN
+========================================================= */
+
+
+async function isAdmin(
+    userID
+) {
+
+    const {
+        data,
+        error
+    } =
+        await hcAuth
+            .from(
+                "admin_users"
+            )
+            .select(
+                "user_id"
+            )
+            .eq(
+                "user_id",
+                userID
+            )
+            .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "Admin check error:",
+            error
+        );
+
+        return false;
+
+    }
+
+
+    return Boolean(
+        data
+    );
 
 }
 
@@ -194,9 +246,8 @@ if (registerForm) {
 
                             },
 
-
                             emailRedirectTo:
-                                "https://www.hammer-craft.co.uk/account.html"
+                                "https://www.hammer-craft.co.uk/login.html"
 
                         }
 
@@ -204,11 +255,6 @@ if (registerForm) {
 
 
             if (error) {
-
-                console.error(
-                    error
-                );
-
 
                 setMessage(
                     message,
@@ -225,8 +271,17 @@ if (registerForm) {
                 data.session
             ) {
 
+                const admin =
+                    await isAdmin(
+                        data.user.id
+                    );
+
+
                 window.location.href =
-                    "account.html";
+                    admin
+                    ? "admin.html"
+                    : "account.html";
+
 
                 return;
 
@@ -234,13 +289,9 @@ if (registerForm) {
 
 
             setMessage(
-
                 message,
-
-                "Account created. Please check your email and confirm your address before logging in.",
-
+                "Account created. Please check your email to confirm your address.",
                 "success"
-
             );
 
         }
@@ -310,37 +361,20 @@ if (loginForm) {
                     .signInWithPassword({
 
                         email,
-
                         password
 
                     });
 
 
-            if (error) {
-
-                console.error(
-                    error
-                );
-
-
-                setMessage(
-                    message,
-                    error.message,
-                    "error"
-                );
-
-                return;
-
-            }
-
-
             if (
-                !data.session
+                error ||
+                !data.user
             ) {
 
                 setMessage(
                     message,
-                    "Login was not completed.",
+                    error?.message ||
+                    "Unable to login.",
                     "error"
                 );
 
@@ -349,8 +383,64 @@ if (loginForm) {
             }
 
 
-            window.location.href =
-                "account.html";
+            setMessage(
+                message,
+                "Checking account..."
+            );
+
+
+            const admin =
+                await isAdmin(
+                    data.user.id
+                );
+
+
+            /*
+                Optional return page.
+
+                If customer was sent to login
+                from ear-scan.html, return them
+                to that page.
+
+                Admin always goes to admin.html.
+            */
+
+            const returnPage =
+                sessionStorage.getItem(
+                    "hc-after-login"
+                );
+
+
+            sessionStorage.removeItem(
+                "hc-after-login"
+            );
+
+
+            if (admin) {
+
+                window.location.replace(
+                    "admin.html"
+                );
+
+                return;
+
+            }
+
+
+            if (returnPage) {
+
+                window.location.replace(
+                    returnPage
+                );
+
+                return;
+
+            }
+
+
+            window.location.replace(
+                "account.html"
+            );
 
         }
 
@@ -361,7 +451,7 @@ if (loginForm) {
 
 
 /* =========================================================
-   PASSWORD RESET EMAIL
+   PASSWORD RESET
 ========================================================= */
 
 
@@ -409,7 +499,7 @@ if (forgotPasswordButton) {
 
                 setMessage(
                     message,
-                    "Sending reset email..."
+                    "Sending password reset email..."
                 );
 
 
@@ -482,8 +572,9 @@ if (logoutButton) {
                 .signOut();
 
 
-            window.location.href =
-                "index.html";
+            window.location.replace(
+                "index.html"
+            );
 
         }
 
@@ -494,7 +585,7 @@ if (logoutButton) {
 
 
 /* =========================================================
-   ACCOUNT PAGE
+   LOAD CUSTOMER ACCOUNT
 ========================================================= */
 
 
@@ -507,9 +598,7 @@ async function loadAccountPage() {
 
 
     if (!accountPage) {
-
         return;
-
     }
 
 
@@ -532,10 +621,26 @@ async function loadAccountPage() {
         session.user;
 
 
+    /*
+        If an admin manually opens account.html,
+        send them to admin.html.
+    */
 
-    /* ===============================
-       PROFILE
-    =============================== */
+    const admin =
+        await isAdmin(
+            user.id
+        );
+
+
+    if (admin) {
+
+        window.location.replace(
+            "admin.html"
+        );
+
+        return;
+
+    }
 
 
     const {
@@ -547,7 +652,7 @@ async function loadAccountPage() {
                 "profiles"
             )
             .select(
-                "id, email, full_name, created_at"
+                "id,email,full_name,created_at"
             )
             .eq(
                 "id",
@@ -556,41 +661,44 @@ async function loadAccountPage() {
             .maybeSingle();
 
 
-    if (
-        profileError
-    ) {
+    if (profileError) {
 
         console.error(
-            "Profile error:",
             profileError
         );
 
     }
 
 
-    document
-        .getElementById(
+    const nameElement =
+        document.getElementById(
             "customerName"
-        )
-        .textContent =
-        profile?.full_name ||
-        user.user_metadata
-            ?.full_name ||
-        "Hammer Craft Customer";
+        );
 
 
-    document
-        .getElementById(
+    if (nameElement) {
+
+        nameElement.textContent =
+            profile?.full_name ||
+            user.user_metadata
+                ?.full_name ||
+            "Hammer Craft Customer";
+
+    }
+
+
+    const emailElement =
+        document.getElementById(
             "customerEmail"
-        )
-        .textContent =
-        user.email;
+        );
 
 
+    if (emailElement) {
 
-    /* ===============================
-       EAR SCANS
-    =============================== */
+        emailElement.textContent =
+            user.email;
+
+    }
 
 
     const {
@@ -632,12 +740,14 @@ async function loadAccountPage() {
         );
 
 
-    if (
-        scansError
-    ) {
+    if (!list) {
+        return;
+    }
+
+
+    if (scansError) {
 
         console.error(
-            "Scan history error:",
             scansError
         );
 
@@ -670,8 +780,7 @@ async function loadAccountPage() {
                 </strong>
 
                 <p>
-                    Create your first digital
-                    ear capture.
+                    Create your first digital ear capture.
                 </p>
 
                 <a href="ear-scan.html">
@@ -735,7 +844,7 @@ async function loadAccountPage() {
                     </span>
 
                     <strong>
-                        ${formatStatus(scan.status)}
+                        ${String(scan.status).toUpperCase()}
                     </strong>
 
                 </div>
@@ -779,9 +888,7 @@ async function loadAccountPage() {
 
 
                 <div class="scan-id">
-
                     ${scan.id}
-
                 </div>
 
             `;
@@ -799,47 +906,9 @@ async function loadAccountPage() {
 
 
 
-function formatStatus(
-    status
-) {
-
-    switch (status) {
-
-        case "capturing":
-
-            return "CAPTURING";
-
-
-        case "uploaded":
-
-            return "UPLOADED";
-
-
-        case "processing":
-
-            return "PROCESSING";
-
-
-        case "complete":
-
-            return "COMPLETE";
-
-
-        case "failed":
-
-            return "NEEDS REVIEW";
-
-
-        default:
-
-            return String(
-                status
-            ).toUpperCase();
-
-    }
-
-}
-
+/* =========================================================
+   INITIALISE
+========================================================= */
 
 
 loadAccountPage();
