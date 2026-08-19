@@ -1,4 +1,16 @@
-* {
+/* =========================================================
+   HAMMER CRAFT
+   DIGITAL EAR SCANNER
+========================================================= */
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -6,23 +18,34 @@
 
 
 :root {
-
     --paper: #f1ede6;
     --paper-dark: #e7e0d6;
+
     --ink: #252321;
+
     --brown: #9a6537;
+
     --muted: #706b64;
+
     --line: rgba(37, 35, 33, 0.16);
 
+    --header-height: 78px;
 }
 
 
 html {
+    width: 100%;
+    min-height: 100%;
+
     scroll-behavior: smooth;
 }
 
 
 body {
+    width: 100%;
+    min-height: 100vh;
+
+    overflow-x: hidden;
 
     background: var(--paper);
 
@@ -32,60 +55,79 @@ body {
         Arial,
         Helvetica,
         sans-serif;
-
 }
 
 
-button {
+button,
+input {
     font: inherit;
 }
 
 
+button {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+
+img {
+    display: block;
+    max-width: 100%;
+}
+
+
+a {
+    color: inherit;
+}
+
+
+
+/* =========================================================
+   FIXED HEADER
+========================================================= */
+
 .scan-header {
+    width: 100%;
+    height: var(--header-height);
 
-    height: 76px;
-
-    padding:
-        0
-        5vw;
+    padding: 0 5vw;
 
     position: fixed;
 
     top: 0;
     left: 0;
 
-    z-index: 100;
-
-    width: 100%;
-
-    background:
-        rgba(
-            241,
-            237,
-            230,
-            0.96
-        );
-
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-
-    border-bottom:
-        1px solid
-        var(--line);
+    z-index: 9999;
 
     display: flex;
 
     align-items: center;
 
-    justify-content:
-        space-between;
+    justify-content: space-between;
 
+    gap: 30px;
+
+    background: rgba(241, 237, 230, 0.96);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border-bottom: 1px solid var(--line);
 }
 
 
-.brand {
 
-    display: flex;
+/* =========================================================
+   HEADER BRAND
+========================================================= */
+
+.scan-header .brand {
+    width: auto;
+    height: 100%;
+
+    flex: 0 0 auto;
+
+    display: inline-flex;
 
     align-items: center;
 
@@ -97,231 +139,246 @@ button {
 
     font-size: 10px;
 
-    font-weight: bold;
+    font-weight: 700;
 
     letter-spacing: 3px;
-
 }
 
 
-.brand img {
+/*
+   VERY IMPORTANT
 
-    width: 46px;
+   This explicitly prevents logo.png
+   from becoming huge.
+*/
 
-    height: 46px;
+.scan-header .brand img {
+    width: 46px !important;
+    height: 46px !important;
+
+    max-width: 46px !important;
+    max-height: 46px !important;
+
+    min-width: 46px;
 
     object-fit: contain;
 
+    flex: 0 0 46px;
 }
 
 
-.header-status {
+.scan-header .brand span {
+    display: block;
 
-    color: var(--brown);
+    white-space: nowrap;
+}
+
+
+
+/* =========================================================
+   CUSTOMER ACCOUNT AREA
+========================================================= */
+
+.scan-user {
+    min-width: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 20px;
+}
+
+
+.scan-user > span {
+    max-width: 250px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    color: var(--muted);
 
     font-size: 8px;
 
-    font-weight: bold;
-
-    letter-spacing: 2px;
-
+    letter-spacing: 1px;
 }
 
+
+.scan-user a {
+    padding: 11px 15px;
+
+    border: 1px solid var(--ink);
+
+    color: var(--ink);
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.5px;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.scan-user a:hover {
+    background: var(--ink);
+
+    color: white;
+}
+
+
+
+/* =========================================================
+   MAIN PAGE
+========================================================= */
 
 main {
+    width: 100%;
 
-    padding-top: 76px;
+    min-height: 100vh;
 
+    padding-top: var(--header-height);
 }
 
 
-.screen {
 
-    display: none;
+/* =========================================================
+   SCREENS
+========================================================= */
+
+.screen {
+    width: 100%;
 
     min-height:
         calc(
-            100vh - 76px
+            100vh - var(--header-height)
         );
 
-    padding:
-        80px
-        7vw;
+    display: none;
 
+    padding:
+        clamp(65px, 8vw, 110px)
+        7vw;
 }
 
 
 .screen.active {
-
     display: block;
-
 }
 
 
+
+/* =========================================================
+   TEXT
+========================================================= */
+
 .section-label {
+    margin-bottom: 0;
 
     color: var(--brown);
 
     font-size: 9px;
 
-    font-weight: bold;
+    font-weight: 700;
 
     letter-spacing: 3px;
 
+    line-height: 1.5;
 }
 
 
 .screen h1 {
-
     max-width: 1100px;
 
     margin-top: 28px;
 
+    color: var(--ink);
+
     font-size:
         clamp(
-            65px,
+            64px,
             9vw,
             130px
         );
 
     line-height: 0.86;
 
-    letter-spacing: -7px;
+    letter-spacing: -0.065em;
 
+    font-weight: 700;
 }
 
 
-.screen h1 span {
-
+.screen h1 em {
     display: block;
 
     color: var(--brown);
 
     font-family:
         Georgia,
+        "Times New Roman",
         serif;
 
     font-style: italic;
 
-    font-weight: normal;
-
+    font-weight: 400;
 }
 
 
 .screen h2 {
+    max-width: 1000px;
 
     margin-top: 25px;
 
+    color: var(--ink);
+
     font-size:
         clamp(
-            50px,
-            7vw,
-            95px
+            48px,
+            6vw,
+            90px
         );
 
     line-height: 0.9;
 
-    letter-spacing: -5px;
-
+    letter-spacing: -0.055em;
 }
 
 
 .lead {
-
-    max-width: 680px;
+    max-width: 700px;
 
     margin-top: 35px;
 
     color: var(--muted);
 
-    font-size: 18px;
+    font-size: 17px;
 
-    line-height: 1.7;
-
+    line-height: 1.75;
 }
 
 
-.primary-button,
-.secondary-button {
 
-    min-height: 56px;
-
-    padding:
-        0
-        22px;
-
-    border: none;
-
-    cursor: pointer;
-
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content:
-        space-between;
-
-    gap: 40px;
-
-    font-size: 9px;
-
-    font-weight: bold;
-
-    letter-spacing: 1.5px;
-
-}
-
-
-.primary-button {
-
-    background: var(--ink);
-
-    color: white;
-
-}
-
-
-.primary-button:hover {
-
-    background: var(--brown);
-
-}
-
-
-.primary-button:disabled {
-
-    opacity: 0.35;
-
-    cursor: not-allowed;
-
-}
-
-
-.secondary-button {
-
-    border:
-        1px solid
-        var(--ink);
-
-    background: transparent;
-
-    color: var(--ink);
-
-}
-
-
-.link-button {
-
-    margin-top: 35px;
-
-    text-decoration: none;
-
-}
-
+/* =========================================================
+   NOTICE
+========================================================= */
 
 .notice {
+    width: 100%;
 
-    max-width: 660px;
+    max-width: 650px;
 
     margin:
         40px
@@ -330,126 +387,201 @@ main {
 
     padding: 20px;
 
-    border:
-        1px solid
-        var(--line);
+    border: 1px solid var(--line);
 
     display: flex;
 
-    gap: 14px;
+    align-items: flex-start;
 
+    gap: 15px;
 }
 
 
 .notice-dot {
-
     width: 8px;
     height: 8px;
 
     margin-top: 5px;
 
+    flex: 0 0 8px;
+
     border-radius: 50%;
 
     background: var(--brown);
+}
 
+
+.notice strong {
+    font-size: 10px;
+
+    letter-spacing: 1px;
 }
 
 
 .notice p {
-
-    margin-top: 5px;
+    margin-top: 7px;
 
     color: var(--muted);
 
     font-size: 12px;
 
-}
-
-
-.privacy {
-
-    max-width: 600px;
-
-    margin-top: 20px;
-
-    color: var(--muted);
-
-    font-size: 10px;
-
     line-height: 1.6;
-
 }
 
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.primary-button,
+.secondary-button {
+    min-height: 56px;
+
+    padding:
+        0
+        22px;
+
+    border-radius: 0;
+
+    cursor: pointer;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 35px;
+
+    text-decoration: none;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.4px;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.primary-button {
+    border: 1px solid var(--ink);
+
+    background: var(--ink);
+
+    color: white;
+}
+
+
+.primary-button:hover {
+    background: var(--brown);
+
+    border-color: var(--brown);
+}
+
+
+.primary-button:disabled {
+    opacity: 0.35;
+
+    cursor: not-allowed;
+}
+
+
+.secondary-button {
+    border: 1px solid var(--ink);
+
+    background: transparent;
+
+    color: var(--ink);
+}
+
+
+.secondary-button:hover {
+    background: var(--ink);
+
+    color: white;
+}
+
+
+
+/* =========================================================
+   PREPARATION
+========================================================= */
 
 .instruction-list {
+    width: 100%;
 
     max-width: 850px;
 
-    margin-top: 60px;
-
+    margin-top: 55px;
 }
 
 
 .instruction-list article {
+    width: 100%;
 
     padding:
         24px
         0;
 
-    border-top:
-        1px solid
-        var(--line);
+    border-top: 1px solid var(--line);
 
     display: grid;
 
     grid-template-columns:
         60px
-        1fr;
+        minmax(0, 1fr);
 
     gap: 20px;
-
 }
 
 
 .instruction-list article > span {
-
     color: var(--brown);
 
     font-size: 9px;
 
+    font-weight: 700;
 }
 
 
 .instruction-list h3 {
+    font-size: 17px;
 
-    font-size: 18px;
-
+    letter-spacing: 0.5px;
 }
 
 
 .instruction-list p {
+    max-width: 550px;
 
-    max-width: 540px;
-
-    margin-top: 7px;
+    margin-top: 8px;
 
     color: var(--muted);
 
     font-size: 13px;
 
-    line-height: 1.6;
-
+    line-height: 1.65;
 }
 
 
 #prepContinueButton {
-
     margin-top: 40px;
-
 }
 
 
+
+/* =========================================================
+   EAR SELECTION
+========================================================= */
+
 .ear-options {
+    width: 100%;
 
     max-width: 850px;
 
@@ -458,25 +590,27 @@ main {
     display: grid;
 
     grid-template-columns:
-        1fr
-        1fr;
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
 
     gap: 20px;
-
 }
 
 
 .ear-option {
+    width: 100%;
 
     min-height: 170px;
 
     padding: 25px;
 
-    border:
-        1px solid
-        var(--line);
+    border: 1px solid var(--line);
 
     background: transparent;
+
+    color: var(--ink);
 
     cursor: pointer;
 
@@ -485,32 +619,32 @@ main {
     display: grid;
 
     grid-template-columns:
-        55px
-        1fr
-        30px;
-
-    gap: 20px;
+        50px
+        minmax(0, 1fr)
+        25px;
 
     align-items: center;
 
+    gap: 20px;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
 }
 
 
 .ear-option:hover {
-
     border-color: var(--brown);
 
+    background: var(--paper-dark);
 }
 
 
 .ear-code {
+    width: 44px;
+    height: 44px;
 
-    width: 45px;
-    height: 45px;
-
-    border:
-        1px solid
-        var(--ink);
+    border: 1px solid var(--ink);
 
     border-radius: 50%;
 
@@ -522,91 +656,89 @@ main {
 
     color: var(--brown);
 
-    font-weight: bold;
+    font-size: 14px;
 
+    font-weight: 700;
 }
 
 
 .ear-option strong {
-
-    font-size: 18px;
-
+    font-size: 17px;
 }
 
 
 .ear-option p {
-
     margin-top: 7px;
 
     color: var(--muted);
 
     font-size: 12px;
 
+    line-height: 1.5;
 }
 
 
-.arrow {
 
-    font-size: 20px;
+/* =========================================================
+   CAMERA HEADER
+========================================================= */
 
-}
+.camera-heading {
+    width: 100%;
 
+    max-width: 900px;
 
-.camera-screen {
-
-    padding-bottom: 50px;
-
-}
-
-
-.camera-top {
+    margin:
+        0
+        auto;
 
     display: flex;
 
     align-items: flex-end;
 
-    justify-content:
-        space-between;
+    justify-content: space-between;
 
     gap: 30px;
-
 }
 
 
-.camera-top h2 {
-
+.camera-heading h2 {
     margin-top: 10px;
 
     font-size:
         clamp(
             38px,
             5vw,
-            70px
+            60px
         );
-
 }
 
 
-.capture-counter {
+.camera-heading > strong {
+    padding-bottom: 7px;
 
     color: var(--muted);
 
-    font-size: 14px;
+    font-size: 12px;
 
+    white-space: nowrap;
 }
 
 
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
 .camera-wrapper {
+    width: min(100%, 900px);
 
-    width: 100%;
+    height: auto;
 
-    max-width: 900px;
-
-    aspect-ratio:
-        3 / 4;
+    aspect-ratio: 3 / 4;
 
     margin:
-        40px
+        35px
         auto
         0;
 
@@ -615,48 +747,54 @@ main {
     overflow: hidden;
 
     background: #111;
-
 }
 
 
 #camera {
-
-    width: 100%;
-
-    height: 100%;
-
-    object-fit: cover;
-
-}
-
-
-#captureCanvas {
-
-    display: none;
-
-}
-
-
-.camera-overlay {
+    width: 100% !important;
+    height: 100% !important;
 
     position: absolute;
 
     inset: 0;
 
-    pointer-events: none;
+    display: block;
 
+    object-fit: cover;
+
+    background: #111;
+}
+
+
+#captureCanvas {
+    display: none !important;
+}
+
+
+
+/* =========================================================
+   CAMERA OVERLAY
+========================================================= */
+
+.camera-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 5;
+
+    pointer-events: none;
 }
 
 
 .ear-guide {
-
-    width: 44%;
+    width: 43%;
     height: 56%;
 
     position: absolute;
 
-    top: 21%;
-    left: 28%;
+    top: 22%;
+    left: 28.5%;
 
     border:
         3px solid
@@ -669,9 +807,9 @@ main {
 
     border-radius:
         50%
-        44%
-        47%
-        42%;
+        42%
+        48%
+        43%;
 
     display: flex;
 
@@ -679,11 +817,21 @@ main {
 
     justify-content: center;
 
+    box-shadow:
+        0
+        0
+        0
+        9999px
+        rgba(
+            0,
+            0,
+            0,
+            0.08
+        );
 }
 
 
 .ear-guide span {
-
     padding:
         7px
         9px;
@@ -693,28 +841,28 @@ main {
             0,
             0,
             0,
-            0.55
+            0.6
         );
 
     color: white;
 
-    font-size: 8px;
+    font-size: 7px;
+
+    font-weight: 700;
 
     letter-spacing: 1px;
 
+    white-space: nowrap;
 }
 
 
-.direction-guide {
-
+.scan-direction {
     position: absolute;
 
     left: 50%;
-
     bottom: 25px;
 
-    transform:
-        translateX(-50%);
+    transform: translateX(-50%);
 
     padding:
         10px
@@ -725,55 +873,113 @@ main {
             0,
             0,
             0,
-            0.7
+            0.72
         );
 
     color: white;
 
     font-size: 9px;
 
-    font-weight: bold;
+    font-weight: 700;
 
     letter-spacing: 2px;
 
     white-space: nowrap;
-
 }
 
 
-.camera-help {
 
-    max-width: 900px;
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.coverage-panel {
+    width: min(100%, 900px);
 
     margin:
         25px
         auto
         0;
-
 }
 
 
-.camera-help h3 {
+.coverage-heading {
+    display: flex;
 
-    font-size: 22px;
+    align-items: center;
 
+    justify-content: space-between;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.3px;
 }
 
 
-.camera-help p {
+.coverage-bar {
+    width: 100%;
+    height: 8px;
 
-    margin-top: 8px;
+    margin-top: 10px;
+
+    overflow: hidden;
+
+    background: var(--paper-dark);
+}
+
+
+#coverageFill {
+    width: 0%;
+    height: 100%;
+
+    background: var(--brown);
+
+    transition:
+        width
+        0.2s ease;
+}
+
+
+
+/* =========================================================
+   SCAN INSTRUCTIONS
+========================================================= */
+
+.scan-message {
+    width: min(100%, 900px);
+
+    margin:
+        25px
+        auto
+        0;
+}
+
+
+.scan-message h3 {
+    font-size: 21px;
+}
+
+
+.scan-message p {
+    margin-top: 7px;
 
     color: var(--muted);
 
-    font-size: 14px;
+    font-size: 13px;
 
+    line-height: 1.6;
 }
 
 
-.camera-controls {
 
-    max-width: 900px;
+/* =========================================================
+   CAMERA CONTROLS
+========================================================= */
+
+.camera-controls {
+    width: min(100%, 900px);
 
     margin:
         25px
@@ -782,17 +988,21 @@ main {
 
     display: flex;
 
-    justify-content:
-        space-between;
+    align-items: center;
+
+    justify-content: space-between;
 
     gap: 15px;
-
 }
 
 
-.thumbnail-strip {
 
-    max-width: 900px;
+/* =========================================================
+   THUMBNAILS
+========================================================= */
+
+.thumbnail-strip {
+    width: min(100%, 900px);
 
     margin:
         25px
@@ -802,38 +1012,42 @@ main {
     display: grid;
 
     grid-template-columns:
-        repeat(8, 1fr);
+        repeat(
+            10,
+            minmax(0, 1fr)
+        );
 
-    gap: 6px;
-
+    gap: 5px;
 }
 
 
 .thumbnail {
+    width: 100%;
 
-    aspect-ratio: 1;
+    aspect-ratio: 1 / 1;
 
     overflow: hidden;
 
     background: var(--paper-dark);
-
 }
 
 
 .thumbnail img {
-
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
 
     object-fit: cover;
-
 }
 
 
-.complete-icon {
 
-    width: 72px;
-    height: 72px;
+/* =========================================================
+   COMPLETE
+========================================================= */
+
+.complete-icon {
+    width: 70px;
+    height: 70px;
 
     margin-bottom: 30px;
 
@@ -851,10 +1065,17 @@ main {
 
     font-size: 28px;
 
+    font-weight: 700;
 }
 
 
+
+/* =========================================================
+   REVIEW
+========================================================= */
+
 .review-grid {
+    width: 100%;
 
     max-width: 750px;
 
@@ -863,48 +1084,48 @@ main {
     display: grid;
 
     grid-template-columns:
-        1fr
-        1fr;
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
 
     gap: 20px;
-
 }
 
 
 .review-card {
+    min-height: 125px;
 
     padding: 25px;
 
-    border:
-        1px solid
-        var(--line);
-
+    border: 1px solid var(--line);
 }
 
 
 .review-card span {
-
     display: block;
-
-    margin-bottom: 10px;
 
     color: var(--brown);
 
-    font-size: 9px;
+    font-size: 8px;
 
-    letter-spacing: 2px;
+    font-weight: 700;
 
+    letter-spacing: 1.5px;
 }
 
 
 .review-card strong {
+    display: block;
+
+    margin-top: 12px;
 
     font-size: 20px;
-
 }
 
 
 .consent-row {
+    width: 100%;
 
     max-width: 750px;
 
@@ -915,9 +1136,7 @@ main {
 
     padding: 18px;
 
-    border:
-        1px solid
-        var(--line);
+    border: 1px solid var(--line);
 
     display: flex;
 
@@ -925,149 +1144,342 @@ main {
 
     gap: 12px;
 
-}
-
-
-.consent-row label {
-
     color: var(--muted);
 
     font-size: 12px;
 
     line-height: 1.6;
+}
 
+
+.consent-row input {
+    margin-top: 3px;
+
+    flex: 0 0 auto;
 }
 
 
 .upload-status {
-
     margin-top: 20px;
 
     color: var(--muted);
 
     font-size: 13px;
 
+    line-height: 1.5;
 }
 
 
-@media
-(max-width: 700px) {
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .screen {
+        padding:
+            70px
+            5vw;
+    }
+
+
+    .screen h1 {
+        font-size:
+            clamp(
+                60px,
+                11vw,
+                95px
+            );
+    }
+
+
+    .screen h2 {
+        font-size:
+            clamp(
+                46px,
+                8vw,
+                75px
+            );
+    }
+
+
+    .thumbnail-strip {
+        grid-template-columns:
+            repeat(
+                8,
+                minmax(0, 1fr)
+            );
+    }
+
+}
+
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    :root {
+        --header-height: 70px;
+    }
+
+
+    /* HEADER */
 
     .scan-header {
-
-        height: 70px;
+        height: var(--header-height);
 
         padding:
             0
             18px;
 
+        gap: 12px;
     }
 
 
-    main {
+    .scan-header .brand {
+        gap: 8px;
 
-        padding-top: 70px;
+        font-size: 8px;
 
+        letter-spacing: 2px;
     }
 
+
+    .scan-header .brand img {
+        width: 40px !important;
+        height: 40px !important;
+
+        max-width: 40px !important;
+        max-height: 40px !important;
+
+        min-width: 40px;
+
+        flex-basis: 40px;
+    }
+
+
+    .scan-user {
+        gap: 8px;
+    }
+
+
+    .scan-user > span {
+        display: none;
+    }
+
+
+    .scan-user a {
+        padding:
+            9px
+            11px;
+
+        font-size: 7px;
+    }
+
+
+    /* SCREENS */
 
     .screen {
-
         min-height:
             calc(
-                100vh - 70px
+                100vh - var(--header-height)
             );
 
         padding:
-            60px
-            18px;
-
+            55px
+            18px
+            70px;
     }
 
 
-    .header-status {
+    .section-label {
+        font-size: 7px;
 
-        display: none;
-
+        letter-spacing: 2px;
     }
 
 
     .screen h1 {
+        margin-top: 20px;
 
-        font-size: 58px;
+        font-size:
+            clamp(
+                52px,
+                16vw,
+                72px
+            );
 
-        letter-spacing: -4px;
+        line-height: 0.9;
 
+        letter-spacing: -0.055em;
     }
 
 
     .screen h2 {
+        font-size:
+            clamp(
+                44px,
+                13vw,
+                58px
+            );
 
-        font-size: 50px;
-
-        letter-spacing: -4px;
-
+        letter-spacing: -0.045em;
     }
 
 
-    .ear-options {
+    .lead {
+        margin-top: 28px;
 
+        font-size: 15px;
+    }
+
+
+    /* BUTTONS */
+
+    .primary-button,
+    .secondary-button {
+        width: 100%;
+
+        min-height: 55px;
+    }
+
+
+    /* INSTRUCTIONS */
+
+    .instruction-list {
+        margin-top: 45px;
+    }
+
+
+    .instruction-list article {
         grid-template-columns:
-            1fr;
+            38px
+            minmax(0, 1fr);
 
+        gap: 12px;
+    }
+
+
+    /* EAR OPTIONS */
+
+    .ear-options {
+        margin-top: 45px;
+
+        grid-template-columns: 1fr;
+    }
+
+
+    /* CAMERA */
+
+    .camera-heading {
+        align-items: flex-start;
+    }
+
+
+    .camera-heading h2 {
+        font-size: 44px;
     }
 
 
     .camera-wrapper {
-
         width:
             calc(
                 100% + 36px
             );
 
-        margin-left: -18px;
+        max-width: none;
+
+        margin:
+            30px
+            -18px
+            0;
 
         aspect-ratio:
             9 / 13;
-
     }
 
 
+    .ear-guide {
+        width: 50%;
+        height: 56%;
+
+        left: 25%;
+    }
+
+
+    /* CONTROLS */
+
     .camera-controls {
-
         flex-direction: column;
-
     }
 
 
     .camera-controls button {
-
         width: 100%;
+    }
 
+
+    /* THUMBNAILS */
+
+    .thumbnail-strip {
+        grid-template-columns:
+            repeat(
+                6,
+                minmax(0, 1fr)
+            );
+    }
+
+
+    /* REVIEW */
+
+    .review-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+
+/* =========================================================
+   VERY SMALL PHONES
+========================================================= */
+
+@media (max-width: 430px) {
+
+    .scan-header .brand span {
+        display: none;
+    }
+
+
+    .screen h1 {
+        font-size:
+            51px;
+    }
+
+
+    .screen h2 {
+        font-size:
+            43px;
+    }
+
+
+    .ear-guide {
+        width: 54%;
+
+        left: 23%;
     }
 
 
     .thumbnail-strip {
-
         grid-template-columns:
-            repeat(4, 1fr);
-
-    }
-
-
-    .review-grid {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
-    .primary-button,
-    .secondary-button {
-
-        width: 100%;
-
+            repeat(
+                5,
+                minmax(0, 1fr)
+            );
     }
 
 }

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Create your Hammer Craft customer account."
+    >
+
+    <title>
+        Create Account | Hammer Craft
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="auth.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="auth-header">
+
+    <a
+        href="index.html"
+        class="auth-brand"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+    </a>
+
+
+    <a
+        href="login.html"
+        class="header-button"
+    >
+        LOGIN
+    </a>
+
+</header>
+
+
+
+<main class="auth-page">
+
+
+    <section class="auth-intro">
+
+
+        <div class="eyebrow">
+            HAMMER CRAFT / CUSTOMER ACCOUNT
+        </div>
+
+
+        <h1>
+
+            Create your
+
+            <em>
+                account.
+            </em>
+
+        </h1>
+
+
+        <p>
+
+            Create a Hammer Craft account to
+            manage your digital ear scans,
+            custom tuning and future builds.
+
+        </p>
+
+
+        <div class="account-benefits">
+
+            <span>
+                EAR SCANS
+            </span>
+
+            <span>
+                CUSTOM TUNING
+            </span>
+
+            <span>
+                ORDERS
+            </span>
+
+        </div>
+
+
+    </section>
+
+
+
+    <section class="auth-panel">
+
+
+        <form id="registerForm">
+
+
+            <label>
+
+                FULL NAME
+
+                <input
+                    id="registerName"
+                    type="text"
+                    autocomplete="name"
+                    placeholder="Your name"
+                    required
+                >
+
+            </label>
+
+
+
+            <label>
+
+                EMAIL
+
+                <input
+                    id="registerEmail"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="you@example.com"
+                    required
+                >
+
+            </label>
+
+
+
+            <label>
+
+                PASSWORD
+
+                <input
+                    id="registerPassword"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Minimum 8 characters"
+                    minlength="8"
+                    required
+                >
+
+            </label>
+
+
+
+            <label>
+
+                CONFIRM PASSWORD
+
+                <input
+                    id="registerPasswordConfirm"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Repeat your password"
+                    minlength="8"
+                    required
+                >
+
+            </label>
+
+
+
+            <label class="check-row">
+
+                <input
+                    id="registerTerms"
+                    type="checkbox"
+                    required
+                >
+
+                <span>
+
+                    I agree to Hammer Craft processing
+                    my account information in accordance
+                    with its privacy terms.
+
+                </span>
+
+            </label>
+
+
+
+            <button
+                type="submit"
+                class="main-button"
+            >
+
+                <span>
+                    CREATE ACCOUNT
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </button>
+
+
+            <div
+                id="registerMessage"
+                class="form-message"
+            ></div>
+
+
+        </form>
+
+
+
+        <div class="auth-panel-footer">
+
+            Already registered?
+
+            <a href="login.html">
+                Log in
+            </a>
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js"></script>
+
+<script src="auth.js"></script>
+
+
+</body>
+
+</html>

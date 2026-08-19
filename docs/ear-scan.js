@@ -1,85 +1,43 @@
-/* =====================================================
-   HAMMER CRAFT WEB EAR SCANNER
-===================================================== */
+/* =========================================================
+   HAMMER CRAFT
+   CONTINUOUS EAR SCANNER
+========================================================= */
 
 
-const API_BASE =
-    "https://YOUR-BACKEND-DOMAIN.com";
+const db =
+    window.hcSupabase;
 
 
-const CAPTURE_ANGLES = [
+const TARGET_FRAMES =
+    45;
 
-    {
-        name: "Front view",
-        guide: "FRONT VIEW",
-        instruction:
-            "Position the ear squarely inside the guide."
-    },
 
-    {
-        name: "Front upper angle",
-        guide: "MOVE SLIGHTLY ABOVE",
-        instruction:
-            "Raise the camera slightly while keeping the ear centred."
-    },
+const MAX_FRAMES =
+    60;
 
-    {
-        name: "Top angle",
-        guide: "CAPTURE FROM ABOVE",
-        instruction:
-            "Move higher and angle the camera gently downward."
-    },
 
-    {
-        name: "Rear upper angle",
-        guide: "MOVE BEHIND THE EAR",
-        instruction:
-            "Move slowly towards the rear-upper side of the ear."
-    },
+const FRAME_INTERVAL =
+    300;
 
-    {
-        name: "Rear view",
-        guide: "REAR ANGLE",
-        instruction:
-            "Capture the rear side of the outer ear."
-    },
-
-    {
-        name: "Rear lower angle",
-        guide: "MOVE LOWER",
-        instruction:
-            "Move gradually towards the lower-rear angle."
-    },
-
-    {
-        name: "Bottom angle",
-        guide: "CAPTURE FROM BELOW",
-        instruction:
-            "Lower the camera and angle it slightly upward."
-    },
-
-    {
-        name: "Front lower angle",
-        guide: "RETURN TO FRONT",
-        instruction:
-            "Finish with a lower-front view of the ear."
-    }
-
-];
 
 
 const state = {
 
+    user: null,
+
+    scanID: null,
+
     stream: null,
 
-    currentSide: null,
+    side: null,
 
-    currentIndex: 0,
+    scanning: false,
+
+    timer: null,
 
     captures: {
 
         left: [],
-
         right: []
 
     }
@@ -87,10 +45,15 @@ const state = {
 };
 
 
+let previousSignature =
+    null;
 
-/* =====================================================
+
+
+/* =========================================================
    ELEMENTS
-===================================================== */
+========================================================= */
+
 
 const screens =
     document.querySelectorAll(
@@ -110,33 +73,33 @@ const canvas =
     );
 
 
-const cameraTitle =
+const frameCounter =
     document.getElementById(
-        "cameraTitle"
+        "frameCounter"
     );
 
 
-const angleTitle =
+const coverageFill =
     document.getElementById(
-        "angleTitle"
+        "coverageFill"
     );
 
 
-const angleInstruction =
+const coverageValue =
     document.getElementById(
-        "angleInstruction"
+        "coverageValue"
     );
 
 
-const directionGuide =
+const scanDirection =
     document.getElementById(
-        "directionGuide"
+        "scanDirection"
     );
 
 
-const captureIndex =
+const qualityMessage =
     document.getElementById(
-        "captureIndex"
+        "qualityMessage"
     );
 
 
@@ -146,100 +109,190 @@ const thumbnailStrip =
     );
 
 
+const uploadStatus =
+    document.getElementById(
+        "uploadStatus"
+    );
 
-/* =====================================================
-   SCREEN CONTROL
-===================================================== */
 
-function showScreen(id) {
 
-    screens.forEach(screen => {
+/* =========================================================
+   SCREENS
+========================================================= */
 
-        screen.classList.remove(
-            "active"
-        );
 
-    });
+function showScreen(
+    id
+) {
+
+    screens.forEach(
+        screen => {
+
+            screen
+                .classList
+                .remove(
+                    "active"
+                );
+
+        }
+    );
 
 
     document
-        .getElementById(id)
+        .getElementById(
+            id
+        )
         .classList
         .add(
             "active"
         );
 
 
-    window.scrollTo({
-
-        top: 0,
-
-        behavior:
-            "smooth"
-
-    });
+    window.scrollTo(
+        0,
+        0
+    );
 
 }
 
 
 
-/* =====================================================
-   CAMERA
-===================================================== */
-
-async function startCamera() {
-
-    try {
-
-        state.stream =
-            await navigator.mediaDevices
-                .getUserMedia({
-
-                    video: {
-
-                        facingMode: {
-                            ideal:
-                                "environment"
-                        },
-
-                        width: {
-                            ideal:
-                                1920
-                        },
-
-                        height: {
-                            ideal:
-                                1080
-                        }
-
-                    },
-
-                    audio: false
-
-                });
+/* =========================================================
+   AUTH
+========================================================= */
 
 
-        camera.srcObject =
-            state.stream;
+async function requireUser() {
+
+    const {
+        data,
+        error
+    } =
+        await db
+            .auth
+            .getSession();
 
 
-        await camera.play();
+    if (
+        error ||
+        !data.session
+    ) {
+
+        window.location.replace(
+            "login.html"
+        );
+
+        return null;
 
     }
 
-    catch (error) {
 
-        console.error(error);
+    return data.session.user;
+
+}
 
 
-        alert(
-            "Camera access is required. Please allow camera permission in your browser settings."
-        );
 
+/* =========================================================
+   CREATE SCAN
+========================================================= */
+
+
+async function createScan() {
+
+    if (
+        state.scanID
+    ) {
+
+        return;
+
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await db
+            .from(
+                "ear_scans"
+            )
+            .insert({
+
+                user_id:
+                    state.user.id,
+
+                status:
+                    "capturing",
+
+                left_image_count:
+                    0,
+
+                right_image_count:
+                    0
+
+            })
+            .select(
+                "id"
+            )
+            .single();
+
+
+    if (error) {
 
         throw error;
 
     }
+
+
+    state.scanID =
+        data.id;
+
+}
+
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+
+async function startCamera() {
+
+    state.stream =
+        await navigator
+            .mediaDevices
+            .getUserMedia({
+
+                video: {
+
+                    facingMode: {
+                        ideal:
+                            "environment"
+                    },
+
+                    width: {
+                        ideal:
+                            1920
+                    },
+
+                    height: {
+                        ideal:
+                            1080
+                    }
+
+                },
+
+                audio: false
+
+            });
+
+
+    camera.srcObject =
+        state.stream;
+
+
+    await camera.play();
 
 }
 
@@ -247,61 +300,67 @@ async function startCamera() {
 
 function stopCamera() {
 
-    if (!state.stream) {
+    stopCapture();
 
-        return;
+
+    if (
+        state.stream
+    ) {
+
+        state.stream
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
 
     }
 
 
-    state.stream
-        .getTracks()
-        .forEach(track => {
-
-            track.stop();
-
-        });
-
-
     state.stream =
-        null;
-
-
-    camera.srcObject =
         null;
 
 }
 
 
 
-/* =====================================================
-   START EAR
-===================================================== */
+/* =========================================================
+   START SIDE
+========================================================= */
 
-async function beginEar(side) {
 
-    state.currentSide =
+async function beginEar(
+    side
+) {
+
+    state.side =
         side;
 
 
-    state.currentIndex =
-        0;
-
-
-    state.captures[side] =
+    state.captures[
+        side
+    ] =
         [];
 
 
-    cameraTitle.textContent =
-        side.toUpperCase() +
-        " EAR";
+    previousSignature =
+        null;
 
 
     thumbnailStrip.innerHTML =
         "";
 
 
-    updateAngleUI();
+    document
+        .getElementById(
+            "cameraTitle"
+        )
+        .textContent =
+        side.toUpperCase() +
+        " EAR";
+
+
+    updateProgress();
 
 
     showScreen(
@@ -315,16 +374,119 @@ async function beginEar(side) {
 
 
 
-/* =====================================================
-   CAPTURE
-===================================================== */
+/* =========================================================
+   CONTINUOUS CAPTURE
+========================================================= */
 
-function captureFrame() {
+
+function startCapture() {
+
+    if (
+        state.scanning
+    ) {
+
+        stopCapture();
+
+        return;
+
+    }
+
+
+    state.scanning =
+        true;
+
+
+    document
+        .getElementById(
+            "startContinuousScanButton"
+        )
+        .textContent =
+        "STOP SCANNING";
+
+
+    qualityMessage.textContent =
+        "Move slowly around the ear.";
+
+
+    state.timer =
+        setInterval(
+
+            captureCandidate,
+
+            FRAME_INTERVAL
+
+        );
+
+}
+
+
+
+function stopCapture() {
+
+    state.scanning =
+        false;
+
+
+    if (
+        state.timer
+    ) {
+
+        clearInterval(
+            state.timer
+        );
+
+        state.timer =
+            null;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "startContinuousScanButton"
+        );
+
+
+    if (button) {
+
+        button.textContent =
+            "START SCANNING";
+
+    }
+
+}
+
+
+
+/* =========================================================
+   FRAME ANALYSIS
+========================================================= */
+
+
+function captureCandidate() {
 
     if (
         !camera.videoWidth ||
         !camera.videoHeight
     ) {
+
+        return;
+
+    }
+
+
+    const captured =
+        state.captures[
+            state.side
+        ];
+
+
+    if (
+        captured.length >=
+        MAX_FRAMES
+    ) {
+
+        finishEar();
 
         return;
 
@@ -339,13 +501,17 @@ function captureFrame() {
         camera.videoHeight;
 
 
-    const context =
+    const ctx =
         canvas.getContext(
-            "2d"
+            "2d",
+            {
+                willReadFrequently:
+                    true
+            }
         );
 
 
-    context.drawImage(
+    ctx.drawImage(
 
         camera,
 
@@ -358,42 +524,47 @@ function captureFrame() {
     );
 
 
+    const quality =
+        analyseFrame(
+            canvas
+        );
+
+
+    if (
+        !quality.accept
+    ) {
+
+        qualityMessage.textContent =
+            quality.message;
+
+        return;
+
+    }
+
+
     canvas.toBlob(
 
         blob => {
 
             if (!blob) {
-
                 return;
-
             }
 
 
-            const capture = {
+            captured.push({
 
                 blob,
 
-                angle:
-                    CAPTURE_ANGLES[
-                        state.currentIndex
-                    ].name,
+                sharpness:
+                    quality.sharpness,
 
-                index:
-                    state.currentIndex,
+                brightness:
+                    quality.brightness,
 
                 timestamp:
                     Date.now()
 
-            };
-
-
-            state
-                .captures[
-                    state.currentSide
-                ]
-                .push(
-                    capture
-                );
+            });
 
 
             addThumbnail(
@@ -401,22 +572,19 @@ function captureFrame() {
             );
 
 
-            state.currentIndex +=
-                1;
+            updateProgress();
+
+
+            qualityMessage.textContent =
+                "Frame accepted — keep moving slowly.";
 
 
             if (
-                state.currentIndex >=
-                CAPTURE_ANGLES.length
+                captured.length >=
+                TARGET_FRAMES
             ) {
 
-                completeCurrentEar();
-
-            }
-
-            else {
-
-                updateAngleUI();
+                finishEar();
 
             }
 
@@ -424,7 +592,7 @@ function captureFrame() {
 
         "image/jpeg",
 
-        0.94
+        .93
 
     );
 
@@ -432,48 +600,486 @@ function captureFrame() {
 
 
 
-/* =====================================================
-   ANGLE UI
-===================================================== */
-
-function updateAngleUI() {
-
-    const angle =
-        CAPTURE_ANGLES[
-            state.currentIndex
-        ];
+/* =========================================================
+   QUALITY ANALYSIS
+========================================================= */
 
 
-    captureIndex.textContent =
-        state.currentIndex + 1;
+function analyseFrame(
+    sourceCanvas
+) {
+
+    const width =
+        240;
 
 
-    angleTitle.textContent =
-        angle.name;
+    const height =
+        Math.round(
+
+            sourceCanvas.height *
+
+            width /
+
+            sourceCanvas.width
+
+        );
 
 
-    angleInstruction.textContent =
-        angle.instruction;
+    const sample =
+        document.createElement(
+            "canvas"
+        );
 
 
-    directionGuide.textContent =
-        angle.guide;
+    sample.width =
+        width;
+
+
+    sample.height =
+        height;
+
+
+    const ctx =
+        sample.getContext(
+            "2d",
+            {
+                willReadFrequently:
+                    true
+            }
+        );
+
+
+    ctx.drawImage(
+
+        sourceCanvas,
+
+        0,
+        0,
+
+        width,
+        height
+
+    );
+
+
+    const image =
+        ctx.getImageData(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+    const brightness =
+        averageBrightness(
+            image
+        );
+
+
+    const sharpness =
+        estimateSharpness(
+            image,
+            width,
+            height
+        );
+
+
+    const signature =
+        frameSignature(
+            image
+        );
+
+
+    if (
+        brightness <
+        40
+    ) {
+
+        return {
+
+            accept: false,
+
+            message:
+                "Image too dark.",
+
+            brightness,
+            sharpness
+
+        };
+
+    }
+
+
+    if (
+        brightness >
+        235
+    ) {
+
+        return {
+
+            accept: false,
+
+            message:
+                "Image too bright.",
+
+            brightness,
+            sharpness
+
+        };
+
+    }
+
+
+    if (
+        sharpness <
+        8
+    ) {
+
+        return {
+
+            accept: false,
+
+            message:
+                "Move more slowly — image is blurred.",
+
+            brightness,
+            sharpness
+
+        };
+
+    }
+
+
+    if (
+        previousSignature !==
+        null
+    ) {
+
+        const difference =
+            Math.abs(
+
+                signature -
+                previousSignature
+
+            );
+
+
+        if (
+            difference <
+            1.5
+        ) {
+
+            return {
+
+                accept: false,
+
+                message:
+                    "Move to a slightly different angle.",
+
+                brightness,
+                sharpness
+
+            };
+
+        }
+
+    }
+
+
+    previousSignature =
+        signature;
+
+
+    return {
+
+        accept: true,
+
+        message:
+            "Good frame.",
+
+        brightness,
+        sharpness
+
+    };
 
 }
 
 
 
-/* =====================================================
-   THUMBNAILS
-===================================================== */
+function averageBrightness(
+    image
+) {
 
-function addThumbnail(blob) {
+    const d =
+        image.data;
 
-    const url =
-        URL.createObjectURL(
-            blob
+
+    let sum =
+        0;
+
+
+    let count =
+        0;
+
+
+    for (
+        let i = 0;
+        i < d.length;
+        i += 4
+    ) {
+
+        sum +=
+            (
+                d[i] +
+                d[i + 1] +
+                d[i + 2]
+            ) / 3;
+
+
+        count++;
+
+    }
+
+
+    return sum /
+        count;
+
+}
+
+
+
+function estimateSharpness(
+    image,
+    width,
+    height
+) {
+
+    const d =
+        image.data;
+
+
+    let score =
+        0;
+
+
+    let count =
+        0;
+
+
+    for (
+        let y = 1;
+        y < height - 1;
+        y += 2
+    ) {
+
+        for (
+            let x = 1;
+            x < width - 1;
+            x += 2
+        ) {
+
+            const p =
+                (
+                    y *
+                    width +
+                    x
+                ) * 4;
+
+
+            const p2 =
+                (
+                    y *
+                    width +
+                    x + 1
+                ) * 4;
+
+
+            const a =
+                (
+                    d[p] +
+                    d[p + 1] +
+                    d[p + 2]
+                ) / 3;
+
+
+            const b =
+                (
+                    d[p2] +
+                    d[p2 + 1] +
+                    d[p2 + 2]
+                ) / 3;
+
+
+            score +=
+                Math.abs(
+                    a - b
+                );
+
+
+            count++;
+
+        }
+
+    }
+
+
+    return score /
+        count;
+
+}
+
+
+
+function frameSignature(
+    image
+) {
+
+    const d =
+        image.data;
+
+
+    let sum =
+        0;
+
+
+    let count =
+        0;
+
+
+    for (
+        let i = 0;
+        i < d.length;
+        i += 120
+    ) {
+
+        sum +=
+            d[i] +
+            d[i + 1] +
+            d[i + 2];
+
+
+        count++;
+
+    }
+
+
+    return sum /
+        count /
+        3;
+
+}
+
+
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+
+function updateProgress() {
+
+    const count =
+        state.side
+        ? state.captures[
+            state.side
+        ].length
+        : 0;
+
+
+    const percentage =
+        Math.min(
+
+            100,
+
+            Math.round(
+
+                count /
+
+                TARGET_FRAMES *
+
+                100
+
+            )
+
         );
 
+
+    frameCounter.textContent =
+
+        `${count} / ${TARGET_FRAMES}`;
+
+
+    coverageValue.textContent =
+
+        `${percentage}%`;
+
+
+    coverageFill.style.width =
+
+        `${percentage}%`;
+
+
+
+    if (
+        count < 10
+    ) {
+
+        scanDirection.textContent =
+            "MOVE SLOWLY TO THE SIDE";
+
+    }
+
+
+    else if (
+        count < 20
+    ) {
+
+        scanDirection.textContent =
+            "MOVE SLIGHTLY ABOVE";
+
+    }
+
+
+    else if (
+        count < 30
+    ) {
+
+        scanDirection.textContent =
+            "MOVE TOWARDS THE REAR";
+
+    }
+
+
+    else if (
+        count < 40
+    ) {
+
+        scanDirection.textContent =
+            "MOVE SLIGHTLY BELOW";
+
+    }
+
+
+    else {
+
+        scanDirection.textContent =
+            "RETURN TOWARDS FRONT";
+
+    }
+
+}
+
+
+
+/* =========================================================
+   THUMBNAIL
+========================================================= */
+
+
+function addThumbnail(
+    blob
+) {
 
     const wrapper =
         document.createElement(
@@ -492,7 +1098,9 @@ function addThumbnail(blob) {
 
 
     image.src =
-        url;
+        URL.createObjectURL(
+            blob
+        );
 
 
     wrapper.appendChild(
@@ -508,11 +1116,15 @@ function addThumbnail(blob) {
 
 
 
-/* =====================================================
-   EAR COMPLETE
-===================================================== */
+/* =========================================================
+   COMPLETE SIDE
+========================================================= */
 
-function completeCurrentEar() {
+
+function finishEar() {
+
+    stopCapture();
+
 
     stopCamera();
 
@@ -522,10 +1134,13 @@ function completeCurrentEar() {
             "earCompleteTitle"
         )
         .textContent =
-        state.currentSide ===
-            "left"
-            ? "Left ear complete."
-            : "Right ear complete.";
+
+        state.side ===
+        "left"
+
+        ? "Left ear complete."
+
+        : "Right ear complete.";
 
 
     showScreen(
@@ -536,31 +1151,32 @@ function completeCurrentEar() {
 
 
 
-function otherSide() {
+function oppositeEar() {
 
-    return state.currentSide ===
+    return state.side ===
         "left"
+
         ? "right"
+
         : "left";
 
 }
 
 
 
-/* =====================================================
+/* =========================================================
    REVIEW
-===================================================== */
+========================================================= */
 
-function showReview() {
 
-    stopCamera();
-
+function review() {
 
     document
         .getElementById(
             "leftCount"
         )
         .textContent =
+
         `${state.captures.left.length} images`;
 
 
@@ -569,6 +1185,7 @@ function showReview() {
             "rightCount"
         )
         .textContent =
+
         `${state.captures.right.length} images`;
 
 
@@ -580,146 +1197,218 @@ function showReview() {
 
 
 
-/* =====================================================
-   SESSION
-===================================================== */
-
-function getSessionID() {
-
-    let session =
-        sessionStorage.getItem(
-            "hc-scan-session"
-        );
+/* =========================================================
+   STORAGE
+========================================================= */
 
 
-    if (!session) {
+async function uploadFile(
+    side,
+    index,
+    capture
+) {
 
-        session =
-            crypto.randomUUID
-                ? crypto.randomUUID()
-                : "HC-" +
-                  Date.now();
+    const filename =
+        String(
+            index + 1
+        )
+        .padStart(
+            3,
+            "0"
+        ) +
+        ".jpg";
 
 
-        sessionStorage.setItem(
+    const path =
 
-            "hc-scan-session",
+        `${state.user.id}/` +
+        `${state.scanID}/` +
+        `${side}/` +
+        filename;
 
-            session
 
-        );
+    const {
+        error
+    } =
+        await db
+            .storage
+            .from(
+                "ear-scans"
+            )
+            .upload(
+
+                path,
+
+                capture.blob,
+
+                {
+
+                    contentType:
+                        "image/jpeg",
+
+                    upsert:
+                        false
+
+                }
+
+            );
+
+
+    if (error) {
+
+        throw error;
 
     }
-
-
-    return session;
 
 }
 
 
 
-/* =====================================================
-   UPLOAD
-===================================================== */
+/* =========================================================
+   UPLOAD ALL
+========================================================= */
 
-async function uploadCaptures() {
 
-    const uploadButton =
+async function uploadAll() {
+
+    let done =
+        0;
+
+
+    const total =
+
+        state.captures.left.length +
+
+        state.captures.right.length;
+
+
+    for (
+        const side
+        of
+        [
+            "left",
+            "right"
+        ]
+    ) {
+
+        for (
+
+            let i = 0;
+
+            i <
+            state.captures[
+                side
+            ].length;
+
+            i++
+
+        ) {
+
+            uploadStatus.textContent =
+
+                `Uploading ${done + 1} / ${total}`;
+
+
+            await uploadFile(
+
+                side,
+
+                i,
+
+                state.captures[
+                    side
+                ][i]
+
+            );
+
+
+            done++;
+
+        }
+
+    }
+
+}
+
+
+
+/* =========================================================
+   MARK DATABASE UPLOADED
+========================================================= */
+
+
+async function markUploaded() {
+
+    const {
+        error
+    } =
+        await db
+            .from(
+                "ear_scans"
+            )
+            .update({
+
+                status:
+                    "uploaded",
+
+                left_image_count:
+                    state.captures.left.length,
+
+                right_image_count:
+                    state.captures.right.length,
+
+                updated_at:
+                    new Date()
+                        .toISOString()
+
+            })
+            .eq(
+                "id",
+                state.scanID
+            );
+
+
+    if (error) {
+
+        throw error;
+
+    }
+
+}
+
+
+
+/* =========================================================
+   SAVE
+========================================================= */
+
+
+async function saveScan() {
+
+    const button =
         document.getElementById(
             "uploadButton"
         );
 
 
-    const status =
-        document.getElementById(
-            "uploadStatus"
-        );
-
-
-    uploadButton.disabled =
+    button.disabled =
         true;
-
-
-    status.textContent =
-        "Uploading images...";
 
 
     try {
 
-        const form =
-            new FormData();
+        uploadStatus.textContent =
+            "Uploading source images...";
 
 
-        const session =
-            getSessionID();
+        await uploadAll();
 
 
-        form.append(
-            "session",
-            session
-        );
+        uploadStatus.textContent =
+            "Creating reconstruction job...";
 
 
-        for (
-            const side
-            of
-            ["left", "right"]
-        ) {
-
-            state.captures[
-                side
-            ]
-            .forEach(
-                (
-                    capture,
-                    index
-                ) => {
-
-                    form.append(
-
-                        `${side}Images`,
-
-                        capture.blob,
-
-                        `${side}-${String(index + 1).padStart(2, "0")}.jpg`
-
-                    );
-
-                }
-            );
-
-        }
-
-
-        const response =
-            await fetch(
-
-                `${API_BASE}/api/ear-scans`,
-
-                {
-
-                    method:
-                        "POST",
-
-                    body:
-                        form
-
-                }
-
-            );
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Upload failed"
-            );
-
-        }
-
-
-        status.textContent =
-            "Upload complete.";
+        await markUploaded();
 
 
         showScreen(
@@ -728,16 +1417,21 @@ async function uploadCaptures() {
 
     }
 
-    catch (error) {
 
-        console.error(error);
+    catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
 
 
-        status.textContent =
+        uploadStatus.textContent =
             "Upload failed. Please try again.";
 
 
-        uploadButton.disabled =
+        button.disabled =
             false;
 
     }
@@ -746,24 +1440,40 @@ async function uploadCaptures() {
 
 
 
-/* =====================================================
-   BUTTON EVENTS
-===================================================== */
+/* =========================================================
+   EVENTS
+========================================================= */
+
 
 document
     .getElementById(
         "beginButton"
     )
-    .addEventListener(
-        "click",
-        () => {
+    .onclick =
+    async () => {
+
+        try {
+
+            await createScan();
+
 
             showScreen(
                 "prepScreen"
             );
 
         }
-    );
+
+        catch (
+            error
+        ) {
+
+            alert(
+                "Unable to create scan."
+            );
+
+        }
+
+    };
 
 
 
@@ -771,16 +1481,11 @@ document
     .getElementById(
         "prepContinueButton"
     )
-    .addEventListener(
-        "click",
-        () => {
-
-            showScreen(
-                "selectionScreen"
-            );
-
-        }
-    );
+    .onclick =
+    () =>
+        showScreen(
+            "selectionScreen"
+        );
 
 
 
@@ -788,31 +1493,29 @@ document
     .querySelectorAll(
         ".ear-option"
     )
-    .forEach(button => {
+    .forEach(
+        button => {
 
-        button.addEventListener(
-            "click",
-            async () => {
+            button.onclick =
+                async () => {
 
-                await beginEar(
-                    button.dataset.side
-                );
+                    await beginEar(
+                        button.dataset.side
+                    );
 
-            }
-        );
+                };
 
-    });
+        }
+    );
 
 
 
 document
     .getElementById(
-        "captureButton"
+        "startContinuousScanButton"
     )
-    .addEventListener(
-        "click",
-        captureFrame
-    );
+    .onclick =
+        startCapture;
 
 
 
@@ -820,19 +1523,17 @@ document
     .getElementById(
         "cancelScanButton"
     )
-    .addEventListener(
-        "click",
-        () => {
+    .onclick =
+    () => {
 
-            stopCamera();
+        stopCamera();
 
 
-            showScreen(
-                "selectionScreen"
-            );
+        showScreen(
+            "selectionScreen"
+        );
 
-        }
-    );
+    };
 
 
 
@@ -840,32 +1541,31 @@ document
     .getElementById(
         "scanOtherEarButton"
     )
-    .addEventListener(
-        "click",
-        async () => {
+    .onclick =
+    async () => {
 
-            const next =
-                otherSide();
-
-
-            if (
-                state.captures[next].length >
-                0
-            ) {
-
-                showReview();
-
-                return;
-
-            }
+        const next =
+            oppositeEar();
 
 
-            await beginEar(
+        if (
+            state.captures[
                 next
-            );
+            ].length
+        ) {
+
+            review();
+
+            return;
 
         }
-    );
+
+
+        await beginEar(
+            next
+        );
+
+    };
 
 
 
@@ -873,19 +1573,17 @@ document
     .getElementById(
         "consentCheckbox"
     )
-    .addEventListener(
-        "change",
-        event => {
+    .onchange =
+    event => {
 
-            document
-                .getElementById(
-                    "uploadButton"
-                )
-                .disabled =
-                !event.target.checked;
+        document
+            .getElementById(
+                "uploadButton"
+            )
+            .disabled =
+            !event.target.checked;
 
-        }
-    );
+    };
 
 
 
@@ -893,16 +1591,39 @@ document
     .getElementById(
         "uploadButton"
     )
-    .addEventListener(
-        "click",
-        uploadCaptures
-    );
+    .onclick =
+        saveScan;
 
 
 
-/* =====================================================
-   CLEANUP
-===================================================== */
+/* =========================================================
+   INITIALISE
+========================================================= */
+
+
+async function initialise() {
+
+    state.user =
+        await requireUser();
+
+
+    if (!state.user) {
+        return;
+    }
+
+
+    document
+        .getElementById(
+            "scanUserEmail"
+        )
+        .textContent =
+        state.user.email;
+
+}
+
+
+initialise();
+
 
 window.addEventListener(
     "beforeunload",

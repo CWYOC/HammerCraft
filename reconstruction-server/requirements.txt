@@ -1,0 +1,5 @@
+supabase>=2.0
+python-dotenv>=1.0
+trimesh>=4.0
+numpy>=1.26
+requests>=2.31

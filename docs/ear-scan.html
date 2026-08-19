@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -9,19 +10,13 @@
         content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     >
 
-    <meta
-        name="description"
-        content="Hammer Craft guided digital ear scanning."
-    >
-
-    <title>
-        Ear Scan | Hammer Craft
-    </title>
+    <title>Digital Ear Scan | Hammer Craft</title>
 
     <link
         rel="stylesheet"
         href="ear-scan.css"
     >
+
 </head>
 
 
@@ -47,8 +42,16 @@
     </a>
 
 
-    <div class="header-status">
-        DIGITAL FIT / BETA
+    <div class="scan-user">
+
+        <span id="scanUserEmail">
+            CHECKING ACCOUNT...
+        </span>
+
+        <a href="account.html">
+            ACCOUNT
+        </a>
+
     </div>
 
 </header>
@@ -68,7 +71,7 @@
 >
 
     <div class="section-label">
-        HAMMER CRAFT / DIGITAL EAR CAPTURE
+        HAMMER CRAFT / DIGITAL FIT
     </div>
 
 
@@ -76,39 +79,37 @@
 
         Scan your ears.
 
-        <span>
+        <em>
             No app required.
-        </span>
+        </em>
 
     </h1>
 
 
     <p class="lead">
 
-        Use your phone camera to capture your ear
-        from a series of guided angles.
+        Ask someone to slowly move your phone
+        around each ear.
 
-        The image set can then be reconstructed
-        into 3D geometry for review.
+        Hammer Craft will automatically capture
+        useful overlapping frames for 3D reconstruction.
 
     </p>
 
 
     <div class="notice">
 
-        <div class="notice-dot"></div>
+        <span class="notice-dot"></span>
 
         <div>
 
             <strong>
-                Camera permission required
+                CAMERA ACCESS REQUIRED
             </strong>
 
             <p>
-
-                Your browser will ask permission
-                before the camera is opened.
-
+                Your browser will ask for permission
+                when scanning begins.
             </p>
 
         </div>
@@ -120,17 +121,12 @@
         id="beginButton"
         class="primary-button"
     >
+
         BEGIN EAR SCAN
+
         <span>→</span>
+
     </button>
-
-
-    <p class="privacy">
-
-        Ear imagery should only be collected
-        for your custom-fit order with consent.
-
-    </p>
 
 </section>
 
@@ -160,9 +156,7 @@
 
         <article>
 
-            <span>
-                01
-            </span>
+            <span>01</span>
 
             <div>
 
@@ -171,8 +165,9 @@
                 </h3>
 
                 <p>
-                    Move hair away and remove earrings,
-                    earphones or anything covering the ear.
+                    Move all hair away and remove
+                    earrings or anything covering
+                    the ear.
                 </p>
 
             </div>
@@ -180,22 +175,19 @@
         </article>
 
 
-
         <article>
 
-            <span>
-                02
-            </span>
+            <span>02</span>
 
             <div>
 
                 <h3>
-                    GOOD LIGHTING
+                    BRIGHT EVEN LIGHT
                 </h3>
 
                 <p>
-                    Use bright, even lighting.
-                    Avoid strong shadows.
+                    Avoid strong shadows,
+                    reflections or very dark rooms.
                 </p>
 
             </div>
@@ -203,12 +195,9 @@
         </article>
 
 
-
         <article>
 
-            <span>
-                03
-            </span>
+            <span>03</span>
 
             <div>
 
@@ -217,8 +206,8 @@
                 </h3>
 
                 <p>
-                    Another person should hold the phone
-                    while you keep your head still.
+                    Keep your head still while
+                    another person moves the phone.
                 </p>
 
             </div>
@@ -226,12 +215,9 @@
         </article>
 
 
-
         <article>
 
-            <span>
-                04
-            </span>
+            <span>04</span>
 
             <div>
 
@@ -240,8 +226,9 @@
                 </h3>
 
                 <p>
-                    Keep approximately 15–25 cm away
-                    from the ear and move smoothly.
+                    Keep roughly 15–25 cm from the
+                    ear and maintain substantial
+                    overlap between views.
                 </p>
 
             </div>
@@ -256,8 +243,11 @@
         id="prepContinueButton"
         class="primary-button"
     >
+
         CONTINUE
+
         <span>→</span>
+
     </button>
 
 </section>
@@ -302,17 +292,16 @@
                 </strong>
 
                 <p>
-                    Begin with your left ear.
+                    Scan your left ear.
                 </p>
 
             </div>
 
-            <span class="arrow">
+            <span>
                 →
             </span>
 
         </button>
-
 
 
         <button
@@ -331,12 +320,12 @@
                 </strong>
 
                 <p>
-                    Begin with your right ear.
+                    Scan your right ear.
                 </p>
 
             </div>
 
-            <span class="arrow">
+            <span>
                 →
             </span>
 
@@ -355,10 +344,10 @@
 
 <section
     id="cameraScreen"
-    class="screen camera-screen"
+    class="screen"
 >
 
-    <div class="camera-top">
+    <div class="camera-heading">
 
         <div>
 
@@ -373,19 +362,9 @@
         </div>
 
 
-        <div class="capture-counter">
-
-            <span id="captureIndex">
-                1
-            </span>
-
-            /
-
-            <span id="captureTotal">
-                8
-            </span>
-
-        </div>
+        <strong id="frameCounter">
+            0 / 45
+        </strong>
 
     </div>
 
@@ -409,7 +388,6 @@
 
         <div class="camera-overlay">
 
-
             <div class="ear-guide">
 
                 <span>
@@ -420,12 +398,11 @@
 
 
             <div
-                id="directionGuide"
-                class="direction-guide"
+                id="scanDirection"
+                class="scan-direction"
             >
-                FRONT VIEW
+                START FROM FRONT
             </div>
-
 
         </div>
 
@@ -434,14 +411,39 @@
 
 
 
-    <div class="camera-help">
+    <div class="coverage-panel">
 
-        <h3 id="angleTitle">
-            Front view
+        <div class="coverage-heading">
+
+            <span>
+                SCAN PROGRESS
+            </span>
+
+            <strong id="coverageValue">
+                0%
+            </strong>
+
+        </div>
+
+
+        <div class="coverage-bar">
+
+            <div id="coverageFill"></div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="scan-message">
+
+        <h3 id="scanInstruction">
+            Position the ear inside the guide.
         </h3>
 
-        <p id="angleInstruction">
-            Position the ear in the centre of the guide.
+        <p id="qualityMessage">
+            Waiting to begin.
         </p>
 
     </div>
@@ -459,17 +461,19 @@
 
 
         <button
-            id="captureButton"
+            id="startContinuousScanButton"
             class="primary-button"
         >
-            CAPTURE
-            <span>●</span>
+            START SCANNING
         </button>
 
     </div>
 
 
-    <div class="thumbnail-strip" id="thumbnailStrip"></div>
+    <div
+        id="thumbnailStrip"
+        class="thumbnail-strip"
+    ></div>
 
 </section>
 
@@ -490,7 +494,7 @@
 
 
     <div class="section-label">
-        EAR CAPTURE COMPLETE
+        CAPTURE COMPLETE
     </div>
 
 
@@ -501,9 +505,8 @@
 
     <p class="lead">
 
-        We captured the required viewpoints.
-
-        You can now scan your other ear.
+        Enough useful frames were collected
+        for this side.
 
     </p>
 
@@ -512,8 +515,11 @@
         id="scanOtherEarButton"
         class="primary-button"
     >
+
         SCAN OTHER EAR
+
         <span>→</span>
+
     </button>
 
 </section>
@@ -535,25 +541,16 @@
 
 
     <h2>
-        Capture complete.
+        Both ears captured.
     </h2>
-
-
-    <p class="lead">
-
-        Both ears have been photographed
-        from the required viewpoints.
-
-    </p>
 
 
     <div class="review-grid">
 
-
         <div class="review-card">
 
             <span>
-                LEFT
+                LEFT EAR
             </span>
 
             <strong id="leftCount">
@@ -566,7 +563,7 @@
         <div class="review-card">
 
             <span>
-                RIGHT
+                RIGHT EAR
             </span>
 
             <strong id="rightCount">
@@ -575,26 +572,25 @@
 
         </div>
 
-
     </div>
 
 
-    <div class="consent-row">
+    <label class="consent-row">
 
         <input
-            type="checkbox"
             id="consentCheckbox"
+            type="checkbox"
         >
 
-        <label for="consentCheckbox">
+        <span>
 
             I consent to Hammer Craft processing
-            these ear images for 3D reconstruction
+            these images for 3D ear reconstruction
             and custom-fit product development.
 
-        </label>
+        </span>
 
-    </div>
+    </label>
 
 
     <button
@@ -602,8 +598,11 @@
         class="primary-button"
         disabled
     >
-        SEND FOR 3D RECONSTRUCTION
+
+        SEND FOR RECONSTRUCTION
+
         <span>↑</span>
+
     </button>
 
 
@@ -636,26 +635,25 @@
 
 
     <h2>
-        Your scan is being processed.
+        Reconstruction queued.
     </h2>
 
 
     <p class="lead">
 
-        Your image sets have been received.
+        Your images are safely stored.
 
-        The reconstruction server can now
-        create left and right 3D models.
+        Hammer Craft's reconstruction server
+        will now create left and right 3D meshes.
 
     </p>
 
 
     <a
-        href="index.html"
-        class="primary-button link-button"
+        href="account.html"
+        class="primary-button"
     >
-        RETURN TO HAMMER CRAFT
-        <span>→</span>
+        VIEW MY ACCOUNT →
     </a>
 
 </section>
@@ -665,7 +663,14 @@
 
 
 
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js"></script>
+
 <script src="ear-scan.js"></script>
+
 
 </body>
 

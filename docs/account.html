@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Hammer Craft customer account."
+    >
+
+    <title>
+        My Account | Hammer Craft
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="auth.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="auth-header">
+
+    <a
+        href="index.html"
+        class="auth-brand"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+    </a>
+
+
+    <button
+        id="logoutButton"
+        class="header-button button-reset"
+    >
+        LOGOUT
+    </button>
+
+</header>
+
+
+
+<main class="account-page">
+
+
+    <section class="account-hero">
+
+
+        <div class="eyebrow">
+            HAMMER CRAFT / CUSTOMER
+        </div>
+
+
+        <h1>
+
+            Your
+
+            <em>
+                account.
+            </em>
+
+        </h1>
+
+
+        <div class="customer-info">
+
+            <strong id="customerName">
+                Loading...
+            </strong>
+
+            <span id="customerEmail">
+                Loading...
+            </span>
+
+        </div>
+
+
+    </section>
+
+
+
+    <section class="account-actions">
+
+
+        <a
+            href="ear-scan.html"
+            class="account-action"
+        >
+
+            <span class="action-number">
+                01
+            </span>
+
+            <div>
+
+                <h2>
+                    NEW EAR SCAN
+                </h2>
+
+                <p>
+
+                    Capture a new left and
+                    right ear image set.
+
+                </p>
+
+            </div>
+
+            <span class="action-arrow">
+                →
+            </span>
+
+        </a>
+
+
+
+        <div class="account-action">
+
+            <span class="action-number">
+                02
+            </span>
+
+            <div>
+
+                <h2>
+                    CUSTOM TUNING
+                </h2>
+
+                <p>
+
+                    Your personalised tuning
+                    profile will appear here.
+
+                </p>
+
+            </div>
+
+            <span class="action-arrow muted">
+                SOON
+            </span>
+
+        </div>
+
+
+
+        <div class="account-action">
+
+            <span class="action-number">
+                03
+            </span>
+
+            <div>
+
+                <h2>
+                    ORDERS
+                </h2>
+
+                <p>
+
+                    Hammer Craft build and
+                    order history.
+
+                </p>
+
+            </div>
+
+            <span class="action-arrow muted">
+                SOON
+            </span>
+
+        </div>
+
+
+    </section>
+
+
+
+    <section class="scan-history">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <div class="eyebrow">
+                    DIGITAL FIT
+                </div>
+
+                <h2>
+                    Your ear scans.
+                </h2>
+
+            </div>
+
+
+            <a
+                href="ear-scan.html"
+                class="small-button"
+            >
+                NEW SCAN +
+            </a>
+
+        </div>
+
+
+
+        <div
+            id="scanList"
+            class="scan-list"
+        >
+
+            <div class="loading-card">
+                Loading scans...
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js"></script>
+
+<script src="auth.js"></script>
+
+
+</body>
+
+</html>
