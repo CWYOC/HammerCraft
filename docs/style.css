@@ -1685,7 +1685,7 @@ main {
 }
 
 /* =========================================================
-   FOOTER SOCIAL UPDATE
+   FOOTER SOCIAL / INSTAGRAM
 ========================================================= */
 
 .site-footer {
@@ -1698,22 +1698,86 @@ main {
 }
 
 
-.footer-social-link {
+/* Instagram link */
+
+.footer-instagram {
+    width: fit-content;
+
     display: inline-flex;
     align-items: center;
-    width: fit-content;
+
+    gap: 9px;
+
+    color: var(--muted);
 
     text-decoration: none;
 
     transition:
-        opacity 0.2s ease,
+        color 0.2s ease,
         transform 0.2s ease;
 }
 
 
-.footer-social-link:hover {
-    opacity: 0.6;
-    transform: translateX(3px);
+/* Instagram logo */
+
+.instagram-icon {
+    width: 20px;
+    height: 20px;
+
+    flex-shrink: 0;
+
+    fill: none;
+
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* Small dot inside Instagram logo */
+
+.instagram-dot {
+    fill: currentColor;
+    stroke: none;
+}
+
+
+/* Instagram text */
+
+.footer-instagram span {
+    font-size: 11px;
+}
+
+
+/* External link arrow */
+
+.social-arrow {
+    margin-left: 2px;
+
+    font-size: 10px;
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+/* Hover */
+
+.footer-instagram:hover {
+    color: var(--brown);
+
+    transform:
+        translateX(2px);
+}
+
+
+.footer-instagram:hover .social-arrow {
+    transform:
+        translate(
+            2px,
+            -2px
+        );
 }
 
 
