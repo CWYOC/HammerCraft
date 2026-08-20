@@ -77,6 +77,7 @@ textarea {
 }
 
 
+
 /* =========================================================
    COMMON
 ========================================================= */
@@ -171,6 +172,7 @@ textarea {
     color:
         white;
 }
+
 
 
 /* =========================================================
@@ -309,6 +311,7 @@ textarea {
 }
 
 
+
 /* =========================================================
    MAIN
 ========================================================= */
@@ -317,6 +320,7 @@ main {
     padding-top:
         var(--header-height);
 }
+
 
 
 /* =========================================================
@@ -434,6 +438,7 @@ main {
 }
 
 
+
 /* =========================================================
    INTRO
 ========================================================= */
@@ -497,6 +502,7 @@ main {
             28px
         );
 }
+
 
 
 /* =========================================================
@@ -598,15 +604,16 @@ main {
 }
 
 
+
 /* =========================================================
-   AI — REDUCED HEIGHT
+   AI — COMPACT VERSION
 ========================================================= */
 
 .ai-section {
     padding:
-        95px
+        70px
         7vw
-        90px;
+        65px;
 
     background:
         var(--paper-dark);
@@ -614,13 +621,13 @@ main {
 
 
 .section-heading-large h2 {
-    margin-top: 15px;
+    margin-top: 12px;
 
     font-size:
         clamp(
-            54px,
-            6.5vw,
-            96px
+            48px,
+            6vw,
+            88px
         );
 
     line-height: .9;
@@ -645,7 +652,7 @@ main {
 
 
 .ai-grid {
-    margin-top: 48px;
+    margin-top: 34px;
 
     display: grid;
 
@@ -655,18 +662,16 @@ main {
             minmax(0, 1fr)
         );
 
-    gap: 18px;
+    gap: 16px;
 }
 
 
-/*
-   This is the main fix for the giant boxes.
-*/
-
 .feature-card {
-    min-height: 255px;
+    min-height: 170px;
 
-    padding: 24px;
+    padding:
+        18px
+        20px;
 
     border:
         1px solid var(--line);
@@ -682,7 +687,7 @@ main {
 .feature-number {
     color: var(--brown);
 
-    font-size: 7px;
+    font-size: 6px;
 
     font-weight: 700;
 }
@@ -694,28 +699,30 @@ main {
 
 
 .feature-card-content h3 {
-    font-size: 17px;
+    font-size: 15px;
 
     line-height: 1.2;
 }
 
 
 .feature-card-content p {
-    margin-top: 12px;
+    margin-top: 9px;
+
+    max-width: 560px;
 
     color: var(--muted);
 
-    font-size: 11px;
+    font-size: 10px;
 
-    line-height: 1.65;
+    line-height: 1.55;
 }
 
 
 .ai-process {
-    margin-top: 18px;
+    margin-top: 14px;
 
     padding:
-        24px
+        17px
         0;
 
     border-top:
@@ -735,7 +742,7 @@ main {
 
     align-items: center;
 
-    gap: 30px;
+    gap: 25px;
 }
 
 
@@ -744,31 +751,32 @@ main {
 
     flex-direction: column;
 
-    gap: 6px;
+    gap: 4px;
 }
 
 
 .ai-process span {
     color: var(--brown);
 
-    font-size: 6px;
+    font-size: 5px;
 
     font-weight: 700;
 
-    letter-spacing: 2px;
+    letter-spacing: 1.8px;
 }
 
 
 .ai-process strong {
-    font-size: 12px;
+    font-size: 10px;
 }
 
 
 .process-arrow {
     color: var(--muted);
 
-    font-size: 14px;
+    font-size: 12px;
 }
+
 
 
 /* =========================================================
@@ -834,8 +842,6 @@ main {
     gap: 24px;
 }
 
-
-/* Loading/error fills full width */
 
 .model-loading {
     grid-column:
@@ -1088,7 +1094,8 @@ main {
     background:
         var(--ink);
 
-    color: white;
+    color:
+        white;
 
     display: inline-flex;
 
@@ -1120,6 +1127,7 @@ main {
 
     cursor: not-allowed;
 }
+
 
 
 /* =========================================================
@@ -1163,11 +1171,9 @@ main {
         Georgia,
         serif;
 
-    font-style:
-        italic;
+    font-style: italic;
 
-    font-weight:
-        400;
+    font-weight: 400;
 }
 
 
@@ -1234,6 +1240,7 @@ main {
 
     line-height: 1.6;
 }
+
 
 
 /* =========================================================
@@ -1338,6 +1345,7 @@ main {
 }
 
 
+
 /* =========================================================
    STATEMENT
 ========================================================= */
@@ -1384,6 +1392,7 @@ main {
 
     line-height: 1.05;
 }
+
 
 
 /* =========================================================
@@ -1477,6 +1486,7 @@ main {
 }
 
 
+
 /* =========================================================
    TABLET
 ========================================================= */
@@ -1510,6 +1520,7 @@ main {
     }
 
 }
+
 
 
 /* =========================================================
@@ -1646,7 +1657,9 @@ main {
 
 
     .feature-card {
-        min-height: 220px;
+        min-height: 145px;
+
+        padding: 16px;
     }
 
 
@@ -1694,7 +1707,8 @@ main {
 
 
     .footer-bottom {
-        grid-column: auto;
+        grid-column:
+            auto;
     }
 
 }
