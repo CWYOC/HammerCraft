@@ -13,7 +13,7 @@
     --ink: #252321;
     --brown: #9a6537;
     --muted: #706b64;
-    --line: rgba(37, 35, 33, 0.16);
+    --line: rgba(37,35,33,.16);
 }
 
 
@@ -21,7 +21,6 @@ body {
     min-height: 100vh;
 
     background: var(--paper);
-
     color: var(--ink);
 
     font-family:
@@ -31,7 +30,10 @@ body {
 }
 
 
-button {
+button,
+input,
+select,
+textarea {
     font: inherit;
 }
 
@@ -43,50 +45,36 @@ button {
     padding: 0 5vw;
 
     position: fixed;
-
     top: 0;
     left: 0;
 
     z-index: 1000;
 
     background:
-        rgba(
-            241,
-            237,
-            230,
-            0.96
-        );
+        rgba(241,237,230,.96);
 
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
 
     border-bottom:
-        1px solid
-        var(--line);
+        1px solid var(--line);
 
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 }
 
 
 .admin-brand {
     display: flex;
-
     align-items: center;
-
     gap: 12px;
 
     color: var(--ink);
-
     text-decoration: none;
 
     font-size: 10px;
-
     font-weight: bold;
-
     letter-spacing: 3px;
 }
 
@@ -101,9 +89,7 @@ button {
 
 .admin-header-right {
     display: flex;
-
     align-items: center;
-
     gap: 20px;
 }
 
@@ -115,30 +101,26 @@ button {
 }
 
 
-.admin-header-right button {
-    padding:
-        11px
-        15px;
+.admin-header-right button,
+.refresh-button {
+    padding: 11px 15px;
 
     border:
-        1px solid
-        var(--ink);
+        1px solid var(--ink);
 
     background: transparent;
 
     cursor: pointer;
 
     font-size: 8px;
-
     font-weight: bold;
-
     letter-spacing: 1px;
 }
 
 
-.admin-header-right button:hover {
+.admin-header-right button:hover,
+.refresh-button:hover {
     background: var(--ink);
-
     color: white;
 }
 
@@ -157,9 +139,7 @@ button {
     color: var(--brown);
 
     font-size: 9px;
-
     font-weight: bold;
-
     letter-spacing: 3px;
 }
 
@@ -175,7 +155,6 @@ button {
         );
 
     line-height: .86;
-
     letter-spacing: -7px;
 }
 
@@ -194,17 +173,20 @@ button {
 
 
 .admin-hero p {
-    max-width: 600px;
+    max-width: 620px;
 
     margin-top: 35px;
 
     color: var(--muted);
 
     font-size: 16px;
-
     line-height: 1.7;
 }
 
+
+/* =====================================================
+   STATS
+===================================================== */
 
 .admin-stats {
     margin-top: 75px;
@@ -214,7 +196,7 @@ button {
     grid-template-columns:
         repeat(
             4,
-            minmax(0, 1fr)
+            minmax(0,1fr)
         );
 }
 
@@ -225,13 +207,10 @@ button {
     padding: 22px;
 
     border:
-        1px solid
-        var(--line);
+        1px solid var(--line);
 
     display: flex;
-
     flex-direction: column;
-
     justify-content: space-between;
 }
 
@@ -240,9 +219,7 @@ button {
     color: var(--muted);
 
     font-size: 8px;
-
     font-weight: bold;
-
     letter-spacing: 1.5px;
 }
 
@@ -252,7 +229,12 @@ button {
 }
 
 
-.admin-scans {
+/* =====================================================
+   HEADINGS
+===================================================== */
+
+.admin-scans,
+.admin-products {
     margin-top: 110px;
 }
 
@@ -261,7 +243,6 @@ button {
     display: flex;
 
     align-items: flex-end;
-
     justify-content: space-between;
 
     gap: 30px;
@@ -282,24 +263,9 @@ button {
 }
 
 
-.refresh-button {
-    padding:
-        12px
-        16px;
-
-    border:
-        1px solid
-        var(--ink);
-
-    background: transparent;
-
-    cursor: pointer;
-
-    font-size: 8px;
-
-    font-weight: bold;
-}
-
+/* =====================================================
+   SCANS
+===================================================== */
 
 .admin-scan-list {
     margin-top: 45px;
@@ -309,7 +275,7 @@ button {
     grid-template-columns:
         repeat(
             2,
-            minmax(0, 1fr)
+            minmax(0,1fr)
         );
 
     gap: 20px;
@@ -318,19 +284,17 @@ button {
 
 .admin-loading,
 .admin-scan-card {
-    min-height: 270px;
+    min-height: 240px;
 
     padding: 25px;
 
     border:
-        1px solid
-        var(--line);
+        1px solid var(--line);
 }
 
 
 .admin-card-top {
     display: flex;
-
     justify-content: space-between;
 
     gap: 20px;
@@ -379,8 +343,7 @@ button {
     padding-top: 10px;
 
     border-top:
-        1px solid
-        var(--line);
+        1px solid var(--line);
 }
 
 
@@ -419,7 +382,6 @@ button {
     margin-top: 25px;
 
     display: flex;
-
     flex-wrap: wrap;
 
     gap: 10px;
@@ -427,28 +389,345 @@ button {
 
 
 .admin-downloads button {
-    padding:
-        10px
-        13px;
+    padding: 10px 13px;
 
     border:
-        1px solid
-        var(--ink);
+        1px solid var(--ink);
 
     background: transparent;
 
     cursor: pointer;
 
     font-size: 8px;
-
     font-weight: bold;
 }
 
 
 .admin-downloads button:hover {
     background: var(--ink);
+    color: white;
+}
+
+
+/* =====================================================
+   PRODUCT CREATE
+===================================================== */
+
+.admin-product-create {
+    margin-top: 50px;
+
+    padding: 30px;
+
+    border:
+        1px solid var(--line);
+
+    background:
+        var(--paper-dark);
+}
+
+
+.admin-product-create h3 {
+    font-size: 18px;
+}
+
+
+.admin-product-create-grid {
+    margin-top: 30px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0,1fr)
+        );
+
+    gap: 20px;
+}
+
+
+.admin-product-create label,
+.admin-description-label {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+
+    color: var(--muted);
+
+    font-size: 8px;
+    font-weight: bold;
+    letter-spacing: 1.3px;
+}
+
+
+.admin-product-create input,
+.admin-product-create select,
+.admin-product-create textarea {
+    width: 100%;
+
+    border:
+        1px solid var(--line);
+
+    background: var(--paper);
+
+    color: var(--ink);
+
+    outline: none;
+}
+
+
+.admin-product-create input,
+.admin-product-create select {
+    height: 46px;
+
+    padding:
+        0
+        12px;
+}
+
+
+.admin-product-create textarea {
+    min-height: 120px;
+
+    padding: 12px;
+
+    resize: vertical;
+}
+
+
+.admin-description-label {
+    margin-top: 20px;
+}
+
+
+.admin-add-product {
+    margin-top: 25px;
+
+    min-height: 48px;
+
+    padding: 0 18px;
+
+    border: none;
+
+    background: var(--ink);
 
     color: white;
+
+    cursor: pointer;
+
+    font-size: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+
+.admin-add-product:hover {
+    background: var(--brown);
+}
+
+
+/* =====================================================
+   PRODUCT LIST
+===================================================== */
+
+.admin-product-list {
+    margin-top: 40px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0,1fr)
+        );
+
+    gap: 20px;
+}
+
+
+.admin-product-card {
+    padding: 28px;
+
+    border:
+        1px solid var(--line);
+}
+
+
+.admin-product-top {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+
+.admin-product-name {
+    font-size: 24px;
+}
+
+
+.admin-product-slug {
+    margin-top: 7px;
+
+    color: var(--muted);
+
+    font-family: monospace;
+
+    font-size: 9px;
+}
+
+
+.admin-product-controls {
+    margin-top: 30px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0,1fr)
+        );
+
+    gap: 20px;
+}
+
+
+.admin-control {
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+
+.admin-control label {
+    color: var(--muted);
+
+    font-size: 8px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+}
+
+
+.admin-control input,
+.admin-control select,
+.admin-control textarea {
+    width: 100%;
+
+    border:
+        1px solid var(--line);
+
+    background: var(--paper);
+
+    color: var(--ink);
+}
+
+
+.admin-control input,
+.admin-control select {
+    min-height: 45px;
+
+    padding: 0 12px;
+}
+
+
+.admin-control textarea {
+    min-height: 100px;
+
+    padding: 10px;
+
+    resize: vertical;
+}
+
+
+.admin-control.full {
+    grid-column:
+        1 / -1;
+}
+
+
+.admin-save-product,
+.admin-delete-product {
+    min-height: 48px;
+
+    margin-top: 20px;
+
+    padding:
+        0
+        16px;
+
+    cursor: pointer;
+
+    font-size: 8px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+
+.admin-save-product {
+    width: 100%;
+
+    border: none;
+
+    background: var(--ink);
+
+    color: white;
+}
+
+
+.admin-save-product:hover {
+    background: var(--brown);
+}
+
+
+.admin-delete-product {
+    width: 100%;
+
+    border:
+        1px solid var(--ink);
+
+    background: transparent;
+
+    color: var(--ink);
+}
+
+
+.admin-delete-product:hover {
+    background: var(--ink);
+
+    color: white;
+}
+
+
+.admin-product-message {
+    min-height: 18px;
+
+    margin-top: 12px;
+
+    color: var(--brown);
+
+    font-size: 11px;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media
+(max-width: 1000px) {
+
+    .admin-product-create-grid {
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0,1fr)
+            );
+    }
+
 }
 
 
@@ -479,7 +758,8 @@ button {
     }
 
 
-    .admin-scan-list {
+    .admin-scan-list,
+    .admin-product-list {
         grid-template-columns:
             1fr;
     }
@@ -488,7 +768,7 @@ button {
 
 
 @media
-(max-width: 500px) {
+(max-width: 550px) {
 
     .admin-header {
         padding:
@@ -497,19 +777,24 @@ button {
     }
 
 
-    .admin-brand span {
-        display: none;
-    }
-
-
+    .admin-brand span,
     .admin-header-right > span {
         display: none;
     }
 
 
-    .admin-stats {
+    .admin-stats,
+    .admin-product-create-grid,
+    .admin-product-controls {
         grid-template-columns:
             1fr;
+    }
+
+
+    .admin-section-heading {
+        align-items: flex-start;
+
+        flex-direction: column;
     }
 
 }

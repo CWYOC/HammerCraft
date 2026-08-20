@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
 
     <meta
@@ -10,15 +9,12 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        Admin | Hammer Craft
-    </title>
+    <title>Admin | Hammer Craft</title>
 
     <link
         rel="stylesheet"
         href="admin.css"
     >
-
 </head>
 
 
@@ -31,7 +27,6 @@
         href="index.html"
         class="admin-brand"
     >
-
         <img
             src="assets/logo.png"
             alt="Hammer Craft"
@@ -40,7 +35,6 @@
         <span>
             HAMMER CRAFT
         </span>
-
     </a>
 
 
@@ -71,22 +65,17 @@
 
 
         <h1>
-
             Admin
 
             <em>
                 dashboard.
             </em>
-
         </h1>
 
 
         <p>
-
-            Customer ear scans,
-            reconstruction jobs and generated
-            STL files.
-
+            Manage customer ear scans, reconstruction jobs,
+            products, pricing and public stock status.
         </p>
 
     </section>
@@ -95,68 +84,40 @@
 
     <section class="admin-stats">
 
-
         <article>
-
-            <span>
-                TOTAL SCANS
-            </span>
-
-            <strong id="totalScans">
-                —
-            </strong>
-
+            <span>TOTAL SCANS</span>
+            <strong id="totalScans">—</strong>
         </article>
 
 
         <article>
-
-            <span>
-                PROCESSING
-            </span>
-
-            <strong id="processingScans">
-                —
-            </strong>
-
+            <span>PROCESSING</span>
+            <strong id="processingScans">—</strong>
         </article>
 
 
         <article>
-
-            <span>
-                COMPLETE
-            </span>
-
-            <strong id="completeScans">
-                —
-            </strong>
-
+            <span>COMPLETE</span>
+            <strong id="completeScans">—</strong>
         </article>
 
 
         <article>
-
-            <span>
-                FAILED
-            </span>
-
-            <strong id="failedScans">
-                —
-            </strong>
-
+            <span>FAILED</span>
+            <strong id="failedScans">—</strong>
         </article>
-
 
     </section>
 
 
 
+    <!-- ==================================================
+         EAR SCANS
+    =================================================== -->
+
     <section class="admin-scans">
 
-
         <div class="admin-section-heading">
-
 
             <div>
 
@@ -178,22 +139,217 @@
                 REFRESH
             </button>
 
-
         </div>
-
 
 
         <div
             id="adminScanList"
             class="admin-scan-list"
         >
-
             <div class="admin-loading">
                 Loading scans...
             </div>
+        </div>
+
+    </section>
+
+
+
+    <!-- ==================================================
+         PRODUCTS
+    =================================================== -->
+
+    <section class="admin-products">
+
+        <div class="admin-section-heading">
+
+            <div>
+
+                <div class="eyebrow">
+                    PRODUCT CONTROL
+                </div>
+
+                <h2>
+                    Models & stock.
+                </h2>
+
+            </div>
+
+
+            <button
+                id="refreshProductsButton"
+                class="refresh-button"
+            >
+                REFRESH
+            </button>
 
         </div>
 
+
+
+        <div class="admin-product-create">
+
+            <h3>
+                ADD NEW MODEL
+            </h3>
+
+
+            <div class="admin-product-create-grid">
+
+
+                <label>
+                    MODEL NAME
+
+                    <input
+                        id="newProductName"
+                        type="text"
+                        placeholder="HC ONE"
+                    >
+                </label>
+
+
+                <label>
+                    SLUG
+
+                    <input
+                        id="newProductSlug"
+                        type="text"
+                        placeholder="hc-one"
+                    >
+                </label>
+
+
+                <label>
+                    SUBTITLE
+
+                    <input
+                        id="newProductSubtitle"
+                        type="text"
+                        placeholder="HAMMER CRAFT / UNIVERSAL"
+                    >
+                </label>
+
+
+                <label>
+                    IMAGE PATH
+
+                    <input
+                        id="newProductImage"
+                        type="text"
+                        placeholder="assets/model-01.png"
+                    >
+                </label>
+
+
+                <label>
+                    PRICE GBP
+
+                    <input
+                        id="newProductPrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="299"
+                    >
+                </label>
+
+
+                <label>
+                    STOCK
+
+                    <input
+                        id="newProductStock"
+                        type="number"
+                        min="0"
+                        step="1"
+                        value="0"
+                    >
+                </label>
+
+
+                <label>
+                    STATUS
+
+                    <select id="newProductStatus">
+
+                        <option value="coming_soon">
+                            Coming soon
+                        </option>
+
+                        <option value="in_stock">
+                            In stock
+                        </option>
+
+                        <option value="low_stock">
+                            Low stock
+                        </option>
+
+                        <option value="out_of_stock">
+                            Out of stock
+                        </option>
+
+                        <option value="hidden">
+                            Hidden
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+                <label>
+                    DISPLAY ORDER
+
+                    <input
+                        id="newProductOrder"
+                        type="number"
+                        step="1"
+                        value="0"
+                    >
+                </label>
+
+            </div>
+
+
+            <label class="admin-description-label">
+
+                DESCRIPTION
+
+                <textarea
+                    id="newProductDescription"
+                    placeholder="Describe the model..."
+                ></textarea>
+
+            </label>
+
+
+            <button
+                id="addProductButton"
+                class="admin-add-product"
+            >
+                ADD PRODUCT
+            </button>
+
+
+            <div
+                id="addProductMessage"
+                class="admin-product-message"
+            ></div>
+
+        </div>
+
+
+
+        <div
+            id="adminProductList"
+            class="admin-product-list"
+        >
+
+            <div class="admin-loading">
+                Loading products...
+            </div>
+
+        </div>
 
     </section>
 
@@ -207,7 +363,6 @@
 ></script>
 
 <script src="supabase-client.js"></script>
-
 <script src="admin.js"></script>
 
 
