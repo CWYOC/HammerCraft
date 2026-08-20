@@ -1821,25 +1821,24 @@ function createProductCard(
 
         <div class="product-image-area">
 
-            ${
-                product.image_path
-                ? `
-                    <img
-                        src="${escapeHTML(
-                            product.image_path
-                        )}"
-                        alt="${escapeHTML(
-                            product.name
-                        )}"
-                    >
-                `
-                : `
-                    <div class="product-image-empty">
-                        NO PRODUCT IMAGE
-                    </div>
-                `
-            }
-
+            <img
+                src="${
+                    product.image_path
+                        ? escapeHTML(product.image_path)
+                        : "assets/logo.png"
+                }"
+                alt="${escapeHTML(product.name)}"
+                class="${
+                    product.image_path
+                        ? "product-image"
+                        : "product-image product-image-placeholder"
+                }"
+                onerror="
+                    this.onerror=null;
+                    this.src='assets/logo.png';
+                    this.classList.add('product-image-placeholder');
+                "
+            >
 
             <span class="product-status-badge">
 
