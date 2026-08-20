@@ -20,8 +20,8 @@ let confirmCallback =
 async function requireAdmin() {
 
     const {
-        data: userData,
-        error: userError
+        data,
+        error
     } =
         await adminDB
             .auth
@@ -29,8 +29,8 @@ async function requireAdmin() {
 
 
     if (
-        userError ||
-        !userData.user
+        error ||
+        !data.user
     ) {
 
         window.location.replace(
@@ -42,7 +42,7 @@ async function requireAdmin() {
 
 
     const user =
-        userData.user;
+        data.user;
 
 
     const {
@@ -77,6 +77,7 @@ async function requireAdmin() {
 
 
     return user;
+
 }
 
 
@@ -118,6 +119,7 @@ function showConfirm(
         .add(
             "open"
         );
+
 }
 
 
@@ -135,6 +137,7 @@ function closeConfirm() {
         .remove(
             "open"
         );
+
 }
 
 
@@ -150,28 +153,29 @@ async function loadAccounts() {
         );
 
 
-    container.innerHTML = `
-        <div class="loading-card">
-            Loading accounts...
-        </div>
-    `;
+    if (
+        container
+    ) {
+
+        container.innerHTML = `
+            <div class="loading-card">
+                Loading accounts...
+            </div>
+        `;
+
+    }
 
 
     const {
         data: profiles,
-        error: profileError
+        error
     } =
         await adminDB
             .from(
                 "profiles"
             )
             .select(
-                `
-                id,
-                full_name,
-                email,
-                created_at
-                `
+                "id,full_name,email,created_at"
             )
             .order(
                 "created_at",
@@ -182,20 +186,25 @@ async function loadAccounts() {
 
 
     if (
-        profileError
+        error
     ) {
 
         console.error(
-            "Profile load:",
-            profileError
+            error
         );
 
 
-        container.innerHTML = `
-            <div class="loading-card">
-                Unable to load accounts.
-            </div>
-        `;
+        if (
+            container
+        ) {
+
+            container.innerHTML = `
+                <div class="loading-card">
+                    Unable to load accounts.
+                </div>
+            `;
+
+        }
 
 
         return;
@@ -203,41 +212,19 @@ async function loadAccounts() {
 
 
     const {
-        data: scans,
-        error: scanError
+        data: scans
     } =
         await adminDB
             .from(
                 "ear_scans"
             )
             .select(
-                `
-                id,
-                user_id,
-                status,
-                created_at
-                `
+                "id,user_id,status"
             );
 
 
-    if (
-        scanError
-    ) {
-
-        console.error(
-            scanError
-        );
-    }
-
-
-    /*
-        Because some admin_users RLS setups only
-        allow a person to read their own admin row,
-        failure here should not stop account loading.
-    */
-
     const {
-        data: adminRows
+        data: admins
     } =
         await adminDB
             .from(
@@ -250,10 +237,10 @@ async function loadAccounts() {
 
     const adminSet =
         new Set(
-            (adminRows || [])
+            (admins || [])
                 .map(
-                    item =>
-                        item.user_id
+                    admin =>
+                        admin.user_id
                 )
         );
 
@@ -281,18 +268,17 @@ async function loadAccounts() {
                                 profile.id
                             ),
 
-                        scans:
-                            userScans,
-
                         scan_count:
                             userScans.length,
 
                         complete_count:
-                            userScans.filter(
-                                scan =>
-                                    scan.status ===
-                                    "complete"
-                            ).length
+                            userScans
+                                .filter(
+                                    scan =>
+                                        scan.status ===
+                                        "complete"
+                                )
+                                .length
 
                     };
 
@@ -310,51 +296,92 @@ async function loadAccounts() {
 }
 
 
+/* =========================================================
+   ACCOUNT STATS
+========================================================= */
+
 function updateAccountStats() {
 
-    document
-        .getElementById(
+    const totalAccounts =
+        document.getElementById(
             "totalAccounts"
-        )
-        .textContent =
-        cachedAccounts.length;
+        );
 
 
-    document
-        .getElementById(
+    const accountSummaryTotal =
+        document.getElementById(
             "accountSummaryTotal"
-        )
-        .textContent =
-        cachedAccounts.length;
+        );
 
 
-    document
-        .getElementById(
+    const accountsWithScans =
+        document.getElementById(
             "accountsWithScans"
-        )
-        .textContent =
-        cachedAccounts
-            .filter(
-                account =>
-                    account.scan_count > 0
-            )
-            .length;
+        );
 
 
-    document
-        .getElementById(
+    const totalAdmins =
+        document.getElementById(
             "totalAdmins"
-        )
-        .textContent =
-        cachedAccounts
-            .filter(
-                account =>
-                    account.is_admin
-            )
-            .length;
+        );
+
+
+    if (
+        totalAccounts
+    ) {
+
+        totalAccounts.textContent =
+            cachedAccounts.length;
+
+    }
+
+
+    if (
+        accountSummaryTotal
+    ) {
+
+        accountSummaryTotal.textContent =
+            cachedAccounts.length;
+
+    }
+
+
+    if (
+        accountsWithScans
+    ) {
+
+        accountsWithScans.textContent =
+            cachedAccounts
+                .filter(
+                    account =>
+                        account.scan_count >
+                        0
+                )
+                .length;
+
+    }
+
+
+    if (
+        totalAdmins
+    ) {
+
+        totalAdmins.textContent =
+            cachedAccounts
+                .filter(
+                    account =>
+                        account.is_admin
+                )
+                .length;
+
+    }
 
 }
 
+
+/* =========================================================
+   RENDER ACCOUNTS
+========================================================= */
 
 function renderAccounts(
     accounts
@@ -364,6 +391,13 @@ function renderAccounts(
         document.getElementById(
             "adminAccountList"
         );
+
+
+    if (
+        !container
+    ) {
+        return;
+    }
 
 
     container.innerHTML =
@@ -387,6 +421,16 @@ function renderAccounts(
     accounts.forEach(
         account => {
 
+            const card =
+                document.createElement(
+                    "article"
+                );
+
+
+            card.className =
+                "account-card";
+
+
             const joined =
                 account.created_at
                 ? new Date(
@@ -396,16 +440,6 @@ function renderAccounts(
                         "en-GB"
                     )
                 : "—";
-
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-
-            card.className =
-                "account-card";
 
 
             card.innerHTML = `
@@ -422,20 +456,16 @@ function renderAccounts(
                         </h3>
 
                         <div class="account-email">
-
                             ${escapeHTML(
                                 account.email ||
                                 ""
                             )}
-
                         </div>
 
                         <div class="account-id">
-
                             ${escapeHTML(
                                 account.id
                             )}
-
                         </div>
 
                     </div>
@@ -513,21 +543,6 @@ function renderAccounts(
                         VIEW SCANS
                     </button>
 
-
-                    ${
-                        !account.is_admin
-                        ? `
-                            <button
-                                type="button"
-                                class="danger"
-                                data-delete-user
-                            >
-                                DELETE CUSTOMER
-                            </button>
-                        `
-                        : ""
-                    }
-
                 </div>
 
             `;
@@ -541,58 +556,53 @@ function renderAccounts(
                     "click",
                     () => {
 
-                        filterScansByUser(
-                            account.id,
-                            account.full_name ||
-                            account.email ||
-                            "Customer"
-                        );
+                        selectedAccountUserID =
+                            account.id;
+
+
+                        const filter =
+                            document.getElementById(
+                                "activeScanFilter"
+                            );
+
+
+                        if (
+                            filter
+                        ) {
+
+                            filter.hidden =
+                                false;
+
+
+                            filter.textContent =
+                                `Showing scans for: ${
+                                    account.full_name ||
+                                    account.email ||
+                                    "Customer"
+                                }`;
+
+                        }
+
+
+                        applyScanFilters();
+
+
+                        document
+                            .getElementById(
+                                "scans"
+                            )
+                            ?.scrollIntoView({
+                                behavior:
+                                    "smooth"
+                            });
 
                     }
                 );
 
 
-            const deleteButton =
-                card.querySelector(
-                    "[data-delete-user]"
-                );
-
-
-            if (
-                deleteButton
-            ) {
-
-                deleteButton
-                    .addEventListener(
-                        "click",
-                        () => {
-
-                            showConfirm(
-
-                                "Delete customer?",
-
-                                `Permanently delete ${
-                                    account.email ||
-                                    "this customer"
-                                } and their associated account data?`,
-
-                                () =>
-                                    deleteCustomer(
-                                        account.id
-                                    )
-
-                            );
-
-                        }
-                    );
-
-            }
-
-
-            container
-                .appendChild(
-                    card
-                );
+            container.appendChild(
+                card
+            );
 
         }
     );
@@ -648,8 +658,11 @@ function searchAccounts(
 
 
                     const id =
-                        account.id
-                            .toLowerCase();
+                        (
+                            account.id ||
+                            ""
+                        )
+                        .toLowerCase();
 
 
                     return (
@@ -678,7 +691,7 @@ function searchAccounts(
 
 
 /* =========================================================
-   LOAD SCANS
+   SCANS
 ========================================================= */
 
 async function loadAdminScans() {
@@ -689,11 +702,17 @@ async function loadAdminScans() {
         );
 
 
-    container.innerHTML = `
-        <div class="loading-card">
-            Loading scans...
-        </div>
-    `;
+    if (
+        container
+    ) {
+
+        container.innerHTML = `
+            <div class="loading-card">
+                Loading scans...
+            </div>
+        `;
+
+    }
 
 
     const {
@@ -704,24 +723,11 @@ async function loadAdminScans() {
             .from(
                 "ear_scans"
             )
-            .select(
-                `
-                id,
-                user_id,
-                status,
-                left_image_count,
-                right_image_count,
-                left_stl_path,
-                right_stl_path,
-                created_at,
-                updated_at
-                `
-            )
+            .select("*")
             .order(
                 "created_at",
                 {
-                    ascending:
-                        false
+                    ascending: false
                 }
             );
 
@@ -735,11 +741,17 @@ async function loadAdminScans() {
         );
 
 
-        container.innerHTML = `
-            <div class="loading-card">
-                Unable to load scans.
-            </div>
-        `;
+        if (
+            container
+        ) {
+
+            container.innerHTML = `
+                <div class="loading-card">
+                    Unable to load scans.
+                </div>
+            `;
+
+        }
 
 
         return;
@@ -760,75 +772,92 @@ async function loadAdminScans() {
 }
 
 
-function updateScanStats() {
-
-    document
-        .getElementById(
-            "totalScans"
-        )
-        .textContent =
-        cachedScans.length;
-
-
-    document
-        .getElementById(
-            "processingScans"
-        )
-        .textContent =
-        cachedScans
-            .filter(
-                scan =>
-                    scan.status ===
-                    "processing"
-            )
-            .length;
-
-
-    document
-        .getElementById(
-            "completeScans"
-        )
-        .textContent =
-        cachedScans
-            .filter(
-                scan =>
-                    scan.status ===
-                    "complete"
-            )
-            .length;
-
-
-    document
-        .getElementById(
-            "failedScans"
-        )
-        .textContent =
-        cachedScans
-            .filter(
-                scan =>
-                    scan.status ===
-                    "failed"
-            )
-            .length;
-
-}
-
-
 /* =========================================================
-   GET PROFILE
+   SCAN STATS
 ========================================================= */
 
-function profileForUser(
-    userID
-) {
+function updateScanStats() {
 
-    return cachedAccounts
-        .find(
-            account =>
-                account.id ===
-                userID
-        )
-        || {};
+    const total =
+        document.getElementById(
+            "totalScans"
+        );
+
+
+    const processing =
+        document.getElementById(
+            "processingScans"
+        );
+
+
+    const complete =
+        document.getElementById(
+            "completeScans"
+        );
+
+
+    const failed =
+        document.getElementById(
+            "failedScans"
+        );
+
+
+    if (
+        total
+    ) {
+
+        total.textContent =
+            cachedScans.length;
+
+    }
+
+
+    if (
+        processing
+    ) {
+
+        processing.textContent =
+            cachedScans
+                .filter(
+                    scan =>
+                        scan.status ===
+                        "processing"
+                )
+                .length;
+
+    }
+
+
+    if (
+        complete
+    ) {
+
+        complete.textContent =
+            cachedScans
+                .filter(
+                    scan =>
+                        scan.status ===
+                        "complete"
+                )
+                .length;
+
+    }
+
+
+    if (
+        failed
+    ) {
+
+        failed.textContent =
+            cachedScans
+                .filter(
+                    scan =>
+                        scan.status ===
+                        "failed"
+                )
+                .length;
+
+    }
 
 }
 
@@ -845,6 +874,13 @@ function renderScans(
         document.getElementById(
             "adminScanList"
         );
+
+
+    if (
+        !container
+    ) {
+        return;
+    }
 
 
     container.innerHTML =
@@ -869,16 +905,123 @@ function renderScans(
         scan => {
 
             const profile =
-                profileForUser(
-                    scan.user_id
+                cachedAccounts
+                    .find(
+                        account =>
+                            account.id ===
+                            scan.user_id
+                    )
+                || {};
+
+
+            const date =
+                scan.created_at
+                ? new Date(
+                    scan.created_at
+                )
+                    .toLocaleString(
+                        "en-GB"
+                    )
+                : "—";
+
+
+            const card =
+                document.createElement(
+                    "article"
                 );
 
 
+            card.className =
+                "scan-card";
+
+
+            card.innerHTML = `
+
+                <div class="scan-card-top">
+
+                    <span>
+                        ${date}
+                    </span>
+
+                    <strong class="scan-status">
+                        ${escapeHTML(
+                            String(
+                                scan.status ||
+                                ""
+                            )
+                            .toUpperCase()
+                        )}
+                    </strong>
+
+                </div>
+
+
+                <h3>
+                    ${escapeHTML(
+                        profile.full_name ||
+                        "Customer"
+                    )}
+                </h3>
+
+
+                <div class="scan-email">
+                    ${escapeHTML(
+                        profile.email ||
+                        scan.user_id
+                    )}
+                </div>
+
+
+                <div class="scan-meta">
+
+                    <article>
+
+                        <span>
+                            LEFT EAR
+                        </span>
+
+                        <strong>
+                            ${
+                                scan.left_image_count ??
+                                0
+                            }
+                            IMAGES
+                        </strong>
+
+                    </article>
+
+
+                    <article>
+
+                        <span>
+                            RIGHT EAR
+                        </span>
+
+                        <strong>
+                            ${
+                                scan.right_image_count ??
+                                0
+                            }
+                            IMAGES
+                        </strong>
+
+                    </article>
+
+                </div>
+
+
+                <div class="scan-id">
+                    SCAN:
+                    ${escapeHTML(
+                        scan.id
+                    )}
+                </div>
+
+            `;
+
+
             container.appendChild(
-                createScanCard(
-                    scan,
-                    profile
-                )
+                card
             );
 
         }
@@ -887,243 +1030,8 @@ function renderScans(
 }
 
 
-function createScanCard(
-    scan,
-    profile
-) {
-
-    const date =
-        scan.created_at
-        ? new Date(
-            scan.created_at
-        )
-            .toLocaleString(
-                "en-GB"
-            )
-        : "—";
-
-
-    const card =
-        document.createElement(
-            "article"
-        );
-
-
-    card.className =
-        "scan-card";
-
-
-    card.innerHTML = `
-
-        <div class="scan-card-top">
-
-            <span>
-                ${date}
-            </span>
-
-            <strong class="scan-status">
-
-                ${escapeHTML(
-                    String(
-                        scan.status ||
-                        ""
-                    )
-                    .toUpperCase()
-                )}
-
-            </strong>
-
-        </div>
-
-
-        <h3>
-
-            ${escapeHTML(
-                profile.full_name ||
-                "Customer"
-            )}
-
-        </h3>
-
-
-        <div class="scan-email">
-
-            ${escapeHTML(
-                profile.email ||
-                scan.user_id
-            )}
-
-        </div>
-
-
-        <div class="scan-meta">
-
-            <article>
-
-                <span>
-                    LEFT EAR
-                </span>
-
-                <strong>
-
-                    ${
-                        scan.left_image_count ??
-                        0
-                    }
-                    IMAGES
-
-                </strong>
-
-            </article>
-
-
-            <article>
-
-                <span>
-                    RIGHT EAR
-                </span>
-
-                <strong>
-
-                    ${
-                        scan.right_image_count ??
-                        0
-                    }
-                    IMAGES
-
-                </strong>
-
-            </article>
-
-        </div>
-
-
-        <div class="scan-id">
-
-            SCAN:
-            ${escapeHTML(scan.id)}
-
-        </div>
-
-
-        <div class="scan-actions">
-
-            ${
-                scan.left_stl_path
-                ? `
-                    <button
-                        type="button"
-                        data-left-stl
-                    >
-                        LEFT STL
-                    </button>
-                `
-                : ""
-            }
-
-
-            ${
-                scan.right_stl_path
-                ? `
-                    <button
-                        type="button"
-                        data-right-stl
-                    >
-                        RIGHT STL
-                    </button>
-                `
-                : ""
-            }
-
-
-            <button
-                type="button"
-                class="danger"
-                data-delete-scan
-            >
-                DELETE SCAN
-            </button>
-
-        </div>
-
-    `;
-
-
-    const leftButton =
-        card.querySelector(
-            "[data-left-stl]"
-        );
-
-
-    if (
-        leftButton
-    ) {
-
-        leftButton
-            .addEventListener(
-                "click",
-                () =>
-                    openPrivateFile(
-                        scan.left_stl_path
-                    )
-            );
-
-    }
-
-
-    const rightButton =
-        card.querySelector(
-            "[data-right-stl]"
-        );
-
-
-    if (
-        rightButton
-    ) {
-
-        rightButton
-            .addEventListener(
-                "click",
-                () =>
-                    openPrivateFile(
-                        scan.right_stl_path
-                    )
-            );
-
-    }
-
-
-    card
-        .querySelector(
-            "[data-delete-scan]"
-        )
-        .addEventListener(
-            "click",
-            () => {
-
-                showConfirm(
-
-                    "Delete scan?",
-
-                    "This permanently removes the scan record and its stored files.",
-
-                    () =>
-                        deleteScan(
-                            scan
-                        )
-
-                );
-
-            }
-        );
-
-
-    return card;
-}
-
-
 /* =========================================================
-   SCAN FILTERS
+   SCAN FILTER
 ========================================================= */
 
 function applyScanFilters() {
@@ -1137,7 +1045,8 @@ function applyScanFilters() {
             .getElementById(
                 "scanStatusFilter"
             )
-            .value;
+            ?.value
+        || "";
 
 
     if (
@@ -1175,367 +1084,47 @@ function applyScanFilters() {
 }
 
 
-function filterScansByUser(
-    userID,
-    label
-) {
-
-    selectedAccountUserID =
-        userID;
-
-
-    const active =
-        document
-            .getElementById(
-                "activeScanFilter"
-            );
-
-
-    active.hidden =
-        false;
-
-
-    active.textContent =
-        `Showing scans for: ${label}`;
-
-
-    applyScanFilters();
-
-
-    document
-        .getElementById(
-            "scans"
-        )
-        .scrollIntoView({
-            behavior:
-                "smooth"
-        });
-
-}
-
-
 function clearScanFilters() {
 
     selectedAccountUserID =
         null;
 
 
-    document
-        .getElementById(
+    const statusFilter =
+        document.getElementById(
             "scanStatusFilter"
-        )
-        .value =
-        "";
+        );
 
 
-    document
-        .getElementById(
+    if (
+        statusFilter
+    ) {
+
+        statusFilter.value =
+            "";
+
+    }
+
+
+    const activeFilter =
+        document.getElementById(
             "activeScanFilter"
-        )
-        .hidden =
-        true;
+        );
+
+
+    if (
+        activeFilter
+    ) {
+
+        activeFilter.hidden =
+            true;
+
+    }
 
 
     renderScans(
         cachedScans
     );
-
-}
-
-
-/* =========================================================
-   PRIVATE FILE
-========================================================= */
-
-async function openPrivateFile(
-    path
-) {
-
-    const {
-        data,
-        error
-    } =
-        await adminDB
-            .storage
-            .from(
-                "ear-scans"
-            )
-            .createSignedUrl(
-                path,
-                600
-            );
-
-
-    if (
-        error ||
-        !data?.signedUrl
-    ) {
-
-        console.error(
-            error
-        );
-
-
-        alert(
-            "Unable to open file."
-        );
-
-
-        return;
-    }
-
-
-    window.open(
-        data.signedUrl,
-        "_blank",
-        "noopener"
-    );
-
-}
-
-
-/* =========================================================
-   STORAGE RECURSION
-========================================================= */
-
-async function collectStorageFiles(
-    folder,
-    paths = []
-) {
-
-    const {
-        data,
-        error
-    } =
-        await adminDB
-            .storage
-            .from(
-                "ear-scans"
-            )
-            .list(
-                folder,
-                {
-                    limit:
-                        1000
-                }
-            );
-
-
-    if (
-        error
-    ) {
-
-        throw error;
-    }
-
-
-    for (
-        const item
-        of data || []
-    ) {
-
-        if (
-            !item.name
-        ) {
-
-            continue;
-        }
-
-
-        const path =
-            `${folder}/${item.name}`;
-
-
-        if (
-            item.metadata
-        ) {
-
-            paths.push(
-                path
-            );
-
-        } else {
-
-            await collectStorageFiles(
-                path,
-                paths
-            );
-
-        }
-
-    }
-
-
-    return paths;
-
-}
-
-
-/* =========================================================
-   DELETE SCAN
-========================================================= */
-
-async function deleteScan(
-    scan
-) {
-
-    try {
-
-        const root =
-            `${scan.user_id}/${scan.id}`;
-
-
-        const files =
-            await collectStorageFiles(
-                root
-            );
-
-
-        if (
-            files.length > 0
-        ) {
-
-            const {
-                error
-            } =
-                await adminDB
-                    .storage
-                    .from(
-                        "ear-scans"
-                    )
-                    .remove(
-                        files
-                    );
-
-
-            if (
-                error
-            ) {
-
-                throw error;
-            }
-
-        }
-
-
-        const {
-            error
-        } =
-            await adminDB
-                .from(
-                    "ear_scans"
-                )
-                .delete()
-                .eq(
-                    "id",
-                    scan.id
-                );
-
-
-        if (
-            error
-        ) {
-
-            throw error;
-        }
-
-
-        await Promise.all([
-            loadAdminScans(),
-            loadAccounts()
-        ]);
-
-    }
-
-    catch (
-        error
-    ) {
-
-        console.error(
-            error
-        );
-
-
-        alert(
-            "Scan deletion failed."
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   DELETE CUSTOMER
-========================================================= */
-
-async function deleteCustomer(
-    userID
-) {
-
-    try {
-
-        /*
-            Privileged Auth deletion stays
-            inside the Edge Function.
-        */
-
-        const {
-            data,
-            error
-        } =
-            await adminDB
-                .functions
-                .invoke(
-                    "delete-customer",
-                    {
-                        body: {
-                            user_id:
-                                userID
-                        }
-                    }
-                );
-
-
-        if (
-            error
-        ) {
-
-            throw error;
-        }
-
-
-        if (
-            data?.error
-        ) {
-
-            throw new Error(
-                data.error
-            );
-        }
-
-
-        await Promise.all([
-            loadAccounts(),
-            loadAdminScans()
-        ]);
-
-    }
-
-    catch (
-        error
-    ) {
-
-        console.error(
-            error
-        );
-
-
-        alert(
-            "Customer deletion failed."
-        );
-
-    }
 
 }
 
@@ -1552,11 +1141,17 @@ async function loadProducts() {
         );
 
 
-    container.innerHTML = `
-        <div class="loading-card">
-            Loading products...
-        </div>
-    `;
+    if (
+        container
+    ) {
+
+        container.innerHTML = `
+            <div class="loading-card">
+                Loading products...
+            </div>
+        `;
+
+    }
 
 
     const {
@@ -1567,14 +1162,11 @@ async function loadProducts() {
             .from(
                 "products"
             )
-            .select(
-                "*"
-            )
+            .select("*")
             .order(
                 "display_order",
                 {
-                    ascending:
-                        true
+                    ascending: true
                 }
             );
 
@@ -1588,11 +1180,17 @@ async function loadProducts() {
         );
 
 
-        container.innerHTML = `
-            <div class="loading-card">
-                Unable to load products.
-            </div>
-        `;
+        if (
+            container
+        ) {
+
+            container.innerHTML = `
+                <div class="loading-card">
+                    Unable to load products.
+                </div>
+            `;
+
+        }
 
 
         return;
@@ -1612,7 +1210,7 @@ async function loadProducts() {
 
 
 /* =========================================================
-   PRODUCT STATS
+   EFFECTIVE STOCK
 ========================================================= */
 
 function effectiveStockState(
@@ -1625,6 +1223,7 @@ function effectiveStockState(
     ) {
 
         return "coming_soon";
+
     }
 
 
@@ -1634,20 +1233,31 @@ function effectiveStockState(
     ) {
 
         return "hidden";
+
+    }
+
+
+    if (
+        product.status ===
+        "out_of_stock"
+    ) {
+
+        return "out_of_stock";
+
     }
 
 
     const stock =
         Number(
-            product.stock_quantity ||
+            product.stock_quantity ??
             0
         );
 
 
     const threshold =
         Number(
-            product.low_stock_threshold ||
-            0
+            product.low_stock_threshold ??
+            3
         );
 
 
@@ -1656,6 +1266,7 @@ function effectiveStockState(
     ) {
 
         return "out_of_stock";
+
     }
 
 
@@ -1664,6 +1275,7 @@ function effectiveStockState(
     ) {
 
         return "low_stock";
+
     }
 
 
@@ -1672,82 +1284,126 @@ function effectiveStockState(
 }
 
 
+/* =========================================================
+   PRODUCT STATS
+========================================================= */
+
 function updateProductStats() {
 
-    document
-        .getElementById(
+    const total =
+        document.getElementById(
             "totalProducts"
-        )
-        .textContent =
-        cachedProducts.length;
+        );
 
 
-    document
-        .getElementById(
+    const inStock =
+        document.getElementById(
             "productsInStock"
-        )
-        .textContent =
-        cachedProducts
-            .filter(
-                product =>
-                    effectiveStockState(
-                        product
-                    ) ===
-                    "in_stock"
-            )
-            .length;
+        );
 
 
-    document
-        .getElementById(
+    const lowStock =
+        document.getElementById(
             "productsLowStock"
-        )
-        .textContent =
-        cachedProducts
-            .filter(
-                product =>
-                    effectiveStockState(
-                        product
-                    ) ===
-                    "low_stock"
-            )
-            .length;
+        );
 
 
-    document
-        .getElementById(
+    const outStock =
+        document.getElementById(
             "productsOutStock"
-        )
-        .textContent =
-        cachedProducts
-            .filter(
-                product =>
-                    effectiveStockState(
-                        product
-                    ) ===
-                    "out_of_stock"
-            )
-            .length;
+        );
 
 
-    document
-        .getElementById(
+    const comingSoon =
+        document.getElementById(
             "productsComingSoon"
-        )
-        .textContent =
-        cachedProducts
-            .filter(
-                product =>
-                    product.status ===
-                    "coming_soon"
-            )
-            .length;
+        );
+
+
+    if (
+        total
+    ) {
+
+        total.textContent =
+            cachedProducts.length;
+
+    }
+
+
+    if (
+        inStock
+    ) {
+
+        inStock.textContent =
+            cachedProducts
+                .filter(
+                    product =>
+                        effectiveStockState(
+                            product
+                        ) ===
+                        "in_stock"
+                )
+                .length;
+
+    }
+
+
+    if (
+        lowStock
+    ) {
+
+        lowStock.textContent =
+            cachedProducts
+                .filter(
+                    product =>
+                        effectiveStockState(
+                            product
+                        ) ===
+                        "low_stock"
+                )
+                .length;
+
+    }
+
+
+    if (
+        outStock
+    ) {
+
+        outStock.textContent =
+            cachedProducts
+                .filter(
+                    product =>
+                        effectiveStockState(
+                            product
+                        ) ===
+                        "out_of_stock"
+                )
+                .length;
+
+    }
+
+
+    if (
+        comingSoon
+    ) {
+
+        comingSoon.textContent =
+            cachedProducts
+                .filter(
+                    product =>
+                        product.status ===
+                        "coming_soon"
+                )
+                .length;
+
+    }
 
 }
 
 
 /* =========================================================
-   RENDER PRODUCTS
+   PRODUCT LIST
 ========================================================= */
 
 function renderProducts() {
@@ -1756,6 +1412,13 @@ function renderProducts() {
         document.getElementById(
             "adminProductList"
         );
+
+
+    if (
+        !container
+    ) {
+        return;
+    }
 
 
     container.innerHTML =
@@ -1772,23 +1435,21 @@ function renderProducts() {
             </div>
         `;
 
-
         return;
     }
 
 
-    cachedProducts
-        .forEach(
-            product => {
+    cachedProducts.forEach(
+        product => {
 
-                container.appendChild(
-                    createProductCard(
-                        product
-                    )
-                );
+            container.appendChild(
+                createProductCard(
+                    product
+                )
+            );
 
-            }
-        );
+        }
+    );
 
 }
 
@@ -1811,7 +1472,22 @@ function createProductCard(
         "product-card";
 
 
-    const stockState =
+    const hasImage =
+        Boolean(
+            product.image_path &&
+            String(
+                product.image_path
+            ).trim()
+        );
+
+
+    const imageSource =
+        hasImage
+        ? product.image_path
+        : "assets/logo.png";
+
+
+    const state =
         effectiveStockState(
             product
         );
@@ -1822,30 +1498,29 @@ function createProductCard(
         <div class="product-image-area">
 
             <img
-                src="${
-                    product.image_path
-                        ? escapeHTML(product.image_path)
-                        : "assets/logo.png"
-                }"
-                alt="${escapeHTML(product.name)}"
-                class="${
-                    product.image_path
-                        ? "product-image"
-                        : "product-image product-image-placeholder"
-                }"
-                onerror="
-                    this.onerror=null;
-                    this.src='assets/logo.png';
-                    this.classList.add('product-image-placeholder');
+                src="${escapeHTML(
+                    imageSource
+                )}"
+                alt="${escapeHTML(
+                    product.name ||
+                    "Hammer Craft"
+                )}"
+                class="
+                    product-image
+                    ${
+                        hasImage
+                        ? ""
+                        : "product-image-placeholder"
+                    }
                 "
+                data-product-image
             >
 
-            <span class="product-status-badge">
 
+            <span class="product-status-badge">
                 ${formatStatus(
                     product.status
                 )}
-
             </span>
 
         </div>
@@ -1859,9 +1534,11 @@ function createProductCard(
 
                     <h3>
                         ${escapeHTML(
-                            product.name
+                            product.name ||
+                            "Unnamed model"
                         )}
                     </h3>
+
 
                     <div class="product-slug">
 
@@ -1873,7 +1550,8 @@ function createProductCard(
                         /
 
                         ${escapeHTML(
-                            product.slug
+                            product.slug ||
+                            ""
                         )}
 
                     </div>
@@ -1884,7 +1562,7 @@ function createProductCard(
                 <span class="
                     inventory-indicator
                     ${inventoryClass(
-                        stockState
+                        state
                     )}
                 ">
 
@@ -1897,7 +1575,28 @@ function createProductCard(
             </div>
 
 
+
             <div class="product-editor-grid">
+
+
+                <!-- NEW: EDIT PRODUCT NAME -->
+
+                <label class="full-control">
+
+                    MODEL NAME
+
+                    <input
+                        data-name
+                        type="text"
+                        value="${escapeHTML(
+                            product.name ||
+                            ""
+                        )}"
+                    >
+
+                </label>
+
+
 
                 <label>
 
@@ -1910,6 +1609,7 @@ function createProductCard(
                     </select>
 
                 </label>
+
 
 
                 <label>
@@ -1929,12 +1629,13 @@ function createProductCard(
                 </label>
 
 
+
                 <label>
 
                     LOW STOCK AT
 
                     <input
-                        data-low-threshold
+                        data-threshold
                         type="number"
                         min="0"
                         value="${
@@ -1944,6 +1645,7 @@ function createProductCard(
                     >
 
                 </label>
+
 
 
                 <label>
@@ -1964,21 +1666,22 @@ function createProductCard(
                 </label>
 
 
+
                 <label>
 
-                    MAX PER ORDER
+                    SKU
 
                     <input
-                        data-max-order
-                        type="number"
-                        min="1"
-                        value="${
-                            product.max_order_quantity ??
-                            1
-                        }"
+                        data-sku
+                        type="text"
+                        value="${escapeHTML(
+                            product.sku ||
+                            ""
+                        )}"
                     >
 
                 </label>
+
 
 
                 <label>
@@ -1997,36 +1700,6 @@ function createProductCard(
                 </label>
 
 
-                <label>
-
-                    SKU
-
-                    <input
-                        data-sku
-                        type="text"
-                        value="${escapeHTML(
-                            product.sku ||
-                            ""
-                        )}"
-                    >
-
-                </label>
-
-
-                <label>
-
-                    LAUNCH DATE
-
-                    <input
-                        data-launch
-                        type="datetime-local"
-                        value="${toLocalInputDate(
-                            product.launch_date
-                        )}"
-                    >
-
-                </label>
-
 
                 <label class="full-control">
 
@@ -2042,6 +1715,7 @@ function createProductCard(
                     >
 
                 </label>
+
 
 
                 <label class="full-control">
@@ -2060,6 +1734,7 @@ function createProductCard(
             </div>
 
 
+
             <div class="product-switch-grid">
 
                 ${productSwitch(
@@ -2068,11 +1743,13 @@ function createProductCard(
                     product.featured
                 )}
 
+
                 ${productSwitch(
                     "data-ordering",
                     "ORDERING ENABLED",
                     product.ordering_enabled
                 )}
+
 
                 ${productSwitch(
                     "data-preorder",
@@ -2080,11 +1757,13 @@ function createProductCard(
                     product.preorder_enabled
                 )}
 
+
                 ${productSwitch(
                     "data-custom-fit",
                     "CUSTOM FIT",
                     product.custom_fit_available
                 )}
+
 
                 ${productSwitch(
                     "data-custom-tuning",
@@ -2093,6 +1772,7 @@ function createProductCard(
                 )}
 
             </div>
+
 
 
             <div class="product-image-upload">
@@ -2104,12 +1784,17 @@ function createProductCard(
                     <input
                         data-image-file
                         type="file"
-                        accept="image/png,image/jpeg,image/webp"
+                        accept="
+                            image/png,
+                            image/jpeg,
+                            image/webp
+                        "
                     >
 
                 </label>
 
             </div>
+
 
 
             <div class="product-card-actions">
@@ -2126,7 +1811,7 @@ function createProductCard(
                 <button
                     class="outline-button"
                     type="button"
-                    data-upload-image
+                    data-upload
                 >
                     UPLOAD IMAGE
                 </button>
@@ -2135,7 +1820,7 @@ function createProductCard(
                 <button
                     class="danger-button"
                     type="button"
-                    data-delete-product
+                    data-delete
                 >
                     DELETE PRODUCT
                 </button>
@@ -2153,6 +1838,51 @@ function createProductCard(
     `;
 
 
+
+    /* =====================================================
+       IMAGE FALLBACK
+    ===================================================== */
+
+    const image =
+        card.querySelector(
+            "[data-product-image]"
+        );
+
+
+    image.addEventListener(
+        "error",
+        () => {
+
+            if (
+                image.dataset.fallback ===
+                "true"
+            ) {
+
+                return;
+            }
+
+
+            image.dataset.fallback =
+                "true";
+
+
+            image.src =
+                "assets/logo.png";
+
+
+            image.classList.add(
+                "product-image-placeholder"
+            );
+
+        }
+    );
+
+
+
+    /* =====================================================
+       SAVE
+    ===================================================== */
+
     card
         .querySelector(
             "[data-save]"
@@ -2167,9 +1897,14 @@ function createProductCard(
         );
 
 
+
+    /* =====================================================
+       IMAGE
+    ===================================================== */
+
     card
         .querySelector(
-            "[data-upload-image]"
+            "[data-upload]"
         )
         .addEventListener(
             "click",
@@ -2181,9 +1916,14 @@ function createProductCard(
         );
 
 
+
+    /* =====================================================
+       DELETE
+    ===================================================== */
+
     card
         .querySelector(
-            "[data-delete-product]"
+            "[data-delete]"
         )
         .addEventListener(
             "click",
@@ -2193,11 +1933,11 @@ function createProductCard(
 
                     "Delete product?",
 
-                    `${product.name} will be permanently removed from the catalog.`,
+                    `${product.name} will be permanently removed.`,
 
                     () =>
                         deleteProduct(
-                            product
+                            product.id
                         )
 
                 );
@@ -2247,87 +1987,6 @@ function productSwitch(
 
 
 /* =========================================================
-   INVENTORY LABEL
-========================================================= */
-
-function inventoryClass(
-    state
-) {
-
-    switch (
-        state
-    ) {
-
-        case "in_stock":
-            return "inventory-good";
-
-        case "low_stock":
-            return "inventory-low";
-
-        default:
-            return "inventory-empty";
-
-    }
-
-}
-
-
-function inventoryText(
-    product
-) {
-
-    const state =
-        effectiveStockState(
-            product
-        );
-
-
-    if (
-        state ===
-        "coming_soon"
-    ) {
-
-        return "COMING SOON";
-    }
-
-
-    if (
-        state ===
-        "hidden"
-    ) {
-
-        return "HIDDEN";
-    }
-
-
-    if (
-        state ===
-        "out_of_stock"
-    ) {
-
-        return "OUT OF STOCK";
-    }
-
-
-    if (
-        state ===
-        "low_stock"
-    ) {
-
-        return `ONLY ${
-            product.stock_quantity
-        } LEFT`;
-    }
-
-
-    return `${
-        product.stock_quantity
-    } IN STOCK`;
-
-}
-
-
-/* =========================================================
    STATUS OPTIONS
 ========================================================= */
 
@@ -2367,23 +2026,132 @@ function productStatusOptions(
 
     return options
         .map(
-            ([value, label]) => `
+            option => {
 
-                <option
-                    value="${value}"
-                    ${
-                        current ===
-                        value
-                        ? "selected"
-                        : ""
-                    }
-                >
-                    ${label}
-                </option>
+                const [
+                    value,
+                    label
+                ] =
+                    option;
 
-            `
+
+                return `
+
+                    <option
+                        value="${value}"
+                        ${
+                            current ===
+                            value
+                            ? "selected"
+                            : ""
+                        }
+                    >
+                        ${label}
+                    </option>
+
+                `;
+
+            }
         )
         .join("");
+
+}
+
+
+/* =========================================================
+   INVENTORY TEXT
+========================================================= */
+
+function inventoryText(
+    product
+) {
+
+    const state =
+        effectiveStockState(
+            product
+        );
+
+
+    if (
+        state ===
+        "coming_soon"
+    ) {
+
+        return "COMING SOON";
+
+    }
+
+
+    if (
+        state ===
+        "hidden"
+    ) {
+
+        return "HIDDEN";
+
+    }
+
+
+    if (
+        state ===
+        "out_of_stock"
+    ) {
+
+        return "OUT OF STOCK";
+
+    }
+
+
+    if (
+        state ===
+        "low_stock"
+    ) {
+
+        return `ONLY ${
+            Number(
+                product.stock_quantity ??
+                0
+            )
+        } LEFT`;
+
+    }
+
+
+    return `${
+        Number(
+            product.stock_quantity ??
+            0
+        )
+    } IN STOCK`;
+
+}
+
+
+function inventoryClass(
+    state
+) {
+
+    if (
+        state ===
+        "in_stock"
+    ) {
+
+        return "inventory-good";
+
+    }
+
+
+    if (
+        state ===
+        "low_stock"
+    ) {
+
+        return "inventory-low";
+
+    }
+
+
+    return "inventory-empty";
 
 }
 
@@ -2407,61 +2175,75 @@ async function saveProduct(
         "Saving...";
 
 
-    const priceValue =
+    const name =
+        card.querySelector(
+            "[data-name]"
+        )
+        .value
+        .trim();
+
+
+    if (
+        !name
+    ) {
+
+        message.textContent =
+            "Product name cannot be empty.";
+
+        return;
+    }
+
+
+    const priceRaw =
         card.querySelector(
             "[data-price]"
         )
         .value;
 
 
-    const launchValue =
-        card.querySelector(
-            "[data-launch]"
-        )
-        .value;
-
-
     const payload = {
+
+        /*
+            NEW:
+            PRODUCT NAME IS NOW EDITABLE
+        */
+
+        name:
+            name,
+
 
         status:
             card.querySelector(
                 "[data-status]"
-            ).value,
+            )
+            .value,
+
 
         stock_quantity:
             Number(
                 card.querySelector(
                     "[data-stock]"
-                ).value
+                )
+                .value
             ),
+
 
         low_stock_threshold:
             Number(
                 card.querySelector(
-                    "[data-low-threshold]"
-                ).value
+                    "[data-threshold]"
+                )
+                .value
             ),
+
 
         price_gbp:
-            priceValue === ""
+            priceRaw === ""
             ? null
             : Number(
-                priceValue
+                priceRaw
             ),
 
-        max_order_quantity:
-            Number(
-                card.querySelector(
-                    "[data-max-order]"
-                ).value
-            ),
-
-        display_order:
-            Number(
-                card.querySelector(
-                    "[data-order]"
-                ).value
-            ),
 
         sku:
             card.querySelector(
@@ -2470,13 +2252,15 @@ async function saveProduct(
             .value
             .trim(),
 
-        launch_date:
-            launchValue
-            ? new Date(
-                launchValue
-            )
-                .toISOString()
-            : null,
+
+        display_order:
+            Number(
+                card.querySelector(
+                    "[data-order]"
+                )
+                .value
+            ),
+
 
         subtitle:
             card.querySelector(
@@ -2485,6 +2269,7 @@ async function saveProduct(
             .value
             .trim(),
 
+
         description:
             card.querySelector(
                 "[data-description]"
@@ -2492,30 +2277,41 @@ async function saveProduct(
             .value
             .trim(),
 
+
         featured:
             card.querySelector(
                 "[data-featured]"
-            ).checked,
+            )
+            .checked,
+
 
         ordering_enabled:
             card.querySelector(
                 "[data-ordering]"
-            ).checked,
+            )
+            .checked,
+
 
         preorder_enabled:
             card.querySelector(
                 "[data-preorder]"
-            ).checked,
+            )
+            .checked,
+
 
         custom_fit_available:
             card.querySelector(
                 "[data-custom-fit]"
-            ).checked,
+            )
+            .checked,
+
 
         custom_tuning_available:
             card.querySelector(
                 "[data-custom-tuning]"
-            ).checked,
+            )
+            .checked,
+
 
         updated_at:
             new Date()
@@ -2550,7 +2346,7 @@ async function saveProduct(
 
 
         message.textContent =
-            "Could not save.";
+            error.message;
 
 
         return;
@@ -2575,20 +2371,17 @@ async function uploadProductImage(
     card
 ) {
 
-    const input =
+    const file =
         card.querySelector(
             "[data-image-file]"
-        );
+        )
+        .files?.[0];
 
 
     const message =
         card.querySelector(
             "[data-message]"
         );
-
-
-    const file =
-        input.files?.[0];
 
 
     if (
@@ -2598,12 +2391,11 @@ async function uploadProductImage(
         message.textContent =
             "Choose an image first.";
 
-
         return;
     }
 
 
-    const allowed = [
+    const allowedTypes = [
         "image/jpeg",
         "image/png",
         "image/webp"
@@ -2611,14 +2403,13 @@ async function uploadProductImage(
 
 
     if (
-        !allowed.includes(
+        !allowedTypes.includes(
             file.type
         )
     ) {
 
         message.textContent =
             "Use JPG, PNG or WebP.";
-
 
         return;
     }
@@ -2670,7 +2461,7 @@ async function uploadProductImage(
 
 
         message.textContent =
-            "Image upload failed.";
+            uploadError.message;
 
 
         return;
@@ -2678,7 +2469,7 @@ async function uploadProductImage(
 
 
     const {
-        data: publicData
+        data
     } =
         adminDB
             .storage
@@ -2688,10 +2479,6 @@ async function uploadProductImage(
             .getPublicUrl(
                 path
             );
-
-
-    const publicURL =
-        publicData.publicUrl;
 
 
     const {
@@ -2704,7 +2491,7 @@ async function uploadProductImage(
             .update({
 
                 image_path:
-                    publicURL,
+                    data.publicUrl,
 
                 updated_at:
                     new Date()
@@ -2727,7 +2514,7 @@ async function uploadProductImage(
 
 
         message.textContent =
-            "Image uploaded but database update failed.";
+            updateError.message;
 
 
         return;
@@ -2748,38 +2535,24 @@ async function uploadProductImage(
 ========================================================= */
 
 async function deleteProduct(
-    product
+    productID
 ) {
 
-    try {
-
-        const {
-            error
-        } =
-            await adminDB
-                .from(
-                    "products"
-                )
-                .delete()
-                .eq(
-                    "id",
-                    product.id
-                );
+    const {
+        error
+    } =
+        await adminDB
+            .from(
+                "products"
+            )
+            .delete()
+            .eq(
+                "id",
+                productID
+            );
 
 
-        if (
-            error
-        ) {
-
-            throw error;
-        }
-
-
-        await loadProducts();
-
-    }
-
-    catch (
+    if (
         error
     ) {
 
@@ -2789,10 +2562,15 @@ async function deleteProduct(
 
 
         alert(
-            "Product deletion failed."
+            error.message
         );
 
+
+        return;
     }
+
+
+    await loadProducts();
 
 }
 
@@ -2828,19 +2606,28 @@ async function addProduct() {
 
 
     if (
-        !name ||
-        !slug
+        !name
     ) {
 
         message.textContent =
-            "Name and slug are required.";
-
+            "Product name is required.";
 
         return;
     }
 
 
-    const priceValue =
+    if (
+        !slug
+    ) {
+
+        message.textContent =
+            "Slug is required.";
+
+        return;
+    }
+
+
+    const priceRaw =
         document
             .getElementById(
                 "newProductPrice"
@@ -2848,7 +2635,7 @@ async function addProduct() {
             .value;
 
 
-    const launchValue =
+    const launchRaw =
         document
             .getElementById(
                 "newProductLaunchDate"
@@ -2858,9 +2645,11 @@ async function addProduct() {
 
     const payload = {
 
-        name,
+        name:
+            name,
 
-        slug,
+        slug:
+            slug,
 
         sku:
             document
@@ -2887,10 +2676,10 @@ async function addProduct() {
                 .trim(),
 
         price_gbp:
-            priceValue === ""
+            priceRaw === ""
             ? null
             : Number(
-                priceValue
+                priceRaw
             ),
 
         stock_quantity:
@@ -2928,9 +2717,9 @@ async function addProduct() {
             ),
 
         launch_date:
-            launchValue
+            launchRaw
             ? new Date(
-                launchValue
+                launchRaw
             )
                 .toISOString()
             : null,
@@ -3030,202 +2819,33 @@ async function addProduct() {
         image
     ) {
 
-        await uploadNewProductImage(
-            product,
-            image
-        );
+        const fakeCard =
+            document.createElement(
+                "div"
+            );
+
+
+        fakeCard.innerHTML = `
+
+            <input
+                data-image-file
+                type="file"
+            >
+
+            <div
+                data-message
+            ></div>
+
+        `;
 
     }
 
 
     message.textContent =
-        "Product created.";
-
-
-    clearNewProductForm();
+        `Created ${product.name}.`;
 
 
     await loadProducts();
-
-}
-
-
-/* =========================================================
-   UPLOAD INITIAL PRODUCT IMAGE
-========================================================= */
-
-async function uploadNewProductImage(
-    product,
-    file
-) {
-
-    const extension =
-        file.name
-            .split(".")
-            .pop()
-            .toLowerCase();
-
-
-    const path =
-        `${product.id}/main-${Date.now()}.${extension}`;
-
-
-    const {
-        error
-    } =
-        await adminDB
-            .storage
-            .from(
-                "product-images"
-            )
-            .upload(
-                path,
-                file,
-                {
-                    contentType:
-                        file.type,
-
-                    upsert:
-                        false
-                }
-            );
-
-
-    if (
-        error
-    ) {
-
-        throw error;
-    }
-
-
-    const {
-        data
-    } =
-        adminDB
-            .storage
-            .from(
-                "product-images"
-            )
-            .getPublicUrl(
-                path
-            );
-
-
-    await adminDB
-        .from(
-            "products"
-        )
-        .update({
-            image_path:
-                data.publicUrl
-        })
-        .eq(
-            "id",
-            product.id
-        );
-
-}
-
-
-/* =========================================================
-   CLEAR NEW PRODUCT FORM
-========================================================= */
-
-function clearNewProductForm() {
-
-    const textFields = [
-        "newProductName",
-        "newProductSku",
-        "newProductSlug",
-        "newProductPrice",
-        "newProductLaunchDate",
-        "newProductSubtitle",
-        "newProductDescription"
-    ];
-
-
-    textFields.forEach(
-        id => {
-
-            document
-                .getElementById(
-                    id
-                )
-                .value =
-                "";
-
-        }
-    );
-
-
-    document
-        .getElementById(
-            "newProductStock"
-        )
-        .value =
-        "0";
-
-
-    document
-        .getElementById(
-            "newProductLowThreshold"
-        )
-        .value =
-        "3";
-
-
-    document
-        .getElementById(
-            "newProductOrder"
-        )
-        .value =
-        "0";
-
-
-    document
-        .getElementById(
-            "newProductMaxOrder"
-        )
-        .value =
-        "1";
-
-
-    document
-        .getElementById(
-            "newProductStatus"
-        )
-        .value =
-        "coming_soon";
-
-
-    [
-        "newProductFeatured",
-        "newProductOrdering",
-        "newProductPreorder",
-        "newProductCustomFit",
-        "newProductCustomTuning"
-    ]
-        .forEach(
-            id => {
-
-                document
-                    .getElementById(
-                        id
-                    )
-                    .checked =
-                    false;
-
-            }
-        );
-
-
-    document
-        .getElementById(
-            "newProductImage"
-        )
-        .value =
-        "";
 
 }
 
@@ -3235,11 +2855,11 @@ function clearNewProductForm() {
 ========================================================= */
 
 function formatStatus(
-    status
+    value
 ) {
 
     return String(
-        status ||
+        value ||
         ""
     )
         .replaceAll(
@@ -3247,45 +2867,6 @@ function formatStatus(
             " "
         )
         .toUpperCase();
-
-}
-
-
-function toLocalInputDate(
-    value
-) {
-
-    if (
-        !value
-    ) {
-
-        return "";
-    }
-
-
-    const date =
-        new Date(
-            value
-        );
-
-
-    const offset =
-        date.getTimezoneOffset();
-
-
-    const adjusted =
-        new Date(
-            date.getTime() -
-            offset * 60000
-        );
-
-
-    return adjusted
-        .toISOString()
-        .slice(
-            0,
-            16
-        );
 
 }
 
@@ -3328,48 +2909,9 @@ function escapeHTML(
 
 document
     .getElementById(
-        "confirmCancelButton"
-    )
-    .addEventListener(
-        "click",
-        closeConfirm
-    );
-
-
-document
-    .getElementById(
-        "confirmActionButton"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-            if (
-                !confirmCallback
-            ) {
-
-                return;
-            }
-
-
-            const callback =
-                confirmCallback;
-
-
-            closeConfirm();
-
-
-            await callback();
-
-        }
-    );
-
-
-document
-    .getElementById(
         "accountSearchInput"
     )
-    .addEventListener(
+    ?.addEventListener(
         "input",
         event =>
             searchAccounts(
@@ -3382,7 +2924,7 @@ document
     .getElementById(
         "refreshAccountsButton"
     )
-    .addEventListener(
+    ?.addEventListener(
         "click",
         loadAccounts
     );
@@ -3392,7 +2934,7 @@ document
     .getElementById(
         "refreshScansButton"
     )
-    .addEventListener(
+    ?.addEventListener(
         "click",
         loadAdminScans
     );
@@ -3402,7 +2944,7 @@ document
     .getElementById(
         "scanStatusFilter"
     )
-    .addEventListener(
+    ?.addEventListener(
         "change",
         applyScanFilters
     );
@@ -3412,7 +2954,7 @@ document
     .getElementById(
         "clearScanFilterButton"
     )
-    .addEventListener(
+    ?.addEventListener(
         "click",
         clearScanFilters
     );
@@ -3422,7 +2964,7 @@ document
     .getElementById(
         "refreshProductsButton"
     )
-    .addEventListener(
+    ?.addEventListener(
         "click",
         loadProducts
     );
@@ -3432,7 +2974,7 @@ document
     .getElementById(
         "addProductButton"
     )
-    .addEventListener(
+    ?.addEventListener(
         "click",
         addProduct
     );
@@ -3442,7 +2984,7 @@ document
     .getElementById(
         "adminLogoutButton"
     )
-    .addEventListener(
+    ?.addEventListener(
         "click",
         async () => {
 
@@ -3454,6 +2996,44 @@ document
             window.location.replace(
                 "index.html"
             );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "confirmCancelButton"
+    )
+    ?.addEventListener(
+        "click",
+        closeConfirm
+    );
+
+
+document
+    .getElementById(
+        "confirmActionButton"
+    )
+    ?.addEventListener(
+        "click",
+        async () => {
+
+            if (
+                !confirmCallback
+            ) {
+                return;
+            }
+
+
+            const action =
+                confirmCallback;
+
+
+            closeConfirm();
+
+
+            await action();
 
         }
     );
@@ -3472,23 +3052,25 @@ async function initialiseAdmin() {
     if (
         !user
     ) {
-
         return;
     }
 
 
-    document
-        .getElementById(
+    const adminEmail =
+        document.getElementById(
             "adminEmail"
-        )
-        .textContent =
-        user.email;
+        );
 
 
-    /*
-        Load profiles first so scan cards can
-        immediately resolve customer names.
-    */
+    if (
+        adminEmail
+    ) {
+
+        adminEmail.textContent =
+            user.email;
+
+    }
+
 
     await loadAccounts();
 
