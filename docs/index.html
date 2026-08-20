@@ -22,7 +22,7 @@
 
     <link
         rel="stylesheet"
-        href="style.css?v=22"
+        href="style.css?v=40"
     >
 
 </head>
@@ -86,7 +86,6 @@
         id="mobileMenuButton"
         class="mobile-menu-button"
         type="button"
-        aria-label="Open menu"
     >
         MENU
     </button>
@@ -171,7 +170,9 @@
 
                 EXPLORE OUR IEMS
 
-                <span>→</span>
+                <span>
+                    →
+                </span>
 
             </a>
 
@@ -208,7 +209,7 @@
 
 
 <!-- =====================================================
-     INTRO STRIP
+     INTRO
 ===================================================== -->
 
 <section class="intro-strip">
@@ -297,7 +298,6 @@
     </div>
 
 
-
     <div class="about-right">
 
         <p>
@@ -313,10 +313,8 @@
 
 
         <p>
-
             We would rather build thoughtfully
             than build quickly.
-
         </p>
 
 
@@ -334,7 +332,7 @@
 
 
 <!-- =====================================================
-     AI
+     AI TUNING
 ===================================================== -->
 
 <section
@@ -381,10 +379,10 @@
 
                 <p>
 
-                    Our internally developed tuning
-                    workflow uses AI-assisted analysis
-                    to help compare frequency response,
-                    tuning targets and acoustic changes.
+                    Our internally developed tuning workflow
+                    uses AI-assisted analysis to help compare
+                    frequency response, tuning targets and
+                    acoustic changes.
 
                 </p>
 
@@ -410,13 +408,11 @@
 
                 <p>
 
-                    AI helps us identify patterns and
-                    move through iterations more
-                    efficiently.
-
-                    Measurements, acoustic engineering
-                    and subjective listening remain
-                    part of the final decision.
+                    AI helps us identify patterns and move
+                    through iterations more efficiently.
+                    Measurements, acoustic engineering and
+                    subjective listening remain part of the
+                    final decision.
 
                 </p>
 
@@ -512,15 +508,13 @@
         <p>
 
             Our models are developed in small batches.
-
-            Availability, pricing and launch status
-            are updated directly through our internal
+            Availability, pricing and launch status are
+            updated directly through our internal
             Hammer Craft system.
 
         </p>
 
     </div>
-
 
 
     <div
@@ -539,7 +533,7 @@
 
 
 <!-- =====================================================
-     CUSTOM
+     CUSTOM OPTIONS
 ===================================================== -->
 
 <section class="custom-section">
@@ -569,7 +563,9 @@
 
         <article>
 
-            <span>01</span>
+            <span>
+                01
+            </span>
 
             <div>
 
@@ -591,7 +587,9 @@
 
         <article>
 
-            <span>02</span>
+            <span>
+                02
+            </span>
 
             <div>
 
@@ -613,7 +611,9 @@
 
         <article>
 
-            <span>03</span>
+            <span>
+                03
+            </span>
 
             <div>
 
@@ -635,7 +635,9 @@
 
         <article>
 
-            <span>04</span>
+            <span>
+                04
+            </span>
 
             <div>
 
@@ -704,7 +706,9 @@
 
             START EAR SCAN
 
-            <span>→</span>
+            <span>
+                →
+            </span>
 
         </a>
 
@@ -716,7 +720,9 @@
 
         <article>
 
-            <span>01</span>
+            <span>
+                01
+            </span>
 
             <div>
 
@@ -735,7 +741,9 @@
 
         <article>
 
-            <span>02</span>
+            <span>
+                02
+            </span>
 
             <div>
 
@@ -754,7 +762,9 @@
 
         <article>
 
-            <span>03</span>
+            <span>
+                03
+            </span>
 
             <div>
 
@@ -887,13 +897,17 @@
 
 
 
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="supabase-client.js?v=5"></script>
+<script src="supabase-client.js?v=10"></script>
 
-<script src="models.js?v=25"></script>
+<script src="models.js?v=40"></script>
 
 
 <script>
@@ -915,9 +929,11 @@ mobileMenuButton.addEventListener(
     () => {
 
         const open =
-            mobileMenu.classList.toggle(
-                "open"
-            );
+            mobileMenu
+                .classList
+                .toggle(
+                    "open"
+                );
 
 
         mobileMenuButton.textContent =
@@ -930,7 +946,9 @@ mobileMenuButton.addEventListener(
 
 
 mobileMenu
-    .querySelectorAll("a")
+    .querySelectorAll(
+        "a"
+    )
     .forEach(
         link => {
 
@@ -940,7 +958,9 @@ mobileMenu
 
                     mobileMenu
                         .classList
-                        .remove("open");
+                        .remove(
+                            "open"
+                        );
 
 
                     mobileMenuButton.textContent =

@@ -1,6 +1,7 @@
 const HC_SUPABASE_URL =
     "https://oljniflqfchxaqamcxam.supabase.co";
 
+
 const HC_SUPABASE_KEY =
     "sb_publishable_XCsum6bA-gwy0etlzArqNA_LxU4K3Ip";
 
@@ -20,5 +21,6 @@ window.hcSupabase =
 
 
 console.log(
-    "Hammer Craft Supabase client loaded."
+    "Hammer Craft Supabase client ready:",
+    Boolean(window.hcSupabase)
 );

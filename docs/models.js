@@ -1,922 +1,217 @@
-const adminDB =
+/* =========================================================
+   HAMMER CRAFT
+   PUBLIC PRODUCT SYSTEM
+========================================================= */
+
+
+console.log(
+    "Hammer Craft models.js started."
+);
+
+
+const modelDB =
     window.hcSupabase;
 
 
-let cachedAccounts = [];
-let cachedScans = [];
-let cachedProducts = [];
-
-let selectedAccountUserID =
-    null;
-
-let confirmCallback =
-    null;
-
 
 /* =========================================================
-   ADMIN AUTH
+   START
 ========================================================= */
 
-async function requireAdmin() {
+async function initialiseModels() {
 
-    const {
-        data,
-        error
-    } =
-        await adminDB
-            .auth
-            .getUser();
-
-
-    if (
-        error ||
-        !data.user
-    ) {
-
-        window.location.replace(
-            "login.html"
+    const container =
+        document.getElementById(
+            "publicModelGrid"
         );
 
-        return null;
-    }
 
+    if (!container) {
 
-    const user =
-        data.user;
-
-
-    const {
-        data: admin,
-        error: adminError
-    } =
-        await adminDB
-            .from(
-                "admin_users"
-            )
-            .select(
-                "user_id"
-            )
-            .eq(
-                "user_id",
-                user.id
-            )
-            .maybeSingle();
-
-
-    if (
-        adminError ||
-        !admin
-    ) {
-
-        window.location.replace(
-            "account.html"
+        console.error(
+            "publicModelGrid does not exist."
         );
-
-        return null;
-    }
-
-
-    return user;
-
-}
-
-
-/* =========================================================
-   CONFIRM
-========================================================= */
-
-function showConfirm(
-    title,
-    text,
-    callback
-) {
-
-    document
-        .getElementById(
-            "confirmTitle"
-        )
-        .textContent =
-        title;
-
-
-    document
-        .getElementById(
-            "confirmText"
-        )
-        .textContent =
-        text;
-
-
-    confirmCallback =
-        callback;
-
-
-    document
-        .getElementById(
-            "confirmModal"
-        )
-        .classList
-        .add(
-            "open"
-        );
-
-}
-
-
-function closeConfirm() {
-
-    confirmCallback =
-        null;
-
-
-    document
-        .getElementById(
-            "confirmModal"
-        )
-        .classList
-        .remove(
-            "open"
-        );
-
-}
-
-
-/* =========================================================
-   ACCOUNTS
-========================================================= */
-
-async function loadAccounts() {
-
-    const {
-        data: profiles,
-        error
-    } =
-        await adminDB
-            .from(
-                "profiles"
-            )
-            .select(
-                "id,full_name,email,created_at"
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
-
-
-    if (error) {
-
-        console.error(error);
 
         return;
     }
 
 
-    const {
-        data: scans
-    } =
-        await adminDB
-            .from(
-                "ear_scans"
-            )
-            .select(
-                "id,user_id,status"
-            );
+    if (!modelDB) {
 
-
-    const {
-        data: admins
-    } =
-        await adminDB
-            .from(
-                "admin_users"
-            )
-            .select(
-                "user_id"
-            );
-
-
-    const adminSet =
-        new Set(
-            (admins || [])
-                .map(
-                    admin =>
-                        admin.user_id
-                )
+        showModelError(
+            "Supabase client did not load."
         );
 
-
-    cachedAccounts =
-        (profiles || [])
-            .map(
-                profile => {
-
-                    const userScans =
-                        (scans || [])
-                            .filter(
-                                scan =>
-                                    scan.user_id ===
-                                    profile.id
-                            );
+        return;
+    }
 
 
-                    return {
-
-                        ...profile,
-
-                        is_admin:
-                            adminSet.has(
-                                profile.id
-                            ),
-
-                        scan_count:
-                            userScans.length,
-
-                        complete_count:
-                            userScans.filter(
-                                scan =>
-                                    scan.status ===
-                                    "complete"
-                            ).length
-
-                    };
-
-                }
-            );
-
-
-    renderAccounts(
-        cachedAccounts
-    );
-
-
-    updateAccountStats();
+    await loadPublicModels();
 
 }
 
 
-function updateAccountStats() {
 
-    document
-        .getElementById(
-            "totalAccounts"
-        )
-        .textContent =
-        cachedAccounts.length;
+/* =========================================================
+   LOAD PRODUCTS
+========================================================= */
 
-
-    document
-        .getElementById(
-            "accountSummaryTotal"
-        )
-        .textContent =
-        cachedAccounts.length;
-
-
-    document
-        .getElementById(
-            "accountsWithScans"
-        )
-        .textContent =
-        cachedAccounts.filter(
-            account =>
-                account.scan_count > 0
-        ).length;
-
-
-    document
-        .getElementById(
-            "totalAdmins"
-        )
-        .textContent =
-        cachedAccounts.filter(
-            account =>
-                account.is_admin
-        ).length;
-
-}
-
-
-function renderAccounts(
-    accounts
-) {
+async function loadPublicModels() {
 
     const container =
         document.getElementById(
-            "adminAccountList"
+            "publicModelGrid"
         );
 
 
-    container.innerHTML =
-        "";
+    if (!container) {
+        return;
+    }
 
 
-    accounts.forEach(
-        account => {
+    container.innerHTML = `
 
-            const card =
-                document.createElement(
-                    "article"
-                );
+        <div class="model-loading">
+            Loading models...
+        </div>
 
-
-            card.className =
-                "account-card";
+    `;
 
 
-            card.innerHTML = `
+    try {
 
-                <div class="account-card-top">
-
-                    <div>
-
-                        <h3>
-                            ${escapeHTML(
-                                account.full_name ||
-                                "Customer"
-                            )}
-                        </h3>
+        console.log(
+            "Requesting products from Supabase..."
+        );
 
 
-                        <div class="account-email">
+        /*
+            IMPORTANT:
 
-                            ${escapeHTML(
-                                account.email ||
-                                ""
-                            )}
+            Use * here.
 
-                        </div>
+            This prevents the entire query from
+            breaking when one newer optional
+            product column does not exist yet.
+        */
 
-
-                        <div class="account-id">
-
-                            ${escapeHTML(
-                                account.id
-                            )}
-
-                        </div>
-
-                    </div>
-
-
-                    <span class="
-                        role-badge
-                        ${
-                            account.is_admin
-                            ? "admin"
-                            : ""
-                        }
-                    ">
-
-                        ${
-                            account.is_admin
-                            ? "ADMIN"
-                            : "CUSTOMER"
-                        }
-
-                    </span>
-
-                </div>
-
-
-                <div class="account-info">
-
-                    <article>
-
-                        <span>
-                            SCANS
-                        </span>
-
-                        <strong>
-                            ${account.scan_count}
-                        </strong>
-
-                    </article>
-
-
-                    <article>
-
-                        <span>
-                            COMPLETE
-                        </span>
-
-                        <strong>
-                            ${account.complete_count}
-                        </strong>
-
-                    </article>
-
-                </div>
-
-
-                <div class="account-actions">
-
-                    <button
-                        data-view-scans
-                        type="button"
-                    >
-                        VIEW SCANS
-                    </button>
-
-                </div>
-
-            `;
-
-
-            card
-                .querySelector(
-                    "[data-view-scans]"
+        const {
+            data,
+            error
+        } =
+            await modelDB
+                .from(
+                    "products"
                 )
-                .addEventListener(
-                    "click",
-                    () => {
-
-                        selectedAccountUserID =
-                            account.id;
-
-
-                        applyScanFilters();
-
-
-                        document
-                            .getElementById(
-                                "scans"
-                            )
-                            .scrollIntoView({
-                                behavior:
-                                    "smooth"
-                            });
-
+                .select("*")
+                .order(
+                    "display_order",
+                    {
+                        ascending: true
                     }
                 );
 
 
-            container.appendChild(
-                card
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   SCANS
-========================================================= */
-
-async function loadAdminScans() {
-
-    const {
-        data,
-        error
-    } =
-        await adminDB
-            .from(
-                "ear_scans"
-            )
-            .select("*")
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
-
-
-    if (error) {
-
-        console.error(error);
-
-        return;
-    }
-
-
-    cachedScans =
-        data || [];
-
-
-    updateScanStats();
-
-
-    renderScans(
-        cachedScans
-    );
-
-}
-
-
-function updateScanStats() {
-
-    document
-        .getElementById(
-            "totalScans"
-        )
-        .textContent =
-        cachedScans.length;
-
-
-    document
-        .getElementById(
-            "processingScans"
-        )
-        .textContent =
-        cachedScans.filter(
-            scan =>
-                scan.status ===
-                "processing"
-        ).length;
-
-
-    document
-        .getElementById(
-            "completeScans"
-        )
-        .textContent =
-        cachedScans.filter(
-            scan =>
-                scan.status ===
-                "complete"
-        ).length;
-
-
-    document
-        .getElementById(
-            "failedScans"
-        )
-        .textContent =
-        cachedScans.filter(
-            scan =>
-                scan.status ===
-                "failed"
-        ).length;
-
-}
-
-
-function renderScans(
-    scans
-) {
-
-    const container =
-        document.getElementById(
-            "adminScanList"
+        console.log(
+            "Supabase products result:",
+            data
         );
 
 
-    container.innerHTML =
-        "";
+        console.log(
+            "Supabase products error:",
+            error
+        );
 
 
-    scans.forEach(
-        scan => {
+        if (error) {
 
-            const profile =
-                cachedAccounts.find(
-                    account =>
-                        account.id ===
-                        scan.user_id
-                ) || {};
+            showModelError(
+                error.message ||
+                "Unable to read products."
+            );
+
+            return;
+        }
 
 
-            const card =
-                document.createElement(
-                    "article"
+        const products =
+            (data || [])
+                .filter(
+                    product =>
+                        product.status !==
+                        "hidden"
                 );
 
 
-            card.className =
-                "scan-card";
+        if (
+            products.length === 0
+        ) {
 
+            container.innerHTML = `
 
-            card.innerHTML = `
+                <div class="model-loading">
 
-                <h3>
+                    <strong>
+                        NEW MODELS COMING SOON
+                    </strong>
 
-                    ${escapeHTML(
-                        profile.full_name ||
-                        "Customer"
-                    )}
+                    <p>
+                        Hammer Craft models are currently
+                        being prepared.
+                    </p>
 
-                </h3>
-
-
-                <div class="scan-email">
-
-                    ${escapeHTML(
-                        profile.email ||
-                        scan.user_id
-                    )}
-
-                </div>
-
-
-                <div class="scan-meta">
-
-                    <article>
-
-                        <span>
-                            LEFT
-                        </span>
-
-                        <strong>
-
-                            ${
-                                scan.left_image_count ||
-                                0
-                            }
-                            IMAGES
-
-                        </strong>
-
-                    </article>
-
-
-                    <article>
-
-                        <span>
-                            RIGHT
-                        </span>
-
-                        <strong>
-
-                            ${
-                                scan.right_image_count ||
-                                0
-                            }
-                            IMAGES
-
-                        </strong>
-
-                    </article>
-
-                </div>
-
-
-                <div class="scan-id">
-                    ${escapeHTML(scan.id)}
                 </div>
 
             `;
 
-
-            container.appendChild(
-                card
-            );
-
+            return;
         }
-    );
 
-}
 
+        container.innerHTML =
+            "";
 
-function applyScanFilters() {
 
-    let result =
-        [...cachedScans];
-
-
-    const status =
-        document
-            .getElementById(
-                "scanStatusFilter"
-            )
-            .value;
-
-
-    if (status) {
-
-        result =
-            result.filter(
-                scan =>
-                    scan.status ===
-                    status
-            );
-
-    }
-
-
-    if (
-        selectedAccountUserID
-    ) {
-
-        result =
-            result.filter(
-                scan =>
-                    scan.user_id ===
-                    selectedAccountUserID
-            );
-
-    }
-
-
-    renderScans(
-        result
-    );
-
-}
-
-
-/* =========================================================
-   PRODUCTS
-========================================================= */
-
-async function loadProducts() {
-
-    const {
-        data,
-        error
-    } =
-        await adminDB
-            .from(
-                "products"
-            )
-            .select("*")
-            .order(
-                "display_order",
-                {
-                    ascending: true
-                }
-            );
-
-
-    if (error) {
-
-        console.error(error);
-
-        return;
-    }
-
-
-    cachedProducts =
-        data || [];
-
-
-    updateProductStats();
-
-
-    renderProducts();
-
-}
-
-
-/* =========================================================
-   STOCK
-========================================================= */
-
-function effectiveStockState(
-    product
-) {
-
-    if (
-        product.status ===
-        "coming_soon"
-    ) {
-        return "coming_soon";
-    }
-
-
-    if (
-        product.status ===
-        "hidden"
-    ) {
-        return "hidden";
-    }
-
-
-    const quantity =
-        Number(
-            product.stock_quantity ||
-            0
-        );
-
-
-    const threshold =
-        Number(
-            product.low_stock_threshold ||
-            0
-        );
-
-
-    if (
-        quantity <= 0
-    ) {
-        return "out_of_stock";
-    }
-
-
-    if (
-        quantity <= threshold
-    ) {
-        return "low_stock";
-    }
-
-
-    return "in_stock";
-
-}
-
-
-function updateProductStats() {
-
-    document
-        .getElementById(
-            "totalProducts"
-        )
-        .textContent =
-        cachedProducts.length;
-
-
-    document
-        .getElementById(
-            "productsInStock"
-        )
-        .textContent =
-        cachedProducts.filter(
-            product =>
-                effectiveStockState(
-                    product
-                ) ===
-                "in_stock"
-        ).length;
-
-
-    document
-        .getElementById(
-            "productsLowStock"
-        )
-        .textContent =
-        cachedProducts.filter(
-            product =>
-                effectiveStockState(
-                    product
-                ) ===
-                "low_stock"
-        ).length;
-
-
-    document
-        .getElementById(
-            "productsOutStock"
-        )
-        .textContent =
-        cachedProducts.filter(
-            product =>
-                effectiveStockState(
-                    product
-                ) ===
-                "out_of_stock"
-        ).length;
-
-
-    document
-        .getElementById(
-            "productsComingSoon"
-        )
-        .textContent =
-        cachedProducts.filter(
-            product =>
-                product.status ===
-                "coming_soon"
-        ).length;
-
-}
-
-
-/* =========================================================
-   PRODUCT CARD
-========================================================= */
-
-function renderProducts() {
-
-    const container =
-        document.getElementById(
-            "adminProductList"
-        );
-
-
-    container.innerHTML =
-        "";
-
-
-    cachedProducts.forEach(
-        product => {
+        for (
+            const product
+            of products
+        ) {
 
             container.appendChild(
-                createProductCard(
+                createPublicModelCard(
                     product
                 )
             );
 
         }
-    );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unexpected model loader error:",
+            error
+        );
+
+
+        showModelError(
+            error.message ||
+            "Unexpected product loading error."
+        );
+
+    }
 
 }
 
 
-function createProductCard(
+
+/* =========================================================
+   CREATE PRODUCT CARD
+========================================================= */
+
+function createPublicModelCard(
     product
 ) {
 
@@ -927,12 +222,19 @@ function createProductCard(
 
 
     card.className =
-        "product-card";
+        "public-model-card";
 
+
+    /*
+        IMAGE FALLBACK
+    */
 
     const hasImage =
         Boolean(
-            product.image_path
+            product.image_path &&
+            String(
+                product.image_path
+            ).trim()
         );
 
 
@@ -942,33 +244,57 @@ function createProductCard(
         : "assets/logo.png";
 
 
+    const state =
+        effectiveStockState(
+            product
+        );
+
+
+    const price =
+        product.price_gbp === null ||
+        product.price_gbp === undefined ||
+        product.price_gbp === ""
+
+        ? ""
+
+        : `£${Number(
+            product.price_gbp
+        ).toFixed(2)}`;
+
+
     card.innerHTML = `
 
-        <div class="product-image-area">
+        <div class="model-image-wrap">
 
             <img
                 src="${escapeHTML(
                     imageSource
                 )}"
                 alt="${escapeHTML(
-                    product.name
+                    product.name ||
+                    "Hammer Craft"
                 )}"
                 class="
-                    product-image
+                    model-image
                     ${
                         hasImage
                         ? ""
-                        : "product-image-placeholder"
+                        : "model-image-placeholder"
                     }
                 "
-                data-product-image
+                data-model-image
             >
 
 
-            <span class="product-status-badge">
+            <span
+                class="
+                    model-status
+                    ${state}
+                "
+            >
 
-                ${formatStatus(
-                    product.status
+                ${stockText(
+                    product
                 )}
 
             </span>
@@ -976,216 +302,82 @@ function createProductCard(
         </div>
 
 
-        <div class="product-card-content">
+        <div class="model-content">
 
-            <div class="product-card-top">
+            <div class="model-top">
 
                 <div>
 
-                    <h3>
-                        ${escapeHTML(
-                            product.name
-                        )}
-                    </h3>
-
-                    <div class="product-slug">
+                    <div class="model-subtitle">
 
                         ${escapeHTML(
-                            product.sku ||
-                            "NO SKU"
-                        )}
-
-                        /
-
-                        ${escapeHTML(
-                            product.slug
+                            product.subtitle ||
+                            "HAMMER CRAFT"
                         )}
 
                     </div>
 
+
+                    <h3>
+
+                        ${escapeHTML(
+                            product.name ||
+                            "Hammer Craft"
+                        )}
+
+                    </h3>
+
                 </div>
 
-            </div>
 
+                ${
+                    price
+                    ? `
 
-            <div class="product-editor-grid">
+                        <strong class="model-price">
+                            ${price}
+                        </strong>
 
-                <label>
-
-                    STATUS
-
-                    <select data-status>
-
-                        <option
-                            value="in_stock"
-                            ${
-                                product.status ===
-                                "in_stock"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            In stock
-                        </option>
-
-                        <option
-                            value="low_stock"
-                            ${
-                                product.status ===
-                                "low_stock"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Low stock
-                        </option>
-
-                        <option
-                            value="out_of_stock"
-                            ${
-                                product.status ===
-                                "out_of_stock"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Out of stock
-                        </option>
-
-                        <option
-                            value="coming_soon"
-                            ${
-                                product.status ===
-                                "coming_soon"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Coming soon
-                        </option>
-
-                        <option
-                            value="hidden"
-                            ${
-                                product.status ===
-                                "hidden"
-                                ? "selected"
-                                : ""
-                            }
-                        >
-                            Hidden
-                        </option>
-
-                    </select>
-
-                </label>
-
-
-                <label>
-
-                    STOCK
-
-                    <input
-                        data-stock
-                        type="number"
-                        min="0"
-                        value="${
-                            product.stock_quantity ||
-                            0
-                        }"
-                    >
-
-                </label>
-
-
-                <label>
-
-                    LOW STOCK AT
-
-                    <input
-                        data-threshold
-                        type="number"
-                        min="0"
-                        value="${
-                            product.low_stock_threshold ||
-                            3
-                        }"
-                    >
-
-                </label>
-
-
-                <label>
-
-                    PRICE
-
-                    <input
-                        data-price
-                        type="number"
-                        step="0.01"
-                        value="${
-                            product.price_gbp ||
-                            ""
-                        }"
-                    >
-
-                </label>
+                    `
+                    : ""
+                }
 
             </div>
 
 
-            <div class="product-image-upload">
+            ${
+                product.description
+                ? `
 
-                <input
-                    data-image-file
-                    type="file"
-                    accept="
-                        image/jpeg,
-                        image/png,
-                        image/webp
-                    "
-                >
+                    <p>
+                        ${escapeHTML(
+                            product.description
+                        )}
+                    </p>
 
-            </div>
-
-
-            <div class="product-card-actions">
-
-                <button
-                    data-save
-                    class="primary-button"
-                >
-                    SAVE CHANGES
-                </button>
+                `
+                : ""
+            }
 
 
-                <button
-                    data-upload
-                    class="outline-button"
-                >
-                    CHANGE IMAGE
-                </button>
-
-            </div>
+            ${createFeatureTags(product)}
 
 
-            <div
-                data-message
-                class="admin-message"
-            ></div>
+            ${createProductAction(product)}
 
         </div>
 
     `;
 
 
-    /*
-        BROKEN IMAGE FALLBACK
-    */
+
+    /* =====================================================
+       BROKEN IMAGE FALLBACK
+    ===================================================== */
 
     const image =
         card.querySelector(
-            "[data-product-image]"
+            "[data-model-image]"
         );
 
 
@@ -1194,14 +386,15 @@ function createProductCard(
         () => {
 
             if (
-                image.dataset.fallbackApplied ===
+                image.dataset.fallback ===
                 "true"
             ) {
+
                 return;
             }
 
 
-            image.dataset.fallbackApplied =
+            image.dataset.fallback =
                 "true";
 
 
@@ -1210,39 +403,11 @@ function createProductCard(
 
 
             image.classList.add(
-                "product-image-placeholder"
+                "model-image-placeholder"
             );
 
         }
     );
-
-
-    card
-        .querySelector(
-            "[data-save]"
-        )
-        .addEventListener(
-            "click",
-            () =>
-                saveProduct(
-                    product.id,
-                    card
-                )
-        );
-
-
-    card
-        .querySelector(
-            "[data-upload]"
-        )
-        .addEventListener(
-            "click",
-            () =>
-                uploadProductImage(
-                    product,
-                    card
-                )
-        );
 
 
     return card;
@@ -1250,359 +415,399 @@ function createProductCard(
 }
 
 
-/* =========================================================
-   SAVE
-========================================================= */
-
-async function saveProduct(
-    productID,
-    card
-) {
-
-    const {
-        error
-    } =
-        await adminDB
-            .from(
-                "products"
-            )
-            .update({
-
-                status:
-                    card.querySelector(
-                        "[data-status]"
-                    ).value,
-
-                stock_quantity:
-                    Number(
-                        card.querySelector(
-                            "[data-stock]"
-                        ).value
-                    ),
-
-                low_stock_threshold:
-                    Number(
-                        card.querySelector(
-                            "[data-threshold]"
-                        ).value
-                    ),
-
-                price_gbp:
-                    Number(
-                        card.querySelector(
-                            "[data-price]"
-                        ).value
-                    ),
-
-                updated_at:
-                    new Date()
-                        .toISOString()
-
-            })
-            .eq(
-                "id",
-                productID
-            );
-
-
-    if (error) {
-
-        console.error(error);
-
-        return;
-    }
-
-
-    await loadProducts();
-
-}
-
 
 /* =========================================================
-   IMAGE UPLOAD
+   STOCK STATE
 ========================================================= */
 
-async function uploadProductImage(
-    product,
-    card
+function effectiveStockState(
+    product
 ) {
 
-    const file =
-        card.querySelector(
-            "[data-image-file]"
-        )
-        .files?.[0];
+    /*
+        Coming soon has priority.
+    */
 
+    if (
+        product.status ===
+        "coming_soon"
+    ) {
 
-    if (!file) {
+        return "coming_soon";
 
-        alert(
-            "Choose an image first."
-        );
-
-        return;
     }
 
 
-    const extension =
-        file.name
-            .split(".")
-            .pop()
-            .toLowerCase();
+    /*
+        Explicit out-of-stock has priority.
+    */
 
+    if (
+        product.status ===
+        "out_of_stock"
+    ) {
 
-    const path =
-        `${product.id}/main-${Date.now()}.${extension}`;
+        return "out_of_stock";
 
-
-    const {
-        error
-    } =
-        await adminDB
-            .storage
-            .from(
-                "product-images"
-            )
-            .upload(
-                path,
-                file,
-                {
-                    contentType:
-                        file.type
-                }
-            );
-
-
-    if (error) {
-
-        console.error(error);
-
-        return;
     }
 
 
-    const {
-        data
-    } =
-        adminDB
-            .storage
-            .from(
-                "product-images"
-            )
-            .getPublicUrl(
-                path
-            );
-
-
-    await adminDB
-        .from(
-            "products"
-        )
-        .update({
-
-            image_path:
-                data.publicUrl
-
-        })
-        .eq(
-            "id",
-            product.id
+    const quantity =
+        Number(
+            product.stock_quantity ??
+            0
         );
 
 
-    await loadProducts();
+    const threshold =
+        Number(
+            product.low_stock_threshold ??
+            3
+        );
+
+
+    if (
+        quantity <= 0
+    ) {
+
+        return "out_of_stock";
+
+    }
+
+
+    if (
+        quantity <= threshold
+    ) {
+
+        return "low_stock";
+
+    }
+
+
+    return "in_stock";
 
 }
 
 
+
 /* =========================================================
-   ADD PRODUCT
+   STOCK LABEL
 ========================================================= */
 
-async function addProduct() {
+function stockText(
+    product
+) {
 
-    const {
-        error
-    } =
-        await adminDB
-            .from(
-                "products"
-            )
-            .insert({
-
-                name:
-                    document
-                        .getElementById(
-                            "newProductName"
-                        )
-                        .value
-                        .trim(),
-
-                slug:
-                    document
-                        .getElementById(
-                            "newProductSlug"
-                        )
-                        .value
-                        .trim(),
-
-                sku:
-                    document
-                        .getElementById(
-                            "newProductSku"
-                        )
-                        .value
-                        .trim(),
-
-                subtitle:
-                    document
-                        .getElementById(
-                            "newProductSubtitle"
-                        )
-                        .value
-                        .trim(),
-
-                description:
-                    document
-                        .getElementById(
-                            "newProductDescription"
-                        )
-                        .value
-                        .trim(),
-
-                price_gbp:
-                    Number(
-                        document
-                            .getElementById(
-                                "newProductPrice"
-                            )
-                            .value
-                    ),
-
-                stock_quantity:
-                    Number(
-                        document
-                            .getElementById(
-                                "newProductStock"
-                            )
-                            .value
-                    ),
-
-                low_stock_threshold:
-                    Number(
-                        document
-                            .getElementById(
-                                "newProductLowThreshold"
-                            )
-                            .value
-                    ),
-
-                status:
-                    document
-                        .getElementById(
-                            "newProductStatus"
-                        )
-                        .value,
-
-                display_order:
-                    Number(
-                        document
-                            .getElementById(
-                                "newProductOrder"
-                            )
-                            .value
-                    ),
-
-                max_order_quantity:
-                    Number(
-                        document
-                            .getElementById(
-                                "newProductMaxOrder"
-                            )
-                            .value
-                    ),
-
-                featured:
-                    document
-                        .getElementById(
-                            "newProductFeatured"
-                        )
-                        .checked,
-
-                ordering_enabled:
-                    document
-                        .getElementById(
-                            "newProductOrdering"
-                        )
-                        .checked,
-
-                preorder_enabled:
-                    document
-                        .getElementById(
-                            "newProductPreorder"
-                        )
-                        .checked,
-
-                custom_fit_available:
-                    document
-                        .getElementById(
-                            "newProductCustomFit"
-                        )
-                        .checked,
-
-                custom_tuning_available:
-                    document
-                        .getElementById(
-                            "newProductCustomTuning"
-                        )
-                        .checked
-
-            });
-
-
-    if (error) {
-
-        console.error(error);
-
-        alert(
-            error.message
+    const state =
+        effectiveStockState(
+            product
         );
 
+
+    switch (state) {
+
+        case "coming_soon":
+
+            return "COMING SOON";
+
+
+        case "out_of_stock":
+
+            return "OUT OF STOCK";
+
+
+        case "low_stock":
+
+            return `ONLY ${
+                Number(
+                    product.stock_quantity ??
+                    0
+                )
+            } LEFT`;
+
+
+        default:
+
+            return "IN STOCK";
+
+    }
+
+}
+
+
+
+/* =========================================================
+   OPTIONAL FEATURE TAGS
+========================================================= */
+
+function createFeatureTags(
+    product
+) {
+
+    const tags =
+        [];
+
+
+    if (
+        product.featured ===
+        true
+    ) {
+
+        tags.push(
+            "FEATURED"
+        );
+
+    }
+
+
+    if (
+        product.custom_fit_available ===
+        true
+    ) {
+
+        tags.push(
+            "CUSTOM FIT"
+        );
+
+    }
+
+
+    if (
+        product.custom_tuning_available ===
+        true
+    ) {
+
+        tags.push(
+            "CUSTOM TUNING"
+        );
+
+    }
+
+
+    if (
+        product.preorder_enabled ===
+        true
+    ) {
+
+        tags.push(
+            "PREORDER"
+        );
+
+    }
+
+
+    if (
+        tags.length === 0
+    ) {
+
+        return "";
+
+    }
+
+
+    return `
+
+        <div class="model-feature-list">
+
+            ${
+                tags
+                    .map(
+                        tag => `
+
+                            <span>
+                                ${tag}
+                            </span>
+
+                        `
+                    )
+                    .join("")
+            }
+
+        </div>
+
+    `;
+
+}
+
+
+
+/* =========================================================
+   PRODUCT BUTTON
+========================================================= */
+
+function createProductAction(
+    product
+) {
+
+    const state =
+        effectiveStockState(
+            product
+        );
+
+
+    const slug =
+        encodeURIComponent(
+            product.slug ||
+            ""
+        );
+
+
+    /*
+        Coming soon
+    */
+
+    if (
+        state ===
+        "coming_soon"
+    ) {
+
+        if (
+            product.preorder_enabled ===
+            true
+        ) {
+
+            return `
+
+                <a
+                    href="product.html?model=${slug}"
+                    class="model-button"
+                >
+
+                    VIEW PREORDER →
+
+                </a>
+
+            `;
+
+        }
+
+
+        return `
+
+            <button
+                class="
+                    model-button
+                    disabled
+                "
+                disabled
+            >
+
+                COMING SOON
+
+            </button>
+
+        `;
+
+    }
+
+
+    /*
+        Out of stock
+    */
+
+    if (
+        state ===
+        "out_of_stock"
+    ) {
+
+        return `
+
+            <button
+                class="
+                    model-button
+                    disabled
+                "
+                disabled
+            >
+
+                OUT OF STOCK
+
+            </button>
+
+        `;
+
+    }
+
+
+    /*
+        Normal product
+    */
+
+    return `
+
+        <a
+            href="product.html?model=${slug}"
+            class="model-button"
+        >
+
+            EXPLORE MODEL →
+
+        </a>
+
+    `;
+
+}
+
+
+
+/* =========================================================
+   ERROR DISPLAY
+========================================================= */
+
+function showModelError(
+    message
+) {
+
+    const container =
+        document.getElementById(
+            "publicModelGrid"
+        );
+
+
+    if (!container) {
         return;
     }
 
 
-    await loadProducts();
+    container.innerHTML = `
+
+        <div class="
+            model-loading
+            model-error
+        ">
+
+            <strong>
+                PRODUCT SYSTEM ERROR
+            </strong>
+
+            <p>
+                The Hammer Craft product database
+                could not be loaded.
+            </p>
+
+            <small>
+                ${escapeHTML(message)}
+            </small>
+
+        </div>
+
+    `;
 
 }
+
 
 
 /* =========================================================
-   HELPERS
+   HTML SAFETY
 ========================================================= */
-
-function formatStatus(
-    value
-) {
-
-    return String(
-        value || ""
-    )
-        .replaceAll(
-            "_",
-            " "
-        )
-        .toUpperCase();
-
-}
-
 
 function escapeHTML(
     value
 ) {
 
     return String(
-        value ?? ""
+        value ??
+        ""
     )
         .replaceAll(
             "&",
@@ -1628,184 +833,66 @@ function escapeHTML(
 }
 
 
+
 /* =========================================================
-   EVENTS
+   INITIAL LOAD
 ========================================================= */
 
-document
-    .getElementById(
-        "accountSearchInput"
-    )
-    .addEventListener(
-        "input",
-        event => {
-
-            const query =
-                event.target.value
-                    .toLowerCase();
-
-
-            renderAccounts(
-
-                cachedAccounts
-                    .filter(
-                        account =>
-
-                            (
-                                account.full_name ||
-                                ""
-                            )
-                            .toLowerCase()
-                            .includes(query)
-
-                            ||
-
-                            (
-                                account.email ||
-                                ""
-                            )
-                            .toLowerCase()
-                            .includes(query)
-
-                    )
-
-            );
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "refreshAccountsButton"
-    )
-    .addEventListener(
-        "click",
-        loadAccounts
-    );
-
-
-document
-    .getElementById(
-        "refreshScansButton"
-    )
-    .addEventListener(
-        "click",
-        loadAdminScans
-    );
-
-
-document
-    .getElementById(
-        "scanStatusFilter"
-    )
-    .addEventListener(
-        "change",
-        applyScanFilters
-    );
-
-
-document
-    .getElementById(
-        "clearScanFilterButton"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-            selectedAccountUserID =
-                null;
-
-
-            document
-                .getElementById(
-                    "scanStatusFilter"
-                )
-                .value =
-                "";
-
-
-            renderScans(
-                cachedScans
-            );
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "refreshProductsButton"
-    )
-    .addEventListener(
-        "click",
-        loadProducts
-    );
-
-
-document
-    .getElementById(
-        "addProductButton"
-    )
-    .addEventListener(
-        "click",
-        addProduct
-    );
-
-
-document
-    .getElementById(
-        "adminLogoutButton"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-            await adminDB
-                .auth
-                .signOut();
-
-
-            window.location.replace(
-                "index.html"
-            );
-
-        }
-    );
+initialiseModels();
 
 
 /* =========================================================
-   INITIALISE
+   REALTIME PRODUCT UPDATES
 ========================================================= */
 
-async function initialiseAdmin() {
+if (
+    modelDB
+) {
 
-    const user =
-        await requireAdmin();
+    try {
+
+        modelDB
+            .channel(
+                "hammer-craft-products"
+            )
+            .on(
+
+                "postgres_changes",
+
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "products"
+                },
+
+                () => {
+
+                    console.log(
+                        "Product change detected."
+                    );
 
 
-    if (!user) {
-        return;
+                    loadPublicModels();
+
+                }
+
+            )
+            .subscribe();
+
     }
 
+    catch (error) {
 
-    document
-        .getElementById(
-            "adminEmail"
-        )
-        .textContent =
-        user.email;
+        /*
+            Realtime failing should NOT stop
+            the actual products from loading.
+        */
 
+        console.warn(
+            "Realtime unavailable:",
+            error
+        );
 
-    await loadAccounts();
-
-
-    await Promise.all([
-        loadAdminScans(),
-        loadProducts()
-    ]);
+    }
 
 }
-
-
-initialiseAdmin();
