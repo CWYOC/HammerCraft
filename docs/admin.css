@@ -13,16 +13,9 @@
     --ink: #252321;
     --brown: #9b6739;
     --muted: #706b64;
-    --line: rgba(37, 35, 33, 0.16);
+    --line: rgba(37, 35, 33, .16);
     --danger: #8b3932;
     --success: #536c4e;
-    --header-height: 78px;
-}
-
-
-html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 100px;
 }
 
 
@@ -30,6 +23,7 @@ body {
     min-height: 100vh;
 
     background: var(--paper);
+
     color: var(--ink);
 
     font-family:
@@ -52,65 +46,63 @@ button {
 }
 
 
-img {
-    display: block;
-    max-width: 100%;
-}
-
-
-
-/* =========================================================
-   HEADER
-========================================================= */
+/* HEADER */
 
 .admin-header {
-    width: 100%;
-    height: var(--header-height);
+    height: 78px;
 
     padding: 0 5vw;
 
     position: fixed;
+
     top: 0;
     left: 0;
+    right: 0;
 
     z-index: 5000;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
-    gap: 30px;
+    background:
+        rgba(
+            242,
+            238,
+            231,
+            .96
+        );
 
-    background: rgba(242, 238, 231, 0.96);
-
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-
-    border-bottom: 1px solid var(--line);
+    border-bottom:
+        1px solid var(--line);
 }
 
 
 .admin-brand {
     display: flex;
+
     align-items: center;
 
     gap: 12px;
 
-    color: var(--ink);
     text-decoration: none;
 
+    color: var(--ink);
+
     font-size: 9px;
+
     font-weight: 700;
+
     letter-spacing: 3px;
 }
 
 
 .admin-brand img {
     width: 46px !important;
-    height: 46px !important;
 
-    max-width: 46px !important;
-    max-height: 46px !important;
+    height: 46px !important;
 
     object-fit: contain;
 }
@@ -118,30 +110,23 @@ img {
 
 .admin-nav {
     display: flex;
-    align-items: center;
 
     gap: 25px;
 }
 
 
 .admin-nav a {
-    color: var(--ink);
-
     text-decoration: none;
 
     font-size: 8px;
+
     font-weight: 700;
-    letter-spacing: 1.3px;
-}
-
-
-.admin-nav a:hover {
-    color: var(--brown);
 }
 
 
 .admin-header-right {
     display: flex;
+
     align-items: center;
 
     gap: 18px;
@@ -156,34 +141,17 @@ img {
 
 
 .admin-header-right button {
-    min-height: 38px;
-
-    padding: 0 14px;
+    padding: 10px 14px;
 
     border: 1px solid var(--ink);
 
     background: transparent;
-
-    font-size: 8px;
-    font-weight: 700;
 }
 
 
-.admin-header-right button:hover {
-    background: var(--ink);
-
-    color: white;
-}
-
-
-
-/* =========================================================
-   MAIN
-========================================================= */
+/* MAIN */
 
 .admin-page {
-    min-height: 100vh;
-
     padding:
         150px
         7vw
@@ -195,7 +163,9 @@ img {
     color: var(--brown);
 
     font-size: 8px;
+
     font-weight: 700;
+
     letter-spacing: 3px;
 }
 
@@ -210,9 +180,7 @@ img {
             120px
         );
 
-    line-height: 0.86;
-
-    letter-spacing: -0.065em;
+    line-height: .86;
 }
 
 
@@ -226,6 +194,7 @@ img {
         serif;
 
     font-style: italic;
+
     font-weight: 400;
 }
 
@@ -237,15 +206,11 @@ img {
 
     color: var(--muted);
 
-    font-size: 15px;
     line-height: 1.7;
 }
 
 
-
-/* =========================================================
-   MAIN STATS
-========================================================= */
+/* STATS */
 
 .admin-stats {
     margin-top: 70px;
@@ -255,30 +220,37 @@ img {
     grid-template-columns:
         repeat(
             6,
-            minmax(0, 1fr)
+            1fr
         );
 }
 
 
-.admin-stats article {
-    min-height: 130px;
+.admin-stats article,
+.account-summary article,
+.inventory-summary article {
+    min-height: 115px;
 
     padding: 20px;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 
     display: flex;
+
     flex-direction: column;
+
     justify-content: space-between;
 }
 
 
-.admin-stats span {
+.admin-stats span,
+.account-summary span,
+.inventory-summary span {
     color: var(--muted);
 
     font-size: 7px;
+
     font-weight: 700;
-    letter-spacing: 1.3px;
 }
 
 
@@ -287,10 +259,7 @@ img {
 }
 
 
-
-/* =========================================================
-   GENERAL SECTION
-========================================================= */
+/* SECTIONS */
 
 .admin-section {
     margin-top: 115px;
@@ -301,9 +270,10 @@ img {
     display: flex;
 
     align-items: flex-end;
+
     justify-content: space-between;
 
-    gap: 35px;
+    gap: 30px;
 }
 
 
@@ -316,14 +286,11 @@ img {
             5vw,
             74px
         );
-
-    letter-spacing: -0.055em;
 }
 
 
 .section-tools {
     display: flex;
-    align-items: center;
 
     gap: 10px;
 }
@@ -335,24 +302,15 @@ img {
 
     padding: 0 13px;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 
     background: var(--paper);
-
-    color: var(--ink);
-
-    outline: none;
 }
 
 
 .admin-search {
     min-width: 270px;
-}
-
-
-.admin-search:focus,
-.admin-select:focus {
-    border-color: var(--brown);
 }
 
 
@@ -364,9 +322,8 @@ img {
     padding: 0 15px;
 
     font-size: 8px;
-    font-weight: 700;
 
-    letter-spacing: 1px;
+    font-weight: 700;
 }
 
 
@@ -374,15 +331,6 @@ img {
     border: 1px solid var(--ink);
 
     background: transparent;
-
-    color: var(--ink);
-}
-
-
-.outline-button:hover {
-    background: var(--ink);
-
-    color: white;
 }
 
 
@@ -395,13 +343,6 @@ img {
 }
 
 
-.primary-button:hover {
-    background: var(--brown);
-
-    border-color: var(--brown);
-}
-
-
 .danger-button {
     border: 1px solid var(--danger);
 
@@ -411,23 +352,7 @@ img {
 }
 
 
-.active-filter {
-    margin-top: 25px;
-
-    padding: 13px 15px;
-
-    border: 1px solid var(--brown);
-
-    color: var(--brown);
-
-    font-size: 10px;
-}
-
-
-
-/* =========================================================
-   ACCOUNT SUMMARY
-========================================================= */
+/* ACCOUNTS */
 
 .account-summary {
     margin-top: 40px;
@@ -437,276 +362,13 @@ img {
     grid-template-columns:
         repeat(
             3,
-            minmax(0, 1fr)
+            1fr
         );
 }
 
 
-.account-summary article {
-    min-height: 110px;
-
-    padding: 20px;
-
-    border: 1px solid var(--line);
-
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-
-.account-summary span {
-    color: var(--muted);
-
-    font-size: 7px;
-    font-weight: 700;
-
-    letter-spacing: 1.3px;
-}
-
-
-.account-summary strong {
-    font-size: 29px;
-}
-
-
-
-/* =========================================================
-   ACCOUNT CARDS
-========================================================= */
-
-.account-grid {
-    margin-top: 25px;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            2,
-            minmax(0, 1fr)
-        );
-
-    gap: 18px;
-}
-
-
-.account-card {
-    padding: 25px;
-
-    border: 1px solid var(--line);
-}
-
-
-.account-card-top {
-    display: flex;
-
-    align-items: flex-start;
-    justify-content: space-between;
-
-    gap: 20px;
-}
-
-
-.account-card h3 {
-    font-size: 22px;
-}
-
-
-.account-email {
-    margin-top: 6px;
-
-    color: var(--muted);
-
-    font-size: 12px;
-}
-
-
-.account-id {
-    margin-top: 10px;
-
-    color: var(--muted);
-
-    font-family: monospace;
-    font-size: 8px;
-
-    word-break: break-all;
-}
-
-
-.role-badge {
-    flex-shrink: 0;
-
-    padding: 7px 9px;
-
-    border: 1px solid var(--line);
-
-    font-size: 7px;
-    font-weight: 700;
-
-    letter-spacing: 1px;
-}
-
-
-.role-badge.admin {
-    border-color: var(--brown);
-
-    background: var(--brown);
-
-    color: white;
-}
-
-
-.account-info {
-    margin-top: 25px;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            3,
-            minmax(0, 1fr)
-        );
-
-    gap: 15px;
-}
-
-
-.account-info article {
-    padding-top: 10px;
-
-    border-top: 1px solid var(--line);
-}
-
-
-.account-info span {
-    display: block;
-
-    color: var(--muted);
-
-    font-size: 7px;
-}
-
-
-.account-info strong {
-    display: block;
-
-    margin-top: 6px;
-
-    font-size: 11px;
-}
-
-
-.account-actions {
-    margin-top: 25px;
-
-    display: flex;
-    flex-wrap: wrap;
-
-    gap: 9px;
-}
-
-
-.account-actions button {
-    min-height: 39px;
-
-    padding: 0 12px;
-
-    border: 1px solid var(--ink);
-
-    background: transparent;
-
-    font-size: 8px;
-    font-weight: 700;
-}
-
-
-.account-actions button:hover {
-    background: var(--ink);
-
-    color: white;
-}
-
-
-.account-actions .danger {
-    border-color: var(--danger);
-
-    color: var(--danger);
-}
-
-
-.account-actions .danger:hover {
-    background: var(--danger);
-
-    color: white;
-}
-
-
-
-/* =========================================================
-   SCANS
-========================================================= */
-
+.account-grid,
 .scan-grid {
-    margin-top: 40px;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(
-            2,
-            minmax(0, 1fr)
-        );
-
-    gap: 18px;
-}
-
-
-.loading-card,
-.scan-card {
-    min-height: 250px;
-
-    padding: 24px;
-
-    border: 1px solid var(--line);
-}
-
-
-.scan-card-top {
-    display: flex;
-    justify-content: space-between;
-
-    gap: 20px;
-
-    color: var(--muted);
-
-    font-size: 8px;
-}
-
-
-.scan-status {
-    color: var(--brown);
-
-    font-weight: 700;
-}
-
-
-.scan-card h3 {
-    margin-top: 30px;
-
-    font-size: 23px;
-}
-
-
-.scan-email {
-    margin-top: 7px;
-
-    color: var(--muted);
-
-    font-size: 12px;
-}
-
-
-.scan-meta {
     margin-top: 25px;
 
     display: grid;
@@ -717,78 +379,140 @@ img {
             1fr
         );
 
+    gap: 18px;
+}
+
+
+.account-card,
+.scan-card,
+.loading-card {
+    padding: 25px;
+
+    border:
+        1px solid var(--line);
+}
+
+
+.account-card-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 20px;
+}
+
+
+.account-card h3,
+.scan-card h3 {
+    font-size: 22px;
+}
+
+
+.account-email,
+.scan-email,
+.account-id,
+.scan-id {
+    margin-top: 7px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+}
+
+
+.account-id,
+.scan-id {
+    font-family: monospace;
+
+    word-break: break-all;
+}
+
+
+.role-badge {
+    padding: 7px 9px;
+
+    border: 1px solid var(--line);
+
+    font-size: 7px;
+}
+
+
+.role-badge.admin {
+    background: var(--brown);
+
+    color: white;
+}
+
+
+.account-info,
+.scan-meta {
+    margin-top: 25px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            1fr
+        );
+
     gap: 15px;
 }
 
 
-.scan-meta article {
-    padding-top: 10px;
-
-    border-top: 1px solid var(--line);
+.scan-meta {
+    grid-template-columns:
+        repeat(
+            2,
+            1fr
+        );
 }
 
 
-.scan-meta span {
-    display: block;
+.account-info article,
+.scan-meta article {
+    padding-top: 10px;
 
+    border-top:
+        1px solid var(--line);
+}
+
+
+.account-info span,
+.scan-meta span {
     color: var(--muted);
 
     font-size: 7px;
 }
 
 
-.scan-meta strong {
-    display: block;
-
-    margin-top: 5px;
-
-    font-size: 10px;
-}
-
-
-.scan-id {
-    margin-top: 20px;
-
-    color: var(--muted);
-
-    font-family: monospace;
-    font-size: 8px;
-
-    word-break: break-all;
-}
-
-
+.account-actions,
 .scan-actions {
-    margin-top: 22px;
+    margin-top: 25px;
 
     display: flex;
+
     flex-wrap: wrap;
 
     gap: 9px;
 }
 
 
+.account-actions button,
 .scan-actions button {
     min-height: 39px;
 
-    padding: 0 11px;
+    padding: 0 12px;
 
     border: 1px solid var(--ink);
 
     background: transparent;
 
     font-size: 8px;
-    font-weight: 700;
 }
 
 
-.scan-actions button:hover {
-    background: var(--ink);
-
-    color: white;
-}
-
-
+.account-actions .danger,
 .scan-actions .danger {
     border-color: var(--danger);
 
@@ -796,17 +520,7 @@ img {
 }
 
 
-.scan-actions .danger:hover {
-    background: var(--danger);
-
-    color: white;
-}
-
-
-
-/* =========================================================
-   INVENTORY SUMMARY
-========================================================= */
+/* INVENTORY */
 
 .inventory-summary {
     margin-top: 40px;
@@ -816,48 +530,20 @@ img {
     grid-template-columns:
         repeat(
             4,
-            minmax(0, 1fr)
+            1fr
         );
 }
 
 
-.inventory-summary article {
-    min-height: 100px;
-
-    padding: 18px;
-
-    border: 1px solid var(--line);
-
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-
-.inventory-summary span {
-    color: var(--muted);
-
-    font-size: 7px;
-    font-weight: 700;
-}
-
-
-.inventory-summary strong {
-    font-size: 26px;
-}
-
-
-
-/* =========================================================
-   ADD PRODUCT
-========================================================= */
+/* ADD PRODUCT */
 
 .create-product-panel {
     margin-top: 35px;
 
     padding: 30px;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 
     background: var(--paper-dark);
 }
@@ -867,9 +553,8 @@ img {
     color: var(--brown);
 
     font-size: 8px;
-    font-weight: 700;
 
-    letter-spacing: 2px;
+    font-weight: 700;
 }
 
 
@@ -888,7 +573,7 @@ img {
     grid-template-columns:
         repeat(
             4,
-            minmax(0, 1fr)
+            1fr
         );
 
     gap: 18px;
@@ -906,9 +591,8 @@ img {
     color: var(--muted);
 
     font-size: 8px;
-    font-weight: 700;
 
-    letter-spacing: 1px;
+    font-weight: 700;
 }
 
 
@@ -921,10 +605,6 @@ img {
     border: 1px solid var(--line);
 
     background: var(--paper);
-
-    color: var(--ink);
-
-    outline: none;
 }
 
 
@@ -946,8 +626,6 @@ img {
     min-height: 110px;
 
     padding: 11px;
-
-    resize: vertical;
 }
 
 
@@ -959,7 +637,7 @@ img {
     grid-template-columns:
         repeat(
             5,
-            minmax(0, 1fr)
+            1fr
         );
 
     gap: 10px;
@@ -971,42 +649,18 @@ img {
 
     padding: 14px;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 
     display: flex;
 
     align-items: center;
 
     gap: 10px;
-
-    cursor: pointer;
 }
 
 
-.admin-switch input {
-    width: 17px;
-    height: 17px;
-}
-
-
-.admin-switch span {
-    font-size: 7px;
-    font-weight: 700;
-
-    letter-spacing: 1px;
-}
-
-
-.create-product-panel
-.primary-button {
-    margin-top: 24px;
-}
-
-
-
-/* =========================================================
-   PRODUCT CARDS
-========================================================= */
+/* PRODUCT GRID */
 
 .product-grid {
     margin-top: 35px;
@@ -1016,7 +670,7 @@ img {
     grid-template-columns:
         repeat(
             2,
-            minmax(0, 1fr)
+            1fr
         );
 
     gap: 20px;
@@ -1026,9 +680,14 @@ img {
 .product-card {
     overflow: hidden;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 }
 
+
+/* =========================================================
+   PRODUCT IMAGE
+========================================================= */
 
 .product-image-area {
     width: 100%;
@@ -1039,29 +698,48 @@ img {
 
     overflow: hidden;
 
-    background: var(--paper-dark);
+    background:
+        var(--paper-dark);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
 }
 
 
-.product-image-area img {
+.product-image {
     width: 100%;
+
     height: 100%;
 
     object-fit: cover;
 }
 
 
-/* Hammer Craft logo used when product has no image */
+/*
+    NO PRODUCT IMAGE / BROKEN IMAGE
 
-.product-image-area img.product-image-placeholder {
+    Hammer Craft logo is displayed instead.
+*/
+
+.product-image.product-image-placeholder {
     width: 100%;
+
     height: 100%;
+
+    padding:
+        clamp(
+            50px,
+            7vw,
+            90px
+        );
 
     object-fit: contain;
 
-    padding: 55px;
-
-    background: #f2eee7;
+    background:
+        var(--paper);
 }
 
 
@@ -1071,11 +749,14 @@ img {
     top: 15px;
     left: 15px;
 
+    z-index: 3;
+
     padding: 8px 10px;
 
     background: var(--paper);
 
     font-size: 8px;
+
     font-weight: 700;
 }
 
@@ -1105,6 +786,7 @@ img {
     color: var(--muted);
 
     font-family: monospace;
+
     font-size: 8px;
 }
 
@@ -1112,10 +794,10 @@ img {
 .inventory-indicator {
     padding: 8px 10px;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 
     font-size: 8px;
-    font-weight: 700;
 }
 
 
@@ -1142,7 +824,7 @@ img {
     grid-template-columns:
         repeat(
             2,
-            minmax(0, 1fr)
+            1fr
         );
 
     gap: 15px;
@@ -1159,7 +841,6 @@ img {
     color: var(--muted);
 
     font-size: 7px;
-    font-weight: 700;
 }
 
 
@@ -1168,11 +849,10 @@ img {
 .product-editor-grid textarea {
     width: 100%;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 
     background: var(--paper);
-
-    color: var(--ink);
 }
 
 
@@ -1188,8 +868,6 @@ img {
     min-height: 90px;
 
     padding: 10px;
-
-    resize: vertical;
 }
 
 
@@ -1214,20 +892,14 @@ img {
 
 
 .product-switch {
-    min-height: 48px;
-
     padding: 12px;
 
-    border: 1px solid var(--line);
+    border:
+        1px solid var(--line);
 
     display: flex;
 
-    align-items: center;
-
     gap: 9px;
-
-    font-size: 7px;
-    font-weight: 700;
 }
 
 
@@ -1236,21 +908,8 @@ img {
 
     padding-top: 18px;
 
-    border-top: 1px solid var(--line);
-}
-
-
-.product-image-upload label {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 10px;
-
-    color: var(--muted);
-
-    font-size: 8px;
-    font-weight: 700;
+    border-top:
+        1px solid var(--line);
 }
 
 
@@ -1262,21 +921,14 @@ img {
     grid-template-columns:
         repeat(
             2,
-            minmax(0, 1fr)
+            1fr
         );
 
     gap: 9px;
 }
 
 
-.product-card-actions button {
-    width: 100%;
-}
-
-
 .admin-message {
-    min-height: 18px;
-
     margin-top: 12px;
 
     color: var(--brown);
@@ -1285,10 +937,7 @@ img {
 }
 
 
-
-/* =========================================================
-   MODAL
-========================================================= */
+/* MODAL */
 
 .modal {
     position: fixed;
@@ -1300,11 +949,16 @@ img {
     display: none;
 
     align-items: center;
+
     justify-content: center;
 
-    padding: 20px;
-
-    background: rgba(0, 0, 0, 0.55);
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            .55
+        );
 }
 
 
@@ -1314,7 +968,13 @@ img {
 
 
 .modal-panel {
-    width: min(100%, 520px);
+    width:
+        min(
+            520px,
+            calc(
+                100% - 40px
+            )
+        );
 
     padding: 30px;
 
@@ -1326,9 +986,6 @@ img {
     color: var(--danger);
 
     font-size: 8px;
-    font-weight: 700;
-
-    letter-spacing: 2px;
 }
 
 
@@ -1343,8 +1000,6 @@ img {
     margin-top: 15px;
 
     color: var(--muted);
-
-    line-height: 1.6;
 }
 
 
@@ -1352,16 +1007,14 @@ img {
     margin-top: 25px;
 
     display: flex;
+
     justify-content: flex-end;
 
     gap: 10px;
 }
 
 
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
+/* RESPONSIVE */
 
 @media
 (max-width: 1200px) {
@@ -1379,15 +1032,6 @@ img {
         grid-template-columns:
             repeat(
                 2,
-                1fr
-            );
-    }
-
-
-    .switch-grid {
-        grid-template-columns:
-            repeat(
-                3,
                 1fr
             );
     }
@@ -1411,22 +1055,6 @@ img {
     }
 
 
-    .admin-hero h1 {
-        font-size: 60px;
-    }
-
-
-    .admin-stats,
-    .account-summary,
-    .inventory-summary {
-        grid-template-columns:
-            repeat(
-                2,
-                1fr
-            );
-    }
-
-
     .account-grid,
     .scan-grid,
     .product-grid {
@@ -1435,14 +1063,9 @@ img {
 
 
     .section-heading {
-        align-items: flex-start;
-
         flex-direction: column;
-    }
 
-
-    .section-tools {
-        width: 100%;
+        align-items: flex-start;
     }
 
 }
@@ -1451,53 +1074,18 @@ img {
 @media
 (max-width: 550px) {
 
-    .admin-header {
-        padding: 0 18px;
-    }
-
-
-    .admin-brand span,
-    .admin-header-right span {
-        display: none;
-    }
-
-
     .admin-stats,
     .account-summary,
     .inventory-summary,
     .form-grid,
     .switch-grid,
-    .product-editor-grid,
-    .product-switch-grid {
+    .product-editor-grid {
         grid-template-columns: 1fr;
-    }
-
-
-    .account-info {
-        grid-template-columns: 1fr;
-    }
-
-
-    .section-tools {
-        flex-direction: column;
-
-        align-items: stretch;
-    }
-
-
-    .admin-search {
-        width: 100%;
-        min-width: 0;
     }
 
 
     .product-card-actions {
         grid-template-columns: 1fr;
-    }
-
-
-    .full-control {
-        grid-column: auto;
     }
 
 }

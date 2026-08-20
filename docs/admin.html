@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -9,16 +10,21 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Admin | Hammer Craft</title>
+    <title>
+        Admin | Hammer Craft
+    </title>
+
 
     <link
         rel="stylesheet"
-        href="admin.css?v=30"
+        href="admin.css?v=31"
     >
+
 </head>
 
 
 <body>
+
 
 <header class="admin-header">
 
@@ -26,6 +32,7 @@
         href="index.html"
         class="admin-brand"
     >
+
         <img
             src="assets/logo.png"
             alt="Hammer Craft"
@@ -34,6 +41,7 @@
         <span>
             HAMMER CRAFT
         </span>
+
     </a>
 
 
@@ -76,632 +84,722 @@
 <main class="admin-page">
 
 
-    <!-- =====================================================
-         HERO
-    ====================================================== -->
+<!-- =====================================================
+     HERO
+===================================================== -->
 
-    <section class="admin-hero">
+<section class="admin-hero">
 
-        <div class="eyebrow">
-            HAMMER CRAFT / INTERNAL
+    <div class="eyebrow">
+        HAMMER CRAFT / INTERNAL
+    </div>
+
+
+    <h1>
+
+        Admin
+
+        <em>
+            dashboard.
+        </em>
+
+    </h1>
+
+
+    <p>
+
+        Manage customer accounts, ear scans,
+        reconstruction files, product availability,
+        stock, pricing and product imagery.
+
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     STATS
+===================================================== -->
+
+<section class="admin-stats">
+
+    <article>
+
+        <span>
+            ACCOUNTS
+        </span>
+
+        <strong id="totalAccounts">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            TOTAL SCANS
+        </span>
+
+        <strong id="totalScans">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            PROCESSING
+        </span>
+
+        <strong id="processingScans">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            COMPLETE
+        </span>
+
+        <strong id="completeScans">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            FAILED
+        </span>
+
+        <strong id="failedScans">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            PRODUCTS
+        </span>
+
+        <strong id="totalProducts">
+            —
+        </strong>
+
+    </article>
+
+</section>
+
+
+
+<!-- =====================================================
+     ACCOUNTS
+===================================================== -->
+
+<section
+    id="accounts"
+    class="admin-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                CUSTOMER MANAGEMENT
+            </div>
+
+            <h2>
+                Accounts.
+            </h2>
+
         </div>
 
 
-        <h1>
-            Admin
-            <em>dashboard.</em>
-        </h1>
+        <div class="section-tools">
+
+            <input
+                id="accountSearchInput"
+                class="admin-search"
+                type="search"
+                placeholder="Search name or email"
+            >
 
 
-        <p>
-            Manage customer accounts, digital ear scans,
-            reconstruction files, models, availability,
-            stock, pricing and product imagery.
-        </p>
+            <button
+                id="refreshAccountsButton"
+                class="outline-button"
+                type="button"
+            >
+                REFRESH
+            </button>
 
-    </section>
+        </div>
+
+    </div>
 
 
-
-    <!-- =====================================================
-         MAIN STATS
-    ====================================================== -->
-
-    <section class="admin-stats">
-
-        <article>
-            <span>ACCOUNTS</span>
-            <strong id="totalAccounts">—</strong>
-        </article>
+    <div class="account-summary">
 
         <article>
-            <span>TOTAL SCANS</span>
-            <strong id="totalScans">—</strong>
+
+            <span>
+                TOTAL ACCOUNTS
+            </span>
+
+            <strong id="accountSummaryTotal">
+                —
+            </strong>
+
         </article>
+
 
         <article>
-            <span>PROCESSING</span>
-            <strong id="processingScans">—</strong>
+
+            <span>
+                WITH SCANS
+            </span>
+
+            <strong id="accountsWithScans">
+                —
+            </strong>
+
         </article>
+
 
         <article>
-            <span>COMPLETE</span>
-            <strong id="completeScans">—</strong>
+
+            <span>
+                ADMINS
+            </span>
+
+            <strong id="totalAdmins">
+                —
+            </strong>
+
         </article>
 
-        <article>
-            <span>FAILED</span>
-            <strong id="failedScans">—</strong>
-        </article>
-
-        <article>
-            <span>PRODUCTS</span>
-            <strong id="totalProducts">—</strong>
-        </article>
-
-    </section>
+    </div>
 
 
-
-    <!-- =====================================================
-         ACCOUNTS
-    ====================================================== -->
-
-    <section
-        id="accounts"
-        class="admin-section"
+    <div
+        id="adminAccountList"
+        class="account-grid"
     >
 
-        <div class="section-heading">
+        <div class="loading-card">
+            Loading accounts...
+        </div>
 
-            <div>
+    </div>
 
-                <div class="eyebrow">
-                    CUSTOMER MANAGEMENT
-                </div>
+</section>
 
-                <h2>
-                    Accounts.
-                </h2>
 
+
+<!-- =====================================================
+     SCANS
+===================================================== -->
+
+<section
+    id="scans"
+    class="admin-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                DIGITAL FIT
             </div>
 
+            <h2>
+                Ear scans.
+            </h2>
 
-            <div class="section-tools">
+        </div>
+
+
+        <div class="section-tools">
+
+            <select
+                id="scanStatusFilter"
+                class="admin-select"
+            >
+
+                <option value="">
+                    All statuses
+                </option>
+
+                <option value="uploaded">
+                    Uploaded
+                </option>
+
+                <option value="processing">
+                    Processing
+                </option>
+
+                <option value="complete">
+                    Complete
+                </option>
+
+                <option value="failed">
+                    Failed
+                </option>
+
+            </select>
+
+
+            <button
+                id="clearScanFilterButton"
+                class="outline-button"
+                type="button"
+            >
+                SHOW ALL
+            </button>
+
+
+            <button
+                id="refreshScansButton"
+                class="outline-button"
+                type="button"
+            >
+                REFRESH
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div
+        id="activeScanFilter"
+        class="active-filter"
+        hidden
+    ></div>
+
+
+    <div
+        id="adminScanList"
+        class="scan-grid"
+    >
+
+        <div class="loading-card">
+            Loading scans...
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     PRODUCTS
+===================================================== -->
+
+<section
+    id="products"
+    class="admin-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                PRODUCT CONTROL
+            </div>
+
+            <h2>
+                Models & stock.
+            </h2>
+
+        </div>
+
+
+        <button
+            id="refreshProductsButton"
+            class="outline-button"
+            type="button"
+        >
+            REFRESH
+        </button>
+
+    </div>
+
+
+
+    <div class="inventory-summary">
+
+        <article>
+
+            <span>
+                IN STOCK
+            </span>
+
+            <strong id="productsInStock">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                LOW STOCK
+            </span>
+
+            <strong id="productsLowStock">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                OUT OF STOCK
+            </span>
+
+            <strong id="productsOutStock">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                COMING SOON
+            </span>
+
+            <strong id="productsComingSoon">
+                —
+            </strong>
+
+        </article>
+
+    </div>
+
+
+
+    <!-- NEW PRODUCT -->
+
+    <div class="create-product-panel">
+
+        <div class="panel-heading">
+
+            <span>
+                CATALOG CONTROL
+            </span>
+
+            <h3>
+                Add a new model.
+            </h3>
+
+        </div>
+
+
+        <div class="form-grid">
+
+            <label>
+                MODEL NAME
 
                 <input
-                    id="accountSearchInput"
-                    class="admin-search"
-                    type="search"
-                    placeholder="Search name or email"
+                    id="newProductName"
+                    type="text"
                 >
+            </label>
 
-                <button
-                    id="refreshAccountsButton"
-                    class="outline-button"
-                    type="button"
+
+            <label>
+                SKU
+
+                <input
+                    id="newProductSku"
+                    type="text"
                 >
-                    REFRESH
-                </button>
-
-            </div>
-
-        </div>
+            </label>
 
 
+            <label>
+                SLUG
 
-        <div class="account-summary">
-
-            <article>
-                <span>TOTAL ACCOUNTS</span>
-                <strong id="accountSummaryTotal">—</strong>
-            </article>
-
-            <article>
-                <span>WITH SCANS</span>
-                <strong id="accountsWithScans">—</strong>
-            </article>
-
-            <article>
-                <span>ADMINS</span>
-                <strong id="totalAdmins">—</strong>
-            </article>
-
-        </div>
-
-
-
-        <div
-            id="adminAccountList"
-            class="account-grid"
-        >
-            <div class="loading-card">
-                Loading accounts...
-            </div>
-        </div>
-
-    </section>
-
-
-
-    <!-- =====================================================
-         SCANS
-    ====================================================== -->
-
-    <section
-        id="scans"
-        class="admin-section"
-    >
-
-        <div class="section-heading">
-
-            <div>
-
-                <div class="eyebrow">
-                    DIGITAL FIT
-                </div>
-
-                <h2>
-                    Ear scans.
-                </h2>
-
-            </div>
-
-
-            <div class="section-tools">
-
-                <select
-                    id="scanStatusFilter"
-                    class="admin-select"
+                <input
+                    id="newProductSlug"
+                    type="text"
                 >
+            </label>
 
-                    <option value="">
-                        All statuses
+
+            <label>
+                PRICE GBP
+
+                <input
+                    id="newProductPrice"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                >
+            </label>
+
+
+            <label>
+                STOCK QUANTITY
+
+                <input
+                    id="newProductStock"
+                    type="number"
+                    min="0"
+                    value="0"
+                >
+            </label>
+
+
+            <label>
+                LOW STOCK AT
+
+                <input
+                    id="newProductLowThreshold"
+                    type="number"
+                    min="0"
+                    value="3"
+                >
+            </label>
+
+
+            <label>
+                STATUS
+
+                <select id="newProductStatus">
+
+                    <option value="coming_soon">
+                        Coming soon
                     </option>
 
-                    <option value="uploaded">
-                        Uploaded
+                    <option value="in_stock">
+                        In stock
                     </option>
 
-                    <option value="processing">
-                        Processing
+                    <option value="low_stock">
+                        Low stock
                     </option>
 
-                    <option value="complete">
-                        Complete
+                    <option value="out_of_stock">
+                        Out of stock
                     </option>
 
-                    <option value="failed">
-                        Failed
+                    <option value="hidden">
+                        Hidden
                     </option>
 
                 </select>
 
+            </label>
 
-                <button
-                    id="clearScanFilterButton"
-                    class="outline-button"
-                    type="button"
-                >
-                    SHOW ALL
-                </button>
 
-
-                <button
-                    id="refreshScansButton"
-                    class="outline-button"
-                    type="button"
-                >
-                    REFRESH
-                </button>
-
-            </div>
-
-        </div>
-
-
-        <div
-            id="activeScanFilter"
-            class="active-filter"
-            hidden
-        ></div>
-
-
-        <div
-            id="adminScanList"
-            class="scan-grid"
-        >
-            <div class="loading-card">
-                Loading scans...
-            </div>
-        </div>
-
-    </section>
-
-
-
-    <!-- =====================================================
-         PRODUCTS
-    ====================================================== -->
-
-    <section
-        id="products"
-        class="admin-section"
-    >
-
-        <div class="section-heading">
-
-            <div>
-
-                <div class="eyebrow">
-                    PRODUCT CONTROL
-                </div>
-
-                <h2>
-                    Models & stock.
-                </h2>
-
-            </div>
-
-
-            <div class="section-tools">
-
-                <button
-                    id="refreshProductsButton"
-                    class="outline-button"
-                    type="button"
-                >
-                    REFRESH
-                </button>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- =================================================
-             PRODUCT SUMMARY
-        ================================================== -->
-
-        <div class="inventory-summary">
-
-            <article>
-                <span>IN STOCK</span>
-                <strong id="productsInStock">—</strong>
-            </article>
-
-            <article>
-                <span>LOW STOCK</span>
-                <strong id="productsLowStock">—</strong>
-            </article>
-
-            <article>
-                <span>OUT OF STOCK</span>
-                <strong id="productsOutStock">—</strong>
-            </article>
-
-            <article>
-                <span>COMING SOON</span>
-                <strong id="productsComingSoon">—</strong>
-            </article>
-
-        </div>
-
-
-
-        <!-- =================================================
-             ADD PRODUCT
-        ================================================== -->
-
-        <div class="create-product-panel">
-
-            <div class="panel-heading">
-
-                <span>
-                    CATALOG CONTROL
-                </span>
-
-                <h3>
-                    Add a new model.
-                </h3>
-
-            </div>
-
-
-
-            <div class="form-grid">
-
-                <label>
-                    MODEL NAME
-
-                    <input
-                        id="newProductName"
-                        type="text"
-                        placeholder="HC ONE"
-                    >
-                </label>
-
-
-                <label>
-                    SKU
-
-                    <input
-                        id="newProductSku"
-                        type="text"
-                        placeholder="HC-001"
-                    >
-                </label>
-
-
-                <label>
-                    SLUG
-
-                    <input
-                        id="newProductSlug"
-                        type="text"
-                        placeholder="hc-one"
-                    >
-                </label>
-
-
-                <label>
-                    PRICE GBP
-
-                    <input
-                        id="newProductPrice"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="299"
-                    >
-                </label>
-
-
-                <label>
-                    STOCK QUANTITY
-
-                    <input
-                        id="newProductStock"
-                        type="number"
-                        min="0"
-                        step="1"
-                        value="0"
-                    >
-                </label>
-
-
-                <label>
-                    LOW STOCK AT
-
-                    <input
-                        id="newProductLowThreshold"
-                        type="number"
-                        min="0"
-                        step="1"
-                        value="3"
-                    >
-                </label>
-
-
-                <label>
-                    PUBLIC STATUS
-
-                    <select id="newProductStatus">
-
-                        <option value="coming_soon">
-                            Coming soon
-                        </option>
-
-                        <option value="in_stock">
-                            In stock
-                        </option>
-
-                        <option value="low_stock">
-                            Low stock
-                        </option>
-
-                        <option value="out_of_stock">
-                            Out of stock
-                        </option>
-
-                        <option value="hidden">
-                            Hidden
-                        </option>
-
-                    </select>
-
-                </label>
-
-
-                <label>
-                    DISPLAY ORDER
-
-                    <input
-                        id="newProductOrder"
-                        type="number"
-                        value="0"
-                    >
-                </label>
-
-
-                <label>
-                    LAUNCH DATE
-
-                    <input
-                        id="newProductLaunchDate"
-                        type="datetime-local"
-                    >
-                </label>
-
-
-                <label>
-                    MAX PER ORDER
-
-                    <input
-                        id="newProductMaxOrder"
-                        type="number"
-                        min="1"
-                        value="1"
-                    >
-                </label>
-
-
-                <label>
-                    PRODUCT IMAGE
-
-                    <input
-                        id="newProductImage"
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                    >
-                </label>
-
-            </div>
-
-
-
-            <div class="switch-grid">
-
-                <label class="admin-switch">
-
-                    <input
-                        id="newProductFeatured"
-                        type="checkbox"
-                    >
-
-                    <span>
-                        FEATURED
-                    </span>
-
-                </label>
-
-
-                <label class="admin-switch">
-
-                    <input
-                        id="newProductOrdering"
-                        type="checkbox"
-                    >
-
-                    <span>
-                        ORDERING ENABLED
-                    </span>
-
-                </label>
-
-
-                <label class="admin-switch">
-
-                    <input
-                        id="newProductPreorder"
-                        type="checkbox"
-                    >
-
-                    <span>
-                        PREORDER
-                    </span>
-
-                </label>
-
-
-                <label class="admin-switch">
-
-                    <input
-                        id="newProductCustomFit"
-                        type="checkbox"
-                    >
-
-                    <span>
-                        CUSTOM FIT
-                    </span>
-
-                </label>
-
-
-                <label class="admin-switch">
-
-                    <input
-                        id="newProductCustomTuning"
-                        type="checkbox"
-                    >
-
-                    <span>
-                        CUSTOM TUNING
-                    </span>
-
-                </label>
-
-            </div>
-
-
-
-            <label class="full-label">
-
-                SUBTITLE
+            <label>
+                DISPLAY ORDER
 
                 <input
-                    id="newProductSubtitle"
-                    type="text"
-                    placeholder="HAMMER CRAFT / UNIVERSAL"
+                    id="newProductOrder"
+                    type="number"
+                    value="0"
+                >
+            </label>
+
+
+            <label>
+                LAUNCH DATE
+
+                <input
+                    id="newProductLaunchDate"
+                    type="datetime-local"
+                >
+            </label>
+
+
+            <label>
+                MAX PER ORDER
+
+                <input
+                    id="newProductMaxOrder"
+                    type="number"
+                    min="1"
+                    value="1"
+                >
+            </label>
+
+
+            <label>
+                PRODUCT IMAGE
+
+                <input
+                    id="newProductImage"
+                    type="file"
+                    accept="
+                        image/png,
+                        image/jpeg,
+                        image/webp
+                    "
+                >
+            </label>
+
+        </div>
+
+
+        <div class="switch-grid">
+
+            <label class="admin-switch">
+
+                <input
+                    id="newProductFeatured"
+                    type="checkbox"
                 >
 
-            </label>
-
-
-
-            <label class="full-label">
-
-                DESCRIPTION
-
-                <textarea
-                    id="newProductDescription"
-                    placeholder="Describe the model..."
-                ></textarea>
+                <span>
+                    FEATURED
+                </span>
 
             </label>
 
 
+            <label class="admin-switch">
 
-            <button
-                id="addProductButton"
-                class="primary-button"
-                type="button"
-            >
-                ADD PRODUCT
-            </button>
+                <input
+                    id="newProductOrdering"
+                    type="checkbox"
+                >
+
+                <span>
+                    ORDERING ENABLED
+                </span>
+
+            </label>
 
 
-            <div
-                id="addProductMessage"
-                class="admin-message"
-            ></div>
+            <label class="admin-switch">
+
+                <input
+                    id="newProductPreorder"
+                    type="checkbox"
+                >
+
+                <span>
+                    PREORDER
+                </span>
+
+            </label>
+
+
+            <label class="admin-switch">
+
+                <input
+                    id="newProductCustomFit"
+                    type="checkbox"
+                >
+
+                <span>
+                    CUSTOM FIT
+                </span>
+
+            </label>
+
+
+            <label class="admin-switch">
+
+                <input
+                    id="newProductCustomTuning"
+                    type="checkbox"
+                >
+
+                <span>
+                    CUSTOM TUNING
+                </span>
+
+            </label>
 
         </div>
 
 
+        <label class="full-label">
 
-        <!-- =================================================
-             PRODUCT LIST
-        ================================================== -->
+            SUBTITLE
+
+            <input
+                id="newProductSubtitle"
+                type="text"
+            >
+
+        </label>
+
+
+        <label class="full-label">
+
+            DESCRIPTION
+
+            <textarea
+                id="newProductDescription"
+            ></textarea>
+
+        </label>
+
+
+        <button
+            id="addProductButton"
+            class="primary-button"
+            type="button"
+        >
+            ADD PRODUCT
+        </button>
+
 
         <div
-            id="adminProductList"
-            class="product-grid"
-        >
-            <div class="loading-card">
-                Loading products...
-            </div>
+            id="addProductMessage"
+            class="admin-message"
+        ></div>
+
+    </div>
+
+
+    <div
+        id="adminProductList"
+        class="product-grid"
+    >
+
+        <div class="loading-card">
+            Loading products...
         </div>
 
-    </section>
+    </div>
+
+</section>
+
 
 </main>
 
 
 
 <!-- =====================================================
-     CONFIRMATION MODAL
+     MODAL
 ===================================================== -->
 
 <div
@@ -757,7 +855,8 @@
 
 <script src="supabase-client.js"></script>
 
-<script src="admin.js?v=30"></script>
+<script src="admin.js?v=31"></script>
+
 
 </body>
 
