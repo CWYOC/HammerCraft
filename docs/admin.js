@@ -2,6 +2,17 @@ const adminDB =
     window.hcSupabase;
 
 
+let cachedAccounts = [];
+let cachedScans = [];
+let cachedProducts = [];
+
+let selectedAccountUserID =
+    null;
+
+let confirmCallback =
+    null;
+
+
 /* =========================================================
    ADMIN AUTH
 ========================================================= */
@@ -73,10 +84,6 @@ async function requireAdmin() {
    CONFIRM MODAL
 ========================================================= */
 
-let confirmCallback =
-    null;
-
-
 function showConfirm(
     title,
     text,
@@ -131,81 +138,542 @@ function closeConfirm() {
 }
 
 
-document
-    .getElementById(
-        "confirmCancelButton"
-    )
-    .addEventListener(
-        "click",
-        closeConfirm
-    );
-
-
-document
-    .getElementById(
-        "confirmActionButton"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-            if (
-                confirmCallback
-            ) {
-
-                const callback =
-                    confirmCallback;
-
-
-                closeConfirm();
-
-
-                await callback();
-            }
-
-        }
-    );
-
-
 /* =========================================================
-   PROFILE
+   ACCOUNTS
 ========================================================= */
 
-async function loadProfile(
-    userID
-) {
+async function loadAccounts() {
+
+    const container =
+        document.getElementById(
+            "adminAccountList"
+        );
+
+
+    container.innerHTML = `
+        <div class="loading-card">
+            Loading accounts...
+        </div>
+    `;
+
 
     const {
-        data,
-        error
+        data: profiles,
+        error: profileError
     } =
         await adminDB
             .from(
                 "profiles"
             )
             .select(
-                "full_name,email"
+                `
+                id,
+                full_name,
+                email,
+                created_at
+                `
             )
-            .eq(
-                "id",
-                userID
-            )
-            .maybeSingle();
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
 
 
-    if (error) {
+    if (
+        profileError
+    ) {
 
         console.error(
-            "Profile load error:",
-            error
+            "Profile load:",
+            profileError
         );
 
 
-        return {};
+        container.innerHTML = `
+            <div class="loading-card">
+                Unable to load accounts.
+            </div>
+        `;
+
+
+        return;
     }
 
 
-    return data || {};
+    const {
+        data: scans,
+        error: scanError
+    } =
+        await adminDB
+            .from(
+                "ear_scans"
+            )
+            .select(
+                `
+                id,
+                user_id,
+                status,
+                created_at
+                `
+            );
+
+
+    if (
+        scanError
+    ) {
+
+        console.error(
+            scanError
+        );
+    }
+
+
+    /*
+        Because some admin_users RLS setups only
+        allow a person to read their own admin row,
+        failure here should not stop account loading.
+    */
+
+    const {
+        data: adminRows
+    } =
+        await adminDB
+            .from(
+                "admin_users"
+            )
+            .select(
+                "user_id"
+            );
+
+
+    const adminSet =
+        new Set(
+            (adminRows || [])
+                .map(
+                    item =>
+                        item.user_id
+                )
+        );
+
+
+    cachedAccounts =
+        (profiles || [])
+            .map(
+                profile => {
+
+                    const userScans =
+                        (scans || [])
+                            .filter(
+                                scan =>
+                                    scan.user_id ===
+                                    profile.id
+                            );
+
+
+                    return {
+
+                        ...profile,
+
+                        is_admin:
+                            adminSet.has(
+                                profile.id
+                            ),
+
+                        scans:
+                            userScans,
+
+                        scan_count:
+                            userScans.length,
+
+                        complete_count:
+                            userScans.filter(
+                                scan =>
+                                    scan.status ===
+                                    "complete"
+                            ).length
+
+                    };
+
+                }
+            );
+
+
+    updateAccountStats();
+
+
+    renderAccounts(
+        cachedAccounts
+    );
+
+}
+
+
+function updateAccountStats() {
+
+    document
+        .getElementById(
+            "totalAccounts"
+        )
+        .textContent =
+        cachedAccounts.length;
+
+
+    document
+        .getElementById(
+            "accountSummaryTotal"
+        )
+        .textContent =
+        cachedAccounts.length;
+
+
+    document
+        .getElementById(
+            "accountsWithScans"
+        )
+        .textContent =
+        cachedAccounts
+            .filter(
+                account =>
+                    account.scan_count > 0
+            )
+            .length;
+
+
+    document
+        .getElementById(
+            "totalAdmins"
+        )
+        .textContent =
+        cachedAccounts
+            .filter(
+                account =>
+                    account.is_admin
+            )
+            .length;
+
+}
+
+
+function renderAccounts(
+    accounts
+) {
+
+    const container =
+        document.getElementById(
+            "adminAccountList"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    if (
+        accounts.length === 0
+    ) {
+
+        container.innerHTML = `
+            <div class="loading-card">
+                No matching accounts.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    accounts.forEach(
+        account => {
+
+            const joined =
+                account.created_at
+                ? new Date(
+                    account.created_at
+                )
+                    .toLocaleDateString(
+                        "en-GB"
+                    )
+                : "—";
+
+
+            const card =
+                document.createElement(
+                    "article"
+                );
+
+
+            card.className =
+                "account-card";
+
+
+            card.innerHTML = `
+
+                <div class="account-card-top">
+
+                    <div>
+
+                        <h3>
+                            ${escapeHTML(
+                                account.full_name ||
+                                "Customer"
+                            )}
+                        </h3>
+
+                        <div class="account-email">
+
+                            ${escapeHTML(
+                                account.email ||
+                                ""
+                            )}
+
+                        </div>
+
+                        <div class="account-id">
+
+                            ${escapeHTML(
+                                account.id
+                            )}
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="
+                        role-badge
+                        ${
+                            account.is_admin
+                            ? "admin"
+                            : ""
+                        }
+                    ">
+
+                        ${
+                            account.is_admin
+                            ? "ADMIN"
+                            : "CUSTOMER"
+                        }
+
+                    </span>
+
+                </div>
+
+
+                <div class="account-info">
+
+                    <article>
+
+                        <span>
+                            JOINED
+                        </span>
+
+                        <strong>
+                            ${joined}
+                        </strong>
+
+                    </article>
+
+
+                    <article>
+
+                        <span>
+                            SCANS
+                        </span>
+
+                        <strong>
+                            ${account.scan_count}
+                        </strong>
+
+                    </article>
+
+
+                    <article>
+
+                        <span>
+                            COMPLETE
+                        </span>
+
+                        <strong>
+                            ${account.complete_count}
+                        </strong>
+
+                    </article>
+
+                </div>
+
+
+                <div class="account-actions">
+
+                    <button
+                        type="button"
+                        data-view-scans
+                    >
+                        VIEW SCANS
+                    </button>
+
+
+                    ${
+                        !account.is_admin
+                        ? `
+                            <button
+                                type="button"
+                                class="danger"
+                                data-delete-user
+                            >
+                                DELETE CUSTOMER
+                            </button>
+                        `
+                        : ""
+                    }
+
+                </div>
+
+            `;
+
+
+            card
+                .querySelector(
+                    "[data-view-scans]"
+                )
+                .addEventListener(
+                    "click",
+                    () => {
+
+                        filterScansByUser(
+                            account.id,
+                            account.full_name ||
+                            account.email ||
+                            "Customer"
+                        );
+
+                    }
+                );
+
+
+            const deleteButton =
+                card.querySelector(
+                    "[data-delete-user]"
+                );
+
+
+            if (
+                deleteButton
+            ) {
+
+                deleteButton
+                    .addEventListener(
+                        "click",
+                        () => {
+
+                            showConfirm(
+
+                                "Delete customer?",
+
+                                `Permanently delete ${
+                                    account.email ||
+                                    "this customer"
+                                } and their associated account data?`,
+
+                                () =>
+                                    deleteCustomer(
+                                        account.id
+                                    )
+
+                            );
+
+                        }
+                    );
+
+            }
+
+
+            container
+                .appendChild(
+                    card
+                );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ACCOUNT SEARCH
+========================================================= */
+
+function searchAccounts(
+    query
+) {
+
+    query =
+        query
+            .trim()
+            .toLowerCase();
+
+
+    if (
+        !query
+    ) {
+
+        renderAccounts(
+            cachedAccounts
+        );
+
+        return;
+    }
+
+
+    const filtered =
+        cachedAccounts
+            .filter(
+                account => {
+
+                    const name =
+                        (
+                            account.full_name ||
+                            ""
+                        )
+                        .toLowerCase();
+
+
+                    const email =
+                        (
+                            account.email ||
+                            ""
+                        )
+                        .toLowerCase();
+
+
+                    const id =
+                        account.id
+                            .toLowerCase();
+
+
+                    return (
+                        name.includes(
+                            query
+                        )
+                        ||
+                        email.includes(
+                            query
+                        )
+                        ||
+                        id.includes(
+                            query
+                        )
+                    );
+
+                }
+            );
+
+
+    renderAccounts(
+        filtered
+    );
+
 }
 
 
@@ -229,7 +697,7 @@ async function loadAdminScans() {
 
 
     const {
-        data: scans,
+        data,
         error
     } =
         await adminDB
@@ -252,12 +720,15 @@ async function loadAdminScans() {
             .order(
                 "created_at",
                 {
-                    ascending: false
+                    ascending:
+                        false
                 }
             );
 
 
-    if (error) {
+    if (
+        error
+    ) {
 
         console.error(
             error
@@ -275,65 +746,28 @@ async function loadAdminScans() {
     }
 
 
-    updateScanStats(
-        scans || []
+    cachedScans =
+        data || [];
+
+
+    updateScanStats();
+
+
+    renderScans(
+        cachedScans
     );
 
-
-    if (
-        !scans ||
-        scans.length === 0
-    ) {
-
-        container.innerHTML = `
-            <div class="loading-card">
-                No scans yet.
-            </div>
-        `;
-
-        return;
-    }
-
-
-    container.innerHTML =
-        "";
-
-
-    for (
-        const scan
-        of scans
-    ) {
-
-        const profile =
-            await loadProfile(
-                scan.user_id
-            );
-
-
-        container.appendChild(
-            createScanCard(
-                scan,
-                profile
-            )
-        );
-    }
 }
 
 
-/* =========================================================
-   STATS
-========================================================= */
-
-function updateScanStats(
-    scans
-) {
+function updateScanStats() {
 
     document
         .getElementById(
             "totalScans"
         )
         .textContent =
-        scans.length;
+        cachedScans.length;
 
 
     document
@@ -341,11 +775,13 @@ function updateScanStats(
             "processingScans"
         )
         .textContent =
-        scans.filter(
-            scan =>
-                scan.status ===
-                "processing"
-        ).length;
+        cachedScans
+            .filter(
+                scan =>
+                    scan.status ===
+                    "processing"
+            )
+            .length;
 
 
     document
@@ -353,11 +789,13 @@ function updateScanStats(
             "completeScans"
         )
         .textContent =
-        scans.filter(
-            scan =>
-                scan.status ===
-                "complete"
-        ).length;
+        cachedScans
+            .filter(
+                scan =>
+                    scan.status ===
+                    "complete"
+            )
+            .length;
 
 
     document
@@ -365,22 +803,105 @@ function updateScanStats(
             "failedScans"
         )
         .textContent =
-        scans.filter(
-            scan =>
-                scan.status ===
-                "failed"
-        ).length;
+        cachedScans
+            .filter(
+                scan =>
+                    scan.status ===
+                    "failed"
+            )
+            .length;
+
 }
 
 
 /* =========================================================
-   SCAN CARD
+   GET PROFILE
 ========================================================= */
+
+function profileForUser(
+    userID
+) {
+
+    return cachedAccounts
+        .find(
+            account =>
+                account.id ===
+                userID
+        )
+        || {};
+
+}
+
+
+/* =========================================================
+   RENDER SCANS
+========================================================= */
+
+function renderScans(
+    scans
+) {
+
+    const container =
+        document.getElementById(
+            "adminScanList"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    if (
+        scans.length === 0
+    ) {
+
+        container.innerHTML = `
+            <div class="loading-card">
+                No matching scans.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    scans.forEach(
+        scan => {
+
+            const profile =
+                profileForUser(
+                    scan.user_id
+                );
+
+
+            container.appendChild(
+                createScanCard(
+                    scan,
+                    profile
+                )
+            );
+
+        }
+    );
+
+}
+
 
 function createScanCard(
     scan,
     profile
 ) {
+
+    const date =
+        scan.created_at
+        ? new Date(
+            scan.created_at
+        )
+            .toLocaleString(
+                "en-GB"
+            )
+        : "—";
+
 
     const card =
         document.createElement(
@@ -392,25 +913,6 @@ function createScanCard(
         "scan-card";
 
 
-    const date =
-        new Date(
-            scan.created_at
-        )
-        .toLocaleString(
-            "en-GB"
-        );
-
-
-    const name =
-        profile.full_name ||
-        "Customer";
-
-
-    const email =
-        profile.email ||
-        scan.user_id;
-
-
     card.innerHTML = `
 
         <div class="scan-card-top">
@@ -420,50 +922,78 @@ function createScanCard(
             </span>
 
             <strong class="scan-status">
-                ${escapeHTML(scan.status).toUpperCase()}
+
+                ${escapeHTML(
+                    String(
+                        scan.status ||
+                        ""
+                    )
+                    .toUpperCase()
+                )}
+
             </strong>
 
         </div>
 
 
         <h3>
-            ${escapeHTML(name)}
+
+            ${escapeHTML(
+                profile.full_name ||
+                "Customer"
+            )}
+
         </h3>
 
 
         <div class="scan-email">
-            ${escapeHTML(email)}
+
+            ${escapeHTML(
+                profile.email ||
+                scan.user_id
+            )}
+
         </div>
 
 
         <div class="scan-meta">
 
-            <div>
+            <article>
 
                 <span>
                     LEFT EAR
                 </span>
 
                 <strong>
-                    ${scan.left_image_count}
+
+                    ${
+                        scan.left_image_count ??
+                        0
+                    }
                     IMAGES
+
                 </strong>
 
-            </div>
+            </article>
 
 
-            <div>
+            <article>
 
                 <span>
                     RIGHT EAR
                 </span>
 
                 <strong>
-                    ${scan.right_image_count}
+
+                    ${
+                        scan.right_image_count ??
+                        0
+                    }
                     IMAGES
+
                 </strong>
 
-            </div>
+            </article>
 
         </div>
 
@@ -482,6 +1012,7 @@ function createScanCard(
                 scan.left_stl_path
                 ? `
                     <button
+                        type="button"
                         data-left-stl
                     >
                         LEFT STL
@@ -495,6 +1026,7 @@ function createScanCard(
                 scan.right_stl_path
                 ? `
                     <button
+                        type="button"
                         data-right-stl
                     >
                         RIGHT STL
@@ -505,21 +1037,15 @@ function createScanCard(
 
 
             <button
+                type="button"
                 class="danger"
                 data-delete-scan
             >
                 DELETE SCAN
             </button>
 
-
-            <button
-                class="danger"
-                data-delete-user
-            >
-                DELETE CUSTOMER
-            </button>
-
         </div>
+
     `;
 
 
@@ -529,18 +1055,19 @@ function createScanCard(
         );
 
 
-    if (leftButton) {
+    if (
+        leftButton
+    ) {
 
-        leftButton.addEventListener(
-            "click",
-            () => {
+        leftButton
+            .addEventListener(
+                "click",
+                () =>
+                    openPrivateFile(
+                        scan.left_stl_path
+                    )
+            );
 
-                openPrivateFile(
-                    scan.left_stl_path
-                );
-
-            }
-        );
     }
 
 
@@ -550,18 +1077,19 @@ function createScanCard(
         );
 
 
-    if (rightButton) {
+    if (
+        rightButton
+    ) {
 
-        rightButton.addEventListener(
-            "click",
-            () => {
+        rightButton
+            .addEventListener(
+                "click",
+                () =>
+                    openPrivateFile(
+                        scan.right_stl_path
+                    )
+            );
 
-                openPrivateFile(
-                    scan.right_stl_path
-                );
-
-            }
-        );
     }
 
 
@@ -577,36 +1105,11 @@ function createScanCard(
 
                     "Delete scan?",
 
-                    "This will permanently remove the scan record and every stored image/STL for this scan.",
+                    "This permanently removes the scan record and its stored files.",
 
                     () =>
                         deleteScan(
                             scan
-                        )
-
-                );
-
-            }
-        );
-
-
-    card
-        .querySelector(
-            "[data-delete-user]"
-        )
-        .addEventListener(
-            "click",
-            () => {
-
-                showConfirm(
-
-                    "Delete customer account?",
-
-                    "This removes the customer's authentication account and associated Hammer Craft data. This cannot be undone.",
-
-                    () =>
-                        deleteCustomer(
-                            scan.user_id
                         )
 
                 );
@@ -620,7 +1123,128 @@ function createScanCard(
 
 
 /* =========================================================
-   SIGNED STL
+   SCAN FILTERS
+========================================================= */
+
+function applyScanFilters() {
+
+    let scans =
+        [...cachedScans];
+
+
+    const status =
+        document
+            .getElementById(
+                "scanStatusFilter"
+            )
+            .value;
+
+
+    if (
+        status
+    ) {
+
+        scans =
+            scans.filter(
+                scan =>
+                    scan.status ===
+                    status
+            );
+
+    }
+
+
+    if (
+        selectedAccountUserID
+    ) {
+
+        scans =
+            scans.filter(
+                scan =>
+                    scan.user_id ===
+                    selectedAccountUserID
+            );
+
+    }
+
+
+    renderScans(
+        scans
+    );
+
+}
+
+
+function filterScansByUser(
+    userID,
+    label
+) {
+
+    selectedAccountUserID =
+        userID;
+
+
+    const active =
+        document
+            .getElementById(
+                "activeScanFilter"
+            );
+
+
+    active.hidden =
+        false;
+
+
+    active.textContent =
+        `Showing scans for: ${label}`;
+
+
+    applyScanFilters();
+
+
+    document
+        .getElementById(
+            "scans"
+        )
+        .scrollIntoView({
+            behavior:
+                "smooth"
+        });
+
+}
+
+
+function clearScanFilters() {
+
+    selectedAccountUserID =
+        null;
+
+
+    document
+        .getElementById(
+            "scanStatusFilter"
+        )
+        .value =
+        "";
+
+
+    document
+        .getElementById(
+            "activeScanFilter"
+        )
+        .hidden =
+        true;
+
+
+    renderScans(
+        cachedScans
+    );
+
+}
+
+
+/* =========================================================
+   PRIVATE FILE
 ========================================================= */
 
 async function openPrivateFile(
@@ -666,9 +1290,12 @@ async function openPrivateFile(
         "_blank",
         "noopener"
     );
+
 }
+
+
 /* =========================================================
-   COLLECT SCAN STORAGE FILES
+   STORAGE RECURSION
 ========================================================= */
 
 async function collectStorageFiles(
@@ -688,12 +1315,16 @@ async function collectStorageFiles(
             .list(
                 folder,
                 {
-                    limit: 1000
+                    limit:
+                        1000
                 }
             );
 
 
-    if (error) {
+    if (
+        error
+    ) {
+
         throw error;
     }
 
@@ -703,18 +1334,17 @@ async function collectStorageFiles(
         of data || []
     ) {
 
+        if (
+            !item.name
+        ) {
+
+            continue;
+        }
+
+
         const path =
             `${folder}/${item.name}`;
 
-
-        /*
-            Supabase Storage list results
-            representing files usually contain
-            metadata.
-
-            If there is no metadata, treat it
-            as a folder and recurse.
-        */
 
         if (
             item.metadata
@@ -732,10 +1362,12 @@ async function collectStorageFiles(
             );
 
         }
+
     }
 
 
     return paths;
+
 }
 
 
@@ -764,7 +1396,7 @@ async function deleteScan(
         ) {
 
             const {
-                error: storageError
+                error
             } =
                 await adminDB
                     .storage
@@ -777,17 +1409,17 @@ async function deleteScan(
 
 
             if (
-                storageError
+                error
             ) {
 
-                throw storageError;
+                throw error;
             }
 
         }
 
 
         const {
-            error: rowError
+            error
         } =
             await adminDB
                 .from(
@@ -801,14 +1433,17 @@ async function deleteScan(
 
 
         if (
-            rowError
+            error
         ) {
 
-            throw rowError;
+            throw error;
         }
 
 
-        await loadAdminScans();
+        await Promise.all([
+            loadAdminScans(),
+            loadAccounts()
+        ]);
 
     }
 
@@ -817,15 +1452,16 @@ async function deleteScan(
     ) {
 
         console.error(
-            "Delete scan error:",
             error
         );
 
 
         alert(
-            "The scan could not be completely deleted."
+            "Scan deletion failed."
         );
+
     }
+
 }
 
 
@@ -840,11 +1476,8 @@ async function deleteCustomer(
     try {
 
         /*
-            DO NOT use auth.admin.deleteUser()
-            in this browser file.
-
-            The Edge Function performs the
-            privileged deletion.
+            Privileged Auth deletion stays
+            inside the Edge Function.
         */
 
         const {
@@ -882,7 +1515,10 @@ async function deleteCustomer(
         }
 
 
-        await loadAdminScans();
+        await Promise.all([
+            loadAccounts(),
+            loadAdminScans()
+        ]);
 
     }
 
@@ -891,7 +1527,6 @@ async function deleteCustomer(
     ) {
 
         console.error(
-            "Delete customer error:",
             error
         );
 
@@ -899,12 +1534,14 @@ async function deleteCustomer(
         alert(
             "Customer deletion failed."
         );
+
     }
+
 }
 
 
 /* =========================================================
-   LOAD PRODUCTS
+   PRODUCTS
 ========================================================= */
 
 async function loadProducts() {
@@ -923,18 +1560,21 @@ async function loadProducts() {
 
 
     const {
-        data: products,
+        data,
         error
     } =
         await adminDB
             .from(
                 "products"
             )
-            .select("*")
+            .select(
+                "*"
+            )
             .order(
                 "display_order",
                 {
-                    ascending: true
+                    ascending:
+                        true
                 }
             );
 
@@ -950,7 +1590,7 @@ async function loadProducts() {
 
         container.innerHTML = `
             <div class="loading-card">
-                Products could not be loaded.
+                Unable to load products.
             </div>
         `;
 
@@ -959,13 +1599,171 @@ async function loadProducts() {
     }
 
 
+    cachedProducts =
+        data || [];
+
+
+    updateProductStats();
+
+
+    renderProducts();
+
+}
+
+
+/* =========================================================
+   PRODUCT STATS
+========================================================= */
+
+function effectiveStockState(
+    product
+) {
+
+    if (
+        product.status ===
+        "coming_soon"
+    ) {
+
+        return "coming_soon";
+    }
+
+
+    if (
+        product.status ===
+        "hidden"
+    ) {
+
+        return "hidden";
+    }
+
+
+    const stock =
+        Number(
+            product.stock_quantity ||
+            0
+        );
+
+
+    const threshold =
+        Number(
+            product.low_stock_threshold ||
+            0
+        );
+
+
+    if (
+        stock <= 0
+    ) {
+
+        return "out_of_stock";
+    }
+
+
+    if (
+        stock <= threshold
+    ) {
+
+        return "low_stock";
+    }
+
+
+    return "in_stock";
+
+}
+
+
+function updateProductStats() {
+
+    document
+        .getElementById(
+            "totalProducts"
+        )
+        .textContent =
+        cachedProducts.length;
+
+
+    document
+        .getElementById(
+            "productsInStock"
+        )
+        .textContent =
+        cachedProducts
+            .filter(
+                product =>
+                    effectiveStockState(
+                        product
+                    ) ===
+                    "in_stock"
+            )
+            .length;
+
+
+    document
+        .getElementById(
+            "productsLowStock"
+        )
+        .textContent =
+        cachedProducts
+            .filter(
+                product =>
+                    effectiveStockState(
+                        product
+                    ) ===
+                    "low_stock"
+            )
+            .length;
+
+
+    document
+        .getElementById(
+            "productsOutStock"
+        )
+        .textContent =
+        cachedProducts
+            .filter(
+                product =>
+                    effectiveStockState(
+                        product
+                    ) ===
+                    "out_of_stock"
+            )
+            .length;
+
+
+    document
+        .getElementById(
+            "productsComingSoon"
+        )
+        .textContent =
+        cachedProducts
+            .filter(
+                product =>
+                    product.status ===
+                    "coming_soon"
+            )
+            .length;
+
+}
+
+
+/* =========================================================
+   RENDER PRODUCTS
+========================================================= */
+
+function renderProducts() {
+
+    const container =
+        document.getElementById(
+            "adminProductList"
+        );
+
+
     container.innerHTML =
         "";
 
 
     if (
-        !products ||
-        products.length === 0
+        cachedProducts.length === 0
     ) {
 
         container.innerHTML = `
@@ -979,17 +1777,19 @@ async function loadProducts() {
     }
 
 
-    products.forEach(
-        product => {
+    cachedProducts
+        .forEach(
+            product => {
 
-            container.appendChild(
-                createProductCard(
-                    product
-                )
-            );
+                container.appendChild(
+                    createProductCard(
+                        product
+                    )
+                );
 
-        }
-    );
+            }
+        );
+
 }
 
 
@@ -1011,6 +1811,12 @@ function createProductCard(
         "product-card";
 
 
+    const stockState =
+        effectiveStockState(
+            product
+        );
+
+
     card.innerHTML = `
 
         <div class="product-image-area">
@@ -1019,8 +1825,12 @@ function createProductCard(
                 product.image_path
                 ? `
                     <img
-                        src="${escapeHTML(product.image_path)}"
-                        alt="${escapeHTML(product.name)}"
+                        src="${escapeHTML(
+                            product.image_path
+                        )}"
+                        alt="${escapeHTML(
+                            product.name
+                        )}"
                     >
                 `
                 : `
@@ -1033,7 +1843,9 @@ function createProductCard(
 
             <span class="product-status-badge">
 
-                ${formatStatus(product.status)}
+                ${formatStatus(
+                    product.status
+                )}
 
             </span>
 
@@ -1047,28 +1859,52 @@ function createProductCard(
                 <div>
 
                     <h3>
-                        ${escapeHTML(product.name)}
+                        ${escapeHTML(
+                            product.name
+                        )}
                     </h3>
 
                     <div class="product-slug">
-                        ${escapeHTML(product.slug)}
+
+                        ${escapeHTML(
+                            product.sku ||
+                            "NO SKU"
+                        )}
+
+                        /
+
+                        ${escapeHTML(
+                            product.slug
+                        )}
+
                     </div>
 
                 </div>
+
+
+                <span class="
+                    inventory-indicator
+                    ${inventoryClass(
+                        stockState
+                    )}
+                ">
+
+                    ${inventoryText(
+                        product
+                    )}
+
+                </span>
 
             </div>
 
 
             <div class="product-editor-grid">
 
-
                 <label>
 
                     STATUS
 
-                    <select
-                        data-status
-                    >
+                    <select data-status>
                         ${productStatusOptions(
                             product.status
                         )}
@@ -1085,7 +1921,27 @@ function createProductCard(
                         data-stock
                         type="number"
                         min="0"
-                        value="${product.stock_quantity}"
+                        value="${
+                            product.stock_quantity ??
+                            0
+                        }"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    LOW STOCK AT
+
+                    <input
+                        data-low-threshold
+                        type="number"
+                        min="0"
+                        value="${
+                            product.low_stock_threshold ??
+                            3
+                        }"
                     >
 
                 </label>
@@ -1100,7 +1956,27 @@ function createProductCard(
                         type="number"
                         min="0"
                         step="0.01"
-                        value="${product.price_gbp ?? ""}"
+                        value="${
+                            product.price_gbp ??
+                            ""
+                        }"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    MAX PER ORDER
+
+                    <input
+                        data-max-order
+                        type="number"
+                        min="1"
+                        value="${
+                            product.max_order_quantity ??
+                            1
+                        }"
                     >
 
                 </label>
@@ -1113,7 +1989,10 @@ function createProductCard(
                     <input
                         data-order
                         type="number"
-                        value="${product.display_order}"
+                        value="${
+                            product.display_order ??
+                            0
+                        }"
                     >
 
                 </label>
@@ -1121,12 +2000,46 @@ function createProductCard(
 
                 <label>
 
+                    SKU
+
+                    <input
+                        data-sku
+                        type="text"
+                        value="${escapeHTML(
+                            product.sku ||
+                            ""
+                        )}"
+                    >
+
+                </label>
+
+
+                <label>
+
+                    LAUNCH DATE
+
+                    <input
+                        data-launch
+                        type="datetime-local"
+                        value="${toLocalInputDate(
+                            product.launch_date
+                        )}"
+                    >
+
+                </label>
+
+
+                <label class="full-control">
+
                     SUBTITLE
 
                     <input
                         data-subtitle
                         type="text"
-                        value="${escapeHTML(product.subtitle || "")}"
+                        value="${escapeHTML(
+                            product.subtitle ||
+                            ""
+                        )}"
                     >
 
                 </label>
@@ -1138,9 +2051,47 @@ function createProductCard(
 
                     <textarea
                         data-description
-                    >${escapeHTML(product.description || "")}</textarea>
+                    >${escapeHTML(
+                        product.description ||
+                        ""
+                    )}</textarea>
 
                 </label>
+
+            </div>
+
+
+            <div class="product-switch-grid">
+
+                ${productSwitch(
+                    "data-featured",
+                    "FEATURED",
+                    product.featured
+                )}
+
+                ${productSwitch(
+                    "data-ordering",
+                    "ORDERING ENABLED",
+                    product.ordering_enabled
+                )}
+
+                ${productSwitch(
+                    "data-preorder",
+                    "PREORDER",
+                    product.preorder_enabled
+                )}
+
+                ${productSwitch(
+                    "data-custom-fit",
+                    "CUSTOM FIT",
+                    product.custom_fit_available
+                )}
+
+                ${productSwitch(
+                    "data-custom-tuning",
+                    "CUSTOM TUNING",
+                    product.custom_tuning_available
+                )}
 
             </div>
 
@@ -1166,6 +2117,7 @@ function createProductCard(
 
                 <button
                     class="primary-button"
+                    type="button"
                     data-save
                 >
                     SAVE CHANGES
@@ -1174,6 +2126,7 @@ function createProductCard(
 
                 <button
                     class="outline-button"
+                    type="button"
                     data-upload-image
                 >
                     UPLOAD IMAGE
@@ -1182,6 +2135,7 @@ function createProductCard(
 
                 <button
                     class="danger-button"
+                    type="button"
                     data-delete-product
                 >
                     DELETE PRODUCT
@@ -1196,6 +2150,7 @@ function createProductCard(
             ></div>
 
         </div>
+
     `;
 
 
@@ -1205,14 +2160,11 @@ function createProductCard(
         )
         .addEventListener(
             "click",
-            () => {
-
+            () =>
                 saveProduct(
                     product.id,
                     card
-                );
-
-            }
+                )
         );
 
 
@@ -1222,14 +2174,11 @@ function createProductCard(
         )
         .addEventListener(
             "click",
-            () => {
-
+            () =>
                 uploadProductImage(
                     product,
                     card
-                );
-
-            }
+                )
         );
 
 
@@ -1245,7 +2194,7 @@ function createProductCard(
 
                     "Delete product?",
 
-                    `${product.name} will be removed from the public website.`,
+                    `${product.name} will be permanently removed from the catalog.`,
 
                     () =>
                         deleteProduct(
@@ -1259,11 +2208,128 @@ function createProductCard(
 
 
     return card;
+
 }
 
 
 /* =========================================================
-   PRODUCT STATUS
+   PRODUCT SWITCH
+========================================================= */
+
+function productSwitch(
+    attribute,
+    label,
+    checked
+) {
+
+    return `
+
+        <label class="product-switch">
+
+            <input
+                ${attribute}
+                type="checkbox"
+                ${
+                    checked
+                    ? "checked"
+                    : ""
+                }
+            >
+
+            <span>
+                ${label}
+            </span>
+
+        </label>
+
+    `;
+
+}
+
+
+/* =========================================================
+   INVENTORY LABEL
+========================================================= */
+
+function inventoryClass(
+    state
+) {
+
+    switch (
+        state
+    ) {
+
+        case "in_stock":
+            return "inventory-good";
+
+        case "low_stock":
+            return "inventory-low";
+
+        default:
+            return "inventory-empty";
+
+    }
+
+}
+
+
+function inventoryText(
+    product
+) {
+
+    const state =
+        effectiveStockState(
+            product
+        );
+
+
+    if (
+        state ===
+        "coming_soon"
+    ) {
+
+        return "COMING SOON";
+    }
+
+
+    if (
+        state ===
+        "hidden"
+    ) {
+
+        return "HIDDEN";
+    }
+
+
+    if (
+        state ===
+        "out_of_stock"
+    ) {
+
+        return "OUT OF STOCK";
+    }
+
+
+    if (
+        state ===
+        "low_stock"
+    ) {
+
+        return `ONLY ${
+            product.stock_quantity
+        } LEFT`;
+    }
+
+
+    return `${
+        product.stock_quantity
+    } IN STOCK`;
+
+}
+
+
+/* =========================================================
+   STATUS OPTIONS
 ========================================================= */
 
 function productStatusOptions(
@@ -1271,26 +2337,32 @@ function productStatusOptions(
 ) {
 
     const options = [
+
         [
             "in_stock",
             "In stock"
         ],
+
         [
             "low_stock",
             "Low stock"
         ],
+
         [
             "out_of_stock",
             "Out of stock"
         ],
+
         [
             "coming_soon",
             "Coming soon"
         ],
+
         [
             "hidden",
             "Hidden"
         ]
+
     ];
 
 
@@ -1301,7 +2373,8 @@ function productStatusOptions(
                 <option
                     value="${value}"
                     ${
-                        value === current
+                        current ===
+                        value
                         ? "selected"
                         : ""
                     }
@@ -1312,21 +2385,7 @@ function productStatusOptions(
             `
         )
         .join("");
-}
 
-
-function formatStatus(
-    status
-) {
-
-    return String(
-        status
-    )
-        .replaceAll(
-            "_",
-            " "
-        )
-        .toUpperCase();
 }
 
 
@@ -1352,7 +2411,118 @@ async function saveProduct(
     const priceValue =
         card.querySelector(
             "[data-price]"
-        ).value;
+        )
+        .value;
+
+
+    const launchValue =
+        card.querySelector(
+            "[data-launch]"
+        )
+        .value;
+
+
+    const payload = {
+
+        status:
+            card.querySelector(
+                "[data-status]"
+            ).value,
+
+        stock_quantity:
+            Number(
+                card.querySelector(
+                    "[data-stock]"
+                ).value
+            ),
+
+        low_stock_threshold:
+            Number(
+                card.querySelector(
+                    "[data-low-threshold]"
+                ).value
+            ),
+
+        price_gbp:
+            priceValue === ""
+            ? null
+            : Number(
+                priceValue
+            ),
+
+        max_order_quantity:
+            Number(
+                card.querySelector(
+                    "[data-max-order]"
+                ).value
+            ),
+
+        display_order:
+            Number(
+                card.querySelector(
+                    "[data-order]"
+                ).value
+            ),
+
+        sku:
+            card.querySelector(
+                "[data-sku]"
+            )
+            .value
+            .trim(),
+
+        launch_date:
+            launchValue
+            ? new Date(
+                launchValue
+            )
+                .toISOString()
+            : null,
+
+        subtitle:
+            card.querySelector(
+                "[data-subtitle]"
+            )
+            .value
+            .trim(),
+
+        description:
+            card.querySelector(
+                "[data-description]"
+            )
+            .value
+            .trim(),
+
+        featured:
+            card.querySelector(
+                "[data-featured]"
+            ).checked,
+
+        ordering_enabled:
+            card.querySelector(
+                "[data-ordering]"
+            ).checked,
+
+        preorder_enabled:
+            card.querySelector(
+                "[data-preorder]"
+            ).checked,
+
+        custom_fit_available:
+            card.querySelector(
+                "[data-custom-fit]"
+            ).checked,
+
+        custom_tuning_available:
+            card.querySelector(
+                "[data-custom-tuning]"
+            ).checked,
+
+        updated_at:
+            new Date()
+                .toISOString()
+
+    };
 
 
     const {
@@ -1362,49 +2532,9 @@ async function saveProduct(
             .from(
                 "products"
             )
-            .update({
-
-                status:
-                    card.querySelector(
-                        "[data-status]"
-                    ).value,
-
-                stock_quantity:
-                    Number(
-                        card.querySelector(
-                            "[data-stock]"
-                        ).value
-                    ),
-
-                price_gbp:
-                    priceValue === ""
-                    ? null
-                    : Number(
-                        priceValue
-                    ),
-
-                display_order:
-                    Number(
-                        card.querySelector(
-                            "[data-order]"
-                        ).value
-                    ),
-
-                subtitle:
-                    card.querySelector(
-                        "[data-subtitle]"
-                    ).value.trim(),
-
-                description:
-                    card.querySelector(
-                        "[data-description]"
-                    ).value.trim(),
-
-                updated_at:
-                    new Date()
-                        .toISOString()
-
-            })
+            .update(
+                payload
+            )
             .eq(
                 "id",
                 productID
@@ -1421,7 +2551,7 @@ async function saveProduct(
 
 
         message.textContent =
-            "Could not save product.";
+            "Could not save.";
 
 
         return;
@@ -1433,6 +2563,7 @@ async function saveProduct(
 
 
     await loadProducts();
+
 }
 
 
@@ -1445,17 +2576,20 @@ async function uploadProductImage(
     card
 ) {
 
-    const file =
+    const input =
         card.querySelector(
             "[data-image-file]"
-        )
-        .files?.[0];
+        );
 
 
     const message =
         card.querySelector(
             "[data-message]"
         );
+
+
+    const file =
+        input.files?.[0];
 
 
     if (
@@ -1470,18 +2604,21 @@ async function uploadProductImage(
     }
 
 
+    const allowed = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+
     if (
-        ![
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-        ].includes(
+        !allowed.includes(
             file.type
         )
     ) {
 
         message.textContent =
-            "Only JPG, PNG and WebP images are allowed.";
+            "Use JPG, PNG or WebP.";
 
 
         return;
@@ -1591,7 +2728,7 @@ async function uploadProductImage(
 
 
         message.textContent =
-            "Image stored but product update failed.";
+            "Image uploaded but database update failed.";
 
 
         return;
@@ -1603,6 +2740,7 @@ async function uploadProductImage(
 
 
     await loadProducts();
+
 }
 
 
@@ -1652,9 +2790,11 @@ async function deleteProduct(
 
 
         alert(
-            "Product could not be deleted."
+            "Product deletion failed."
         );
+
     }
+
 }
 
 
@@ -1671,15 +2811,21 @@ async function addProduct() {
 
 
     const name =
-        document.getElementById(
-            "newProductName"
-        ).value.trim();
+        document
+            .getElementById(
+                "newProductName"
+            )
+            .value
+            .trim();
 
 
     const slug =
-        document.getElementById(
-            "newProductSlug"
-        ).value.trim();
+        document
+            .getElementById(
+                "newProductSlug"
+            )
+            .value
+            .trim();
 
 
     if (
@@ -1696,62 +2842,162 @@ async function addProduct() {
 
 
     const priceValue =
-        document.getElementById(
-            "newProductPrice"
-        ).value;
+        document
+            .getElementById(
+                "newProductPrice"
+            )
+            .value;
+
+
+    const launchValue =
+        document
+            .getElementById(
+                "newProductLaunchDate"
+            )
+            .value;
+
+
+    const payload = {
+
+        name,
+
+        slug,
+
+        sku:
+            document
+                .getElementById(
+                    "newProductSku"
+                )
+                .value
+                .trim(),
+
+        subtitle:
+            document
+                .getElementById(
+                    "newProductSubtitle"
+                )
+                .value
+                .trim(),
+
+        description:
+            document
+                .getElementById(
+                    "newProductDescription"
+                )
+                .value
+                .trim(),
+
+        price_gbp:
+            priceValue === ""
+            ? null
+            : Number(
+                priceValue
+            ),
+
+        stock_quantity:
+            Number(
+                document
+                    .getElementById(
+                        "newProductStock"
+                    )
+                    .value
+            ),
+
+        low_stock_threshold:
+            Number(
+                document
+                    .getElementById(
+                        "newProductLowThreshold"
+                    )
+                    .value
+            ),
+
+        status:
+            document
+                .getElementById(
+                    "newProductStatus"
+                )
+                .value,
+
+        display_order:
+            Number(
+                document
+                    .getElementById(
+                        "newProductOrder"
+                    )
+                    .value
+            ),
+
+        launch_date:
+            launchValue
+            ? new Date(
+                launchValue
+            )
+                .toISOString()
+            : null,
+
+        max_order_quantity:
+            Number(
+                document
+                    .getElementById(
+                        "newProductMaxOrder"
+                    )
+                    .value
+            ),
+
+        featured:
+            document
+                .getElementById(
+                    "newProductFeatured"
+                )
+                .checked,
+
+        ordering_enabled:
+            document
+                .getElementById(
+                    "newProductOrdering"
+                )
+                .checked,
+
+        preorder_enabled:
+            document
+                .getElementById(
+                    "newProductPreorder"
+                )
+                .checked,
+
+        custom_fit_available:
+            document
+                .getElementById(
+                    "newProductCustomFit"
+                )
+                .checked,
+
+        custom_tuning_available:
+            document
+                .getElementById(
+                    "newProductCustomTuning"
+                )
+                .checked
+
+    };
+
+
+    message.textContent =
+        "Creating product...";
 
 
     const {
-        data: inserted,
+        data: product,
         error
     } =
         await adminDB
             .from(
                 "products"
             )
-            .insert({
-
-                name,
-
-                slug,
-
-                subtitle:
-                    document.getElementById(
-                        "newProductSubtitle"
-                    ).value.trim(),
-
-                description:
-                    document.getElementById(
-                        "newProductDescription"
-                    ).value.trim(),
-
-                price_gbp:
-                    priceValue === ""
-                    ? null
-                    : Number(
-                        priceValue
-                    ),
-
-                stock_quantity:
-                    Number(
-                        document.getElementById(
-                            "newProductStock"
-                        ).value
-                    ),
-
-                status:
-                    document.getElementById(
-                        "newProductStatus"
-                    ).value,
-
-                display_order:
-                    Number(
-                        document.getElementById(
-                            "newProductOrder"
-                        ).value
-                    )
-
-            })
+            .insert(
+                payload
+            )
             .select()
             .single();
 
@@ -1774,114 +3020,144 @@ async function addProduct() {
 
 
     const image =
-        document.getElementById(
-            "newProductImage"
-        )
-        .files?.[0];
+        document
+            .getElementById(
+                "newProductImage"
+            )
+            .files?.[0];
 
 
     if (
         image
     ) {
 
-        /*
-            Build a temporary card-like object
-            so we can reuse uploadProductImage.
-        */
-
-        const fakeCard =
-            document.createElement(
-                "div"
-            );
-
-
-        fakeCard.innerHTML = `
-
-            <input
-                data-image-file
-                type="file"
-            >
-
-            <div
-                data-message
-            ></div>
-
-        `;
-
-
-        const fileInput =
-            fakeCard.querySelector(
-                "[data-image-file]"
-            );
-
-
-        const transfer =
-            new DataTransfer();
-
-
-        transfer.items.add(
+        await uploadNewProductImage(
+            product,
             image
         );
 
-
-        fileInput.files =
-            transfer.files;
-
-
-        await uploadProductImage(
-            inserted,
-            fakeCard
-        );
     }
 
 
     message.textContent =
-        "Product added.";
+        "Product created.";
 
 
     clearNewProductForm();
 
 
     await loadProducts();
+
 }
 
 
 /* =========================================================
-   CLEAR PRODUCT FORM
+   UPLOAD INITIAL PRODUCT IMAGE
+========================================================= */
+
+async function uploadNewProductImage(
+    product,
+    file
+) {
+
+    const extension =
+        file.name
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+
+    const path =
+        `${product.id}/main-${Date.now()}.${extension}`;
+
+
+    const {
+        error
+    } =
+        await adminDB
+            .storage
+            .from(
+                "product-images"
+            )
+            .upload(
+                path,
+                file,
+                {
+                    contentType:
+                        file.type,
+
+                    upsert:
+                        false
+                }
+            );
+
+
+    if (
+        error
+    ) {
+
+        throw error;
+    }
+
+
+    const {
+        data
+    } =
+        adminDB
+            .storage
+            .from(
+                "product-images"
+            )
+            .getPublicUrl(
+                path
+            );
+
+
+    await adminDB
+        .from(
+            "products"
+        )
+        .update({
+            image_path:
+                data.publicUrl
+        })
+        .eq(
+            "id",
+            product.id
+        );
+
+}
+
+
+/* =========================================================
+   CLEAR NEW PRODUCT FORM
 ========================================================= */
 
 function clearNewProductForm() {
 
-    document
-        .getElementById(
-            "newProductName"
-        )
-        .value =
-        "";
+    const textFields = [
+        "newProductName",
+        "newProductSku",
+        "newProductSlug",
+        "newProductPrice",
+        "newProductLaunchDate",
+        "newProductSubtitle",
+        "newProductDescription"
+    ];
 
 
-    document
-        .getElementById(
-            "newProductSlug"
-        )
-        .value =
-        "";
+    textFields.forEach(
+        id => {
 
+            document
+                .getElementById(
+                    id
+                )
+                .value =
+                "";
 
-    document
-        .getElementById(
-            "newProductSubtitle"
-        )
-        .value =
-        "";
-
-
-    document
-        .getElementById(
-            "newProductPrice"
-        )
-        .value =
-        "";
+        }
+    );
 
 
     document
@@ -1894,6 +3170,14 @@ function clearNewProductForm() {
 
     document
         .getElementById(
+            "newProductLowThreshold"
+        )
+        .value =
+        "3";
+
+
+    document
+        .getElementById(
             "newProductOrder"
         )
         .value =
@@ -1902,10 +3186,39 @@ function clearNewProductForm() {
 
     document
         .getElementById(
-            "newProductDescription"
+            "newProductMaxOrder"
         )
         .value =
-        "";
+        "1";
+
+
+    document
+        .getElementById(
+            "newProductStatus"
+        )
+        .value =
+        "coming_soon";
+
+
+    [
+        "newProductFeatured",
+        "newProductOrdering",
+        "newProductPreorder",
+        "newProductCustomFit",
+        "newProductCustomTuning"
+    ]
+        .forEach(
+            id => {
+
+                document
+                    .getElementById(
+                        id
+                    )
+                    .checked =
+                    false;
+
+            }
+        );
 
 
     document
@@ -1914,19 +3227,77 @@ function clearNewProductForm() {
         )
         .value =
         "";
+
 }
 
 
 /* =========================================================
-   ESCAPE
+   HELPERS
 ========================================================= */
+
+function formatStatus(
+    status
+) {
+
+    return String(
+        status ||
+        ""
+    )
+        .replaceAll(
+            "_",
+            " "
+        )
+        .toUpperCase();
+
+}
+
+
+function toLocalInputDate(
+    value
+) {
+
+    if (
+        !value
+    ) {
+
+        return "";
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    const offset =
+        date.getTimezoneOffset();
+
+
+    const adjusted =
+        new Date(
+            date.getTime() -
+            offset * 60000
+        );
+
+
+    return adjusted
+        .toISOString()
+        .slice(
+            0,
+            16
+        );
+
+}
+
 
 function escapeHTML(
     value
 ) {
 
     return String(
-        value ?? ""
+        value ??
+        ""
     )
         .replaceAll(
             "&",
@@ -1948,6 +3319,7 @@ function escapeHTML(
             "'",
             "&#039;"
         );
+
 }
 
 
@@ -1957,11 +3329,93 @@ function escapeHTML(
 
 document
     .getElementById(
+        "confirmCancelButton"
+    )
+    .addEventListener(
+        "click",
+        closeConfirm
+    );
+
+
+document
+    .getElementById(
+        "confirmActionButton"
+    )
+    .addEventListener(
+        "click",
+        async () => {
+
+            if (
+                !confirmCallback
+            ) {
+
+                return;
+            }
+
+
+            const callback =
+                confirmCallback;
+
+
+            closeConfirm();
+
+
+            await callback();
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "accountSearchInput"
+    )
+    .addEventListener(
+        "input",
+        event =>
+            searchAccounts(
+                event.target.value
+            )
+    );
+
+
+document
+    .getElementById(
+        "refreshAccountsButton"
+    )
+    .addEventListener(
+        "click",
+        loadAccounts
+    );
+
+
+document
+    .getElementById(
         "refreshScansButton"
     )
     .addEventListener(
         "click",
         loadAdminScans
+    );
+
+
+document
+    .getElementById(
+        "scanStatusFilter"
+    )
+    .addEventListener(
+        "change",
+        applyScanFilters
+    );
+
+
+document
+    .getElementById(
+        "clearScanFilterButton"
+    )
+    .addEventListener(
+        "click",
+        clearScanFilters
     );
 
 
@@ -2032,13 +3486,19 @@ async function initialiseAdmin() {
         user.email;
 
 
+    /*
+        Load profiles first so scan cards can
+        immediately resolve customer names.
+    */
+
+    await loadAccounts();
+
+
     await Promise.all([
-
         loadAdminScans(),
-
         loadProducts()
-
     ]);
+
 }
 
 
