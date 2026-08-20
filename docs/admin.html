@@ -9,7 +9,9 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Admin | Hammer Craft</title>
+    <title>
+        Hammer Craft Admin
+    </title>
 
     <link
         rel="stylesheet"
@@ -57,6 +59,10 @@
 <main class="admin-page">
 
 
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
     <section class="admin-hero">
 
         <div class="eyebrow">
@@ -66,21 +72,22 @@
 
         <h1>
             Admin
-
-            <em>
-                dashboard.
-            </em>
+            <em>dashboard.</em>
         </h1>
 
 
         <p>
-            Manage customer ear scans, reconstruction jobs,
-            products, pricing and public stock status.
+            Manage customer scans, STL reconstruction,
+            products, stock, images and account data.
         </p>
 
     </section>
 
 
+
+    <!-- =====================================================
+         STATS
+    ====================================================== -->
 
     <section class="admin-stats">
 
@@ -89,18 +96,15 @@
             <strong id="totalScans">—</strong>
         </article>
 
-
         <article>
             <span>PROCESSING</span>
             <strong id="processingScans">—</strong>
         </article>
 
-
         <article>
             <span>COMPLETE</span>
             <strong id="completeScans">—</strong>
         </article>
-
 
         <article>
             <span>FAILED</span>
@@ -111,13 +115,13 @@
 
 
 
-    <!-- ==================================================
-         EAR SCANS
-    =================================================== -->
+    <!-- =====================================================
+         SCANS
+    ====================================================== -->
 
-    <section class="admin-scans">
+    <section class="admin-section">
 
-        <div class="admin-section-heading">
+        <div class="section-heading">
 
             <div>
 
@@ -126,15 +130,15 @@
                 </div>
 
                 <h2>
-                    Ear scans.
+                    Customer scans.
                 </h2>
 
             </div>
 
 
             <button
-                id="refreshAdminButton"
-                class="refresh-button"
+                id="refreshScansButton"
+                class="outline-button"
             >
                 REFRESH
             </button>
@@ -144,24 +148,26 @@
 
         <div
             id="adminScanList"
-            class="admin-scan-list"
+            class="scan-grid"
         >
-            <div class="admin-loading">
+
+            <div class="loading-card">
                 Loading scans...
             </div>
+
         </div>
 
     </section>
 
 
 
-    <!-- ==================================================
+    <!-- =====================================================
          PRODUCTS
-    =================================================== -->
+    ====================================================== -->
 
-    <section class="admin-products">
+    <section class="admin-section">
 
-        <div class="admin-section-heading">
+        <div class="section-heading">
 
             <div>
 
@@ -178,7 +184,7 @@
 
             <button
                 id="refreshProductsButton"
-                class="refresh-button"
+                class="outline-button"
             >
                 REFRESH
             </button>
@@ -187,15 +193,28 @@
 
 
 
-        <div class="admin-product-create">
+        <!-- ADD PRODUCT -->
 
-            <h3>
-                ADD NEW MODEL
-            </h3>
+        <div class="create-product-panel">
+
+            <div class="panel-heading">
+
+                <div>
+
+                    <span>
+                        NEW MODEL
+                    </span>
+
+                    <h3>
+                        Add product.
+                    </h3>
+
+                </div>
+
+            </div>
 
 
-            <div class="admin-product-create-grid">
-
+            <div class="form-grid">
 
                 <label>
                     MODEL NAME
@@ -231,17 +250,6 @@
 
 
                 <label>
-                    IMAGE PATH
-
-                    <input
-                        id="newProductImage"
-                        type="text"
-                        placeholder="assets/model-01.png"
-                    >
-                </label>
-
-
-                <label>
                     PRICE GBP
 
                     <input
@@ -249,7 +257,6 @@
                         type="number"
                         min="0"
                         step="0.01"
-                        placeholder="299"
                     >
                 </label>
 
@@ -303,21 +310,31 @@
                     <input
                         id="newProductOrder"
                         type="number"
-                        step="1"
                         value="0"
+                    >
+                </label>
+
+
+                <label>
+                    PRODUCT IMAGE
+
+                    <input
+                        id="newProductImage"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
                     >
                 </label>
 
             </div>
 
 
-            <label class="admin-description-label">
+            <label class="full-label">
 
                 DESCRIPTION
 
                 <textarea
                     id="newProductDescription"
-                    placeholder="Describe the model..."
+                    placeholder="Model description..."
                 ></textarea>
 
             </label>
@@ -325,7 +342,7 @@
 
             <button
                 id="addProductButton"
-                class="admin-add-product"
+                class="primary-button"
             >
                 ADD PRODUCT
             </button>
@@ -333,19 +350,21 @@
 
             <div
                 id="addProductMessage"
-                class="admin-product-message"
+                class="admin-message"
             ></div>
 
         </div>
 
 
 
+        <!-- PRODUCT LIST -->
+
         <div
             id="adminProductList"
-            class="admin-product-list"
+            class="product-grid"
         >
 
-            <div class="admin-loading">
+            <div class="loading-card">
                 Loading products...
             </div>
 
@@ -358,6 +377,51 @@
 
 
 
+<!-- =====================================================
+     CONFIRM MODAL
+===================================================== -->
+
+<div
+    id="confirmModal"
+    class="modal"
+>
+
+    <div class="modal-panel">
+
+        <span class="modal-label">
+            CONFIRM ACTION
+        </span>
+
+        <h3 id="confirmTitle">
+            Are you sure?
+        </h3>
+
+        <p id="confirmText"></p>
+
+        <div class="modal-actions">
+
+            <button
+                id="confirmCancelButton"
+                class="outline-button"
+            >
+                CANCEL
+            </button>
+
+            <button
+                id="confirmActionButton"
+                class="danger-button"
+            >
+                CONFIRM
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
@@ -365,7 +429,5 @@
 <script src="supabase-client.js"></script>
 <script src="admin.js"></script>
 
-
 </body>
-
 </html>
