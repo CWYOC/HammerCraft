@@ -4,11 +4,7 @@ import shutil
 import socket
 import time
 
-from datetime import (
-    datetime,
-    timezone,
-)
-
+from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -57,10 +53,26 @@ POLL_SECONDS = int(
 )
 
 
+TARGET_IMAGES_PER_EAR = int(
+    os.getenv(
+        "TARGET_IMAGES_PER_EAR",
+        "120",
+    )
+)
+
+
 MIN_IMAGES_PER_EAR = int(
     os.getenv(
         "MIN_IMAGES_PER_EAR",
-        "15",
+        "90",
+    )
+)
+
+
+MESH_VOXEL_RESOLUTION = int(
+    os.getenv(
+        "MESH_VOXEL_RESOLUTION",
+        "350",
     )
 )
 
@@ -121,7 +133,7 @@ def utc_now():
 
 
 # =========================================================
-# UPDATE SCAN
+# DATABASE UPDATE
 # =========================================================
 
 def update_scan(
@@ -134,7 +146,7 @@ def update_scan(
     ] = utc_now()
 
 
-    response = (
+    return (
         supabase
         .table(
             "ear_scans"
@@ -148,9 +160,6 @@ def update_scan(
         )
         .execute()
     )
-
-
-    return response
 
 
 # =========================================================
@@ -200,8 +209,6 @@ def set_progress(
 
     if accelerator:
 
-        # Only include this if you added the
-        # processor_accelerator column.
         values[
             "processor_accelerator"
         ] = accelerator
@@ -214,19 +221,22 @@ def set_progress(
             values,
         )
 
+
     except Exception as error:
 
-        # If processor_accelerator does not exist yet,
-        # retry without it.
+        # Compatibility fallback if the
+        # processor_accelerator column has not
+        # been created yet.
+
         if (
             "processor_accelerator"
             in values
         ):
 
             values.pop(
-                "processor_accelerator",
-                None,
+                "processor_accelerator"
             )
+
 
             update_scan(
                 scan_id,
@@ -239,7 +249,7 @@ def set_progress(
 
 
 # =========================================================
-# DOWNLOAD IMAGES
+# DOWNLOAD EAR IMAGES
 # =========================================================
 
 def download_side(
@@ -268,7 +278,7 @@ def download_side(
 
 
     print(
-        "Listing:",
+        "\nStorage folder:",
         prefix,
     )
 
@@ -329,27 +339,43 @@ def download_side(
     image_files.sort()
 
 
+    count = len(
+        image_files
+    )
+
+
+    print(
+        f"{side}: "
+        f"{count} images found."
+    )
+
+
     if (
-        len(
-            image_files
-        )
-        <
+        count <
         MIN_IMAGES_PER_EAR
     ):
 
         raise RuntimeError(
 
-            f"{side} ear contains "
-            f"{len(image_files)} images. "
+            f"{side} ear has "
+            f"{count} images. "
             f"Minimum required is "
             f"{MIN_IMAGES_PER_EAR}."
 
         )
 
 
-    total = len(
-        image_files
-    )
+    if (
+        count <
+        TARGET_IMAGES_PER_EAR
+    ):
+
+        print(
+            f"WARNING: target is "
+            f"{TARGET_IMAGES_PER_EAR}, "
+            f"but {count} images will "
+            f"be processed."
+        )
 
 
     for (
@@ -367,8 +393,9 @@ def download_side(
 
 
         print(
-            f"Downloading {side} "
-            f"{index}/{total}: "
+            f"Downloading "
+            f"{side} "
+            f"{index}/{count}: "
             f"{filename}"
         )
 
@@ -397,7 +424,7 @@ def download_side(
         )
 
 
-    return total
+    return count
 
 
 # =========================================================
@@ -426,7 +453,7 @@ def upload_stl(
         )
 
 
-    storage_path = (
+    remote_path = (
         f"{user_id}/"
         f"{scan_id}/"
         f"results/"
@@ -435,14 +462,8 @@ def upload_stl(
 
 
     print(
-        "Uploading STL:",
-        storage_path,
-    )
-
-
-    file_bytes = (
-        local_path
-        .read_bytes()
+        "\nUploading STL:",
+        remote_path,
     )
 
 
@@ -455,12 +476,12 @@ def upload_stl(
     )
 
 
-    # Remove old result if reprocessing.
+    # Reprocessing support
     try:
 
         bucket.remove(
             [
-                storage_path
+                remote_path
             ]
         )
 
@@ -472,10 +493,10 @@ def upload_stl(
     bucket.upload(
 
         path=
-            storage_path,
+            remote_path,
 
         file=
-            file_bytes,
+            local_path.read_bytes(),
 
         file_options={
 
@@ -487,7 +508,7 @@ def upload_stl(
     )
 
 
-    return storage_path
+    return remote_path
 
 
 # =========================================================
@@ -502,19 +523,20 @@ def process_side(
     progress_end,
 ):
 
-    user_id = scan[
-        "user_id"
-    ]
-
-
     scan_id = scan[
         "id"
     ]
 
 
+    user_id = scan[
+        "user_id"
+    ]
+
+
     side_title = (
         "Left"
-        if side == "left"
+        if side ==
+        "left"
         else "Right"
     )
 
@@ -566,7 +588,8 @@ def process_side(
         progress_start,
 
         f"Downloading "
-        f"{side_title.lower()} ear images",
+        f"{side_title.lower()} "
+        f"ear images",
 
     )
 
@@ -584,13 +607,13 @@ def process_side(
 
 
     print(
-        f"{side}: "
+        f"{side_title}: "
         f"{image_count} images downloaded."
     )
 
 
     # -----------------------------------------------------
-    # MAP RECONSTRUCTION PROGRESS
+    # RECONSTRUCTION PROGRESS
     # -----------------------------------------------------
 
     reconstruction_range = (
@@ -618,8 +641,11 @@ def process_side(
 
 
         overall = (
+
             progress_start
+
             +
+
             (
                 reconstruction_range
                 *
@@ -627,6 +653,7 @@ def process_side(
                 /
                 100
             )
+
         )
 
 
@@ -636,7 +663,8 @@ def process_side(
 
             overall,
 
-            f"{side_title}: {stage}",
+            f"{side_title}: "
+            f"{stage}",
 
             accelerator=
                 accelerator,
@@ -645,33 +673,35 @@ def process_side(
 
 
     # -----------------------------------------------------
-    # RECONSTRUCT
+    # RECONSTRUCTION
     # -----------------------------------------------------
 
-    raw_mesh = (
-        reconstruct(
+    raw_mesh = reconstruct(
 
-            images_dir,
-            reconstruction_dir,
+        images_dir,
+        reconstruction_dir,
 
-            progress_callback=
-                reconstruction_progress,
+        progress_callback=
+            reconstruction_progress,
 
+    )
+
+
+    if (
+        not Path(
+            raw_mesh
         )
-    )
+        .exists()
+    ):
 
-
-    print(
-        f"{side}: raw mesh created:"
-    )
-
-    print(
-        raw_mesh
-    )
+        raise RuntimeError(
+            f"{side_title} reconstruction "
+            f"did not produce a raw mesh."
+        )
 
 
     # -----------------------------------------------------
-    # CLEAN MESH
+    # CLEANUP
     # -----------------------------------------------------
 
     set_progress(
@@ -680,33 +710,25 @@ def process_side(
 
         progress_end - 3,
 
-        f"Cleaning "
-        f"{side_title.lower()} ear mesh",
+        f"Repairing "
+        f"{side_title.lower()} "
+        f"ear mesh",
 
     )
 
 
-    final_stl = (
-        clean_mesh(
+    final_stl = clean_mesh(
 
-            raw_mesh,
-            output_stl,
+        raw_mesh,
+        output_stl,
 
-        )
+        force_solid=
+            True,
+
+        voxel_resolution=
+            MESH_VOXEL_RESOLUTION,
+
     )
-
-
-    if (
-        not Path(
-            final_stl
-        )
-        .exists()
-    ):
-
-        raise RuntimeError(
-            f"Mesh cleanup did not "
-            f"produce {side} STL."
-        )
 
 
     # -----------------------------------------------------
@@ -720,24 +742,19 @@ def process_side(
         progress_end - 1,
 
         f"Uploading "
-        f"{side_title.lower()} ear STL",
+        f"{side_title.lower()} STL",
 
     )
 
 
-    storage_path = (
-        upload_stl(
+    return upload_stl(
 
-            user_id,
-            scan_id,
-            side,
-            final_stl,
+        user_id,
+        scan_id,
+        side,
+        final_stl,
 
-        )
     )
-
-
-    return storage_path
 
 
 # =========================================================
@@ -748,46 +765,9 @@ def claim_scan(
     scan,
 ):
 
-    scan_id = scan[
-        "id"
-    ]
-
-
     old_status = scan[
         "status"
     ]
-
-
-    values = {
-
-        "status":
-            "processing",
-
-        "progress_percent":
-            1,
-
-        "progress_stage":
-            "Preparing local reconstruction",
-
-        "processor_name":
-            PROCESSOR_NAME,
-
-        "processor_platform":
-            PROCESSOR_PLATFORM,
-
-        "processing_started_at":
-            utc_now(),
-
-        "processing_finished_at":
-            None,
-
-        "error_message":
-            None,
-
-        "updated_at":
-            utc_now(),
-
-    }
 
 
     response = (
@@ -795,12 +775,41 @@ def claim_scan(
         .table(
             "ear_scans"
         )
-        .update(
-            values
-        )
+        .update({
+
+            "status":
+                "processing",
+
+            "progress_percent":
+                1,
+
+            "progress_stage":
+                "Preparing local reconstruction",
+
+            "processor_name":
+                PROCESSOR_NAME,
+
+            "processor_platform":
+                PROCESSOR_PLATFORM,
+
+            "processing_started_at":
+                utc_now(),
+
+            "processing_finished_at":
+                None,
+
+            "error_message":
+                None,
+
+            "updated_at":
+                utc_now(),
+
+        })
         .eq(
             "id",
-            scan_id
+            scan[
+                "id"
+            ]
         )
         .eq(
             "status",
@@ -810,20 +819,15 @@ def claim_scan(
     )
 
 
-    # If another worker claimed it first,
-    # there should be no updated rows.
     if (
-        hasattr(
-            response,
-            "data"
-        )
-        and
-        response.data is not None
+        response.data
+        is not None
         and
         len(
             response.data
         )
-        == 0
+        ==
+        0
     ):
 
         return False
@@ -833,7 +837,7 @@ def claim_scan(
 
 
 # =========================================================
-# PROCESS COMPLETE SCAN
+# PROCESS FULL SCAN
 # =========================================================
 
 def process_scan(
@@ -852,8 +856,8 @@ def process_scan(
     ):
 
         print(
-            "Scan already claimed:",
-            scan_id,
+            "Job already claimed:",
+            scan_id
         )
 
         return
@@ -864,31 +868,29 @@ def process_scan(
         "############################################"
     )
 
+
     print(
-        "HAMMER CRAFT RECONSTRUCTION"
+        "HAMMER CRAFT EAR RECONSTRUCTION"
     )
+
 
     print(
         "SCAN:",
-        scan_id,
+        scan_id
     )
 
-    print(
-        "ORDER:",
-        scan.get(
-            "order_id"
-        ),
-    )
 
     print(
         "PROCESSOR:",
-        PROCESSOR_NAME,
+        PROCESSOR_NAME
     )
+
 
     print(
         "PLATFORM:",
-        PROCESSOR_PLATFORM,
+        PROCESSOR_PLATFORM
     )
+
 
     print(
         "############################################"
@@ -903,9 +905,7 @@ def process_scan(
     )
 
 
-    if (
-        workspace.exists()
-    ):
+    if workspace.exists():
 
         shutil.rmtree(
             workspace
@@ -920,35 +920,41 @@ def process_scan(
 
     try:
 
-        # LEFT EAR
-        left_path = (
-            process_side(
+        # -------------------------------------------------
+        # LEFT
+        # -------------------------------------------------
 
-                scan,
-                "left",
-                workspace,
+        left_path = process_side(
 
-                4,
-                48,
+            scan,
+            "left",
+            workspace,
 
-            )
+            4,
+            48,
+
         )
 
 
-        # RIGHT EAR
-        right_path = (
-            process_side(
+        # -------------------------------------------------
+        # RIGHT
+        # -------------------------------------------------
 
-                scan,
-                "right",
-                workspace,
+        right_path = process_side(
 
-                52,
-                96,
+            scan,
+            "right",
+            workspace,
 
-            )
+            52,
+            96,
+
         )
 
+
+        # -------------------------------------------------
+        # COMPLETE
+        # -------------------------------------------------
 
         update_scan(
             scan_id,
@@ -980,11 +986,7 @@ def process_scan(
 
 
         print(
-            "\n"
-            "SCAN COMPLETE:"
-        )
-
-        print(
+            "\nSCAN COMPLETE:",
             scan_id
         )
 
@@ -992,13 +994,10 @@ def process_scan(
     except Exception as error:
 
         print(
-            "\n"
-            "SCAN FAILED:"
-        )
-
-        print(
+            "\nSCAN FAILED:",
             scan_id
         )
+
 
         print(
             error
@@ -1028,19 +1027,17 @@ def process_scan(
 
 
 # =========================================================
-# FIND JOBS
+# QUEUE
 # =========================================================
 
 def get_pending_scans():
 
     statuses = [
-        "queued",
+        "queued"
     ]
 
 
-    if (
-        AUTO_PROCESS_UPLOADED
-    ):
+    if AUTO_PROCESS_UPLOADED:
 
         statuses.append(
             "uploaded"
@@ -1089,56 +1086,61 @@ def main():
 
     print(
         "Processor:",
-        PROCESSOR_NAME,
+        PROCESSOR_NAME
     )
 
 
     print(
         "Platform:",
-        PROCESSOR_PLATFORM,
+        PROCESSOR_PLATFORM
     )
 
 
     print(
         "Supabase:",
-        SUPABASE_URL,
+        SUPABASE_URL
     )
 
 
     print(
         "Bucket:",
-        SUPABASE_BUCKET,
+        SUPABASE_BUCKET
     )
 
 
     print(
-        "Working directory:",
-        WORK_ROOT.resolve(),
+        "Work directory:",
+        WORK_ROOT.resolve()
+    )
+
+
+    print(
+        "Target images per ear:",
+        TARGET_IMAGES_PER_EAR
     )
 
 
     print(
         "Minimum images per ear:",
-        MIN_IMAGES_PER_EAR,
+        MIN_IMAGES_PER_EAR
     )
 
 
     print(
         "Automatically process uploaded scans:",
-        AUTO_PROCESS_UPLOADED,
+        AUTO_PROCESS_UPLOADED
     )
 
 
     print(
         "Polling every",
         POLL_SECONDS,
-        "seconds.",
+        "seconds."
     )
 
 
     print(
-        "\n"
-        "Waiting for reconstruction jobs..."
+        "\nWaiting for reconstruction jobs..."
     )
 
 
@@ -1151,9 +1153,7 @@ def main():
             )
 
 
-            if (
-                not scans
-            ):
+            if not scans:
 
                 time.sleep(
                     POLL_SECONDS
@@ -1172,8 +1172,7 @@ def main():
         except KeyboardInterrupt:
 
             print(
-                "\n"
-                "Processor stopped."
+                "\nWorker stopped."
             )
 
             break
@@ -1182,9 +1181,9 @@ def main():
         except Exception as error:
 
             print(
-                "\n"
-                "Worker loop error:"
+                "\nWorker loop error:"
             )
+
 
             print(
                 error

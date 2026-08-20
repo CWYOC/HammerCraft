@@ -1,40 +1,71 @@
+/* =========================================================
+   HAMMER CRAFT
+   EAR SCAN ADMIN / PROCESSOR
+========================================================= */
+
+
 const processorDB =
     window.hcSupabase;
+
+
+const STORAGE_BUCKET =
+    "ear-scans";
 
 
 let currentAdmin =
     null;
 
 
-let scanRefreshTimer =
+let allScans =
+    [];
+
+
+let pendingDeleteScan =
+    null;
+
+
+let refreshTimer =
     null;
 
 
 
 /* =========================================================
-   START
+   INITIALISE
 ========================================================= */
 
-async function initialiseProcessorPage() {
+async function initialiseProcessor() {
 
     if (
         !processorDB
     ) {
 
-        showMessage(
-            "Supabase unavailable."
+        showProcessorMessage(
+            "Unable to connect to Hammer Craft."
         );
 
         return;
+
     }
 
 
     const {
-        data
+        data,
+        error
     } =
         await processorDB
             .auth
             .getUser();
+
+
+    if (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+
+    }
 
 
     currentAdmin =
@@ -54,12 +85,17 @@ async function initialiseProcessorPage() {
             }`;
 
         return;
+
     }
 
 
+    /* =====================================================
+       CHECK ADMIN
+    ===================================================== */
+
     const {
         data: adminRow,
-        error
+        error: adminError
     } =
         await processorDB
             .from(
@@ -76,7 +112,17 @@ async function initialiseProcessorPage() {
 
 
     if (
-        error ||
+        adminError
+    ) {
+
+        console.error(
+            adminError
+        );
+
+    }
+
+
+    if (
         !adminRow
     ) {
 
@@ -84,16 +130,37 @@ async function initialiseProcessorPage() {
             "account.html";
 
         return;
+
     }
 
 
-    await loadScans();
+    const emailElement =
+        document.getElementById(
+            "processorAdminEmail"
+        );
 
 
-    scanRefreshTimer =
+    if (
+        emailElement
+    ) {
+
+        emailElement.textContent =
+            currentAdmin.email ||
+            "ADMIN";
+
+    }
+
+
+    await loadProcessorScans();
+
+
+    refreshTimer =
         window.setInterval(
-            loadScans,
+
+            loadProcessorScans,
+
             3000
+
         );
 
 }
@@ -101,10 +168,10 @@ async function initialiseProcessorPage() {
 
 
 /* =========================================================
-   LOAD
+   LOAD SCANS
 ========================================================= */
 
-async function loadScans() {
+async function loadProcessorScans() {
 
     const {
         data,
@@ -123,13 +190,14 @@ async function loadScans() {
                 progress_stage,
                 processor_name,
                 processor_platform,
+                processor_accelerator,
                 left_stl_path,
                 right_stl_path,
                 error_message,
-                created_at,
-                updated_at,
                 processing_started_at,
-                processing_finished_at
+                processing_finished_at,
+                created_at,
+                updated_at
             `)
             .order(
                 "created_at",
@@ -139,7 +207,7 @@ async function loadScans() {
                 }
             )
             .limit(
-                100
+                200
             );
 
 
@@ -152,102 +220,162 @@ async function loadScans() {
         );
 
 
-        showMessage(
+        showProcessorMessage(
             error.message
         );
 
         return;
+
     }
 
 
-    renderScans(
+    allScans =
         data ||
-        []
-    );
+        [];
+
+
+    renderProcessorStats();
+
+
+    renderProcessorScans();
 
 }
 
 
 
 /* =========================================================
-   COUNTS
+   STATS
 ========================================================= */
 
-function renderCounts(
-    scans
-) {
+function renderProcessorStats() {
 
-    const count =
-        status =>
-            scans
-                .filter(
-                    scan =>
-                        scan.status ===
-                        status
-                )
-                .length;
+    function countStatus(
+        status
+    ) {
+
+        return allScans.filter(
+            scan =>
+                scan.status ===
+                status
+        ).length;
+
+    }
 
 
-    document
-        .getElementById(
-            "queuedCount"
+    setText(
+        "uploadedCount",
+        countStatus(
+            "uploaded"
         )
-        .textContent =
-        count(
+    );
+
+
+    setText(
+        "queuedCount",
+        countStatus(
             "queued"
-        );
-
-
-    document
-        .getElementById(
-            "processingCount"
         )
-        .textContent =
-        count(
+    );
+
+
+    setText(
+        "processingCount",
+        countStatus(
             "processing"
-        );
-
-
-    document
-        .getElementById(
-            "completeCount"
         )
-        .textContent =
-        count(
+    );
+
+
+    setText(
+        "completeCount",
+        countStatus(
             "complete"
-        );
-
-
-    document
-        .getElementById(
-            "failedCount"
         )
-        .textContent =
-        count(
+    );
+
+
+    setText(
+        "failedCount",
+        countStatus(
             "failed"
-        );
+        )
+    );
 
 }
 
 
 
 /* =========================================================
-   RENDER
+   FILTER
 ========================================================= */
 
-function renderScans(
-    scans
-) {
+function getFilteredScans() {
 
-    renderCounts(
-        scans
+    const filter =
+        document.getElementById(
+            "processorStatusFilter"
+        );
+
+
+    if (
+        !filter
+    ) {
+
+        return allScans;
+
+    }
+
+
+    const status =
+        filter.value;
+
+
+    if (
+        !status
+    ) {
+
+        return allScans;
+
+    }
+
+
+    return allScans.filter(
+        scan =>
+            scan.status ===
+            status
     );
 
+}
+
+
+
+/* =========================================================
+   RENDER SCANS
+========================================================= */
+
+function renderProcessorScans() {
 
     const container =
         document.getElementById(
-            "scanList"
+            "processorScanList"
         );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
+
+
+    const scans =
+        getFilteredScans();
+
+
+    container.innerHTML =
+        "";
 
 
     if (
@@ -255,233 +383,28 @@ function renderScans(
         0
     ) {
 
-        container.innerHTML =
-            "No ear scans found.";
+        container.innerHTML = `
+
+            <div class="empty-card">
+
+                No ear scans found.
+
+            </div>
+
+        `;
 
         return;
+
     }
-
-
-    container.innerHTML =
-        "";
 
 
     scans.forEach(
         scan => {
 
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-
-            card.className =
-                "scan-card";
-
-
-            const percent =
-                Number(
-                    scan.progress_percent ||
-                    0
-                );
-
-
-            card.innerHTML = `
-
-                <div class="scan-card-top">
-
-                    <div>
-
-                        <strong>
-                            EAR SCAN
-                        </strong>
-
-                        <div class="scan-id">
-
-                            ${escapeHTML(
-                                scan.id
-                            )}
-
-                        </div>
-
-                    </div>
-
-
-                    <span class="scan-status">
-
-                        ${formatStatus(
-                            scan.status
-                        )}
-
-                    </span>
-
-                </div>
-
-
-                <div class="scan-info">
-
-                    <div>
-
-                        <span>
-                            ORDER
-                        </span>
-
-                        <strong>
-
-                            ${
-                                escapeHTML(
-                                    scan.order_id ||
-                                    "Not linked"
-                                )
-                            }
-
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            PROCESSOR
-                        </span>
-
-                        <strong>
-
-                            ${
-                                escapeHTML(
-                                    scan.processor_name ||
-                                    "Waiting"
-                                )
-                            }
-
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            PLATFORM
-                        </span>
-
-                        <strong>
-
-                            ${
-                                escapeHTML(
-                                    scan.processor_platform ||
-                                    "—"
-                                )
-                            }
-
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            CREATED
-                        </span>
-
-                        <strong>
-
-                            ${
-                                new Date(
-                                    scan.created_at
-                                )
-                                .toLocaleString(
-                                    "en-GB"
-                                )
-                            }
-
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="progress-area">
-
-                    <div class="progress-top">
-
-                        <span>
-
-                            ${
-                                escapeHTML(
-                                    scan.progress_stage ||
-                                    formatStatus(
-                                        scan.status
-                                    )
-                                )
-                            }
-
-                        </span>
-
-
-                        <strong>
-                            ${percent}%
-                        </strong>
-
-                    </div>
-
-
-                    <div class="progress-track">
-
-                        <div
-                            class="progress-bar"
-                            style="
-                                width:
-                                ${percent}%;
-                            "
-                        ></div>
-
-                    </div>
-
-                </div>
-
-
-                ${
-                    scan.error_message
-
-                    ? `
-
-                        <div class="scan-error">
-
-                            ${escapeHTML(
-                                scan.error_message
-                            )}
-
-                        </div>
-
-                    `
-
-                    : ""
-                }
-
-
-                <div class="scan-actions">
-
-                    ${actionsHTML(
-                        scan
-                    )}
-
-                </div>
-
-            `;
-
-
-            bindCardButtons(
-                card,
-                scan
-            );
-
-
             container.appendChild(
-                card
+                createScanCard(
+                    scan
+                )
             );
 
         }
@@ -492,160 +415,271 @@ function renderScans(
 
 
 /* =========================================================
-   BUTTON HTML
+   CREATE SCAN CARD
 ========================================================= */
 
-function actionsHTML(
+function createScanCard(
     scan
 ) {
 
-    if (
-        scan.status ===
-        "uploaded"
-    ) {
+    const card =
+        document.createElement(
+            "article"
+        );
 
-        return `
 
-            <button
-                type="button"
-                data-process
+    card.className =
+        "processor-scan-card";
+
+
+    const progress =
+        Math.max(
+
+            0,
+
+            Math.min(
+
+                100,
+
+                Number(
+                    scan.progress_percent ||
+                    0
+                )
+
+            )
+
+        );
+
+
+    card.innerHTML = `
+
+        <div class="scan-card-header">
+
+            <div>
+
+                <span class="card-label">
+                    EAR SCAN
+                </span>
+
+                <h3>
+
+                    ${shortID(
+                        scan.id
+                    )}
+
+                </h3>
+
+                <div class="scan-full-id">
+
+                    ${escapeHTML(
+                        scan.id
+                    )}
+
+                </div>
+
+            </div>
+
+
+            <span
+                class="
+                    status-badge
+                    status-${escapeHTML(
+                        scan.status ||
+                        "unknown"
+                    )}
+                "
             >
-                PROCESS SCAN →
-            </button>
 
-        `;
+                ${formatStatus(
+                    scan.status
+                )}
 
-    }
+            </span>
 
-
-    if (
-        scan.status ===
-        "failed"
-    ) {
-
-        return `
-
-            <button
-                type="button"
-                data-process
-            >
-                RETRY PROCESSING →
-            </button>
-
-        `;
-
-    }
+        </div>
 
 
-    if (
-        scan.status ===
-        "queued"
-    ) {
+        <div class="scan-data-grid">
 
-        return `
+            <article>
 
-            <button
-                type="button"
-                disabled
-            >
-                WAITING FOR LOCAL PROCESSOR
-            </button>
+                <span>
+                    ORDER
+                </span>
 
-        `;
+                <strong>
 
-    }
+                    ${escapeHTML(
+                        scan.order_id ||
+                        "NOT LINKED"
+                    )}
 
+                </strong>
 
-    if (
-        scan.status ===
-        "processing"
-    ) {
-
-        return `
-
-            <button
-                type="button"
-                disabled
-            >
-                PROCESSING...
-            </button>
-
-        `;
-
-    }
+            </article>
 
 
-    if (
-        scan.status ===
-        "complete"
-    ) {
+            <article>
 
-        return `
+                <span>
+                    PROCESSOR
+                </span>
 
-            ${
-                scan.left_stl_path
+                <strong>
 
-                ? `
+                    ${escapeHTML(
+                        scan.processor_name ||
+                        "WAITING"
+                    )}
 
-                    <button
-                        type="button"
-                        class="secondary"
-                        data-left
-                    >
-                        OPEN LEFT STL
-                    </button>
+                </strong>
 
-                `
-
-                : ""
-            }
+            </article>
 
 
-            ${
-                scan.right_stl_path
+            <article>
 
-                ? `
+                <span>
+                    PLATFORM
+                </span>
 
-                    <button
-                        type="button"
-                        class="secondary"
-                        data-right
-                    >
-                        OPEN RIGHT STL
-                    </button>
+                <strong>
 
-                `
+                    ${escapeHTML(
+                        scan.processor_platform ||
+                        "—"
+                    )}
 
-                : ""
-            }
+                </strong>
 
-
-            <button
-                type="button"
-                data-process
-            >
-                REPROCESS
-            </button>
-
-        `;
-
-    }
+            </article>
 
 
-    return "";
+            <article>
 
-}
+                <span>
+                    ACCELERATOR
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        scan.processor_accelerator ||
+                        "—"
+                    )}
+
+                </strong>
+
+            </article>
+
+        </div>
 
 
+        <div class="scan-progress">
 
-/* =========================================================
-   BIND BUTTONS
-========================================================= */
+            <div class="progress-heading">
 
-function bindCardButtons(
-    card,
-    scan
-) {
+                <span>
+
+                    ${escapeHTML(
+                        scan.progress_stage ||
+                        formatStatus(
+                            scan.status
+                        )
+                    )}
+
+                </span>
+
+
+                <strong>
+                    ${progress}%
+                </strong>
+
+            </div>
+
+
+            <div class="progress-track">
+
+                <div
+                    class="progress-fill"
+                    style="
+                        width:
+                        ${progress}%;
+                    "
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        ${
+            scan.error_message
+
+            ? `
+
+                <div class="scan-error">
+
+                    <strong>
+                        ERROR
+                    </strong>
+
+                    <p>
+
+                        ${escapeHTML(
+                            scan.error_message
+                        )}
+
+                    </p>
+
+                </div>
+
+            `
+
+            : ""
+        }
+
+
+        <div class="scan-meta">
+
+            <span>
+
+                CREATED
+
+                ${formatDate(
+                    scan.created_at
+                )}
+
+            </span>
+
+
+            <span>
+
+                UPDATED
+
+                ${formatDate(
+                    scan.updated_at
+                )}
+
+            </span>
+
+        </div>
+
+
+        <div class="scan-card-actions">
+
+            ${getActionHTML(
+                scan
+            )}
+
+        </div>
+
+    `;
+
+
+    /* =====================================================
+       PROCESS / RETRY / REPROCESS
+    ===================================================== */
 
     card
         .querySelector(
@@ -660,9 +694,13 @@ function bindCardButtons(
         );
 
 
+    /* =====================================================
+       LEFT STL
+    ===================================================== */
+
     card
         .querySelector(
-            "[data-left]"
+            "[data-left-stl]"
         )
         ?.addEventListener(
             "click",
@@ -673,9 +711,13 @@ function bindCardButtons(
         );
 
 
+    /* =====================================================
+       RIGHT STL
+    ===================================================== */
+
     card
         .querySelector(
-            "[data-right]"
+            "[data-right-stl]"
         )
         ?.addEventListener(
             "click",
@@ -685,20 +727,222 @@ function bindCardButtons(
                 )
         );
 
+
+    /* =====================================================
+       DELETE
+    ===================================================== */
+
+    card
+        .querySelector(
+            "[data-delete-scan]"
+        )
+        ?.addEventListener(
+            "click",
+            () =>
+                openDeleteScanModal(
+                    scan
+                )
+        );
+
+
+    return card;
+
 }
 
 
 
 /* =========================================================
-   QUEUE
+   ACTION HTML
+========================================================= */
+
+function getActionHTML(
+    scan
+) {
+
+    let html =
+        "";
+
+
+    if (
+        scan.status ===
+        "uploaded"
+    ) {
+
+        html += `
+
+            <button
+                type="button"
+                class="primary-button"
+                data-process
+            >
+                PROCESS SCAN →
+            </button>
+
+        `;
+
+    }
+
+
+    else if (
+        scan.status ===
+        "failed"
+    ) {
+
+        html += `
+
+            <button
+                type="button"
+                class="primary-button"
+                data-process
+            >
+                RETRY PROCESSING →
+            </button>
+
+        `;
+
+    }
+
+
+    else if (
+        scan.status ===
+        "queued"
+    ) {
+
+        html += `
+
+            <button
+                type="button"
+                class="primary-button"
+                disabled
+            >
+                WAITING FOR PROCESSOR
+            </button>
+
+        `;
+
+    }
+
+
+    else if (
+        scan.status ===
+        "processing"
+    ) {
+
+        html += `
+
+            <button
+                type="button"
+                class="primary-button"
+                disabled
+            >
+                PROCESSING...
+            </button>
+
+        `;
+
+    }
+
+
+    else if (
+        scan.status ===
+        "complete"
+    ) {
+
+        if (
+            scan.left_stl_path
+        ) {
+
+            html += `
+
+                <button
+                    type="button"
+                    class="outline-button"
+                    data-left-stl
+                >
+                    LEFT STL
+                </button>
+
+            `;
+
+        }
+
+
+        if (
+            scan.right_stl_path
+        ) {
+
+            html += `
+
+                <button
+                    type="button"
+                    class="outline-button"
+                    data-right-stl
+                >
+                    RIGHT STL
+                </button>
+
+            `;
+
+        }
+
+
+        html += `
+
+            <button
+                type="button"
+                class="outline-button"
+                data-process
+            >
+                REPROCESS
+            </button>
+
+        `;
+
+    }
+
+
+    /* =====================================================
+       DELETE
+
+       Prevent deletion while actively processing.
+    ===================================================== */
+
+    if (
+        scan.status !==
+        "processing"
+    ) {
+
+        html += `
+
+            <button
+                type="button"
+                class="danger-button"
+                data-delete-scan
+            >
+                DELETE SCAN
+            </button>
+
+        `;
+
+    }
+
+
+    return html;
+
+}
+
+
+
+/* =========================================================
+   QUEUE SCAN
 ========================================================= */
 
 async function queueScan(
     scanID
 ) {
 
-    showMessage(
-        "Adding scan to local processing queue..."
+    showProcessorMessage(
+        "Adding scan to processing queue..."
     );
 
 
@@ -726,6 +970,9 @@ async function queueScan(
                 processor_platform:
                     null,
 
+                processor_accelerator:
+                    null,
+
                 processing_started_at:
                     null,
 
@@ -750,20 +997,26 @@ async function queueScan(
         error
     ) {
 
-        showMessage(
+        console.error(
+            error
+        );
+
+
+        showProcessorMessage(
             error.message
         );
 
         return;
+
     }
 
 
-    showMessage(
-        "Scan queued."
+    showProcessorMessage(
+        "Scan queued successfully."
     );
 
 
-    await loadScans();
+    await loadProcessorScans();
 
 }
 
@@ -781,8 +1034,18 @@ async function openSTL(
         !path
     ) {
 
+        showProcessorMessage(
+            "No STL file is available."
+        );
+
         return;
+
     }
+
+
+    showProcessorMessage(
+        "Creating secure STL link..."
+    );
 
 
     const {
@@ -792,7 +1055,7 @@ async function openSTL(
         await processorDB
             .storage
             .from(
-                "ear-scans"
+                STORAGE_BUCKET
             )
             .createSignedUrl(
                 path,
@@ -804,12 +1067,23 @@ async function openSTL(
         error
     ) {
 
-        showMessage(
+        console.error(
+            error
+        );
+
+
+        showProcessorMessage(
             error.message
         );
 
         return;
+
     }
+
+
+    showProcessorMessage(
+        ""
+    );
 
 
     window.open(
@@ -823,36 +1097,564 @@ async function openSTL(
 
 
 /* =========================================================
-   MESSAGE
+   DELETE MODAL
 ========================================================= */
 
-function showMessage(
-    message
+function openDeleteScanModal(
+    scan
 ) {
 
-    document
-        .getElementById(
-            "processorMessage"
-        )
-        .textContent =
-        message ||
-        "";
+    if (
+        scan.status ===
+        "processing"
+    ) {
+
+        showProcessorMessage(
+            "A scan cannot be deleted while it is processing."
+        );
+
+        return;
+
+    }
+
+
+    pendingDeleteScan =
+        scan;
+
+
+    setText(
+        "deleteScanId",
+        scan.id
+    );
+
+
+    const modal =
+        document.getElementById(
+            "deleteScanModal"
+        );
+
+
+    if (
+        !modal
+    ) {
+
+        return;
+
+    }
+
+
+    modal.classList.add(
+        "open"
+    );
+
+
+    modal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
 
 }
 
 
 
 /* =========================================================
-   FORMAT
+   CLOSE DELETE MODAL
 ========================================================= */
 
-function formatStatus(
+function closeDeleteScanModal() {
+
+    pendingDeleteScan =
+        null;
+
+
+    const modal =
+        document.getElementById(
+            "deleteScanModal"
+        );
+
+
+    if (
+        !modal
+    ) {
+
+        return;
+
+    }
+
+
+    modal.classList.remove(
+        "open"
+    );
+
+
+    modal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+}
+
+
+
+/* =========================================================
+   DELETE SCAN DIRECTLY
+   NO EDGE FUNCTION REQUIRED
+========================================================= */
+
+async function deleteScanDirectly(
+    scan
+) {
+
+    if (
+        !scan?.id
+    ) {
+
+        throw new Error(
+            "Invalid scan."
+        );
+
+    }
+
+
+    if (
+        scan.status ===
+        "processing"
+    ) {
+
+        throw new Error(
+            "This scan is currently processing."
+        );
+
+    }
+
+
+    const userID =
+        scan.user_id;
+
+
+    const scanID =
+        scan.id;
+
+
+    if (
+        !userID
+    ) {
+
+        throw new Error(
+            "Scan owner is missing."
+        );
+
+    }
+
+
+    const bucket =
+        processorDB
+            .storage
+            .from(
+                STORAGE_BUCKET
+            );
+
+
+    const rootPath =
+        `${userID}/${scanID}`;
+
+
+    const pathsToDelete =
+        [];
+
+
+    /* =====================================================
+       RECURSIVE STORAGE LIST
+    ===================================================== */
+
+    async function collectFolder(
+        folder
+    ) {
+
+        let offset =
+            0;
+
+
+        const limit =
+            100;
+
+
+        while (
+            true
+        ) {
+
+            const {
+                data,
+                error
+            } =
+                await bucket
+                    .list(
+                        folder,
+                        {
+
+                            limit,
+
+                            offset,
+
+                            sortBy: {
+
+                                column:
+                                    "name",
+
+                                order:
+                                    "asc",
+
+                            },
+
+                        }
+                    );
+
+
+            if (
+                error
+            ) {
+
+                throw error;
+
+            }
+
+
+            const entries =
+                data ||
+                [];
+
+
+            if (
+                entries.length ===
+                0
+            ) {
+
+                break;
+
+            }
+
+
+            for (
+                const entry
+                of entries
+            ) {
+
+                const path =
+                    `${folder}/${entry.name}`;
+
+
+                /*
+                 * In Supabase Storage, folder-like entries
+                 * usually have no object id.
+                 */
+
+                const looksLikeFolder =
+                    !entry.id;
+
+
+                if (
+                    looksLikeFolder
+                ) {
+
+                    await collectFolder(
+                        path
+                    );
+
+                }
+
+                else {
+
+                    pathsToDelete.push(
+                        path
+                    );
+
+                }
+
+            }
+
+
+            if (
+                entries.length <
+                limit
+            ) {
+
+                break;
+
+            }
+
+
+            offset +=
+                limit;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       FIND EVERYTHING UNDER THIS SCAN
+    ===================================================== */
+
+    await collectFolder(
+        rootPath
+    );
+
+
+    console.log(
+        "Storage files to delete:",
+        pathsToDelete
+    );
+
+
+    /* =====================================================
+       DELETE STORAGE FIRST
+    ===================================================== */
+
+    const batchSize =
+        100;
+
+
+    for (
+        let index = 0;
+        index <
+        pathsToDelete.length;
+        index += batchSize
+    ) {
+
+        const batch =
+            pathsToDelete.slice(
+                index,
+                index +
+                batchSize
+            );
+
+
+        const {
+            error
+        } =
+            await bucket
+                .remove(
+                    batch
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       DELETE DATABASE RECORD LAST
+    ===================================================== */
+
+    const {
+        error: deleteError
+    } =
+        await processorDB
+            .from(
+                "ear_scans"
+            )
+            .delete()
+            .eq(
+                "id",
+                scanID
+            );
+
+
+    if (
+        deleteError
+    ) {
+
+        throw deleteError;
+
+    }
+
+
+    return {
+
+        success:
+            true,
+
+        filesDeleted:
+            pathsToDelete.length,
+
+    };
+
+}
+
+
+
+/* =========================================================
+   CONFIRM DELETE
+========================================================= */
+
+async function deleteSelectedScan() {
+
+    if (
+        !pendingDeleteScan
+    ) {
+
+        return;
+
+    }
+
+
+    const button =
+        document.getElementById(
+            "confirmDeleteScanButton"
+        );
+
+
+    if (
+        button
+    ) {
+
+        button.disabled =
+            true;
+
+
+        button.textContent =
+            "DELETING...";
+
+    }
+
+
+    try {
+
+        const result =
+            await deleteScanDirectly(
+                pendingDeleteScan
+            );
+
+
+        closeDeleteScanModal();
+
+
+        showProcessorMessage(
+
+            `Scan deleted successfully. ${
+                result.filesDeleted
+            } files removed.`
+
+        );
+
+
+        await loadProcessorScans();
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+
+
+        showProcessorMessage(
+
+            error.message ||
+            "Unable to delete scan."
+
+        );
+
+    }
+
+    finally {
+
+        if (
+            button
+        ) {
+
+            button.disabled =
+                false;
+
+
+            button.textContent =
+                "DELETE SCAN";
+
+        }
+
+    }
+
+}
+
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
+
+function showProcessorMessage(
+    message
+) {
+
+    const element =
+        document.getElementById(
+            "processorMessage"
+        );
+
+
+    if (
+        element
+    ) {
+
+        element.textContent =
+            message ||
+            "";
+
+    }
+
+}
+
+
+
+/* =========================================================
+   SET TEXT
+========================================================= */
+
+function setText(
+    id,
     value
 ) {
 
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    if (
+        element
+    ) {
+
+        element.textContent =
+            value;
+
+    }
+
+}
+
+
+
+/* =========================================================
+   FORMAT STATUS
+========================================================= */
+
+function formatStatus(
+    status
+) {
+
     return String(
-        value ||
-        ""
+        status ||
+        "unknown"
     )
         .replaceAll(
             "_",
@@ -865,7 +1667,77 @@ function formatStatus(
 
 
 /* =========================================================
-   ESCAPE
+   FORMAT DATE
+========================================================= */
+
+function formatDate(
+    value
+) {
+
+    if (
+        !value
+    ) {
+
+        return "—";
+
+    }
+
+
+    try {
+
+        return new Date(
+            value
+        )
+        .toLocaleString(
+            "en-GB"
+        );
+
+    }
+
+    catch {
+
+        return String(
+            value
+        );
+
+    }
+
+}
+
+
+
+/* =========================================================
+   SHORT ID
+========================================================= */
+
+function shortID(
+    value
+) {
+
+    if (
+        !value
+    ) {
+
+        return "UNKNOWN";
+
+    }
+
+
+    return String(
+        value
+    )
+        .slice(
+            0,
+            8
+        )
+        .toUpperCase();
+
+}
+
+
+
+/* =========================================================
+   ESCAPE HTML
 ========================================================= */
 
 function escapeHTML(
@@ -876,22 +1748,27 @@ function escapeHTML(
         value ??
         ""
     )
+
         .replaceAll(
             "&",
             "&amp;"
         )
+
         .replaceAll(
             "<",
             "&lt;"
         )
+
         .replaceAll(
             ">",
             "&gt;"
         )
+
         .replaceAll(
             '"',
             "&quot;"
         )
+
         .replaceAll(
             "'",
             "&#039;"
@@ -902,22 +1779,119 @@ function escapeHTML(
 
 
 /* =========================================================
-   REFRESH
+   EVENT BINDING
 ========================================================= */
 
-document
-    .getElementById(
-        "refreshButton"
-    )
-    .addEventListener(
-        "click",
-        loadScans
+const refreshButton =
+    document.getElementById(
+        "processorRefreshButton"
     );
+
+
+if (
+    refreshButton
+) {
+
+    refreshButton.addEventListener(
+        "click",
+        loadProcessorScans
+    );
+
+}
+
+
+const statusFilter =
+    document.getElementById(
+        "processorStatusFilter"
+    );
+
+
+if (
+    statusFilter
+) {
+
+    statusFilter.addEventListener(
+        "change",
+        renderProcessorScans
+    );
+
+}
+
+
+const cancelDeleteButton =
+    document.getElementById(
+        "cancelDeleteScanButton"
+    );
+
+
+if (
+    cancelDeleteButton
+) {
+
+    cancelDeleteButton.addEventListener(
+        "click",
+        closeDeleteScanModal
+    );
+
+}
+
+
+const confirmDeleteButton =
+    document.getElementById(
+        "confirmDeleteScanButton"
+    );
+
+
+if (
+    confirmDeleteButton
+) {
+
+    confirmDeleteButton.addEventListener(
+        "click",
+        deleteSelectedScan
+    );
+
+}
+
+
+const modalBackdrop =
+    document.querySelector(
+        "#deleteScanModal .modal-backdrop"
+    );
+
+
+if (
+    modalBackdrop
+) {
+
+    modalBackdrop.addEventListener(
+        "click",
+        closeDeleteScanModal
+    );
+
+}
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key ===
+            "Escape"
+        ) {
+
+            closeDeleteScanModal();
+
+        }
+
+    }
+);
 
 
 
 /* =========================================================
-   STOP TIMER
+   CLEANUP
 ========================================================= */
 
 window.addEventListener(
@@ -925,11 +1899,11 @@ window.addEventListener(
     () => {
 
         if (
-            scanRefreshTimer
+            refreshTimer
         ) {
 
             clearInterval(
-                scanRefreshTimer
+                refreshTimer
             );
 
         }
@@ -943,4 +1917,4 @@ window.addEventListener(
    START
 ========================================================= */
 
-initialiseProcessorPage();
+initialiseProcessor();
