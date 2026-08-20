@@ -12,16 +12,20 @@
 
     <meta
         name="description"
-        content="Hammer Craft — small-batch IEMs designed and built from Bristol, UK."
+        content="Hammer Craft — small-batch custom and universal in-ear monitors developed in Bristol, UK."
     >
 
     <title>
         Hammer Craft | Small-Batch IEMs
     </title>
 
+    <!--
+        Change the version number when you make major CSS changes.
+        This helps prevent browsers from loading an old cached CSS file.
+    -->
     <link
         rel="stylesheet"
-        href="style.css"
+        href="style.css?v=21"
     >
 
 </head>
@@ -31,7 +35,7 @@
 
 
 <!-- =====================================================
-     HEADER
+     FIXED HEADER
 ===================================================== -->
 
 <header class="site-header">
@@ -39,6 +43,7 @@
     <a
         href="#top"
         class="header-brand"
+        aria-label="Hammer Craft home"
     >
 
         <img
@@ -84,7 +89,9 @@
     <button
         id="mobileMenuButton"
         class="mobile-menu-button"
-        aria-label="Open menu"
+        type="button"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
     >
         MENU
     </button>
@@ -93,7 +100,11 @@
 
 
 
-<div
+<!-- =====================================================
+     MOBILE NAVIGATION
+===================================================== -->
+
+<nav
     id="mobileMenu"
     class="mobile-menu"
 >
@@ -118,7 +129,7 @@
         LOGIN
     </a>
 
-</div>
+</nav>
 
 
 
@@ -131,19 +142,21 @@
 
 <section class="hero-section">
 
+
     <div class="hero-copy">
 
+
         <div class="eyebrow">
-            BRISTOL / UNITED KINGDOM
+            HAMMER CRAFT / BRISTOL UK
         </div>
 
 
         <h1>
 
-            HAMMER
+            Sound,
 
             <em>
-                CRAFT
+                crafted for you.
             </em>
 
         </h1>
@@ -151,21 +164,29 @@
 
         <p class="hero-lead">
 
-            Small-batch in-ear monitors built
-            around experimentation, acoustic design
-            and personalised listening.
+            In-ear monitors built around sound,
+            individuality and experimentation.
+
+            From our reference tuning to custom
+            sound and custom-fit shells.
 
         </p>
 
 
         <div class="hero-actions">
 
+
             <a
                 href="#models"
                 class="primary-link"
             >
-                EXPLORE MODELS
-                <span>→</span>
+
+                EXPLORE OUR IEMS
+
+                <span>
+                    →
+                </span>
+
             </a>
 
 
@@ -173,21 +194,24 @@
                 href="ear-scan.html"
                 class="secondary-link"
             >
-                START EAR SCAN
+                DIGITAL EAR FIT ↗
             </a>
 
+
         </div>
+
 
     </div>
 
 
+
     <div class="hero-visual">
 
-        <div class="hero-logo-wrap">
+        <div class="hero-logo-frame">
 
             <img
                 src="assets/logo.png"
-                alt="Hammer Craft logo"
+                alt="Hammer Craft"
                 class="hero-logo"
             >
 
@@ -195,17 +219,19 @@
 
     </div>
 
+
 </section>
 
 
 
 <!-- =====================================================
-     INTRO STRIP
+     INTRODUCTION STRIP
 ===================================================== -->
 
 <section class="intro-strip">
 
-    <div>
+
+    <article>
 
         <span>
             SMALL BATCH
@@ -215,10 +241,10 @@
             Built thoughtfully.
         </strong>
 
-    </div>
+    </article>
 
 
-    <div>
+    <article>
 
         <span>
             DEVELOPED IN
@@ -228,20 +254,21 @@
             Bristol, UK.
         </strong>
 
-    </div>
+    </article>
 
 
-    <div>
+    <article>
 
         <span>
-            FOCUS
+            BUILT AROUND
         </span>
 
         <strong>
-            Fit. Tuning. Detail.
+            Sound. Fit. Detail.
         </strong>
 
-    </div>
+    </article>
+
 
 </section>
 
@@ -256,7 +283,9 @@
     class="about-section"
 >
 
-    <div class="about-location">
+
+    <div class="about-left">
+
 
         <div class="coordinates">
 
@@ -271,11 +300,8 @@
         </div>
 
 
-        <div class="location-title">
-
-            BRISTOL /
-            UNITED KINGDOM
-
+        <div class="eyebrow about-eyebrow">
+            BRISTOL / UNITED KINGDOM
         </div>
 
 
@@ -289,10 +315,13 @@
 
         </h2>
 
+
     </div>
 
 
-    <div class="about-copy">
+
+    <div class="about-right">
+
 
         <p>
 
@@ -314,14 +343,16 @@
         </p>
 
 
-        <div class="about-rule"></div>
+        <div class="about-divider"></div>
 
 
-        <span class="about-caption">
-            DEVELOPING FROM BRISTOL
+        <span class="small-caption">
+            GROWING FROM BRISTOL, ONE BUILD AT A TIME.
         </span>
 
+
     </div>
+
 
 </section>
 
@@ -336,19 +367,20 @@
     class="ai-section"
 >
 
-    <div class="ai-heading">
+
+    <div class="section-heading-large">
 
         <div class="eyebrow">
-            HAMMER CRAFT / ASSISTED TUNING
+            HAMMER CRAFT / AI-ASSISTED TUNING
         </div>
 
 
         <h2>
 
-            Human ears.
+            Engineering
 
             <em>
-                AI assistance.
+                with assistance.
             </em>
 
         </h2>
@@ -356,130 +388,133 @@
     </div>
 
 
+
     <div class="ai-grid">
 
 
-        <article class="ai-copy-card">
+        <article class="feature-card">
 
-            <span class="section-number">
+
+            <span class="feature-number">
                 01
             </span>
 
 
-            <h3>
-                TRAINED TO SUPPORT OUR TUNING PROCESS
-            </h3>
+            <div class="feature-card-content">
+
+                <h3>
+                    TRAINED TO SUPPORT OUR TUNING PROCESS
+                </h3>
 
 
-            <p>
+                <p>
 
-                Our internal tuning system uses a
-                trained AI-assisted workflow to help
-                analyse frequency-response behaviour,
-                compare targets and evaluate tuning
-                changes.
+                    Our internally developed tuning
+                    workflow uses AI-assisted analysis
+                    to help compare frequency-response
+                    behaviour, tuning targets and
+                    acoustic changes.
 
-            </p>
+                </p>
 
+            </div>
 
-            <p>
-
-                The AI does not replace listening.
-                It helps us move through iterations
-                faster and identify patterns that
-                would otherwise take significantly
-                longer to assess manually.
-
-            </p>
 
         </article>
 
 
 
-        <article class="ai-copy-card">
+        <article class="feature-card">
 
-            <span class="section-number">
+
+            <span class="feature-number">
                 02
             </span>
 
 
-            <h3>
-                PERSONALISED DIRECTION
-            </h3>
+            <div class="feature-card-content">
+
+                <h3>
+                    NOT A REPLACEMENT FOR LISTENING
+                </h3>
 
 
-            <p>
+                <p>
 
-                For custom-tuned builds, the system
-                can use a customer's preferred sound
-                direction as another input during
-                development.
+                    AI helps us identify patterns and
+                    move through iterations more
+                    efficiently.
 
-            </p>
+                    Measurements, acoustic engineering
+                    and subjective listening remain
+                    part of the final decision.
 
+                </p>
 
-            <p>
+            </div>
 
-                Measurements, acoustic engineering
-                and subjective listening remain part
-                of the final decision.
-
-            </p>
 
         </article>
 
 
-
-        <div class="ai-process">
-
-            <div class="process-step">
-
-                <span>
-                    INPUT
-                </span>
-
-                <strong>
-                    Target + preference
-                </strong>
-
-            </div>
+    </div>
 
 
-            <div class="process-line"></div>
+
+    <div class="ai-process">
 
 
-            <div class="process-step">
+        <article>
 
-                <span>
-                    ANALYSIS
-                </span>
+            <span>
+                INPUT
+            </span>
 
-                <strong>
-                    AI-assisted comparison
-                </strong>
+            <strong>
+                Target + preference
+            </strong>
 
-            </div>
-
-
-            <div class="process-line"></div>
+        </article>
 
 
-            <div class="process-step">
-
-                <span>
-                    OUTPUT
-                </span>
-
-                <strong>
-                    Refined acoustic direction
-                </strong>
-
-            </div>
-
+        <div class="process-arrow">
+            →
         </div>
 
 
+        <article>
+
+            <span>
+                ANALYSIS
+            </span>
+
+            <strong>
+                AI-assisted comparison
+            </strong>
+
+        </article>
+
+
+        <div class="process-arrow">
+            →
+        </div>
+
+
+        <article>
+
+            <span>
+                OUTPUT
+            </span>
+
+            <strong>
+                Refined acoustic direction
+            </strong>
+
+        </article>
+
+
     </div>
+
 
 </section>
 
@@ -494,13 +529,15 @@
     class="models-section"
 >
 
+
     <div class="models-heading">
+
 
         <div>
 
-            <span class="eyebrow">
+            <div class="eyebrow">
                 HAMMER CRAFT / MODELS
-            </span>
+            </div>
 
 
             <h2>
@@ -512,14 +549,21 @@
 
         <p>
 
-            Availability and launch status are
-            managed directly through our internal
-            Hammer Craft system.
+            Our models are developed in small batches.
+            Availability and launch status are updated
+            directly through our internal system.
 
         </p>
 
+
     </div>
 
+
+
+    <!--
+        models.js automatically fills this area
+        from your Supabase products table.
+    -->
 
     <div
         id="publicModelGrid"
@@ -532,6 +576,7 @@
 
     </div>
 
+
 </section>
 
 
@@ -542,24 +587,26 @@
 
 <section class="custom-section">
 
+
     <div class="custom-heading">
 
-        <div class="eyebrow">
-            BUILD OPTIONS
+        <div class="eyebrow light-eyebrow">
+            HAMMER CRAFT / BUILD OPTIONS
         </div>
 
 
         <h2>
 
-            One platform.
+            Built around
 
             <em>
-                Different levels of custom.
+                what you need.
             </em>
 
         </h2>
 
     </div>
+
 
 
     <div class="custom-grid">
@@ -571,16 +618,23 @@
                 01
             </span>
 
-            <h3>
-                STANDARD
-            </h3>
+            <div>
 
-            <p>
-                Standard shell and Hammer Craft
-                default tuning.
-            </p>
+                <h3>
+                    STANDARD
+                </h3>
+
+                <p>
+
+                    Universal shell geometry with
+                    Hammer Craft's standard tuning.
+
+                </p>
+
+            </div>
 
         </article>
+
 
 
         <article>
@@ -589,16 +643,23 @@
                 02
             </span>
 
-            <h3>
-                CUSTOM TUNING
-            </h3>
+            <div>
 
-            <p>
-                Standard fit with a personalised
-                tuning direction.
-            </p>
+                <h3>
+                    CUSTOM TUNING
+                </h3>
+
+                <p>
+
+                    Universal fit with a personalised
+                    tuning direction.
+
+                </p>
+
+            </div>
 
         </article>
+
 
 
         <article>
@@ -607,16 +668,23 @@
                 03
             </span>
 
-            <h3>
-                CUSTOM FIT
-            </h3>
+            <div>
 
-            <p>
-                Custom ear geometry with our
-                standard acoustic tuning.
-            </p>
+                <h3>
+                    CUSTOM FIT
+                </h3>
+
+                <p>
+
+                    Custom ear geometry with our
+                    standard acoustic tuning.
+
+                </p>
+
+            </div>
 
         </article>
+
 
 
         <article>
@@ -625,33 +693,44 @@
                 04
             </span>
 
-            <h3>
-                FULL CUSTOM
-            </h3>
+            <div>
 
-            <p>
-                Custom fit combined with a
-                personalised tuning direction.
-            </p>
+                <h3>
+                    FULL CUSTOM
+                </h3>
+
+                <p>
+
+                    Personalised ear geometry combined
+                    with a personalised tuning
+                    direction.
+
+                </p>
+
+            </div>
 
         </article>
 
+
     </div>
+
 
 </section>
 
 
 
 <!-- =====================================================
-     EAR SCAN
+     DIGITAL EAR SCAN
 ===================================================== -->
 
 <section
     id="ear-scan"
-    class="scan-section"
+    class="ear-scan-section"
 >
 
-    <div class="scan-left">
+
+    <div class="ear-scan-copy">
+
 
         <div class="eyebrow">
             HAMMER CRAFT / DIGITAL FIT
@@ -671,10 +750,10 @@
 
         <p>
 
-            Our guided web scanner captures multiple
-            views of each ear and sends them securely
-            into the Hammer Craft reconstruction
-            workflow.
+            Our guided browser-based scanner captures
+            overlapping views of each ear and securely
+            sends them into the Hammer Craft 3D
+            reconstruction workflow.
 
         </p>
 
@@ -692,63 +771,82 @@
 
         </a>
 
+
     </div>
 
 
-    <div class="scan-process">
 
-        <div>
+    <div class="ear-scan-process">
+
+
+        <article>
 
             <span>
                 01
             </span>
 
-            <strong>
-                Capture
-            </strong>
+            <div>
 
-            <p>
-                Guided overlapping camera frames.
-            </p>
+                <strong>
+                    CAPTURE
+                </strong>
 
-        </div>
+                <p>
+                    Guided overlapping camera views.
+                </p>
+
+            </div>
+
+        </article>
 
 
-        <div>
+
+        <article>
 
             <span>
                 02
             </span>
 
-            <strong>
-                Reconstruct
-            </strong>
+            <div>
 
-            <p>
-                Images converted into 3D geometry.
-            </p>
+                <strong>
+                    RECONSTRUCT
+                </strong>
 
-        </div>
+                <p>
+                    Images converted into 3D geometry.
+                </p>
+
+            </div>
+
+        </article>
 
 
-        <div>
+
+        <article>
 
             <span>
                 03
             </span>
 
-            <strong>
-                Design
-            </strong>
+            <div>
 
-            <p>
-                Ear geometry becomes part of the
-                custom-fit design workflow.
-            </p>
+                <strong>
+                    DESIGN
+                </strong>
 
-        </div>
+                <p>
+                    Ear geometry becomes part of the
+                    custom-fit workflow.
+                </p>
+
+            </div>
+
+        </article>
+
 
     </div>
+
 
 </section>
 
@@ -760,6 +858,7 @@
 
 <section class="statement-section">
 
+
     <span>
         HAMMER CRAFT
     </span>
@@ -767,10 +866,11 @@
 
     <blockquote>
 
-        “We would rather build thoughtfully
-        than build quickly.”
+        We would rather build thoughtfully
+        than build quickly.
 
     </blockquote>
+
 
 </section>
 
@@ -782,6 +882,7 @@
 
 <footer class="site-footer">
 
+
     <div class="footer-brand">
 
         <img
@@ -789,48 +890,78 @@
             alt="Hammer Craft"
         >
 
-        <strong>
+        <span>
             HAMMER CRAFT
-        </strong>
-
-    </div>
-
-
-    <div class="footer-location">
-
-        <span>
-            BRISTOL
-        </span>
-
-        <span>
-            UNITED KINGDOM
         </span>
 
     </div>
 
 
-    <div class="footer-links">
+
+    <div class="footer-column">
+
+        <span class="footer-label">
+            LOCATION
+        </span>
+
+        <p>
+            Bristol
+        </p>
+
+        <p>
+            United Kingdom
+        </p>
+
+    </div>
+
+
+
+    <div class="footer-column">
+
+        <span class="footer-label">
+            EXPLORE
+        </span>
 
         <a href="#models">
-            MODELS
+            Models
+        </a>
+
+        <a href="#ai">
+            AI Tuning
         </a>
 
         <a href="ear-scan.html">
-            EAR SCAN
-        </a>
-
-        <a href="login.html">
-            ACCOUNT
+            Ear Scan
         </a>
 
     </div>
 
 
-    <div class="footer-copy">
+
+    <div class="footer-column">
+
+        <span class="footer-label">
+            ACCOUNT
+        </span>
+
+        <a href="login.html">
+            Login
+        </a>
+
+        <a href="register.html">
+            Register
+        </a>
+
+    </div>
+
+
+
+    <div class="footer-bottom">
 
         © HAMMER CRAFT
 
     </div>
+
 
 </footer>
 
@@ -839,13 +970,23 @@
 
 
 
+<!-- =====================================================
+     SUPABASE + MODELS
+===================================================== -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
 <script src="supabase-client.js"></script>
+
 <script src="models.js"></script>
 
+
+
+<!-- =====================================================
+     MOBILE MENU
+===================================================== -->
 
 <script>
 
@@ -861,19 +1002,32 @@ const mobileMenu =
     );
 
 
-mobileMenuButton
-    .addEventListener(
-        "click",
-        () => {
+mobileMenuButton.addEventListener(
+    "click",
+    () => {
 
+        const open =
             mobileMenu
                 .classList
                 .toggle(
                     "open"
                 );
 
-        }
-    );
+
+        mobileMenuButton
+            .setAttribute(
+                "aria-expanded",
+                String(open)
+            );
+
+
+        mobileMenuButton.textContent =
+            open
+            ? "CLOSE"
+            : "MENU";
+
+    }
+);
 
 
 mobileMenu
@@ -891,6 +1045,17 @@ mobileMenu
                         .classList
                         .remove(
                             "open"
+                        );
+
+
+                    mobileMenuButton.textContent =
+                        "MENU";
+
+
+                    mobileMenuButton
+                        .setAttribute(
+                            "aria-expanded",
+                            "false"
                         );
 
                 }
