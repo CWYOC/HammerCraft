@@ -17,3 +17,8 @@ window.hcSupabase =
             }
         }
     );
+
+
+console.log(
+    "Hammer Craft Supabase client loaded."
+);
