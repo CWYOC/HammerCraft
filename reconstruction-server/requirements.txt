@@ -1,7 +1,13 @@
 supabase>=2.0
 python-dotenv>=1.0
 trimesh>=4.0
-numpy>=1.26
+numpy>=1.26,<3
 requests>=2.31
 pymeshfix>=0.18
 pyvista>=0.46
+
+torch
+torchvision
+transformers
+pillow
+open3d>=0.19

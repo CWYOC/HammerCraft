@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -15,10 +14,9 @@
         Order | Hammer Craft
     </title>
 
-
     <link
         rel="stylesheet"
-        href="order.css?v=10"
+        href="order.css?v=30"
     >
 
 </head>
@@ -26,6 +24,10 @@
 
 <body>
 
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
 
 <header class="order-header">
 
@@ -46,16 +48,31 @@
     </a>
 
 
-    <a
-        href="account.html"
-        class="account-link"
-    >
-        MY ACCOUNT
-    </a>
+    <div class="order-header-actions">
+
+        <a
+            href="basket.html"
+            class="header-link"
+        >
+            BASKET
+        </a>
+
+        <a
+            href="account.html"
+            class="header-link"
+        >
+            MY ACCOUNT
+        </a>
+
+    </div>
 
 </header>
 
 
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
 
 <main class="order-page">
 
@@ -64,9 +81,7 @@
         id="orderLoading"
         class="order-loading"
     >
-
         Loading order...
-
     </div>
 
 
@@ -76,6 +91,10 @@
         hidden
     >
 
+
+        <!-- =================================================
+             ORDER HEADING
+        ================================================== -->
 
         <div class="order-heading">
 
@@ -96,11 +115,17 @@
             <div
                 id="orderStatus"
                 class="order-status"
-            ></div>
+            >
+                —
+            </div>
 
         </div>
 
 
+
+        <!-- =================================================
+             ORDER INFORMATION
+        ================================================== -->
 
         <div class="order-grid">
 
@@ -143,7 +168,7 @@
                     <div>
 
                         <span>
-                            DATE
+                            ORDER DATE
                         </span>
 
                         <strong id="createdDate">
@@ -177,8 +202,57 @@
 
 
 
-        <section class="files-section">
+        <!-- =================================================
+             EAR SCAN
+        ================================================== -->
 
+        <section
+            id="earScanSection"
+            class="ear-scan-order-section"
+            hidden
+        >
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="panel-label">
+                        CUSTOM FIT
+                    </span>
+
+
+                    <h2>
+                        Digital ear scan.
+                    </h2>
+
+                </div>
+
+
+                <div
+                    id="earScanStatusBadge"
+                    class="scan-status-badge"
+                >
+                    NOT SUBMITTED
+                </div>
+
+            </div>
+
+
+
+            <div
+                id="earScanContent"
+                class="scan-content"
+            ></div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             CUSTOMER FILES
+        ================================================== -->
+
+        <section class="files-section">
 
             <div class="files-heading">
 
@@ -213,8 +287,8 @@
 
             <p class="files-description">
 
-                Files here are private to your Hammer Craft
-                account and this order.
+                Files uploaded here are private to
+                your Hammer Craft account and this order.
 
             </p>
 
@@ -230,7 +304,6 @@
                 class="file-message"
             ></div>
 
-
         </section>
 
 
@@ -241,13 +314,17 @@
 
 
 
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
 <script src="supabase-client.js?v=20"></script>
 
-<script src="order.js?v=10"></script>
+<script src="order.js?v=30"></script>
 
 
 </body>

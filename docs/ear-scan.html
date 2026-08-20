@@ -7,14 +7,16 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Digital Ear Scan | Hammer Craft</title>
+    <title>
+        Digital Ear Scan | Hammer Craft
+    </title>
 
     <link
         rel="stylesheet"
-        href="ear-scan.css"
+        href="ear-scan.css?v=40"
     >
 
 </head>
@@ -27,9 +29,8 @@
 
     <a
         href="index.html"
-        class="brand"
+        class="scan-brand"
     >
-
         <img
             src="assets/logo.png"
             alt="Hammer Craft"
@@ -38,625 +39,471 @@
         <span>
             HAMMER CRAFT
         </span>
-
     </a>
 
 
-    <div class="scan-user">
-
-        <span id="scanUserEmail">
-            CHECKING ACCOUNT...
-        </span>
-
-        <a href="account.html">
-            ACCOUNT
-        </a>
-
-    </div>
+    <a
+        id="returnToOrder"
+        href="account.html"
+        class="header-link"
+    >
+        ← ORDER
+    </a>
 
 </header>
 
 
 
-<main>
+<main class="scan-page">
 
 
-<!-- =====================================================
-     INTRO
-===================================================== -->
+    <section class="scan-heading">
 
-<section
-    id="introScreen"
-    class="screen active"
->
-
-    <div class="section-label">
-        HAMMER CRAFT / DIGITAL FIT
-    </div>
-
-
-    <h1>
-
-        Scan your ears.
-
-        <em>
-            No app required.
-        </em>
-
-    </h1>
-
-
-    <p class="lead">
-
-        Ask someone to slowly move your phone
-        around each ear.
-
-        Hammer Craft will automatically capture
-        useful overlapping frames for 3D reconstruction.
-
-    </p>
-
-
-    <div class="notice">
-
-        <span class="notice-dot"></span>
-
-        <div>
-
-            <strong>
-                CAMERA ACCESS REQUIRED
-            </strong>
-
-            <p>
-                Your browser will ask for permission
-                when scanning begins.
-            </p>
-
+        <div class="eyebrow">
+            HAMMER CRAFT / DIGITAL EAR FIT
         </div>
 
-    </div>
+        <h1>
+            Guided
+            <em>
+                ear capture.
+            </em>
+        </h1>
+
+        <p>
+            Follow the on-screen route around each ear.
+            The camera stays open while you capture a
+            series of overlapping images for 3D reconstruction.
+        </p>
+
+    </section>
 
 
-    <button
-        id="beginButton"
-        class="primary-button"
+
+    <section
+        id="orderInfo"
+        class="order-info"
+        hidden
     >
 
-        BEGIN EAR SCAN
-
-        <span>→</span>
-
-    </button>
-
-</section>
-
-
-
-<!-- =====================================================
-     PREPARATION
-===================================================== -->
-
-<section
-    id="prepScreen"
-    class="screen"
->
-
-    <div class="section-label">
-        01 / PREPARATION
-    </div>
-
-
-    <h2>
-        Before you scan.
-    </h2>
-
-
-    <div class="instruction-list">
-
-
-        <article>
-
-            <span>01</span>
-
-            <div>
-
-                <h3>
-                    CLEAR THE EAR
-                </h3>
-
-                <p>
-                    Move all hair away and remove
-                    earrings or anything covering
-                    the ear.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>02</span>
-
-            <div>
-
-                <h3>
-                    BRIGHT EVEN LIGHT
-                </h3>
-
-                <p>
-                    Avoid strong shadows,
-                    reflections or very dark rooms.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>03</span>
-
-            <div>
-
-                <h3>
-                    ASK SOMEONE TO HELP
-                </h3>
-
-                <p>
-                    Keep your head still while
-                    another person moves the phone.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>04</span>
-
-            <div>
-
-                <h3>
-                    MOVE SLOWLY
-                </h3>
-
-                <p>
-                    Keep roughly 15–25 cm from the
-                    ear and maintain substantial
-                    overlap between views.
-                </p>
-
-            </div>
-
-        </article>
-
-
-    </div>
-
-
-    <button
-        id="prepContinueButton"
-        class="primary-button"
-    >
-
-        CONTINUE
-
-        <span>→</span>
-
-    </button>
-
-</section>
-
-
-
-<!-- =====================================================
-     EAR SELECTION
-===================================================== -->
-
-<section
-    id="selectionScreen"
-    class="screen"
->
-
-    <div class="section-label">
-        02 / SELECT EAR
-    </div>
-
-
-    <h2>
-        Which ear first?
-    </h2>
-
-
-    <div class="ear-options">
-
-
-        <button
-            class="ear-option"
-            data-side="left"
-        >
-
-            <span class="ear-code">
-                L
-            </span>
-
-            <div>
-
-                <strong>
-                    LEFT EAR
-                </strong>
-
-                <p>
-                    Scan your left ear.
-                </p>
-
-            </div>
-
-            <span>
-                →
-            </span>
-
-        </button>
-
-
-        <button
-            class="ear-option"
-            data-side="right"
-        >
-
-            <span class="ear-code">
-                R
-            </span>
-
-            <div>
-
-                <strong>
-                    RIGHT EAR
-                </strong>
-
-                <p>
-                    Scan your right ear.
-                </p>
-
-            </div>
-
-            <span>
-                →
-            </span>
-
-        </button>
-
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     CAMERA
-===================================================== -->
-
-<section
-    id="cameraScreen"
-    class="screen"
->
-
-    <div class="camera-heading">
-
-        <div>
-
-            <div class="section-label">
-                03 / CAPTURE
-            </div>
-
-            <h2 id="cameraTitle">
-                LEFT EAR
-            </h2>
-
-        </div>
-
-
-        <strong id="frameCounter">
-            0 / 45
+        <span>
+            CUSTOM-FIT ORDER
+        </span>
+
+        <strong id="scanOrderNumber">
+            —
         </strong>
 
-    </div>
+    </section>
 
 
 
-    <div class="camera-wrapper">
+    <div
+        id="scanError"
+        class="scan-error"
+        hidden
+    ></div>
 
 
-        <video
-            id="camera"
-            autoplay
-            muted
-            playsinline
-        ></video>
+
+    <!-- =================================================
+         START PANEL
+    ================================================== -->
+
+    <section
+        id="startPanel"
+        class="scan-panel"
+        hidden
+    >
+
+        <span class="panel-number">
+            01
+        </span>
+
+        <h2>
+            Before you begin.
+        </h2>
+
+        <div class="instruction-grid">
+
+            <article>
+                <strong>
+                    BRIGHT, EVEN LIGHT
+                </strong>
+
+                <p>
+                    Avoid strong shadows and direct glare.
+                </p>
+            </article>
+
+            <article>
+                <strong>
+                    REMOVE HAIR
+                </strong>
+
+                <p>
+                    Keep the full outer ear visible.
+                </p>
+            </article>
+
+            <article>
+                <strong>
+                    MOVE SLOWLY
+                </strong>
+
+                <p>
+                    Small movements create better image overlap.
+                </p>
+            </article>
+
+            <article>
+                <strong>
+                    KEEP DISTANCE STEADY
+                </strong>
+
+                <p>
+                    Keep the ear filling most of the guide outline.
+                </p>
+            </article>
+
+        </div>
+
+        <button
+            id="startScanButton"
+            class="primary-button"
+            type="button"
+        >
+            OPEN CAMERA →
+        </button>
+
+    </section>
 
 
-        <canvas
-            id="captureCanvas"
-        ></canvas>
+
+    <!-- =================================================
+         LIVE CAMERA
+    ================================================== -->
+
+    <section
+        id="cameraPanel"
+        class="camera-panel"
+        hidden
+    >
+
+        <div class="camera-topbar">
+
+            <div>
+
+                <span class="panel-number">
+                    LIVE CAPTURE
+                </span>
+
+                <h2 id="currentEarTitle">
+                    Left ear
+                </h2>
+
+            </div>
 
 
-        <div class="camera-overlay">
+            <div class="capture-counter">
 
-            <div class="ear-guide">
+                <strong id="captureCount">
+                    0 / 30
+                </strong>
 
                 <span>
-                    KEEP EAR HERE
+                    CAPTURES
                 </span>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="camera-stage">
+
+            <video
+                id="cameraVideo"
+                autoplay
+                playsinline
+                muted
+            ></video>
+
+
+            <canvas
+                id="captureCanvas"
+                hidden
+            ></canvas>
+
+
+            <div class="ear-guide-overlay">
+
+                <div class="ear-guide-shape">
+
+                    <div class="ear-guide-inner"></div>
+
+                </div>
 
             </div>
 
 
             <div
-                id="scanDirection"
-                class="scan-direction"
+                id="lightingWarning"
+                class="camera-warning"
+                hidden
             >
-                START FROM FRONT
+                LOW LIGHT — MOVE TO A BRIGHTER AREA
+            </div>
+
+
+            <div
+                id="qualityWarning"
+                class="camera-warning secondary-warning"
+                hidden
+            >
+                HOLD STEADY
             </div>
 
         </div>
 
 
-    </div>
 
+        <div class="camera-instruction">
 
-
-    <div class="coverage-panel">
-
-        <div class="coverage-heading">
-
-            <span>
-                SCAN PROGRESS
+            <span class="instruction-label">
+                CURRENT POSITION
             </span>
 
-            <strong id="coverageValue">
-                0%
+            <h3 id="captureStageTitle">
+                FRONT
+            </h3>
+
+            <p id="captureInstruction">
+                Keep the ear centred inside the outline.
+            </p>
+
+            <div class="movement-guide">
+                <span id="movementArrow">
+                    →
+                </span>
+
+                <strong id="movementText">
+                    Move very slightly upward after each photo
+                </strong>
+            </div>
+
+        </div>
+
+
+
+        <div class="progress-track">
+
+            <div
+                id="captureProgress"
+                class="progress-fill"
+            ></div>
+
+        </div>
+
+
+
+        <div class="camera-actions">
+
+            <button
+                id="capturePhotoButton"
+                type="button"
+                class="capture-main-button"
+            >
+                CAPTURE PHOTO
+            </button>
+
+
+            <button
+                id="undoPhotoButton"
+                type="button"
+                class="secondary-button"
+                disabled
+            >
+                UNDO LAST
+            </button>
+
+        </div>
+
+
+
+        <div
+            id="miniPreviewStrip"
+            class="mini-preview-strip"
+        ></div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         REVIEW
+    ================================================== -->
+
+    <section
+        id="reviewPanel"
+        class="review-panel"
+        hidden
+    >
+
+        <div class="review-heading">
+
+            <div>
+
+                <span class="panel-number">
+                    REVIEW
+                </span>
+
+                <h2 id="reviewTitle">
+                    Left ear captured.
+                </h2>
+
+            </div>
+
+            <strong id="reviewCount">
+                30 IMAGES
             </strong>
 
         </div>
 
 
-        <div class="coverage-bar">
-
-            <div id="coverageFill"></div>
-
-        </div>
-
-    </div>
-
-
-
-    <div class="scan-message">
-
-        <h3 id="scanInstruction">
-            Position the ear inside the guide.
-        </h3>
-
-        <p id="qualityMessage">
-            Waiting to begin.
+        <p>
+            Remove any obviously blurred, blocked or badly framed images.
+            Keep at least 25 images before continuing.
         </p>
 
-    </div>
+
+        <div
+            id="reviewGrid"
+            class="review-grid"
+        ></div>
+
+
+        <div class="review-actions">
+
+            <button
+                id="retakeEarButton"
+                class="secondary-button"
+                type="button"
+            >
+                RETAKE THIS EAR
+            </button>
+
+            <button
+                id="continueEarButton"
+                class="primary-button"
+                type="button"
+            >
+                CONTINUE →
+            </button>
+
+        </div>
+
+    </section>
 
 
 
-    <div class="camera-controls">
+    <!-- =================================================
+         FINAL REVIEW
+    ================================================== -->
 
-        <button
-            id="cancelScanButton"
-            class="secondary-button"
-        >
-            CANCEL
-        </button>
-
-
-        <button
-            id="startContinuousScanButton"
-            class="primary-button"
-        >
-            START SCANNING
-        </button>
-
-    </div>
-
-
-    <div
-        id="thumbnailStrip"
-        class="thumbnail-strip"
-    ></div>
-
-</section>
-
-
-
-<!-- =====================================================
-     EAR COMPLETE
-===================================================== -->
-
-<section
-    id="earCompleteScreen"
-    class="screen"
->
-
-    <div class="complete-icon">
-        ✓
-    </div>
-
-
-    <div class="section-label">
-        CAPTURE COMPLETE
-    </div>
-
-
-    <h2 id="earCompleteTitle">
-        Left ear complete.
-    </h2>
-
-
-    <p class="lead">
-
-        Enough useful frames were collected
-        for this side.
-
-    </p>
-
-
-    <button
-        id="scanOtherEarButton"
-        class="primary-button"
+    <section
+        id="finalPanel"
+        class="scan-panel"
+        hidden
     >
 
-        SCAN OTHER EAR
-
-        <span>→</span>
-
-    </button>
-
-</section>
-
-
-
-<!-- =====================================================
-     REVIEW
-===================================================== -->
-
-<section
-    id="reviewScreen"
-    class="screen"
->
-
-    <div class="section-label">
-        04 / REVIEW
-    </div>
-
-
-    <h2>
-        Both ears captured.
-    </h2>
-
-
-    <div class="review-grid">
-
-        <div class="review-card">
-
-            <span>
-                LEFT EAR
-            </span>
-
-            <strong id="leftCount">
-                0 images
-            </strong>
-
-        </div>
-
-
-        <div class="review-card">
-
-            <span>
-                RIGHT EAR
-            </span>
-
-            <strong id="rightCount">
-                0 images
-            </strong>
-
-        </div>
-
-    </div>
-
-
-    <label class="consent-row">
-
-        <input
-            id="consentCheckbox"
-            type="checkbox"
-        >
-
-        <span>
-
-            I consent to Hammer Craft processing
-            these images for 3D ear reconstruction
-            and custom-fit product development.
-
+        <span class="panel-number">
+            READY TO UPLOAD
         </span>
 
-    </label>
+        <h2>
+            Both ears captured.
+        </h2>
+
+        <div class="final-summary">
+
+            <article>
+                <span>
+                    LEFT EAR
+                </span>
+
+                <strong id="finalLeftCount">
+                    0
+                </strong>
+            </article>
+
+            <article>
+                <span>
+                    RIGHT EAR
+                </span>
+
+                <strong id="finalRightCount">
+                    0
+                </strong>
+            </article>
+
+        </div>
+
+        <p>
+            Your images will now be uploaded securely to
+            Hammer Craft for 3D reconstruction.
+        </p>
+
+        <button
+            id="submitScanButton"
+            class="primary-button"
+            type="button"
+        >
+            UPLOAD EAR SCAN →
+        </button>
+
+        <div
+            id="uploadStatus"
+            class="upload-status"
+        ></div>
+
+    </section>
 
 
-    <button
-        id="uploadButton"
-        class="primary-button"
-        disabled
+
+    <!-- =================================================
+         COMPLETE
+    ================================================== -->
+
+    <section
+        id="completePanel"
+        class="scan-panel"
+        hidden
     >
 
-        SEND FOR RECONSTRUCTION
+        <span class="panel-number">
+            COMPLETE
+        </span>
 
-        <span>↑</span>
+        <h2>
+            Scan received.
+        </h2>
 
-    </button>
+        <p>
+            Your images are now waiting for Hammer Craft
+            reconstruction processing.
+        </p>
 
+        <a
+            id="viewOrderButton"
+            href="account.html"
+            class="primary-button"
+        >
+            RETURN TO ORDER →
+        </a>
 
-    <div
-        id="uploadStatus"
-        class="upload-status"
-    ></div>
-
-</section>
-
-
-
-<!-- =====================================================
-     SUCCESS
-===================================================== -->
-
-<section
-    id="successScreen"
-    class="screen"
->
-
-    <div class="complete-icon">
-        ✓
-    </div>
-
-
-    <div class="section-label">
-        UPLOAD COMPLETE
-    </div>
-
-
-    <h2>
-        Reconstruction queued.
-    </h2>
-
-
-    <p class="lead">
-
-        Your images are safely stored.
-
-        Hammer Craft's reconstruction server
-        will now create left and right 3D meshes.
-
-    </p>
-
-
-    <a
-        href="account.html"
-        class="primary-button"
-    >
-        VIEW MY ACCOUNT →
-    </a>
-
-</section>
+    </section>
 
 
 </main>
@@ -667,9 +514,9 @@
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="supabase-client.js"></script>
+<script src="supabase-client.js?v=20"></script>
 
-<script src="ear-scan.js"></script>
+<script src="ear-scan.js?v=40"></script>
 
 
 </body>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Ear Scan Processor | Hammer Craft
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="scan-admin.css?v=1"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="processor-header">
+
+    <a
+        href="admin.html"
+        class="brand"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+    </a>
+
+
+    <a
+        href="admin.html"
+        class="back-link"
+    >
+        ← ADMIN
+    </a>
+
+</header>
+
+
+
+<main class="processor-page">
+
+
+    <section class="processor-heading">
+
+        <div class="eyebrow">
+            HAMMER CRAFT / LOCAL PROCESSOR
+        </div>
+
+
+        <h1>
+
+            Ear scan
+
+            <em>
+                processing.
+            </em>
+
+        </h1>
+
+
+        <p>
+
+            Queue ear reconstructions from the web.
+            Processing is performed by your local
+            Hammer Craft Mac processor.
+
+        </p>
+
+    </section>
+
+
+
+    <section class="processor-summary">
+
+        <article>
+
+            <span>
+                QUEUED
+            </span>
+
+            <strong id="queuedCount">
+                0
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                PROCESSING
+            </span>
+
+            <strong id="processingCount">
+                0
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                COMPLETE
+            </span>
+
+            <strong id="completeCount">
+                0
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                FAILED
+            </span>
+
+            <strong id="failedCount">
+                0
+            </strong>
+
+        </article>
+
+    </section>
+
+
+
+    <section class="scan-list-section">
+
+        <div class="scan-list-heading">
+
+            <h2>
+                Ear scans
+            </h2>
+
+
+            <button
+                id="refreshButton"
+                type="button"
+            >
+                REFRESH
+            </button>
+
+        </div>
+
+
+        <div
+            id="processorMessage"
+            class="processor-message"
+        ></div>
+
+
+        <div
+            id="scanList"
+            class="scan-list"
+        >
+
+            Loading scans...
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js"></script>
+
+<script src="scan-admin.js?v=1"></script>
+
+
+</body>
+
+</html>

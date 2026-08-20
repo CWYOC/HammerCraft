@@ -1,11 +1,15 @@
 import os
+import platform
 import shutil
+import socket
 import time
 
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import (
+    datetime,
+    timezone,
+)
 
-import requests
+from pathlib import Path
 
 from dotenv import load_dotenv
 from supabase import create_client
@@ -26,47 +30,29 @@ SUPABASE_URL = os.environ[
 ]
 
 
-SUPABASE_SECRET_KEY = os.environ[
-    "SUPABASE_SECRET_KEY"
+SUPABASE_SERVICE_ROLE_KEY = os.environ[
+    "SUPABASE_SERVICE_ROLE_KEY"
 ]
 
 
 SUPABASE_BUCKET = os.getenv(
     "SUPABASE_BUCKET",
-    "ear-scans"
+    "ear-scans",
 )
 
 
 WORK_ROOT = Path(
     os.getenv(
         "WORK_DIR",
-        "./work"
+        "./work",
     )
-)
-
-
-RESEND_API_KEY = os.getenv(
-    "RESEND_API_KEY",
-    ""
-)
-
-
-HAMMER_CRAFT_EMAIL = os.getenv(
-    "HAMMER_CRAFT_EMAIL",
-    "waiyin.hammercraft@gmail.com"
-)
-
-
-EMAIL_FROM = os.getenv(
-    "EMAIL_FROM",
-    "Hammer Craft Scanner <scans@hammer-craft.co.uk>"
 )
 
 
 POLL_SECONDS = int(
     os.getenv(
         "POLL_SECONDS",
-        "15"
+        "5",
     )
 )
 
@@ -74,29 +60,53 @@ POLL_SECONDS = int(
 MIN_IMAGES_PER_EAR = int(
     os.getenv(
         "MIN_IMAGES_PER_EAR",
-        "15"
+        "15",
     )
+)
+
+
+AUTO_PROCESS_UPLOADED = (
+    os.getenv(
+        "AUTO_PROCESS_UPLOADED",
+        "false",
+    )
+    .strip()
+    .lower()
+    in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+)
+
+
+PROCESSOR_NAME = os.getenv(
+    "PROCESSOR_NAME",
+    socket.gethostname(),
+)
+
+
+PROCESSOR_PLATFORM = (
+    f"{platform.system()} "
+    f"{platform.machine()}"
 )
 
 
 WORK_ROOT.mkdir(
     parents=True,
-    exist_ok=True
+    exist_ok=True,
 )
 
-
-# =========================================================
-# SUPABASE CLIENT
-# =========================================================
 
 supabase = create_client(
     SUPABASE_URL,
-    SUPABASE_SECRET_KEY
+    SUPABASE_SERVICE_ROLE_KEY,
 )
 
 
 # =========================================================
-# HELPERS
+# TIME
 # =========================================================
 
 def utc_now():
@@ -110,14 +120,19 @@ def utc_now():
     )
 
 
+# =========================================================
+# UPDATE SCAN
+# =========================================================
+
 def update_scan(
     scan_id,
-    values
+    values,
 ):
 
-    values["updated_at"] = (
-        utc_now()
-    )
+    values[
+        "updated_at"
+    ] = utc_now()
+
 
     response = (
         supabase
@@ -134,7 +149,93 @@ def update_scan(
         .execute()
     )
 
+
     return response
+
+
+# =========================================================
+# PROGRESS
+# =========================================================
+
+def set_progress(
+    scan_id,
+    percent,
+    stage,
+    accelerator=None,
+):
+
+    percent = max(
+        0,
+        min(
+            100,
+            int(
+                percent
+            ),
+        ),
+    )
+
+
+    print(
+        f"[{percent:3d}%] {stage}",
+        flush=True,
+    )
+
+
+    values = {
+
+        "progress_percent":
+            percent,
+
+        "progress_stage":
+            stage,
+
+        "processor_name":
+            PROCESSOR_NAME,
+
+        "processor_platform":
+            PROCESSOR_PLATFORM,
+
+    }
+
+
+    if accelerator:
+
+        # Only include this if you added the
+        # processor_accelerator column.
+        values[
+            "processor_accelerator"
+        ] = accelerator
+
+
+    try:
+
+        update_scan(
+            scan_id,
+            values,
+        )
+
+    except Exception as error:
+
+        # If processor_accelerator does not exist yet,
+        # retry without it.
+        if (
+            "processor_accelerator"
+            in values
+        ):
+
+            values.pop(
+                "processor_accelerator",
+                None,
+            )
+
+            update_scan(
+                scan_id,
+                values,
+            )
+
+        else:
+
+            raise error
 
 
 # =========================================================
@@ -145,16 +246,17 @@ def download_side(
     user_id,
     scan_id,
     side,
-    destination
+    destination,
 ):
 
     destination = Path(
         destination
     )
 
+
     destination.mkdir(
         parents=True,
-        exist_ok=True
+        exist_ok=True,
     )
 
 
@@ -166,7 +268,8 @@ def download_side(
 
 
     print(
-        f"Listing storage folder: {prefix}"
+        "Listing:",
+        prefix,
     )
 
 
@@ -187,28 +290,34 @@ def download_side(
 
     for file in files:
 
-        name = (
-            file.get("name")
-            if isinstance(
-                file,
-                dict
+        if isinstance(
+            file,
+            dict,
+        ):
+
+            name = file.get(
+                "name"
             )
-            else getattr(
+
+        else:
+
+            name = getattr(
                 file,
                 "name",
-                None
+                None,
             )
-        )
 
 
         if not name:
+
             continue
 
 
         if name.lower().endswith(
             (
                 ".jpg",
-                ".jpeg"
+                ".jpeg",
+                ".png",
             )
         ):
 
@@ -221,19 +330,35 @@ def download_side(
 
 
     if (
-        len(image_files) <
+        len(
+            image_files
+        )
+        <
         MIN_IMAGES_PER_EAR
     ):
 
         raise RuntimeError(
-            f"{side} ear only has "
+
+            f"{side} ear contains "
             f"{len(image_files)} images. "
-            f"Minimum is "
+            f"Minimum required is "
             f"{MIN_IMAGES_PER_EAR}."
+
         )
 
 
-    for filename in image_files:
+    total = len(
+        image_files
+    )
+
+
+    for (
+        index,
+        filename,
+    ) in enumerate(
+        image_files,
+        start=1,
+    ):
 
         remote_path = (
             f"{prefix}/"
@@ -242,8 +367,9 @@ def download_side(
 
 
         print(
-            "Downloading:",
-            remote_path
+            f"Downloading {side} "
+            f"{index}/{total}: "
+            f"{filename}"
         )
 
 
@@ -260,7 +386,8 @@ def download_side(
 
 
         local_path = (
-            destination /
+            destination
+            /
             filename
         )
 
@@ -270,75 +397,7 @@ def download_side(
         )
 
 
-    return len(
-        image_files
-    )
-
-
-# =========================================================
-# UPLOAD FILE TO RESULTS
-# =========================================================
-
-def upload_result_file(
-    user_id,
-    scan_id,
-    filename,
-    local_path,
-    content_type
-):
-
-    local_path = Path(
-        local_path
-    )
-
-
-    storage_path = (
-        f"{user_id}/"
-        f"{scan_id}/"
-        f"results/"
-        f"{filename}"
-    )
-
-
-    print(
-        "Uploading result:",
-        storage_path
-    )
-
-
-    file_bytes = (
-        local_path
-        .read_bytes()
-    )
-
-
-    (
-        supabase
-        .storage
-        .from_(
-            SUPABASE_BUCKET
-        )
-        .upload(
-
-            path=
-                storage_path,
-
-            file=
-                file_bytes,
-
-            file_options={
-                "content-type":
-                    content_type,
-
-                "upsert":
-                    "true"
-            }
-
-        )
-    )
-
-
-    return storage_path
+    return total
 
 
 # =========================================================
@@ -349,330 +408,98 @@ def upload_stl(
     user_id,
     scan_id,
     side,
-    local_path
+    local_path,
 ):
 
-    return upload_result_file(
-
-        user_id=
-            user_id,
-
-        scan_id=
-            scan_id,
-
-        filename=
-            f"{side}-ear.stl",
-
-        local_path=
-            local_path,
-
-        content_type=
-            "model/stl"
-
+    local_path = Path(
+        local_path
     )
 
 
-# =========================================================
-# UPLOAD RAW PLY
-# =========================================================
+    if (
+        not local_path.exists()
+    ):
 
-def upload_raw_ply(
-    user_id,
-    scan_id,
-    side,
-    local_path
-):
+        raise RuntimeError(
+            f"STL does not exist: "
+            f"{local_path}"
+        )
 
-    return upload_result_file(
 
-        user_id=
-            user_id,
-
-        scan_id=
-            scan_id,
-
-        filename=
-            f"{side}-ear-raw.ply",
-
-        local_path=
-            local_path,
-
-        content_type=
-            "application/octet-stream"
-
+    storage_path = (
+        f"{user_id}/"
+        f"{scan_id}/"
+        f"results/"
+        f"{side}-ear.stl"
     )
 
 
-# =========================================================
-# SIGNED URL
-# =========================================================
+    print(
+        "Uploading STL:",
+        storage_path,
+    )
 
-def create_signed_url(
-    path,
-    expires_seconds=86400
-):
 
-    result = (
+    file_bytes = (
+        local_path
+        .read_bytes()
+    )
+
+
+    bucket = (
         supabase
         .storage
         .from_(
             SUPABASE_BUCKET
         )
-        .create_signed_url(
-            path,
-            expires_seconds
-        )
     )
 
 
-    if isinstance(
-        result,
-        dict
-    ):
+    # Remove old result if reprocessing.
+    try:
 
-        return (
-            result.get(
-                "signedURL"
-            )
-            or
-            result.get(
-                "signedUrl"
-            )
-            or
-            result.get(
-                "signed_url"
-            )
+        bucket.remove(
+            [
+                storage_path
+            ]
         )
 
+    except Exception:
 
-    return None
-
-
-# =========================================================
-# CUSTOMER PROFILE
-# =========================================================
-
-def get_customer_profile(
-    user_id
-):
-
-    response = (
-        supabase
-        .table(
-            "profiles"
-        )
-        .select(
-            "full_name,email"
-        )
-        .eq(
-            "id",
-            user_id
-        )
-        .limit(
-            1
-        )
-        .execute()
-    )
+        pass
 
 
-    if not response.data:
-        return {}
+    bucket.upload(
 
+        path=
+            storage_path,
 
-    return response.data[0]
+        file=
+            file_bytes,
 
+        file_options={
 
-# =========================================================
-# EMAIL
-# =========================================================
+            "content-type":
+                "model/stl",
 
-def send_completion_email(
-    scan,
-    left_stl_path,
-    right_stl_path
-):
-
-    if not RESEND_API_KEY:
-
-        print(
-            "RESEND_API_KEY is not configured."
-        )
-
-        print(
-            "Skipping completion email."
-        )
-
-        return
-
-
-    user_id = scan[
-        "user_id"
-    ]
-
-
-    profile = (
-        get_customer_profile(
-            user_id
-        )
-    )
-
-
-    customer_name = (
-        profile.get(
-            "full_name"
-        )
-        or
-        "Hammer Craft Customer"
-    )
-
-
-    customer_email = (
-        profile.get(
-            "email"
-        )
-        or
-        "Unknown"
-    )
-
-
-    left_url = (
-        create_signed_url(
-            left_stl_path
-        )
-    )
-
-
-    right_url = (
-        create_signed_url(
-            right_stl_path
-        )
-    )
-
-
-    html = f"""
-    <div style="
-        font-family:
-        Arial,sans-serif;
-        max-width:700px;
-        margin:auto;
-    ">
-
-        <h1>
-            Hammer Craft Ear Scan Complete
-        </h1>
-
-        <p>
-            A new ear reconstruction has finished.
-        </p>
-
-        <hr>
-
-        <p>
-            <strong>Customer:</strong>
-            {customer_name}
-        </p>
-
-        <p>
-            <strong>Email:</strong>
-            {customer_email}
-        </p>
-
-        <p>
-            <strong>User ID:</strong>
-            {user_id}
-        </p>
-
-        <p>
-            <strong>Scan ID:</strong>
-            {scan["id"]}
-        </p>
-
-        <hr>
-
-        <h2>
-            Left Ear
-        </h2>
-
-        <p>
-            <a href="{left_url}">
-                Download left-ear.stl
-            </a>
-        </p>
-
-        <h2>
-            Right Ear
-        </h2>
-
-        <p>
-            <a href="{right_url}">
-                Download right-ear.stl
-            </a>
-        </p>
-
-        <hr>
-
-        <p style="
-            color:#777;
-            font-size:12px;
-        ">
-            Download links expire after 24 hours.
-        </p>
-
-    </div>
-    """
-
-
-    response = requests.post(
-
-        "https://api.resend.com/emails",
-
-        headers={
-            "Authorization":
-                f"Bearer {RESEND_API_KEY}",
-
-            "Content-Type":
-                "application/json"
         },
 
-        json={
-            "from":
-                EMAIL_FROM,
-
-            "to": [
-                HAMMER_CRAFT_EMAIL
-            ],
-
-            "reply_to":
-                customer_email,
-
-            "subject":
-                f"Ear STL Ready — {customer_name}",
-
-            "html":
-                html
-        },
-
-        timeout=30
-
     )
 
 
-    response.raise_for_status()
-
-
-    print(
-        "Completion email sent."
-    )
+    return storage_path
 
 
 # =========================================================
-# PROCESS ONE SIDE
+# PROCESS ONE EAR
 # =========================================================
 
 def process_side(
     scan,
     side,
-    workspace
+    workspace,
+    progress_start,
+    progress_end,
 ):
 
     user_id = scan[
@@ -685,58 +512,73 @@ def process_side(
     ]
 
 
+    side_title = (
+        "Left"
+        if side == "left"
+        else "Right"
+    )
+
+
     side_root = (
-        workspace /
+        workspace
+        /
         side
     )
 
 
     images_dir = (
-        side_root /
+        side_root
+        /
         "images"
     )
 
 
     reconstruction_dir = (
-        side_root /
+        side_root
+        /
         "reconstruction"
     )
 
 
-    results_dir = (
-        workspace /
-        "results"
-    )
-
-
-    results_dir.mkdir(
-        parents=True,
-        exist_ok=True
-    )
-
-
     output_stl = (
-        results_dir /
+        workspace
+        /
+        "results"
+        /
         f"{side}-ear.stl"
     )
 
 
-    raw_copy = (
-        results_dir /
-        f"{side}-ear-raw.ply"
+    output_stl.parent.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
 
-    # =====================================================
-    # DOWNLOAD IMAGES
-    # =====================================================
+    # -----------------------------------------------------
+    # DOWNLOAD
+    # -----------------------------------------------------
+
+    set_progress(
+
+        scan_id,
+
+        progress_start,
+
+        f"Downloading "
+        f"{side_title.lower()} ear images",
+
+    )
+
 
     image_count = (
         download_side(
+
             user_id,
             scan_id,
             side,
-            images_dir
+            images_dir,
+
         )
     )
 
@@ -747,124 +589,163 @@ def process_side(
     )
 
 
-    # =====================================================
-    # PHOTOGRAMMETRY
-    # =====================================================
+    # -----------------------------------------------------
+    # MAP RECONSTRUCTION PROGRESS
+    # -----------------------------------------------------
+
+    reconstruction_range = (
+        progress_end
+        -
+        progress_start
+    )
+
+
+    def reconstruction_progress(
+        relative_percent,
+        stage,
+        accelerator=None,
+    ):
+
+        relative_percent = max(
+            0,
+            min(
+                100,
+                float(
+                    relative_percent
+                ),
+            ),
+        )
+
+
+        overall = (
+            progress_start
+            +
+            (
+                reconstruction_range
+                *
+                relative_percent
+                /
+                100
+            )
+        )
+
+
+        set_progress(
+
+            scan_id,
+
+            overall,
+
+            f"{side_title}: {stage}",
+
+            accelerator=
+                accelerator,
+
+        )
+
+
+    # -----------------------------------------------------
+    # RECONSTRUCT
+    # -----------------------------------------------------
 
     raw_mesh = (
         reconstruct(
+
             images_dir,
-            reconstruction_dir
+            reconstruction_dir,
+
+            progress_callback=
+                reconstruction_progress,
+
         )
     )
 
 
     print(
-        f"{side}: raw mesh created at "
-        f"{raw_mesh}"
+        f"{side}: raw mesh created:"
     )
-
-
-    # =====================================================
-    # KEEP RAW RECONSTRUCTION
-    # =====================================================
-
-    shutil.copy2(
-        raw_mesh,
-        raw_copy
-    )
-
 
     print(
-        f"{side}: raw PLY copied to "
-        f"{raw_copy}"
+        raw_mesh
     )
 
 
-    # =====================================================
-    # UPLOAD RAW PLY
-    # =====================================================
+    # -----------------------------------------------------
+    # CLEAN MESH
+    # -----------------------------------------------------
 
-    raw_storage_path = (
-        upload_raw_ply(
-            user_id,
-            scan_id,
-            side,
-            raw_copy
-        )
+    set_progress(
+
+        scan_id,
+
+        progress_end - 3,
+
+        f"Cleaning "
+        f"{side_title.lower()} ear mesh",
+
     )
 
-
-    print(
-        f"{side}: raw PLY uploaded to "
-        f"{raw_storage_path}"
-    )
-
-
-    # =====================================================
-    # REPAIR + SOLIDIFY
-    # =====================================================
 
     final_stl = (
         clean_mesh(
 
             raw_mesh,
-
             output_stl,
-
-            force_solid=
-                True,
-
-            voxel_resolution=
-                350
 
         )
     )
 
 
-    print(
-        f"{side}: solid STL created at "
-        f"{final_stl}"
+    if (
+        not Path(
+            final_stl
+        )
+        .exists()
+    ):
+
+        raise RuntimeError(
+            f"Mesh cleanup did not "
+            f"produce {side} STL."
+        )
+
+
+    # -----------------------------------------------------
+    # UPLOAD
+    # -----------------------------------------------------
+
+    set_progress(
+
+        scan_id,
+
+        progress_end - 1,
+
+        f"Uploading "
+        f"{side_title.lower()} ear STL",
+
     )
 
 
-    # =====================================================
-    # UPLOAD STL
-    # =====================================================
-
-    stl_storage_path = (
+    storage_path = (
         upload_stl(
+
             user_id,
             scan_id,
             side,
-            final_stl
+            final_stl,
+
         )
     )
 
 
-    print(
-        f"{side}: STL uploaded to "
-        f"{stl_storage_path}"
-    )
-
-
-    return {
-
-        "stl_path":
-            stl_storage_path,
-
-        "raw_path":
-            raw_storage_path
-
-    }
+    return storage_path
 
 
 # =========================================================
-# PROCESS COMPLETE SCAN
+# CLAIM JOB
 # =========================================================
 
-def process_scan(
-    scan
+def claim_scan(
+    scan,
 ):
 
     scan_id = scan[
@@ -872,27 +753,159 @@ def process_scan(
     ]
 
 
+    old_status = scan[
+        "status"
+    ]
+
+
+    values = {
+
+        "status":
+            "processing",
+
+        "progress_percent":
+            1,
+
+        "progress_stage":
+            "Preparing local reconstruction",
+
+        "processor_name":
+            PROCESSOR_NAME,
+
+        "processor_platform":
+            PROCESSOR_PLATFORM,
+
+        "processing_started_at":
+            utc_now(),
+
+        "processing_finished_at":
+            None,
+
+        "error_message":
+            None,
+
+        "updated_at":
+            utc_now(),
+
+    }
+
+
+    response = (
+        supabase
+        .table(
+            "ear_scans"
+        )
+        .update(
+            values
+        )
+        .eq(
+            "id",
+            scan_id
+        )
+        .eq(
+            "status",
+            old_status
+        )
+        .execute()
+    )
+
+
+    # If another worker claimed it first,
+    # there should be no updated rows.
+    if (
+        hasattr(
+            response,
+            "data"
+        )
+        and
+        response.data is not None
+        and
+        len(
+            response.data
+        )
+        == 0
+    ):
+
+        return False
+
+
+    return True
+
+
+# =========================================================
+# PROCESS COMPLETE SCAN
+# =========================================================
+
+def process_scan(
+    scan,
+):
+
+    scan_id = scan[
+        "id"
+    ]
+
+
+    if (
+        not claim_scan(
+            scan
+        )
+    ):
+
+        print(
+            "Scan already claimed:",
+            scan_id,
+        )
+
+        return
+
+
     print(
-        "\n\n############################################"
+        "\n"
+        "############################################"
     )
 
     print(
-        "PROCESSING SCAN:",
-        scan_id
+        "HAMMER CRAFT RECONSTRUCTION"
     )
 
     print(
-        "############################################\n"
+        "SCAN:",
+        scan_id,
+    )
+
+    print(
+        "ORDER:",
+        scan.get(
+            "order_id"
+        ),
+    )
+
+    print(
+        "PROCESSOR:",
+        PROCESSOR_NAME,
+    )
+
+    print(
+        "PLATFORM:",
+        PROCESSOR_PLATFORM,
+    )
+
+    print(
+        "############################################"
+        "\n"
     )
 
 
     workspace = (
-        WORK_ROOT /
+        WORK_ROOT
+        /
         scan_id
     )
 
 
-    if workspace.exists():
+    if (
+        workspace.exists()
+    ):
 
         shutil.rmtree(
             workspace
@@ -901,107 +914,74 @@ def process_scan(
 
     workspace.mkdir(
         parents=True,
-        exist_ok=True
-    )
-
-
-    update_scan(
-        scan_id,
-        {
-            "status":
-                "processing"
-        }
+        exist_ok=True,
     )
 
 
     try:
 
-        # =================================================
         # LEFT EAR
-        # =================================================
-
-        left_result = (
+        left_path = (
             process_side(
+
                 scan,
                 "left",
-                workspace
+                workspace,
+
+                4,
+                48,
+
             )
         )
 
 
-        # =================================================
         # RIGHT EAR
-        # =================================================
-
-        right_result = (
+        right_path = (
             process_side(
+
                 scan,
                 "right",
-                workspace
+                workspace,
+
+                52,
+                96,
+
             )
         )
 
-
-        # =================================================
-        # DATABASE COMPLETE
-        # =================================================
 
         update_scan(
             scan_id,
             {
+
                 "status":
                     "complete",
 
+                "progress_percent":
+                    100,
+
+                "progress_stage":
+                    "Reconstruction complete",
+
                 "left_stl_path":
-                    left_result[
-                        "stl_path"
-                    ],
+                    left_path,
 
                 "right_stl_path":
-                    right_result[
-                        "stl_path"
-                    ]
-            }
+                    right_path,
+
+                "processing_finished_at":
+                    utc_now(),
+
+                "error_message":
+                    None,
+
+            },
         )
 
 
-        # =================================================
-        # EMAIL
-        # =================================================
-
-        try:
-
-            send_completion_email(
-
-                scan,
-
-                left_result[
-                    "stl_path"
-                ],
-
-                right_result[
-                    "stl_path"
-                ]
-
-            )
-
-        except Exception as email_error:
-
-            print(
-                "WARNING:"
-            )
-
-            print(
-                "STLs completed, but email failed:"
-            )
-
-            print(
-                email_error
-            )
-
-
         print(
-            "\nSCAN COMPLETE:"
+            "\n"
+            "SCAN COMPLETE:"
         )
 
         print(
@@ -1012,7 +992,8 @@ def process_scan(
     except Exception as error:
 
         print(
-            "\nSCAN FAILED:"
+            "\n"
+            "SCAN FAILED:"
         )
 
         print(
@@ -1027,20 +1008,44 @@ def process_scan(
         update_scan(
             scan_id,
             {
+
                 "status":
-                    "failed"
-            }
+                    "failed",
+
+                "progress_stage":
+                    "Reconstruction failed",
+
+                "processing_finished_at":
+                    utc_now(),
+
+                "error_message":
+                    str(
+                        error
+                    )[:10000],
+
+            },
         )
 
 
-        raise
-
-
 # =========================================================
-# FIND WAITING SCANS
+# FIND JOBS
 # =========================================================
 
 def get_pending_scans():
+
+    statuses = [
+        "queued",
+    ]
+
+
+    if (
+        AUTO_PROCESS_UPLOADED
+    ):
+
+        statuses.append(
+            "uploaded"
+        )
+
 
     response = (
         supabase
@@ -1050,15 +1055,15 @@ def get_pending_scans():
         .select(
             "*"
         )
-        .eq(
+        .in_(
             "status",
-            "uploaded"
+            statuses
         )
         .order(
-            "created_at"
+            "updated_at"
         )
         .limit(
-            3
+            1
         )
         .execute()
     )
@@ -1077,46 +1082,63 @@ def get_pending_scans():
 def main():
 
     print(
-        "============================================"
+        "\n"
+        "Hammer Craft Local Reconstruction Processor"
     )
 
-    print(
-        "HAMMER CRAFT RECONSTRUCTION WORKER"
-    )
 
     print(
-        "============================================"
+        "Processor:",
+        PROCESSOR_NAME,
+    )
+
+
+    print(
+        "Platform:",
+        PROCESSOR_PLATFORM,
     )
 
 
     print(
         "Supabase:",
-        SUPABASE_URL
+        SUPABASE_URL,
     )
 
 
     print(
         "Bucket:",
-        SUPABASE_BUCKET
+        SUPABASE_BUCKET,
     )
 
 
     print(
-        "Work directory:",
-        WORK_ROOT
+        "Working directory:",
+        WORK_ROOT.resolve(),
     )
 
 
     print(
         "Minimum images per ear:",
-        MIN_IMAGES_PER_EAR
+        MIN_IMAGES_PER_EAR,
+    )
+
+
+    print(
+        "Automatically process uploaded scans:",
+        AUTO_PROCESS_UPLOADED,
     )
 
 
     print(
         "Polling every",
         POLL_SECONDS,
-        "seconds."
+        "seconds.",
+    )
+
+
+    print(
+        "\n"
+        "Waiting for reconstruction jobs..."
     )
 
 
@@ -1129,7 +1151,9 @@ def main():
             )
 
 
-            if not scans:
+            if (
+                not scans
+            ):
 
                 time.sleep(
                     POLL_SECONDS
@@ -1140,24 +1164,16 @@ def main():
 
             for scan in scans:
 
-                try:
-
-                    process_scan(
-                        scan
-                    )
-
-                except Exception as error:
-
-                    print(
-                        "Processing error:",
-                        error
-                    )
+                process_scan(
+                    scan
+                )
 
 
         except KeyboardInterrupt:
 
             print(
-                "\nWorker stopped."
+                "\n"
+                "Processor stopped."
             )
 
             break
@@ -1166,7 +1182,11 @@ def main():
         except Exception as error:
 
             print(
-                "Worker loop error:",
+                "\n"
+                "Worker loop error:"
+            )
+
+            print(
                 error
             )
 
