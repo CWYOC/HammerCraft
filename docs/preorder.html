@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Preorder | Hammer Craft
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="preorder.css?v=1"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="site-header">
+
+    <a
+        href="index.html"
+        class="header-brand"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+    </a>
+
+
+    <a
+        href="index.html#models"
+        class="back-link"
+    >
+        ← MODELS
+    </a>
+
+</header>
+
+
+
+<main class="preorder-page">
+
+
+    <!-- =================================================
+         INTRO
+    ================================================== -->
+
+    <section class="preorder-intro">
+
+        <div class="eyebrow">
+            HAMMER CRAFT / PREORDER
+        </div>
+
+
+        <h1>
+
+            Reserve your
+
+            <em>
+                build.
+            </em>
+
+        </h1>
+
+
+        <p>
+
+            Submit your preorder request below.
+
+            This does not automatically charge you.
+
+            Hammer Craft will review the request
+            before confirming the build.
+
+        </p>
+
+    </section>
+
+
+
+    <!-- =================================================
+         CONTENT
+    ================================================== -->
+
+    <section class="preorder-layout">
+
+
+        <!-- PRODUCT -->
+
+        <article
+            id="productPanel"
+            class="product-panel"
+        >
+
+            <div class="loading-state">
+                Loading model...
+            </div>
+
+        </article>
+
+
+
+        <!-- FORM -->
+
+        <article class="form-panel">
+
+            <div id="loginRequired" hidden>
+
+                <div class="notice-box">
+
+                    <strong>
+                        ACCOUNT REQUIRED
+                    </strong>
+
+                    <p>
+
+                        Please sign in before submitting
+                        a preorder.
+
+                    </p>
+
+
+                    <a
+                        id="loginButton"
+                        href="login.html"
+                        class="primary-button"
+                    >
+                        LOGIN →
+                    </a>
+
+                </div>
+
+            </div>
+
+
+
+            <form
+                id="preorderForm"
+                hidden
+            >
+
+                <div class="form-heading">
+
+                    <span>
+                        PREORDER DETAILS
+                    </span>
+
+                    <h2>
+                        Your request.
+                    </h2>
+
+                </div>
+
+
+
+                <label>
+
+                    NAME
+
+                    <input
+                        id="customerName"
+                        type="text"
+                        autocomplete="name"
+                        required
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    EMAIL
+
+                    <input
+                        id="customerEmail"
+                        type="email"
+                        readonly
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    QUANTITY
+
+                    <input
+                        id="quantity"
+                        type="number"
+                        min="1"
+                        value="1"
+                        required
+                    >
+
+                </label>
+
+
+
+                <div class="option-grid">
+
+
+                    <label class="option-card">
+
+                        <input
+                            id="customFit"
+                            type="checkbox"
+                        >
+
+                        <span>
+
+                            <strong>
+                                CUSTOM FIT
+                            </strong>
+
+                            <small>
+                                Use personalised ear geometry.
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+
+                    <label class="option-card">
+
+                        <input
+                            id="customTuning"
+                            type="checkbox"
+                        >
+
+                        <span>
+
+                            <strong>
+                                CUSTOM TUNING
+                            </strong>
+
+                            <small>
+                                Request personalised tuning.
+                            </small>
+
+                        </span>
+
+                    </label>
+
+
+                </div>
+
+
+
+                <label>
+
+                    NOTES
+
+                    <textarea
+                        id="notes"
+                        placeholder="Anything you would like us to know..."
+                    ></textarea>
+
+                </label>
+
+
+
+                <div class="preorder-disclaimer">
+
+                    This is a preorder request rather
+                    than an immediate purchase.
+
+                    Hammer Craft will contact you before
+                    payment or production begins.
+
+                </div>
+
+
+
+                <button
+                    id="submitPreorderButton"
+                    type="submit"
+                    class="primary-button submit-button"
+                >
+
+                    SUBMIT PREORDER →
+
+                </button>
+
+
+
+                <div
+                    id="formMessage"
+                    class="form-message"
+                ></div>
+
+            </form>
+
+        </article>
+
+    </section>
+
+
+</main>
+
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js?v=10"></script>
+
+<script src="preorder.js?v=1"></script>
+
+
+</body>
+
+</html>

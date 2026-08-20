@@ -12,15 +12,21 @@ window.hcSupabase =
         HC_SUPABASE_KEY,
         {
             auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true
+
+                persistSession:
+                    true,
+
+                autoRefreshToken:
+                    true,
+
+                detectSessionInUrl:
+                    true
+
             }
         }
     );
 
 
 console.log(
-    "Hammer Craft Supabase client ready:",
-    Boolean(window.hcSupabase)
+    "Hammer Craft Supabase client ready."
 );

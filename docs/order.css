@@ -1,0 +1,511 @@
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+:root {
+    --paper: #f2eee7;
+    --paper-dark: #e7e0d6;
+    --ink: #252321;
+    --brown: #9b6739;
+    --muted: #706b64;
+    --line: rgba(37,35,33,.16);
+}
+
+
+body {
+    min-height: 100vh;
+
+    background:
+        var(--paper);
+
+    color:
+        var(--ink);
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+button {
+    font: inherit;
+
+    cursor: pointer;
+}
+
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.order-header {
+    height: 88px;
+
+    padding:
+        0 6vw;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 30px;
+
+    border-bottom:
+        1px solid var(--line);
+}
+
+
+.order-brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    color:
+        var(--ink);
+
+    text-decoration: none;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    letter-spacing: 3px;
+}
+
+
+.order-brand img {
+    width: 52px;
+
+    height: 52px;
+
+    object-fit: contain;
+}
+
+
+.account-link {
+    color:
+        var(--ink);
+
+    text-decoration: none;
+
+    font-size: 9px;
+
+    font-weight: 700;
+}
+
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.order-page {
+    padding:
+        95px
+        7vw
+        120px;
+}
+
+
+.order-loading {
+    font-size: 15px;
+
+    color:
+        var(--muted);
+}
+
+
+.order-heading {
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    gap: 30px;
+}
+
+
+.eyebrow,
+.panel-label {
+    color:
+        var(--brown);
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 2px;
+}
+
+
+.order-heading h1 {
+    margin-top: 12px;
+
+    font-size:
+        clamp(
+            50px,
+            6.5vw,
+            95px
+        );
+
+    line-height: .95;
+
+    letter-spacing: -.05em;
+}
+
+
+.order-status {
+    padding:
+        12px 16px;
+
+    border:
+        1px solid var(--brown);
+
+    color:
+        var(--brown);
+
+    font-size: 10px;
+
+    font-weight: 700;
+}
+
+
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+.order-grid {
+    margin-top: 60px;
+
+    display: grid;
+
+    grid-template-columns:
+        .8fr
+        1.2fr;
+
+    gap: 22px;
+}
+
+
+.order-panel {
+    padding: 30px;
+
+    border:
+        1px solid var(--line);
+}
+
+
+.order-data {
+    margin-top: 30px;
+
+    display: grid;
+
+    gap: 24px;
+}
+
+
+.order-data div {
+    padding-top: 12px;
+
+    border-top:
+        1px solid var(--line);
+}
+
+
+.order-data span {
+    display: block;
+
+    color:
+        var(--muted);
+
+    font-size: 8px;
+}
+
+
+.order-data strong {
+    display: block;
+
+    margin-top: 7px;
+
+    font-size: 18px;
+}
+
+
+
+/* =========================================================
+   ORDER ITEMS
+========================================================= */
+
+.order-items {
+    margin-top: 18px;
+}
+
+
+.order-item-row {
+    padding:
+        18px
+        0;
+
+    border-bottom:
+        1px solid var(--line);
+}
+
+
+.order-item-row:last-child {
+    border-bottom: none;
+}
+
+
+.order-item-row h3 {
+    font-size: 21px;
+}
+
+
+.order-item-row p {
+    margin-top: 7px;
+
+    color:
+        var(--muted);
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+.order-item-tags {
+    margin-top: 10px;
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+
+.order-item-tags span {
+    padding:
+        7px
+        9px;
+
+    border:
+        1px solid var(--line);
+
+    font-size: 7px;
+
+    font-weight: 700;
+}
+
+
+
+/* =========================================================
+   FILES
+========================================================= */
+
+.files-section {
+    margin-top: 80px;
+}
+
+
+.files-heading {
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    gap: 30px;
+}
+
+
+.files-heading h2 {
+    margin-top: 10px;
+
+    font-size: 42px;
+}
+
+
+.files-description {
+    max-width: 650px;
+
+    margin-top: 15px;
+
+    color:
+        var(--muted);
+
+    font-size: 12px;
+
+    line-height: 1.65;
+}
+
+
+.upload-button {
+    min-height: 46px;
+
+    padding:
+        0 16px;
+
+    background:
+        var(--ink);
+
+    color:
+        white;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+
+.files-list {
+    margin-top: 25px;
+
+    border-top:
+        1px solid var(--line);
+}
+
+
+.file-row {
+    min-height: 60px;
+
+    padding:
+        12px
+        0;
+
+    border-bottom:
+        1px solid var(--line);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 25px;
+}
+
+
+.file-name {
+    overflow-wrap: anywhere;
+
+    color:
+        var(--muted);
+
+    font-size: 11px;
+}
+
+
+.file-actions {
+    display: flex;
+
+    gap: 12px;
+}
+
+
+.file-actions button {
+    border: none;
+
+    background: transparent;
+
+    color:
+        var(--brown);
+
+    font-size: 8px;
+
+    font-weight: 700;
+}
+
+
+.file-message {
+    margin-top: 15px;
+
+    color:
+        var(--brown);
+
+    font-size: 11px;
+}
+
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media
+(max-width: 800px) {
+
+    .order-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .order-heading {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+}
+
+
+@media
+(max-width: 600px) {
+
+    .order-header {
+        height: 72px;
+
+        padding:
+            0 18px;
+    }
+
+
+    .order-brand img {
+        width: 42px;
+
+        height: 42px;
+    }
+
+
+    .order-brand span {
+        display: none;
+    }
+
+
+    .order-page {
+        padding:
+            70px
+            18px
+            90px;
+    }
+
+
+    .files-heading {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+}

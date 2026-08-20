@@ -1,0 +1,746 @@
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+:root {
+    --paper: #f2eee7;
+    --paper-dark: #e7e0d6;
+    --ink: #252321;
+    --brown: #9b6739;
+    --muted: #706b64;
+    --line: rgba(37, 35, 33, 0.16);
+}
+
+
+body {
+    min-height: 100vh;
+
+    background:
+        var(--paper);
+
+    color:
+        var(--ink);
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+button,
+input,
+textarea {
+    font: inherit;
+}
+
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.site-header {
+    height: 88px;
+
+    padding:
+        0
+        6vw;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    border-bottom:
+        1px solid var(--line);
+}
+
+
+.header-brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    color:
+        var(--ink);
+
+    text-decoration:
+        none;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        3px;
+}
+
+
+.header-brand img {
+    width: 50px;
+    height: 50px;
+
+    object-fit:
+        contain;
+}
+
+
+.back-link {
+    color:
+        var(--ink);
+
+    text-decoration:
+        none;
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1px;
+}
+
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.preorder-page {
+    padding:
+        100px
+        7vw
+        120px;
+}
+
+
+.eyebrow {
+    color:
+        var(--brown);
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        3px;
+}
+
+
+.preorder-intro {
+    max-width:
+        900px;
+}
+
+
+.preorder-intro h1 {
+    margin-top:
+        20px;
+
+    font-size:
+        clamp(
+            70px,
+            8vw,
+            125px
+        );
+
+    line-height:
+        0.88;
+
+    letter-spacing:
+        -0.06em;
+}
+
+
+.preorder-intro h1 em {
+    display:
+        block;
+
+    color:
+        var(--brown);
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-style:
+        italic;
+
+    font-weight:
+        400;
+}
+
+
+.preorder-intro p {
+    max-width:
+        650px;
+
+    margin-top:
+        35px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        15px;
+
+    line-height:
+        1.75;
+}
+
+
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+
+.preorder-layout {
+    margin-top:
+        75px;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        0.9fr
+        1.1fr;
+
+    gap:
+        30px;
+
+    align-items:
+        start;
+}
+
+
+
+/* =========================================================
+   PRODUCT
+========================================================= */
+
+.product-panel,
+.form-panel {
+    border:
+        1px solid var(--line);
+}
+
+
+.product-image {
+    width:
+        100%;
+
+    aspect-ratio:
+        4 / 3;
+
+    object-fit:
+        cover;
+
+    background:
+        var(--paper-dark);
+}
+
+
+.product-image.logo-placeholder {
+    object-fit:
+        contain;
+
+    padding:
+        70px;
+
+    background:
+        var(--paper);
+}
+
+
+.product-details {
+    padding:
+        28px;
+}
+
+
+.product-status {
+    color:
+        var(--brown);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        2px;
+}
+
+
+.product-details h2 {
+    margin-top:
+        10px;
+
+    font-size:
+        36px;
+}
+
+
+.product-price {
+    margin-top:
+        10px;
+
+    font-size:
+        18px;
+
+    font-weight:
+        700;
+}
+
+
+.product-description {
+    margin-top:
+        20px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        13px;
+
+    line-height:
+        1.7;
+}
+
+
+.loading-state {
+    min-height:
+        300px;
+
+    padding:
+        30px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    color:
+        var(--muted);
+}
+
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.form-panel {
+    padding:
+        32px;
+}
+
+
+.form-heading span {
+    color:
+        var(--brown);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        2px;
+}
+
+
+.form-heading h2 {
+    margin-top:
+        8px;
+
+    margin-bottom:
+        30px;
+
+    font-size:
+        36px;
+}
+
+
+#preorderForm {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        20px;
+}
+
+
+#preorderForm > label {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        8px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1px;
+}
+
+
+input,
+textarea {
+    width:
+        100%;
+
+    border:
+        1px solid var(--line);
+
+    background:
+        var(--paper);
+
+    color:
+        var(--ink);
+
+    outline:
+        none;
+}
+
+
+input {
+    min-height:
+        48px;
+
+    padding:
+        0
+        12px;
+}
+
+
+textarea {
+    min-height:
+        130px;
+
+    padding:
+        12px;
+
+    resize:
+        vertical;
+}
+
+
+input:focus,
+textarea:focus {
+    border-color:
+        var(--brown);
+}
+
+
+
+/* =========================================================
+   OPTIONS
+========================================================= */
+
+.option-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            1fr
+        );
+
+    gap:
+        12px;
+}
+
+
+.option-card {
+    min-height:
+        95px;
+
+    padding:
+        17px;
+
+    border:
+        1px solid var(--line);
+
+    display:
+        flex;
+
+    align-items:
+        flex-start;
+
+    gap:
+        12px;
+
+    cursor:
+        pointer;
+}
+
+
+.option-card input {
+    width:
+        18px;
+
+    height:
+        18px;
+
+    min-height:
+        auto;
+}
+
+
+.option-card span {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        7px;
+}
+
+
+.option-card strong {
+    font-size:
+        10px;
+}
+
+
+.option-card small {
+    color:
+        var(--muted);
+
+    font-size:
+        10px;
+
+    line-height:
+        1.5;
+}
+
+
+
+/* =========================================================
+   BUTTON
+========================================================= */
+
+.primary-button {
+    min-height:
+        52px;
+
+    padding:
+        0
+        18px;
+
+    border:
+        1px solid var(--ink);
+
+    background:
+        var(--ink);
+
+    color:
+        white;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    text-decoration:
+        none;
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1px;
+
+    cursor:
+        pointer;
+}
+
+
+.primary-button:hover {
+    border-color:
+        var(--brown);
+
+    background:
+        var(--brown);
+}
+
+
+.submit-button {
+    margin-top:
+        5px;
+}
+
+
+
+/* =========================================================
+   NOTICE
+========================================================= */
+
+.notice-box {
+    padding:
+        28px;
+}
+
+
+.notice-box strong {
+    color:
+        var(--brown);
+
+    font-size:
+        9px;
+
+    letter-spacing:
+        2px;
+}
+
+
+.notice-box p {
+    margin:
+        15px
+        0
+        25px;
+
+    color:
+        var(--muted);
+
+    line-height:
+        1.7;
+}
+
+
+.preorder-disclaimer {
+    padding:
+        15px;
+
+    border:
+        1px solid var(--line);
+
+    color:
+        var(--muted);
+
+    font-size:
+        10px;
+
+    line-height:
+        1.6;
+}
+
+
+.form-message {
+    min-height:
+        20px;
+
+    color:
+        var(--brown);
+
+    font-size:
+        11px;
+}
+
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media
+(max-width: 850px) {
+
+    .preorder-layout {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+@media
+(max-width: 600px) {
+
+    .site-header {
+        height:
+            70px;
+
+        padding:
+            0
+            18px;
+    }
+
+
+    .header-brand img {
+        width:
+            40px;
+
+        height:
+            40px;
+    }
+
+
+    .preorder-page {
+        padding:
+            70px
+            18px
+            90px;
+    }
+
+
+    .preorder-intro h1 {
+        font-size:
+            60px;
+    }
+
+
+    .option-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .form-panel {
+        padding:
+            20px;
+    }
+
+}

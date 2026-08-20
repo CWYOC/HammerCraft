@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Order | Hammer Craft
+    </title>
+
+
+    <link
+        rel="stylesheet"
+        href="order.css?v=10"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="order-header">
+
+    <a
+        href="index.html"
+        class="order-brand"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+    </a>
+
+
+    <a
+        href="account.html"
+        class="account-link"
+    >
+        MY ACCOUNT
+    </a>
+
+</header>
+
+
+
+<main class="order-page">
+
+
+    <div
+        id="orderLoading"
+        class="order-loading"
+    >
+
+        Loading order...
+
+    </div>
+
+
+
+    <section
+        id="orderContent"
+        hidden
+    >
+
+
+        <div class="order-heading">
+
+            <div>
+
+                <div class="eyebrow">
+                    HAMMER CRAFT / ORDER
+                </div>
+
+
+                <h1 id="orderNumber">
+                    HC-
+                </h1>
+
+            </div>
+
+
+            <div
+                id="orderStatus"
+                class="order-status"
+            ></div>
+
+        </div>
+
+
+
+        <div class="order-grid">
+
+
+            <article class="order-panel">
+
+                <span class="panel-label">
+                    ORDER SUMMARY
+                </span>
+
+
+                <div class="order-data">
+
+                    <div>
+
+                        <span>
+                            TOTAL
+                        </span>
+
+                        <strong id="orderTotal">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            PAYMENT
+                        </span>
+
+                        <strong id="paymentStatus">
+                            —
+                        </strong>
+
+                    </div>
+
+
+                    <div>
+
+                        <span>
+                            DATE
+                        </span>
+
+                        <strong id="createdDate">
+                            —
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+
+            <article class="order-panel">
+
+                <span class="panel-label">
+                    ITEMS
+                </span>
+
+
+                <div
+                    id="orderItems"
+                    class="order-items"
+                ></div>
+
+            </article>
+
+
+        </div>
+
+
+
+        <section class="files-section">
+
+
+            <div class="files-heading">
+
+                <div>
+
+                    <span class="panel-label">
+                        PRIVATE CUSTOMER FILES
+                    </span>
+
+
+                    <h2>
+                        Order files.
+                    </h2>
+
+                </div>
+
+
+                <label class="upload-button">
+
+                    UPLOAD FILE
+
+                    <input
+                        id="customerFileInput"
+                        type="file"
+                        hidden
+                    >
+
+                </label>
+
+            </div>
+
+
+            <p class="files-description">
+
+                Files here are private to your Hammer Craft
+                account and this order.
+
+            </p>
+
+
+            <div
+                id="customerFiles"
+                class="files-list"
+            ></div>
+
+
+            <div
+                id="fileMessage"
+                class="file-message"
+            ></div>
+
+
+        </section>
+
+
+    </section>
+
+
+</main>
+
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js?v=20"></script>
+
+<script src="order.js?v=10"></script>
+
+
+</body>
+
+</html>

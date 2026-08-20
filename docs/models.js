@@ -1,16 +1,15 @@
 /* =========================================================
    HAMMER CRAFT
-   PUBLIC PRODUCT SYSTEM
+   PRODUCT + BASKET SYSTEM
 ========================================================= */
-
-
-console.log(
-    "Hammer Craft models.js started."
-);
 
 
 const modelDB =
     window.hcSupabase;
+
+
+let currentModelUser =
+    null;
 
 
 
@@ -20,40 +19,50 @@ const modelDB =
 
 async function initialiseModels() {
 
-    const container =
-        document.getElementById(
-            "publicModelGrid"
-        );
-
-
-    if (!container) {
-
-        console.error(
-            "publicModelGrid does not exist."
-        );
-
-        return;
-    }
-
-
     if (!modelDB) {
 
         showModelError(
-            "Supabase client did not load."
+            "Supabase client unavailable."
         );
 
         return;
     }
 
 
+    await loadCurrentModelUser();
+
     await loadPublicModels();
+
+    await updateBasketCount();
 
 }
 
 
 
 /* =========================================================
-   LOAD PRODUCTS
+   USER
+========================================================= */
+
+async function loadCurrentModelUser() {
+
+    const {
+        data
+    } =
+        await modelDB
+            .auth
+            .getUser();
+
+
+    currentModelUser =
+        data.user ||
+        null;
+
+}
+
+
+
+/* =========================================================
+   PRODUCTS
 ========================================================= */
 
 async function loadPublicModels() {
@@ -72,28 +81,15 @@ async function loadPublicModels() {
     container.innerHTML = `
 
         <div class="model-loading">
+
             Loading models...
+
         </div>
 
     `;
 
 
     try {
-
-        console.log(
-            "Requesting products from Supabase..."
-        );
-
-
-        /*
-            IMPORTANT:
-
-            Use * here.
-
-            This prevents the entire query from
-            breaking when one newer optional
-            product column does not exist yet.
-        */
 
         const {
             data,
@@ -107,31 +103,16 @@ async function loadPublicModels() {
                 .order(
                     "display_order",
                     {
-                        ascending: true
+                        ascending:
+                            true
                     }
                 );
 
 
-        console.log(
-            "Supabase products result:",
-            data
-        );
-
-
-        console.log(
-            "Supabase products error:",
-            error
-        );
-
-
         if (error) {
 
-            showModelError(
-                error.message ||
-                "Unable to read products."
-            );
+            throw error;
 
-            return;
         }
 
 
@@ -145,7 +126,8 @@ async function loadPublicModels() {
 
 
         if (
-            products.length === 0
+            products.length ===
+            0
         ) {
 
             container.innerHTML = `
@@ -157,13 +139,16 @@ async function loadPublicModels() {
                     </strong>
 
                     <p>
-                        Hammer Craft models are currently
-                        being prepared.
+
+                        Hammer Craft models
+                        are currently being prepared.
+
                     </p>
 
                 </div>
 
             `;
+
 
             return;
         }
@@ -173,32 +158,30 @@ async function loadPublicModels() {
             "";
 
 
-        for (
-            const product
-            of products
-        ) {
+        products.forEach(
+            product => {
 
-            container.appendChild(
-                createPublicModelCard(
-                    product
-                )
-            );
+                container.appendChild(
+                    createPublicModelCard(
+                        product
+                    )
+                );
 
-        }
+            }
+        );
 
     }
 
     catch (error) {
 
         console.error(
-            "Unexpected model loader error:",
             error
         );
 
 
         showModelError(
             error.message ||
-            "Unexpected product loading error."
+            "Unable to load products."
         );
 
     }
@@ -208,7 +191,7 @@ async function loadPublicModels() {
 
 
 /* =========================================================
-   CREATE PRODUCT CARD
+   PRODUCT CARD
 ========================================================= */
 
 function createPublicModelCard(
@@ -225,16 +208,13 @@ function createPublicModelCard(
         "public-model-card";
 
 
-    /*
-        IMAGE FALLBACK
-    */
-
     const hasImage =
         Boolean(
             product.image_path &&
             String(
                 product.image_path
-            ).trim()
+            )
+            .trim()
         );
 
 
@@ -251,9 +231,8 @@ function createPublicModelCard(
 
 
     const price =
-        product.price_gbp === null ||
-        product.price_gbp === undefined ||
-        product.price_gbp === ""
+        product.price_gbp ==
+        null
 
         ? ""
 
@@ -270,10 +249,12 @@ function createPublicModelCard(
                 src="${escapeHTML(
                     imageSource
                 )}"
+
                 alt="${escapeHTML(
                     product.name ||
                     "Hammer Craft"
                 )}"
+
                 class="
                     model-image
                     ${
@@ -282,6 +263,7 @@ function createPublicModelCard(
                         : "model-image-placeholder"
                     }
                 "
+
                 data-model-image
             >
 
@@ -335,7 +317,9 @@ function createPublicModelCard(
                     ? `
 
                         <strong class="model-price">
+
                             ${price}
+
                         </strong>
 
                     `
@@ -350,9 +334,11 @@ function createPublicModelCard(
                 ? `
 
                     <p>
+
                         ${escapeHTML(
                             product.description
                         )}
+
                     </p>
 
                 `
@@ -360,10 +346,24 @@ function createPublicModelCard(
             }
 
 
-            ${createFeatureTags(product)}
+            ${createFeatureTags(
+                product
+            )}
 
 
-            ${createProductAction(product)}
+            <div class="model-action-area">
+
+                ${createProductAction(
+                    product
+                )}
+
+            </div>
+
+
+            <div
+                class="model-card-message"
+                data-card-message
+            ></div>
 
         </div>
 
@@ -371,9 +371,7 @@ function createPublicModelCard(
 
 
 
-    /* =====================================================
-       BROKEN IMAGE FALLBACK
-    ===================================================== */
+    /* IMAGE FALLBACK */
 
     const image =
         card.querySelector(
@@ -410,6 +408,36 @@ function createPublicModelCard(
     );
 
 
+
+    /* BASKET */
+
+    const basketButton =
+        card.querySelector(
+            "[data-add-basket]"
+        );
+
+
+    if (
+        basketButton
+    ) {
+
+        basketButton
+            .addEventListener(
+                "click",
+                async () => {
+
+                    await addProductToBasket(
+                        product,
+                        basketButton,
+                        card
+                    );
+
+                }
+            );
+
+    }
+
+
     return card;
 
 }
@@ -417,16 +445,12 @@ function createPublicModelCard(
 
 
 /* =========================================================
-   STOCK STATE
+   STOCK
 ========================================================= */
 
 function effectiveStockState(
     product
 ) {
-
-    /*
-        Coming soon has priority.
-    */
 
     if (
         product.status ===
@@ -437,10 +461,6 @@ function effectiveStockState(
 
     }
 
-
-    /*
-        Explicit out-of-stock has priority.
-    */
 
     if (
         product.status ===
@@ -490,10 +510,6 @@ function effectiveStockState(
 
 
 
-/* =========================================================
-   STOCK LABEL
-========================================================= */
-
 function stockText(
     product
 ) {
@@ -504,40 +520,49 @@ function stockText(
         );
 
 
-    switch (state) {
+    if (
+        state ===
+        "coming_soon"
+    ) {
 
-        case "coming_soon":
-
-            return "COMING SOON";
-
-
-        case "out_of_stock":
-
-            return "OUT OF STOCK";
-
-
-        case "low_stock":
-
-            return `ONLY ${
-                Number(
-                    product.stock_quantity ??
-                    0
-                )
-            } LEFT`;
-
-
-        default:
-
-            return "IN STOCK";
+        return "COMING SOON";
 
     }
+
+
+    if (
+        state ===
+        "out_of_stock"
+    ) {
+
+        return "OUT OF STOCK";
+
+    }
+
+
+    if (
+        state ===
+        "low_stock"
+    ) {
+
+        return `ONLY ${
+            Number(
+                product.stock_quantity ??
+                0
+            )
+        } LEFT`;
+
+    }
+
+
+    return "IN STOCK";
 
 }
 
 
 
 /* =========================================================
-   OPTIONAL FEATURE TAGS
+   TAGS
 ========================================================= */
 
 function createFeatureTags(
@@ -597,7 +622,8 @@ function createFeatureTags(
 
 
     if (
-        tags.length === 0
+        tags.length ===
+        0
     ) {
 
         return "";
@@ -632,7 +658,7 @@ function createFeatureTags(
 
 
 /* =========================================================
-   PRODUCT BUTTON
+   BUTTON
 ========================================================= */
 
 function createProductAction(
@@ -645,42 +671,33 @@ function createProductAction(
         );
 
 
-    const slug =
-        encodeURIComponent(
-            product.slug ||
-            ""
-        );
+    if (
+        product.preorder_enabled ===
+        true
+    ) {
 
+        return `
 
-    /*
-        Coming soon
-    */
+            <button
+                type="button"
+                class="model-button"
+                data-add-basket
+                data-order-type="preorder"
+            >
+
+                ADD PREORDER TO BASKET →
+
+            </button>
+
+        `;
+
+    }
+
 
     if (
         state ===
         "coming_soon"
     ) {
-
-        if (
-            product.preorder_enabled ===
-            true
-        ) {
-
-            return `
-
-                <a
-                    href="product.html?model=${slug}"
-                    class="model-button"
-                >
-
-                    VIEW PREORDER →
-
-                </a>
-
-            `;
-
-        }
-
 
         return `
 
@@ -700,10 +717,6 @@ function createProductAction(
 
     }
 
-
-    /*
-        Out of stock
-    */
 
     if (
         state ===
@@ -729,14 +742,38 @@ function createProductAction(
     }
 
 
-    /*
-        Normal product
-    */
+    if (
+        product.ordering_enabled ===
+        true
+    ) {
+
+        return `
+
+            <button
+                type="button"
+                class="model-button"
+                data-add-basket
+                data-order-type="standard"
+            >
+
+                ADD TO BASKET →
+
+            </button>
+
+        `;
+
+    }
+
 
     return `
 
         <a
-            href="product.html?model=${slug}"
+            href="product.html?model=${
+                encodeURIComponent(
+                    product.slug ||
+                    ""
+                )
+            }"
             class="model-button"
         >
 
@@ -751,7 +788,340 @@ function createProductAction(
 
 
 /* =========================================================
-   ERROR DISPLAY
+   ADD TO BASKET
+========================================================= */
+
+async function addProductToBasket(
+    product,
+    button,
+    card
+) {
+
+    const message =
+        card.querySelector(
+            "[data-card-message]"
+        );
+
+
+    if (
+        !currentModelUser
+    ) {
+
+        window.location.href =
+            `login.html?redirect=${
+                encodeURIComponent(
+                    window.location.href
+                )
+            }`;
+
+
+        return;
+    }
+
+
+    const orderType =
+        button.dataset.orderType ||
+        "standard";
+
+
+    button.disabled =
+        true;
+
+
+    button.textContent =
+        "ADDING...";
+
+
+    message.textContent =
+        "";
+
+
+    try {
+
+        const {
+            data: existing,
+            error: existingError
+        } =
+            await modelDB
+                .from(
+                    "basket_items"
+                )
+                .select(
+                    "id,quantity"
+                )
+                .eq(
+                    "user_id",
+                    currentModelUser.id
+                )
+                .eq(
+                    "product_id",
+                    product.id
+                )
+                .eq(
+                    "order_type",
+                    orderType
+                )
+                .eq(
+                    "custom_fit",
+                    false
+                )
+                .eq(
+                    "custom_tuning",
+                    false
+                )
+                .maybeSingle();
+
+
+        if (
+            existingError
+        ) {
+
+            throw existingError;
+
+        }
+
+
+        if (
+            existing
+        ) {
+
+            const next =
+                Number(
+                    existing.quantity
+                )
+                +
+                1;
+
+
+            const max =
+                Number(
+                    product.max_order_quantity ||
+                    99
+                );
+
+
+            if (
+                next >
+                max
+            ) {
+
+                throw new Error(
+                    `Maximum quantity is ${max}.`
+                );
+
+            }
+
+
+            const {
+                error
+            } =
+                await modelDB
+                    .from(
+                        "basket_items"
+                    )
+                    .update({
+
+                        quantity:
+                            next,
+
+                        updated_at:
+                            new Date()
+                                .toISOString()
+
+                    })
+                    .eq(
+                        "id",
+                        existing.id
+                    );
+
+
+            if (
+                error
+            ) {
+
+                throw error;
+
+            }
+
+        }
+
+        else {
+
+            const {
+                error
+            } =
+                await modelDB
+                    .from(
+                        "basket_items"
+                    )
+                    .insert({
+
+                        user_id:
+                            currentModelUser.id,
+
+                        product_id:
+                            product.id,
+
+                        quantity:
+                            1,
+
+                        order_type:
+                            orderType,
+
+                        custom_fit:
+                            false,
+
+                        custom_tuning:
+                            false
+
+                    });
+
+
+            if (
+                error
+            ) {
+
+                throw error;
+
+            }
+
+        }
+
+
+        button.textContent =
+            "ADDED ✓";
+
+
+        message.textContent =
+            "Added to your basket.";
+
+
+        await updateBasketCount();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        message.textContent =
+            error.message ||
+            "Unable to add item.";
+
+    }
+
+
+    setTimeout(
+        () => {
+
+            button.disabled =
+                false;
+
+
+            button.textContent =
+                orderType ===
+                "preorder"
+
+                ? "ADD PREORDER TO BASKET →"
+
+                : "ADD TO BASKET →";
+
+
+            message.textContent =
+                "";
+
+        },
+        1500
+    );
+
+}
+
+
+
+/* =========================================================
+   BASKET COUNT
+========================================================= */
+
+async function updateBasketCount() {
+
+    const countElement =
+        document.getElementById(
+            "basketCount"
+        );
+
+
+    if (
+        !countElement
+    ) {
+
+        return;
+    }
+
+
+    if (
+        !currentModelUser
+    ) {
+
+        countElement.textContent =
+            "0";
+
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await modelDB
+            .from(
+                "basket_items"
+            )
+            .select(
+                "quantity"
+            );
+
+
+    if (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+
+        return;
+    }
+
+
+    const total =
+        (data || [])
+            .reduce(
+                (
+                    sum,
+                    item
+                ) =>
+                    sum +
+                    Number(
+                        item.quantity ||
+                        0
+                    ),
+                0
+            );
+
+
+    countElement.textContent =
+        total;
+
+}
+
+
+
+/* =========================================================
+   ERROR
 ========================================================= */
 
 function showModelError(
@@ -764,29 +1134,34 @@ function showModelError(
         );
 
 
-    if (!container) {
+    if (
+        !container
+    ) {
+
         return;
     }
 
 
     container.innerHTML = `
 
-        <div class="
-            model-loading
-            model-error
-        ">
+        <div
+            class="
+                model-loading
+                model-error
+            "
+        >
 
             <strong>
                 PRODUCT SYSTEM ERROR
             </strong>
 
-            <p>
-                The Hammer Craft product database
-                could not be loaded.
-            </p>
 
             <small>
-                ${escapeHTML(message)}
+
+                ${escapeHTML(
+                    message
+                )}
+
             </small>
 
         </div>
@@ -798,7 +1173,7 @@ function showModelError(
 
 
 /* =========================================================
-   HTML SAFETY
+   ESCAPE
 ========================================================= */
 
 function escapeHTML(
@@ -835,64 +1210,7 @@ function escapeHTML(
 
 
 /* =========================================================
-   INITIAL LOAD
+   START
 ========================================================= */
 
 initialiseModels();
-
-
-/* =========================================================
-   REALTIME PRODUCT UPDATES
-========================================================= */
-
-if (
-    modelDB
-) {
-
-    try {
-
-        modelDB
-            .channel(
-                "hammer-craft-products"
-            )
-            .on(
-
-                "postgres_changes",
-
-                {
-                    event: "*",
-                    schema: "public",
-                    table: "products"
-                },
-
-                () => {
-
-                    console.log(
-                        "Product change detected."
-                    );
-
-
-                    loadPublicModels();
-
-                }
-
-            )
-            .subscribe();
-
-    }
-
-    catch (error) {
-
-        /*
-            Realtime failing should NOT stop
-            the actual products from loading.
-        */
-
-        console.warn(
-            "Realtime unavailable:",
-            error
-        );
-
-    }
-
-}

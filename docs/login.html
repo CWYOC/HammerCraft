@@ -10,13 +10,19 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <meta
+        name="description"
+        content="Login to your Hammer Craft account."
+    >
+
     <title>
         Login | Hammer Craft
     </title>
 
+
     <link
         rel="stylesheet"
-        href="auth.css"
+        href="login.css?v=21"
     >
 
 </head>
@@ -25,11 +31,15 @@
 <body>
 
 
-<header class="auth-header">
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="login-header">
 
     <a
         href="index.html"
-        class="auth-brand"
+        class="login-brand"
     >
 
         <img
@@ -45,24 +55,31 @@
 
 
     <a
-        href="register.html"
-        class="header-button"
+        href="index.html"
+        class="back-link"
     >
-        REGISTER
+        ← HOME
     </a>
 
 </header>
 
 
 
-<main class="auth-page">
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="login-page">
 
 
-    <section class="auth-intro">
+    <!-- =================================================
+         LEFT SIDE
+    ================================================== -->
 
+    <section class="login-intro">
 
         <div class="eyebrow">
-            HAMMER CRAFT / LOGIN
+            HAMMER CRAFT / ACCOUNT
         </div>
 
 
@@ -79,29 +96,178 @@
 
         <p>
 
-            Sign in to access your Hammer Craft
-            customer account or internal admin
-            dashboard.
+            Sign in to access your Hammer Craft account,
+            basket, orders, private files and digital
+            ear-fit workflow.
 
         </p>
 
+
+        <!-- =============================================
+             ACCOUNT FEATURES
+        ============================================== -->
+
+        <div class="login-points">
+
+
+            <article>
+
+                <span>
+                    01
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        YOUR BASKET
+                    </strong>
+
+
+                    <p>
+
+                        Keep your selected Hammer Craft
+                        models linked to your account.
+
+                    </p>
+
+                </div>
+
+            </article>
+
+
+
+            <article>
+
+                <span>
+                    02
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        YOUR ORDERS
+                    </strong>
+
+
+                    <p>
+
+                        View your Hammer Craft order
+                        numbers and order progress.
+
+                    </p>
+
+                </div>
+
+            </article>
+
+
+
+            <article>
+
+                <span>
+                    03
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        YOUR EAR SCANS
+                    </strong>
+
+
+                    <p>
+
+                        Manage ear scans and custom-fit
+                        information connected to your
+                        account.
+
+                    </p>
+
+                </div>
+
+            </article>
+
+
+
+            <article>
+
+                <span>
+                    04
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        YOUR FILES
+                    </strong>
+
+
+                    <p>
+
+                        Access private files connected
+                        to your Hammer Craft builds.
+
+                    </p>
+
+                </div>
+
+            </article>
+
+
+        </div>
 
     </section>
 
 
 
-    <section class="auth-panel">
+    <!-- =================================================
+         LOGIN CARD
+    ================================================== -->
+
+    <section class="login-card">
 
 
-        <form id="loginForm">
+        <div class="login-card-heading">
+
+            <span>
+                SIGN IN
+            </span>
 
 
-            <label>
+            <h2>
+                Your account.
+            </h2>
+
+        </div>
+
+
+
+        <!-- =============================================
+             LOGIN FORM
+
+             IMPORTANT:
+             These IDs are used by login.js.
+        ============================================== -->
+
+        <form
+            id="loginForm"
+            class="login-form"
+        >
+
+
+            <!-- EMAIL -->
+
+            <label for="email">
 
                 EMAIL
 
                 <input
-                    id="loginEmail"
+                    id="email"
+                    name="email"
                     type="email"
                     autocomplete="email"
                     placeholder="you@example.com"
@@ -112,12 +278,15 @@
 
 
 
-            <label>
+            <!-- PASSWORD -->
+
+            <label for="password">
 
                 PASSWORD
 
                 <input
-                    id="loginPassword"
+                    id="password"
+                    name="password"
                     type="password"
                     autocomplete="current-password"
                     placeholder="Your password"
@@ -128,56 +297,25 @@
 
 
 
-            <div class="login-tools">
-
-
-                <label class="check-row small-check">
-
-                    <input
-                        id="rememberMe"
-                        type="checkbox"
-                        checked
-                    >
-
-                    <span>
-                        Remember me
-                    </span>
-
-                </label>
-
-
-                <button
-                    type="button"
-                    id="forgotPasswordButton"
-                    class="text-button"
-                >
-                    FORGOT PASSWORD?
-                </button>
-
-
-            </div>
-
-
+            <!-- LOGIN BUTTON -->
 
             <button
+                id="loginButton"
+                class="login-button"
                 type="submit"
-                class="main-button"
             >
-
-                <span>
-                    LOGIN
-                </span>
-
-                <span>
-                    →
-                </span>
-
+                LOGIN →
             </button>
 
 
+
+            <!-- LOGIN STATUS / ERRORS -->
+
             <div
                 id="loginMessage"
-                class="form-message"
+                class="login-message"
+                role="status"
+                aria-live="polite"
             ></div>
 
 
@@ -185,12 +323,22 @@
 
 
 
-        <div class="auth-panel-footer">
+        <!-- =============================================
+             REGISTER
+        ============================================== -->
 
-            New to Hammer Craft?
+        <div class="register-area">
 
-            <a href="register.html">
-                Create an account
+            <span>
+                NEW TO HAMMER CRAFT?
+            </span>
+
+
+            <a
+                href="register.html"
+                class="register-link"
+            >
+                CREATE ACCOUNT →
             </a>
 
         </div>
@@ -203,13 +351,48 @@
 
 
 
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer class="login-footer">
+
+    <span>
+        © HAMMER CRAFT
+    </span>
+
+
+    <span>
+        BRISTOL / UNITED KINGDOM
+    </span>
+
+</footer>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+
+     ORDER IS IMPORTANT:
+
+     1. Supabase library
+     2. Hammer Craft Supabase client
+     3. Login system
+===================================================== -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="supabase-client.js"></script>
 
-<script src="auth.js"></script>
+<script
+    src="supabase-client.js?v=20"
+></script>
+
+
+<script
+    src="login.js?v=2"
+></script>
 
 
 </body>
