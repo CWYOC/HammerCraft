@@ -19,10 +19,9 @@
         Hammer Craft | Small-Batch IEMs
     </title>
 
-
     <link
         rel="stylesheet"
-        href="style.css?v=41"
+        href="style.css?v=23"
     >
 
 </head>
@@ -86,6 +85,7 @@
         id="mobileMenuButton"
         class="mobile-menu-button"
         type="button"
+        aria-label="Open menu"
     >
         MENU
     </button>
@@ -93,6 +93,10 @@
 </header>
 
 
+
+<!-- =====================================================
+     MOBILE MENU
+===================================================== -->
 
 <nav
     id="mobileMenu"
@@ -170,9 +174,7 @@
 
                 EXPLORE OUR IEMS
 
-                <span>
-                    →
-                </span>
+                <span>→</span>
 
             </a>
 
@@ -209,7 +211,7 @@
 
 
 <!-- =====================================================
-     INTRO
+     INTRO STRIP
 ===================================================== -->
 
 <section class="intro-strip">
@@ -298,6 +300,7 @@
     </div>
 
 
+
     <div class="about-right">
 
         <p>
@@ -313,8 +316,10 @@
 
 
         <p>
+
             We would rather build thoughtfully
             than build quickly.
+
         </p>
 
 
@@ -332,7 +337,7 @@
 
 
 <!-- =====================================================
-     AI TUNING
+     AI
 ===================================================== -->
 
 <section
@@ -379,10 +384,10 @@
 
                 <p>
 
-                    Our internally developed tuning workflow
-                    uses AI-assisted analysis to help compare
-                    frequency response, tuning targets and
-                    acoustic changes.
+                    Our internally developed tuning
+                    workflow uses AI-assisted analysis
+                    to help compare frequency response,
+                    tuning targets and acoustic changes.
 
                 </p>
 
@@ -408,11 +413,13 @@
 
                 <p>
 
-                    AI helps us identify patterns and move
-                    through iterations more efficiently.
-                    Measurements, acoustic engineering and
-                    subjective listening remain part of the
-                    final decision.
+                    AI helps us identify patterns and
+                    move through iterations more
+                    efficiently.
+
+                    Measurements, acoustic engineering
+                    and subjective listening remain
+                    part of the final decision.
 
                 </p>
 
@@ -508,13 +515,15 @@
         <p>
 
             Our models are developed in small batches.
-            Availability, pricing and launch status are
-            updated directly through our internal
+
+            Availability, pricing and launch status
+            are updated directly through our internal
             Hammer Craft system.
 
         </p>
 
     </div>
+
 
 
     <div
@@ -533,7 +542,7 @@
 
 
 <!-- =====================================================
-     CUSTOM OPTIONS
+     CUSTOM
 ===================================================== -->
 
 <section class="custom-section">
@@ -585,6 +594,7 @@
         </article>
 
 
+
         <article>
 
             <span>
@@ -609,6 +619,7 @@
         </article>
 
 
+
         <article>
 
             <span>
@@ -631,6 +642,7 @@
             </div>
 
         </article>
+
 
 
         <article>
@@ -739,6 +751,7 @@
         </article>
 
 
+
         <article>
 
             <span>
@@ -758,6 +771,7 @@
             </div>
 
         </article>
+
 
 
         <article>
@@ -817,6 +831,9 @@
 
 <footer class="site-footer">
 
+
+    <!-- BRAND -->
+
     <div class="footer-brand">
 
         <img
@@ -830,6 +847,9 @@
 
     </div>
 
+
+
+    <!-- LOCATION -->
 
     <div class="footer-column">
 
@@ -847,6 +867,9 @@
 
     </div>
 
+
+
+    <!-- EXPLORE -->
 
     <div class="footer-column">
 
@@ -869,6 +892,9 @@
     </div>
 
 
+
+    <!-- ACCOUNT -->
+
     <div class="footer-column">
 
         <span class="footer-label">
@@ -886,8 +912,40 @@
     </div>
 
 
+
+    <!-- SOCIAL -->
+
+    <div class="footer-column">
+
+        <span class="footer-label">
+            SOCIAL
+        </span>
+
+        <a
+            href="https://www.instagram.com/hammer_craft.uk/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-social-link"
+        >
+            Instagram ↗
+        </a>
+
+    </div>
+
+
+
+    <!-- FOOTER BOTTOM -->
+
     <div class="footer-bottom">
-        © HAMMER CRAFT
+
+        <span>
+            © HAMMER CRAFT
+        </span>
+
+        <span>
+            BRISTOL / UNITED KINGDOM
+        </span>
+
     </div>
 
 </footer>
@@ -898,17 +956,22 @@
 
 
 <!-- =====================================================
-     JAVASCRIPT
+     SUPABASE + MODELS
 ===================================================== -->
 
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="supabase-client.js?v=10"></script>
+<script src="supabase-client.js"></script>
 
-<script src="models.js?v=40"></script>
+<script src="models.js?v=22"></script>
 
+
+
+<!-- =====================================================
+     MOBILE MENU
+===================================================== -->
 
 <script>
 
