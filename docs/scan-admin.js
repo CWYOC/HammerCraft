@@ -1,6 +1,8 @@
 /* =========================================================
    HAMMER CRAFT
    EAR SCAN ADMIN / PROCESSOR
+
+   Compatible with older and newer scan-admin.html
 ========================================================= */
 
 
@@ -30,10 +32,85 @@ let refreshTimer =
 
 
 /* =========================================================
+   ELEMENT HELPERS
+========================================================= */
+
+function getFirstElement(
+    ...ids
+) {
+
+    for (
+        const id
+        of ids
+    ) {
+
+        const element =
+            document.getElementById(
+                id
+            );
+
+
+        if (
+            element
+        ) {
+
+            return element;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+
+function setText(
+    ids,
+    value
+) {
+
+    const list =
+        Array.isArray(
+            ids
+        )
+        ? ids
+        : [
+            ids
+        ];
+
+
+    const element =
+        getFirstElement(
+            ...list
+        );
+
+
+    if (
+        element
+    ) {
+
+        element.textContent =
+            value;
+
+    }
+
+}
+
+
+
+/* =========================================================
    INITIALISE
 ========================================================= */
 
 async function initialiseProcessor() {
+
+    console.log(
+        "Hammer Craft scan processor starting..."
+    );
+
 
     if (
         !processorDB
@@ -47,6 +124,10 @@ async function initialiseProcessor() {
 
     }
 
+
+    /* =====================================================
+       CURRENT USER
+    ===================================================== */
 
     const {
         data,
@@ -62,6 +143,7 @@ async function initialiseProcessor() {
     ) {
 
         console.error(
+            "Auth error:",
             error
         );
 
@@ -89,8 +171,14 @@ async function initialiseProcessor() {
     }
 
 
+    console.log(
+        "Logged in:",
+        currentAdmin.email
+    );
+
+
     /* =====================================================
-       CHECK ADMIN
+       VERIFY ADMIN
     ===================================================== */
 
     const {
@@ -116,6 +204,7 @@ async function initialiseProcessor() {
     ) {
 
         console.error(
+            "Admin check error:",
             adminError
         );
 
@@ -126,6 +215,11 @@ async function initialiseProcessor() {
         !adminRow
     ) {
 
+        console.error(
+            "Current user is not an administrator."
+        );
+
+
         window.location.href =
             "account.html";
 
@@ -134,32 +228,60 @@ async function initialiseProcessor() {
     }
 
 
-    const emailElement =
-        document.getElementById(
-            "processorAdminEmail"
-        );
+    setText(
+        [
+            "processorAdminEmail",
+            "adminEmail"
+        ],
+        currentAdmin.email ||
+        "ADMIN"
+    );
 
 
-    if (
-        emailElement
-    ) {
-
-        emailElement.textContent =
-            currentAdmin.email ||
-            "ADMIN";
-
-    }
-
+    /* =====================================================
+       LOAD
+    ===================================================== */
 
     await loadProcessorScans();
+
+
+    /* =====================================================
+       AUTO REFRESH
+
+       Do not create several timers.
+    ===================================================== */
+
+    if (
+        refreshTimer
+    ) {
+
+        clearInterval(
+            refreshTimer
+        );
+
+    }
 
 
     refreshTimer =
         window.setInterval(
 
-            loadProcessorScans,
+            () => {
 
-            3000
+                loadProcessorScans()
+                    .catch(
+                        error => {
+
+                            console.error(
+                                "Automatic scan refresh failed:",
+                                error
+                            );
+
+                        }
+                    );
+
+            },
+
+            5000
 
         );
 
@@ -172,6 +294,18 @@ async function initialiseProcessor() {
 ========================================================= */
 
 async function loadProcessorScans() {
+
+    console.log(
+        "Loading ear scans..."
+    );
+
+
+    /*
+     * Do NOT request processor_accelerator here.
+     *
+     * This keeps this page compatible even if that
+     * database column has not been added yet.
+     */
 
     const {
         data,
@@ -190,7 +324,6 @@ async function loadProcessorScans() {
                 progress_stage,
                 processor_name,
                 processor_platform,
-                processor_accelerator,
                 left_stl_path,
                 right_stl_path,
                 error_message,
@@ -216,13 +349,46 @@ async function loadProcessorScans() {
     ) {
 
         console.error(
+            "LOAD SCANS ERROR:",
             error
         );
 
 
         showProcessorMessage(
-            error.message
+
+            `Unable to load scans: ${
+                error.message
+            }`
+
         );
+
+
+        const container =
+            getScanContainer();
+
+
+        if (
+            container
+        ) {
+
+            container.innerHTML = `
+
+                <div class="scan-error">
+
+                    Unable to load ear scans.
+
+                    <br><br>
+
+                    ${escapeHTML(
+                        error.message
+                    )}
+
+                </div>
+
+            `;
+
+        }
+
 
         return;
 
@@ -234,10 +400,37 @@ async function loadProcessorScans() {
         [];
 
 
+    console.log(
+        "Scans loaded:",
+        allScans.length
+    );
+
+
     renderProcessorStats();
 
-
     renderProcessorScans();
+
+}
+
+
+
+/* =========================================================
+   FIND SCAN CONTAINER
+
+   Supports old + new HTML
+========================================================= */
+
+function getScanContainer() {
+
+    return getFirstElement(
+
+        "processorScanList",
+
+        "scanList",
+
+        "adminScanList"
+
+    );
 
 }
 
@@ -249,17 +442,13 @@ async function loadProcessorScans() {
 
 function renderProcessorStats() {
 
-    function countStatus(
-        status
-    ) {
-
-        return allScans.filter(
-            scan =>
-                scan.status ===
-                status
-        ).length;
-
-    }
+    const countStatus =
+        status =>
+            allScans.filter(
+                scan =>
+                    scan.status ===
+                    status
+            ).length;
 
 
     setText(
@@ -306,32 +495,34 @@ function renderProcessorStats() {
 
 
 /* =========================================================
-   FILTER
+   STATUS FILTER
+
+   Supports old + new HTML
 ========================================================= */
+
+function getStatusFilter() {
+
+    return getFirstElement(
+
+        "processorStatusFilter",
+
+        "scanStatusFilter"
+
+    );
+
+}
+
+
 
 function getFilteredScans() {
 
     const filter =
-        document.getElementById(
-            "processorStatusFilter"
-        );
+        getStatusFilter();
 
 
     if (
-        !filter
-    ) {
-
-        return allScans;
-
-    }
-
-
-    const status =
-        filter.value;
-
-
-    if (
-        !status
+        !filter ||
+        !filter.value
     ) {
 
         return allScans;
@@ -342,7 +533,7 @@ function getFilteredScans() {
     return allScans.filter(
         scan =>
             scan.status ===
-            status
+            filter.value
     );
 
 }
@@ -350,20 +541,27 @@ function getFilteredScans() {
 
 
 /* =========================================================
-   RENDER SCANS
+   RENDER
 ========================================================= */
 
 function renderProcessorScans() {
 
     const container =
-        document.getElementById(
-            "processorScanList"
-        );
+        getScanContainer();
 
 
     if (
         !container
     ) {
+
+        console.error(
+            "No scan list container found."
+        );
+
+
+        showProcessorMessage(
+            "scan-admin.html and scan-admin.js do not contain matching scan-list IDs."
+        );
 
         return;
 
@@ -385,7 +583,7 @@ function renderProcessorScans() {
 
         container.innerHTML = `
 
-            <div class="empty-card">
+            <div class="loading-card">
 
                 No ear scans found.
 
@@ -415,7 +613,7 @@ function renderProcessorScans() {
 
 
 /* =========================================================
-   CREATE SCAN CARD
+   CARD
 ========================================================= */
 
 function createScanCard(
@@ -428,8 +626,13 @@ function createScanCard(
         );
 
 
+    /*
+     * Include both class names so either version
+     * of your CSS can style it.
+     */
+
     card.className =
-        "processor-scan-card";
+        "processor-scan-card scan-card";
 
 
     const progress =
@@ -453,7 +656,7 @@ function createScanCard(
 
     card.innerHTML = `
 
-        <div class="scan-card-header">
+        <div class="scan-card-header scan-card-top">
 
             <div>
 
@@ -462,14 +665,12 @@ function createScanCard(
                 </span>
 
                 <h3>
-
                     ${shortID(
                         scan.id
                     )}
-
                 </h3>
 
-                <div class="scan-full-id">
+                <div class="scan-full-id scan-id">
 
                     ${escapeHTML(
                         scan.id
@@ -483,6 +684,7 @@ function createScanCard(
             <span
                 class="
                     status-badge
+                    scan-status
                     status-${escapeHTML(
                         scan.status ||
                         "unknown"
@@ -499,7 +701,7 @@ function createScanCard(
         </div>
 
 
-        <div class="scan-data-grid">
+        <div class="scan-data-grid scan-info">
 
             <article>
 
@@ -558,14 +760,13 @@ function createScanCard(
             <article>
 
                 <span>
-                    ACCELERATOR
+                    CREATED
                 </span>
 
                 <strong>
 
-                    ${escapeHTML(
-                        scan.processor_accelerator ||
-                        "—"
+                    ${formatDate(
+                        scan.created_at
                     )}
 
                 </strong>
@@ -575,9 +776,9 @@ function createScanCard(
         </div>
 
 
-        <div class="scan-progress">
+        <div class="scan-progress progress-area">
 
-            <div class="progress-heading">
+            <div class="progress-heading progress-top">
 
                 <span>
 
@@ -601,7 +802,7 @@ function createScanCard(
             <div class="progress-track">
 
                 <div
-                    class="progress-fill"
+                    class="progress-fill progress-bar"
                     style="
                         width:
                         ${progress}%;
@@ -620,17 +821,9 @@ function createScanCard(
 
                 <div class="scan-error">
 
-                    <strong>
-                        ERROR
-                    </strong>
-
-                    <p>
-
-                        ${escapeHTML(
-                            scan.error_message
-                        )}
-
-                    </p>
+                    ${escapeHTML(
+                        scan.error_message
+                    )}
 
                 </div>
 
@@ -641,17 +834,6 @@ function createScanCard(
 
 
         <div class="scan-meta">
-
-            <span>
-
-                CREATED
-
-                ${formatDate(
-                    scan.created_at
-                )}
-
-            </span>
-
 
             <span>
 
@@ -666,7 +848,7 @@ function createScanCard(
         </div>
 
 
-        <div class="scan-card-actions">
+        <div class="scan-card-actions scan-actions">
 
             ${getActionHTML(
                 scan
@@ -678,7 +860,7 @@ function createScanCard(
 
 
     /* =====================================================
-       PROCESS / RETRY / REPROCESS
+       PROCESS
     ===================================================== */
 
     card
@@ -752,7 +934,7 @@ function createScanCard(
 
 
 /* =========================================================
-   ACTION HTML
+   BUTTONS
 ========================================================= */
 
 function getActionHTML(
@@ -762,6 +944,10 @@ function getActionHTML(
     let html =
         "";
 
+
+    /* -----------------------------------------------------
+       UPLOADED
+    ----------------------------------------------------- */
 
     if (
         scan.status ===
@@ -783,6 +969,10 @@ function getActionHTML(
     }
 
 
+    /* -----------------------------------------------------
+       FAILED
+    ----------------------------------------------------- */
+
     else if (
         scan.status ===
         "failed"
@@ -802,6 +992,10 @@ function getActionHTML(
 
     }
 
+
+    /* -----------------------------------------------------
+       QUEUED
+    ----------------------------------------------------- */
 
     else if (
         scan.status ===
@@ -823,6 +1017,10 @@ function getActionHTML(
     }
 
 
+    /* -----------------------------------------------------
+       PROCESSING
+    ----------------------------------------------------- */
+
     else if (
         scan.status ===
         "processing"
@@ -843,6 +1041,10 @@ function getActionHTML(
     }
 
 
+    /* -----------------------------------------------------
+       COMPLETE
+    ----------------------------------------------------- */
+
     else if (
         scan.status ===
         "complete"
@@ -856,7 +1058,7 @@ function getActionHTML(
 
                 <button
                     type="button"
-                    class="outline-button"
+                    class="outline-button secondary"
                     data-left-stl
                 >
                     LEFT STL
@@ -875,7 +1077,7 @@ function getActionHTML(
 
                 <button
                     type="button"
-                    class="outline-button"
+                    class="outline-button secondary"
                     data-right-stl
                 >
                     RIGHT STL
@@ -890,7 +1092,7 @@ function getActionHTML(
 
             <button
                 type="button"
-                class="outline-button"
+                class="outline-button secondary"
                 data-process
             >
                 REPROCESS
@@ -901,11 +1103,35 @@ function getActionHTML(
     }
 
 
-    /* =====================================================
+    /* -----------------------------------------------------
+       CAPTURING
+    ----------------------------------------------------- */
+
+    else if (
+        scan.status ===
+        "capturing"
+    ) {
+
+        html += `
+
+            <button
+                type="button"
+                class="outline-button secondary"
+                disabled
+            >
+                CUSTOMER CAPTURING
+            </button>
+
+        `;
+
+    }
+
+
+    /* -----------------------------------------------------
        DELETE
 
-       Prevent deletion while actively processing.
-    ===================================================== */
+       Allow deletion for everything except active processing.
+    ----------------------------------------------------- */
 
     if (
         scan.status !==
@@ -934,7 +1160,7 @@ function getActionHTML(
 
 
 /* =========================================================
-   QUEUE SCAN
+   QUEUE / RETRY / REPROCESS
 ========================================================= */
 
 async function queueScan(
@@ -946,7 +1172,14 @@ async function queueScan(
     );
 
 
+    console.log(
+        "Queuing scan:",
+        scanID
+    );
+
+
     const {
+        data,
         error
     } =
         await processorDB
@@ -970,9 +1203,6 @@ async function queueScan(
                 processor_platform:
                     null,
 
-                processor_accelerator:
-                    null,
-
                 processing_started_at:
                     null,
 
@@ -990,7 +1220,8 @@ async function queueScan(
             .eq(
                 "id",
                 scanID
-            );
+            )
+            .select();
 
 
     if (
@@ -998,12 +1229,36 @@ async function queueScan(
     ) {
 
         console.error(
+            "QUEUE ERROR:",
             error
         );
 
 
         showProcessorMessage(
-            error.message
+            `Unable to queue scan: ${
+                error.message
+            }`
+        );
+
+        return;
+
+    }
+
+
+    console.log(
+        "Queue response:",
+        data
+    );
+
+
+    if (
+        !data ||
+        data.length ===
+        0
+    ) {
+
+        showProcessorMessage(
+            "The scan was not updated. Check the admin UPDATE RLS policy."
         );
 
         return;
@@ -1012,7 +1267,7 @@ async function queueScan(
 
 
     showProcessorMessage(
-        "Scan queued successfully."
+        "Scan queued. The local processor will pick it up shortly."
     );
 
 
@@ -1035,17 +1290,12 @@ async function openSTL(
     ) {
 
         showProcessorMessage(
-            "No STL file is available."
+            "No STL is available."
         );
 
         return;
 
     }
-
-
-    showProcessorMessage(
-        "Creating secure STL link..."
-    );
 
 
     const {
@@ -1068,6 +1318,7 @@ async function openSTL(
     ) {
 
         console.error(
+            "STL ERROR:",
             error
         );
 
@@ -1079,11 +1330,6 @@ async function openSTL(
         return;
 
     }
-
-
-    showProcessorMessage(
-        ""
-    );
 
 
     window.open(
@@ -1110,7 +1356,7 @@ function openDeleteScanModal(
     ) {
 
         showProcessorMessage(
-            "A scan cannot be deleted while it is processing."
+            "A scan cannot be deleted while it is actively processing."
         );
 
         return;
@@ -1122,11 +1368,9 @@ function openDeleteScanModal(
         scan;
 
 
-    setText(
-        "deleteScanId",
-        scan.id
-    );
-
+    /*
+     * New modal version.
+     */
 
     const modal =
         document.getElementById(
@@ -1135,38 +1379,69 @@ function openDeleteScanModal(
 
 
     if (
-        !modal
+        modal
     ) {
+
+        setText(
+            "deleteScanId",
+            scan.id
+        );
+
+
+        modal.classList.add(
+            "open"
+        );
+
+
+        modal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
 
         return;
 
     }
 
 
-    modal.classList.add(
-        "open"
-    );
+    /*
+     * Your older scan-admin HTML might not yet
+     * contain the delete modal.
+     *
+     * Fall back to native confirmation so DELETE
+     * still works.
+     */
+
+    const confirmed =
+        window.confirm(
+
+            "Permanently delete this ear scan?\n\n" +
+
+            "This deletes the uploaded photographs, generated STL files and database record.\n\n" +
+
+            "This cannot be undone."
+
+        );
 
 
-    modal.setAttribute(
-        "aria-hidden",
-        "false"
-    );
+    if (
+        confirmed
+    ) {
+
+        deleteSelectedScan();
+
+    }
 
 }
 
 
 
 /* =========================================================
-   CLOSE DELETE MODAL
+   CLOSE MODAL
 ========================================================= */
 
 function closeDeleteScanModal() {
 
-    pendingDeleteScan =
-        null;
-
-
     const modal =
         document.getElementById(
             "deleteScanModal"
@@ -1174,31 +1449,173 @@ function closeDeleteScanModal() {
 
 
     if (
-        !modal
+        modal
     ) {
 
-        return;
+        modal.classList.remove(
+            "open"
+        );
+
+
+        modal.setAttribute(
+            "aria-hidden",
+            "true"
+        );
 
     }
 
 
-    modal.classList.remove(
-        "open"
-    );
-
-
-    modal.setAttribute(
-        "aria-hidden",
-        "true"
-    );
+    pendingDeleteScan =
+        null;
 
 }
 
 
 
 /* =========================================================
-   DELETE SCAN DIRECTLY
-   NO EDGE FUNCTION REQUIRED
+   DELETE STORAGE RECURSIVELY
+========================================================= */
+
+async function collectStorageFiles(
+    bucket,
+    folder,
+    output
+) {
+
+    let offset =
+        0;
+
+
+    const limit =
+        100;
+
+
+    while (
+        true
+    ) {
+
+        console.log(
+            "Listing storage:",
+            folder,
+            "offset:",
+            offset
+        );
+
+
+        const {
+            data,
+            error
+        } =
+            await bucket
+                .list(
+                    folder,
+                    {
+
+                        limit,
+
+                        offset,
+
+                        sortBy: {
+
+                            column:
+                                "name",
+
+                            order:
+                                "asc"
+
+                        }
+
+                    }
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw new Error(
+                `Unable to list storage folder ${folder}: ${error.message}`
+            );
+
+        }
+
+
+        const entries =
+            data ||
+            [];
+
+
+        if (
+            entries.length ===
+            0
+        ) {
+
+            break;
+
+        }
+
+
+        for (
+            const entry
+            of entries
+        ) {
+
+            const path =
+                `${folder}/${entry.name}`;
+
+
+            /*
+             * Folder entries normally have no id.
+             */
+
+            if (
+                !entry.id
+            ) {
+
+                await collectStorageFiles(
+
+                    bucket,
+
+                    path,
+
+                    output
+
+                );
+
+            }
+
+            else {
+
+                output.push(
+                    path
+                );
+
+            }
+
+        }
+
+
+        if (
+            entries.length <
+            limit
+        ) {
+
+            break;
+
+        }
+
+
+        offset +=
+            limit;
+
+    }
+
+}
+
+
+
+/* =========================================================
+   DELETE DIRECTLY THROUGH RLS
 ========================================================= */
 
 async function deleteScanDirectly(
@@ -1228,16 +1645,8 @@ async function deleteScanDirectly(
     }
 
 
-    const userID =
-        scan.user_id;
-
-
-    const scanID =
-        scan.id;
-
-
     if (
-        !userID
+        !scan.user_id
     ) {
 
         throw new Error(
@@ -1245,6 +1654,18 @@ async function deleteScanDirectly(
         );
 
     }
+
+
+    const scanID =
+        scan.id;
+
+
+    const userID =
+        scan.user_id;
+
+
+    const rootPath =
+        `${userID}/${scanID}`;
 
 
     const bucket =
@@ -1255,159 +1676,32 @@ async function deleteScanDirectly(
             );
 
 
-    const rootPath =
-        `${userID}/${scanID}`;
-
-
-    const pathsToDelete =
+    const files =
         [];
 
 
     /* =====================================================
-       RECURSIVE STORAGE LIST
+       LIST ALL FILES
     ===================================================== */
 
-    async function collectFolder(
-        folder
-    ) {
+    await collectStorageFiles(
 
-        let offset =
-            0;
+        bucket,
 
+        rootPath,
 
-        const limit =
-            100;
+        files
 
-
-        while (
-            true
-        ) {
-
-            const {
-                data,
-                error
-            } =
-                await bucket
-                    .list(
-                        folder,
-                        {
-
-                            limit,
-
-                            offset,
-
-                            sortBy: {
-
-                                column:
-                                    "name",
-
-                                order:
-                                    "asc",
-
-                            },
-
-                        }
-                    );
-
-
-            if (
-                error
-            ) {
-
-                throw error;
-
-            }
-
-
-            const entries =
-                data ||
-                [];
-
-
-            if (
-                entries.length ===
-                0
-            ) {
-
-                break;
-
-            }
-
-
-            for (
-                const entry
-                of entries
-            ) {
-
-                const path =
-                    `${folder}/${entry.name}`;
-
-
-                /*
-                 * In Supabase Storage, folder-like entries
-                 * usually have no object id.
-                 */
-
-                const looksLikeFolder =
-                    !entry.id;
-
-
-                if (
-                    looksLikeFolder
-                ) {
-
-                    await collectFolder(
-                        path
-                    );
-
-                }
-
-                else {
-
-                    pathsToDelete.push(
-                        path
-                    );
-
-                }
-
-            }
-
-
-            if (
-                entries.length <
-                limit
-            ) {
-
-                break;
-
-            }
-
-
-            offset +=
-                limit;
-
-        }
-
-    }
-
-
-    /* =====================================================
-       FIND EVERYTHING UNDER THIS SCAN
-    ===================================================== */
-
-    await collectFolder(
-        rootPath
     );
 
 
     console.log(
-        "Storage files to delete:",
-        pathsToDelete
+        `Found ${files.length} storage files for deletion.`
     );
 
 
     /* =====================================================
-       DELETE STORAGE FIRST
+       DELETE FILES
     ===================================================== */
 
     const batchSize =
@@ -1416,17 +1710,29 @@ async function deleteScanDirectly(
 
     for (
         let index = 0;
+
         index <
-        pathsToDelete.length;
-        index += batchSize
+        files.length;
+
+        index +=
+        batchSize
     ) {
 
         const batch =
-            pathsToDelete.slice(
+            files.slice(
+
                 index,
+
                 index +
                 batchSize
+
             );
+
+
+        console.log(
+            "Deleting storage batch:",
+            batch.length
+        );
 
 
         const {
@@ -1442,7 +1748,9 @@ async function deleteScanDirectly(
             error
         ) {
 
-            throw error;
+            throw new Error(
+                `Storage delete failed: ${error.message}`
+            );
 
         }
 
@@ -1450,10 +1758,11 @@ async function deleteScanDirectly(
 
 
     /* =====================================================
-       DELETE DATABASE RECORD LAST
+       DELETE DATABASE ROW
     ===================================================== */
 
     const {
+        data: deletedRows,
         error: deleteError
     } =
         await processorDB
@@ -1464,14 +1773,37 @@ async function deleteScanDirectly(
             .eq(
                 "id",
                 scanID
-            );
+            )
+            .select();
 
 
     if (
         deleteError
     ) {
 
-        throw deleteError;
+        throw new Error(
+            `Database delete failed: ${deleteError.message}`
+        );
+
+    }
+
+
+    /*
+     * Important diagnostic:
+     *
+     * Supabase can return no error but delete zero rows
+     * when RLS prevents the operation.
+     */
+
+    if (
+        !deletedRows ||
+        deletedRows.length ===
+        0
+    ) {
+
+        throw new Error(
+            "No database row was deleted. Check the admin DELETE RLS policy."
+        );
 
     }
 
@@ -1482,7 +1814,7 @@ async function deleteScanDirectly(
             true,
 
         filesDeleted:
-            pathsToDelete.length,
+            files.length,
 
     };
 
@@ -1505,6 +1837,10 @@ async function deleteSelectedScan() {
     }
 
 
+    const scan =
+        pendingDeleteScan;
+
+
     const button =
         document.getElementById(
             "confirmDeleteScanButton"
@@ -1525,15 +1861,48 @@ async function deleteSelectedScan() {
     }
 
 
+    showProcessorMessage(
+        "Deleting scan and storage files..."
+    );
+
+
     try {
 
         const result =
             await deleteScanDirectly(
-                pendingDeleteScan
+                scan
             );
 
 
-        closeDeleteScanModal();
+        /*
+         * Clear only after deletion succeeds.
+         */
+
+        const modal =
+            document.getElementById(
+                "deleteScanModal"
+            );
+
+
+        if (
+            modal
+        ) {
+
+            modal.classList.remove(
+                "open"
+            );
+
+
+            modal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+        }
+
+
+        pendingDeleteScan =
+            null;
 
 
         showProcessorMessage(
@@ -1554,6 +1923,7 @@ async function deleteSelectedScan() {
     ) {
 
         console.error(
+            "DELETE SCAN ERROR:",
             error
         );
 
@@ -1597,8 +1967,14 @@ function showProcessorMessage(
 ) {
 
     const element =
-        document.getElementById(
-            "processorMessage"
+        getFirstElement(
+
+            "processorMessage",
+
+            "scanMessage",
+
+            "adminMessage"
+
         );
 
 
@@ -1612,33 +1988,11 @@ function showProcessorMessage(
 
     }
 
-}
 
-
-
-/* =========================================================
-   SET TEXT
-========================================================= */
-
-function setText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            id
-        );
-
-
-    if (
-        element
-    ) {
-
-        element.textContent =
-            value;
-
-    }
+    console.log(
+        "PROCESSOR:",
+        message
+    );
 
 }
 
@@ -1667,7 +2021,7 @@ function formatStatus(
 
 
 /* =========================================================
-   FORMAT DATE
+   DATE
 ========================================================= */
 
 function formatDate(
@@ -1683,24 +2037,28 @@ function formatDate(
     }
 
 
-    try {
-
-        return new Date(
+    const date =
+        new Date(
             value
-        )
-        .toLocaleString(
-            "en-GB"
         );
 
-    }
 
-    catch {
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
 
         return String(
             value
         );
 
     }
+
+
+    return date.toLocaleString(
+        "en-GB"
+    );
 
 }
 
@@ -1779,12 +2137,20 @@ function escapeHTML(
 
 
 /* =========================================================
-   EVENT BINDING
+   REFRESH BUTTON
+
+   Supports both versions.
 ========================================================= */
 
 const refreshButton =
-    document.getElementById(
-        "processorRefreshButton"
+    getFirstElement(
+
+        "processorRefreshButton",
+
+        "refreshButton",
+
+        "refreshScansButton"
+
     );
 
 
@@ -1793,17 +2159,37 @@ if (
 ) {
 
     refreshButton.addEventListener(
+
         "click",
-        loadProcessorScans
+
+        async () => {
+
+            showProcessorMessage(
+                "Refreshing scans..."
+            );
+
+
+            await loadProcessorScans();
+
+
+            showProcessorMessage(
+                ""
+            );
+
+        }
+
     );
 
 }
 
 
+
+/* =========================================================
+   FILTER
+========================================================= */
+
 const statusFilter =
-    document.getElementById(
-        "processorStatusFilter"
-    );
+    getStatusFilter();
 
 
 if (
@@ -1817,6 +2203,11 @@ if (
 
 }
 
+
+
+/* =========================================================
+   DELETE MODAL EVENTS
+========================================================= */
 
 const cancelDeleteButton =
     document.getElementById(
@@ -1872,6 +2263,11 @@ if (
 }
 
 
+
+/* =========================================================
+   ESCAPE
+========================================================= */
+
 document.addEventListener(
     "keydown",
     event => {
@@ -1891,7 +2287,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   CLEANUP
+   PAGE CLEANUP
 ========================================================= */
 
 window.addEventListener(
@@ -1917,4 +2313,21 @@ window.addEventListener(
    START
 ========================================================= */
 
-initialiseProcessor();
+initialiseProcessor()
+    .catch(
+        error => {
+
+            console.error(
+                "PROCESSOR STARTUP ERROR:",
+                error
+            );
+
+
+            showProcessorMessage(
+                `Processor page error: ${
+                    error.message
+                }`
+            );
+
+        }
+    );
