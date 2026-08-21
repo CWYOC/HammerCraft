@@ -133,7 +133,7 @@ def utc_now():
 
 
 # =========================================================
-# DATABASE UPDATE
+# DATABASE
 # =========================================================
 
 def update_scan(
@@ -222,34 +222,104 @@ def set_progress(
         )
 
 
-    except Exception as error:
+    except Exception:
 
-        # Compatibility fallback if the
-        # processor_accelerator column has not
-        # been created yet.
+        # Allows compatibility with databases that
+        # do not yet contain processor_accelerator.
 
-        if (
-            "processor_accelerator"
-            in values
+        values.pop(
+            "processor_accelerator",
+            None,
+        )
+
+
+        update_scan(
+            scan_id,
+            values,
+        )
+
+
+# =========================================================
+# STORAGE IMAGE LIST
+# =========================================================
+
+def get_storage_images(
+    user_id,
+    scan_id,
+    side,
+):
+
+    prefix = (
+        f"{user_id}/"
+        f"{scan_id}/"
+        f"{side}"
+    )
+
+
+    entries = (
+        supabase
+        .storage
+        .from_(
+            SUPABASE_BUCKET
+        )
+        .list(
+            prefix
+        )
+    )
+
+
+    filenames = []
+
+
+    for entry in entries:
+
+        if isinstance(
+            entry,
+            dict,
         ):
 
-            values.pop(
-                "processor_accelerator"
-            )
-
-
-            update_scan(
-                scan_id,
-                values,
+            name = entry.get(
+                "name"
             )
 
         else:
 
-            raise error
+            name = getattr(
+                entry,
+                "name",
+                None,
+            )
+
+
+        if not name:
+
+            continue
+
+
+        if name.lower().endswith(
+            (
+                ".jpg",
+                ".jpeg",
+                ".png",
+            )
+        ):
+
+            filenames.append(
+                name
+            )
+
+
+    filenames.sort()
+
+
+    return (
+        prefix,
+        filenames,
+    )
 
 
 # =========================================================
-# DOWNLOAD EAR IMAGES
+# DOWNLOAD EAR
 # =========================================================
 
 def download_side(
@@ -270,83 +340,35 @@ def download_side(
     )
 
 
-    prefix = (
-        f"{user_id}/"
-        f"{scan_id}/"
-        f"{side}"
+    (
+        prefix,
+        filenames,
+    ) = get_storage_images(
+        user_id,
+        scan_id,
+        side,
+    )
+
+
+    count = len(
+        filenames
     )
 
 
     print(
-        "\nStorage folder:",
+        f"\n{side.upper()} EAR"
+    )
+
+
+    print(
+        "Storage:",
         prefix,
     )
 
 
-    files = (
-        supabase
-        .storage
-        .from_(
-            SUPABASE_BUCKET
-        )
-        .list(
-            prefix
-        )
-    )
-
-
-    image_files = []
-
-
-    for file in files:
-
-        if isinstance(
-            file,
-            dict,
-        ):
-
-            name = file.get(
-                "name"
-            )
-
-        else:
-
-            name = getattr(
-                file,
-                "name",
-                None,
-            )
-
-
-        if not name:
-
-            continue
-
-
-        if name.lower().endswith(
-            (
-                ".jpg",
-                ".jpeg",
-                ".png",
-            )
-        ):
-
-            image_files.append(
-                name
-            )
-
-
-    image_files.sort()
-
-
-    count = len(
-        image_files
-    )
-
-
     print(
-        f"{side}: "
-        f"{count} images found."
+        "Images:",
+        count,
     )
 
 
@@ -357,8 +379,9 @@ def download_side(
 
         raise RuntimeError(
 
-            f"{side} ear has "
+            f"{side} ear has only "
             f"{count} images. "
+
             f"Minimum required is "
             f"{MIN_IMAGES_PER_EAR}."
 
@@ -371,18 +394,28 @@ def download_side(
     ):
 
         print(
+
             f"WARNING: target is "
             f"{TARGET_IMAGES_PER_EAR}, "
-            f"but {count} images will "
-            f"be processed."
+            f"using {count}."
+
         )
+
+
+    bucket = (
+        supabase
+        .storage
+        .from_(
+            SUPABASE_BUCKET
+        )
+    )
 
 
     for (
         index,
         filename,
     ) in enumerate(
-        image_files,
+        filenames,
         start=1,
     ):
 
@@ -394,21 +427,13 @@ def download_side(
 
         print(
             f"Downloading "
-            f"{side} "
             f"{index}/{count}: "
             f"{filename}"
         )
 
 
-        file_bytes = (
-            supabase
-            .storage
-            .from_(
-                SUPABASE_BUCKET
-            )
-            .download(
-                remote_path
-            )
+        data = bucket.download(
+            remote_path
         )
 
 
@@ -420,7 +445,7 @@ def download_side(
 
 
         local_path.write_bytes(
-            file_bytes
+            data
         )
 
 
@@ -448,22 +473,18 @@ def upload_stl(
     ):
 
         raise RuntimeError(
-            f"STL does not exist: "
+            f"STL missing: "
             f"{local_path}"
         )
 
 
     remote_path = (
+
         f"{user_id}/"
         f"{scan_id}/"
         f"results/"
         f"{side}-ear.stl"
-    )
 
-
-    print(
-        "\nUploading STL:",
-        remote_path,
     )
 
 
@@ -476,7 +497,6 @@ def upload_stl(
     )
 
 
-    # Reprocessing support
     try:
 
         bucket.remove(
@@ -505,6 +525,12 @@ def upload_stl(
 
         },
 
+    )
+
+
+    print(
+        "Uploaded STL:",
+        remote_path,
     )
 
 
@@ -563,11 +589,13 @@ def process_side(
 
 
     output_stl = (
+
         workspace
         /
         "results"
         /
         f"{side}-ear.stl"
+
     )
 
 
@@ -576,10 +604,6 @@ def process_side(
         exist_ok=True,
     )
 
-
-    # -----------------------------------------------------
-    # DOWNLOAD
-    # -----------------------------------------------------
 
     set_progress(
 
@@ -594,15 +618,13 @@ def process_side(
     )
 
 
-    image_count = (
-        download_side(
+    image_count = download_side(
 
-            user_id,
-            scan_id,
-            side,
-            images_dir,
+        user_id,
+        scan_id,
+        side,
+        images_dir,
 
-        )
     )
 
 
@@ -612,11 +634,7 @@ def process_side(
     )
 
 
-    # -----------------------------------------------------
-    # RECONSTRUCTION PROGRESS
-    # -----------------------------------------------------
-
-    reconstruction_range = (
+    progress_range = (
         progress_end
         -
         progress_start
@@ -647,11 +665,11 @@ def process_side(
             +
 
             (
-                reconstruction_range
+                progress_range
                 *
                 relative_percent
                 /
-                100
+                100.0
             )
 
         )
@@ -672,10 +690,6 @@ def process_side(
         )
 
 
-    # -----------------------------------------------------
-    # RECONSTRUCTION
-    # -----------------------------------------------------
-
     raw_mesh = reconstruct(
 
         images_dir,
@@ -687,22 +701,20 @@ def process_side(
     )
 
 
+    raw_mesh = Path(
+        raw_mesh
+    )
+
+
     if (
-        not Path(
-            raw_mesh
-        )
-        .exists()
+        not raw_mesh.exists()
     ):
 
         raise RuntimeError(
             f"{side_title} reconstruction "
-            f"did not produce a raw mesh."
+            f"did not create a mesh."
         )
 
-
-    # -----------------------------------------------------
-    # CLEANUP
-    # -----------------------------------------------------
 
     set_progress(
 
@@ -710,9 +722,8 @@ def process_side(
 
         progress_end - 3,
 
-        f"Repairing "
-        f"{side_title.lower()} "
-        f"ear mesh",
+        f"Cleaning "
+        f"{side_title.lower()} mesh",
 
     )
 
@@ -730,10 +741,6 @@ def process_side(
 
     )
 
-
-    # -----------------------------------------------------
-    # UPLOAD
-    # -----------------------------------------------------
 
     set_progress(
 
@@ -765,12 +772,8 @@ def claim_scan(
     scan,
 ):
 
-    old_status = scan[
-        "status"
-    ]
-
-
     response = (
+
         supabase
         .table(
             "ear_scans"
@@ -813,9 +816,12 @@ def claim_scan(
         )
         .eq(
             "status",
-            old_status
+            scan[
+                "status"
+            ]
         )
         .execute()
+
     )
 
 
@@ -849,15 +855,13 @@ def process_scan(
     ]
 
 
-    if (
-        not claim_scan(
-            scan
-        )
+    if not claim_scan(
+        scan
     ):
 
         print(
-            "Job already claimed:",
-            scan_id
+            "Scan already claimed:",
+            scan_id,
         )
 
         return
@@ -865,36 +869,35 @@ def process_scan(
 
     print(
         "\n"
-        "############################################"
+        "=============================================="
     )
 
 
     print(
-        "HAMMER CRAFT EAR RECONSTRUCTION"
+        " HAMMER CRAFT EAR RECONSTRUCTION"
     )
 
 
     print(
-        "SCAN:",
+        "=============================================="
+    )
+
+
+    print(
+        "Scan:",
         scan_id
     )
 
 
     print(
-        "PROCESSOR:",
+        "Processor:",
         PROCESSOR_NAME
     )
 
 
     print(
-        "PLATFORM:",
+        "Platform:",
         PROCESSOR_PLATFORM
-    )
-
-
-    print(
-        "############################################"
-        "\n"
     )
 
 
@@ -920,10 +923,6 @@ def process_scan(
 
     try:
 
-        # -------------------------------------------------
-        # LEFT
-        # -------------------------------------------------
-
         left_path = process_side(
 
             scan,
@@ -936,10 +935,6 @@ def process_scan(
         )
 
 
-        # -------------------------------------------------
-        # RIGHT
-        # -------------------------------------------------
-
         right_path = process_side(
 
             scan,
@@ -951,10 +946,6 @@ def process_scan(
 
         )
 
-
-        # -------------------------------------------------
-        # COMPLETE
-        # -------------------------------------------------
 
         update_scan(
             scan_id,
@@ -1045,6 +1036,7 @@ def get_pending_scans():
 
 
     response = (
+
         supabase
         .table(
             "ear_scans"
@@ -1063,6 +1055,7 @@ def get_pending_scans():
             1
         )
         .execute()
+
     )
 
 
@@ -1073,14 +1066,13 @@ def get_pending_scans():
 
 
 # =========================================================
-# MAIN LOOP
+# MAIN
 # =========================================================
 
 def main():
 
     print(
-        "\n"
-        "Hammer Craft Local Reconstruction Processor"
+        "\nHammer Craft Local Reconstruction Processor"
     )
 
 
@@ -1093,12 +1085,6 @@ def main():
     print(
         "Platform:",
         PROCESSOR_PLATFORM
-    )
-
-
-    print(
-        "Supabase:",
-        SUPABASE_URL
     )
 
 
@@ -1127,7 +1113,7 @@ def main():
 
 
     print(
-        "Automatically process uploaded scans:",
+        "Automatically process uploaded:",
         AUTO_PROCESS_UPLOADED
     )
 
@@ -1148,9 +1134,7 @@ def main():
 
         try:
 
-            scans = (
-                get_pending_scans()
-            )
+            scans = get_pending_scans()
 
 
             if not scans:

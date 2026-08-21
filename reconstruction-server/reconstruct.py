@@ -19,7 +19,7 @@ from transformers import (
 
 
 # =========================================================
-# CONFIGURATION
+# CONFIG
 # =========================================================
 
 DEPTH_MODEL_NAME = os.getenv(
@@ -136,7 +136,7 @@ def accelerator_name():
         try:
 
             return (
-                "CUDA — "
+                "CUDA - "
                 +
                 torch.cuda.get_device_name(
                     0
@@ -150,9 +150,7 @@ def accelerator_name():
 
     if DEVICE.type == "mps":
 
-        return (
-            "MPS / Apple Metal"
-        )
+        return "MPS / Apple Metal"
 
 
     return "CPU"
@@ -165,19 +163,21 @@ def accelerator_name():
 def report(
     callback,
     percent,
-    text,
+    message,
 ):
 
-    accelerator = (
-        accelerator_name()
-    )
+    accelerator = accelerator_name()
 
 
     print(
-        f"[RECONSTRUCTION {percent}%] "
-        f"{text} "
+
+        f"[RECONSTRUCTION "
+        f"{percent}%] "
+        f"{message} "
         f"[{accelerator}]",
+
         flush=True,
+
     )
 
 
@@ -187,7 +187,7 @@ def report(
 
             callback(
                 percent,
-                text,
+                message,
                 accelerator,
             )
 
@@ -195,12 +195,12 @@ def report(
 
             callback(
                 percent,
-                text,
+                message,
             )
 
 
 # =========================================================
-# EXTERNAL COMMAND
+# COMMAND
 # =========================================================
 
 def run(
@@ -258,29 +258,26 @@ def run(
     output = []
 
 
-    assert process.stdout is not None
+    if process.stdout:
+
+        for line in process.stdout:
+
+            print(
+                line,
+                end="",
+                flush=True,
+            )
 
 
-    for line in process.stdout:
-
-        print(
-            line,
-            end="",
-            flush=True,
-        )
+            output.append(
+                line
+            )
 
 
-        output.append(
-            line
-        )
+    return_code = process.wait()
 
 
-    code = (
-        process.wait()
-    )
-
-
-    if code != 0:
+    if return_code != 0:
 
         text = "".join(
             output
@@ -290,20 +287,17 @@ def run(
         raise RuntimeError(
 
             f"External command failed "
-            f"with exit code "
-            f"{code}\n\n"
+            f"with code {return_code}\n\n"
 
-            f"COMMAND:\n"
             f"{' '.join(command)}\n\n"
 
-            f"OUTPUT:\n"
             f"{text[-12000:]}"
 
         )
 
 
 # =========================================================
-# FIND IMAGES
+# IMAGES
 # =========================================================
 
 def get_images(
@@ -344,13 +338,10 @@ def get_images(
 
 
 # =========================================================
-# COLMAP CUDA SUPPORT
+# COLMAP GPU
 # =========================================================
 
-def use_colmap_gpu():
-
-    # COLMAP SIFT can use CUDA on supported NVIDIA systems.
-    # Apple MPS is not a COLMAP CUDA device.
+def use_colmap_cuda():
 
     return (
         DEVICE.type ==
@@ -362,8 +353,8 @@ def use_colmap_gpu():
 # CONVERT COLMAP MODEL
 # =========================================================
 
-def convert_to_text(
-    model,
+def convert_model_to_text(
+    model_path,
     destination,
 ):
 
@@ -391,7 +382,7 @@ def convert_to_text(
         "model_converter",
 
         "--input_path",
-        model,
+        model_path,
 
         "--output_path",
         destination,
@@ -406,97 +397,510 @@ def convert_to_text(
 
 
 # =========================================================
-# READ REGISTERED IMAGE NAMES
+# QUATERNION
 # =========================================================
 
-def read_registered_names(
-    images_txt,
+def quaternion_to_rotation(
+    qw,
+    qx,
+    qy,
+    qz,
 ):
 
-    names = []
+    return np.array(
+        [
+
+            [
+
+                1 - 2 * (
+                    qy * qy +
+                    qz * qz
+                ),
+
+                2 * (
+                    qx * qy -
+                    qz * qw
+                ),
+
+                2 * (
+                    qx * qz +
+                    qy * qw
+                ),
+
+            ],
+
+            [
+
+                2 * (
+                    qx * qy +
+                    qz * qw
+                ),
+
+                1 - 2 * (
+                    qx * qx +
+                    qz * qz
+                ),
+
+                2 * (
+                    qy * qz -
+                    qx * qw
+                ),
+
+            ],
+
+            [
+
+                2 * (
+                    qx * qz -
+                    qy * qw
+                ),
+
+                2 * (
+                    qy * qz +
+                    qx * qw
+                ),
+
+                1 - 2 * (
+                    qx * qx +
+                    qy * qy
+                ),
+
+            ],
+
+        ],
+        dtype=np.float64,
+    )
+
+
+# =========================================================
+# PARSE CAMERAS
+# =========================================================
+
+def parse_cameras(
+    path,
+):
+
+    cameras = {}
 
 
     with open(
-        images_txt,
+        path,
         "r",
         encoding="utf-8",
     ) as file:
 
-        lines = file.readlines()
+        for line in file:
+
+            line = line.strip()
 
 
-    data_lines = [
-
-        line.rstrip(
-            "\n"
-        )
-
-        for line in lines
-
-        if (
-            line.strip()
-            and
-            not line.startswith(
-                "#"
-            )
-        )
-
-    ]
-
-
-    index = 0
-
-
-    while (
-        index <
-        len(
-            data_lines
-        )
-    ):
-
-        header = (
-            data_lines[
-                index
-            ]
-            .strip()
-        )
-
-
-        index += 1
-
-
-        pieces = header.split()
-
-
-        if (
-            len(
-                pieces
-            )
-            >=
-            10
-        ):
-
-            names.append(
-                " ".join(
-                    pieces[
-                        9:
-                    ]
+            if (
+                not line
+                or
+                line.startswith(
+                    "#"
                 )
+            ):
+
+                continue
+
+
+            parts = line.split()
+
+
+            camera_id = int(
+                parts[0]
             )
 
 
-        # observations line
-        if (
-            index <
-            len(
-                data_lines
+            model = parts[1]
+
+
+            width = int(
+                parts[2]
             )
-        ):
-
-            index += 1
 
 
-    return names
+            height = int(
+                parts[3]
+            )
+
+
+            params = [
+                float(
+                    value
+                )
+                for value
+                in parts[4:]
+            ]
+
+
+            if model in (
+
+                "SIMPLE_PINHOLE",
+                "SIMPLE_RADIAL",
+                "RADIAL",
+
+            ):
+
+                fx = params[0]
+                fy = params[0]
+
+                cx = params[1]
+                cy = params[2]
+
+
+            elif model in (
+
+                "PINHOLE",
+                "OPENCV",
+                "OPENCV_FISHEYE",
+                "FULL_OPENCV",
+
+            ):
+
+                fx = params[0]
+                fy = params[1]
+
+                cx = params[2]
+                cy = params[3]
+
+
+            else:
+
+                raise RuntimeError(
+                    f"Unsupported camera model: "
+                    f"{model}"
+                )
+
+
+            cameras[
+                camera_id
+            ] = {
+
+                "width":
+                    width,
+
+                "height":
+                    height,
+
+                "fx":
+                    fx,
+
+                "fy":
+                    fy,
+
+                "cx":
+                    cx,
+
+                "cy":
+                    cy,
+
+            }
+
+
+    return cameras
+
+
+# =========================================================
+# PARSE POINTS
+# =========================================================
+
+def parse_points3d(
+    path,
+):
+
+    points = {}
+
+
+    with open(
+        path,
+        "r",
+        encoding="utf-8",
+    ) as file:
+
+        for line in file:
+
+            line = line.strip()
+
+
+            if (
+                not line
+                or
+                line.startswith(
+                    "#"
+                )
+            ):
+
+                continue
+
+
+            parts = line.split()
+
+
+            if len(
+                parts
+            ) < 4:
+
+                continue
+
+
+            point_id = int(
+                parts[0]
+            )
+
+
+            points[
+                point_id
+            ] = np.array(
+                [
+
+                    float(
+                        parts[1]
+                    ),
+
+                    float(
+                        parts[2]
+                    ),
+
+                    float(
+                        parts[3]
+                    ),
+
+                ],
+                dtype=np.float64,
+            )
+
+
+    return points
+
+
+# =========================================================
+# PARSE IMAGES
+# =========================================================
+
+def parse_images(
+    path,
+):
+
+    images = {}
+
+
+    with open(
+        path,
+        "r",
+        encoding="utf-8",
+    ) as file:
+
+        iterator = iter(
+            file
+        )
+
+
+        for line in iterator:
+
+            if line.startswith(
+                "#"
+            ):
+
+                continue
+
+
+            header = line.strip()
+
+
+            if not header:
+
+                continue
+
+
+            parts = header.split()
+
+
+            if len(
+                parts
+            ) < 10:
+
+                continue
+
+
+            try:
+
+                image_id = int(
+                    parts[0]
+                )
+
+            except ValueError:
+
+                continue
+
+
+            qw = float(
+                parts[1]
+            )
+
+            qx = float(
+                parts[2]
+            )
+
+            qy = float(
+                parts[3]
+            )
+
+            qz = float(
+                parts[4]
+            )
+
+
+            tx = float(
+                parts[5]
+            )
+
+            ty = float(
+                parts[6]
+            )
+
+            tz = float(
+                parts[7]
+            )
+
+
+            camera_id = int(
+                parts[8]
+            )
+
+
+            name = " ".join(
+                parts[9:]
+            )
+
+
+            try:
+
+                observation_line = next(
+                    iterator
+                ).strip()
+
+            except StopIteration:
+
+                observation_line = ""
+
+
+            observations = []
+
+
+            values = (
+                observation_line.split()
+                if observation_line
+                else []
+            )
+
+
+            for position in range(
+
+                0,
+
+                len(
+                    values
+                )
+                -
+                2,
+
+                3,
+
+            ):
+
+                try:
+
+                    x = float(
+                        values[
+                            position
+                        ]
+                    )
+
+
+                    y = float(
+                        values[
+                            position + 1
+                        ]
+                    )
+
+
+                    point_id = int(
+                        values[
+                            position + 2
+                        ]
+                    )
+
+
+                except (
+                    ValueError,
+                    IndexError,
+                ):
+
+                    continue
+
+
+                if point_id < 0:
+
+                    continue
+
+
+                observations.append(
+                    (
+                        x,
+                        y,
+                        point_id,
+                    )
+                )
+
+
+            rotation = quaternion_to_rotation(
+
+                qw,
+                qx,
+                qy,
+                qz,
+
+            )
+
+
+            translation = np.array(
+
+                [
+                    tx,
+                    ty,
+                    tz,
+                ],
+
+                dtype=np.float64,
+
+            )
+
+
+            images[
+                name
+            ] = {
+
+                "id":
+                    image_id,
+
+                "camera_id":
+                    camera_id,
+
+                "rotation":
+                    rotation,
+
+                "translation":
+                    translation,
+
+                "observations":
+                    observations,
+
+            }
+
+
+    return images
 
 
 # =========================================================
@@ -505,34 +909,29 @@ def read_registered_names(
 
 def run_colmap_attempt(
     image_dir,
-    workspace,
+    attempt_dir,
     matcher,
     overlap,
     callback,
 ):
 
-    workspace = Path(
-        workspace
+    attempt_dir.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
 
     database = (
-        workspace
+        attempt_dir
         /
         "database.db"
     )
 
 
     sparse = (
-        workspace
+        attempt_dir
         /
         "sparse"
-    )
-
-
-    workspace.mkdir(
-        parents=True,
-        exist_ok=True,
     )
 
 
@@ -556,7 +955,7 @@ def run_colmap_attempt(
 
     gpu = (
         "1"
-        if use_colmap_gpu()
+        if use_colmap_cuda()
         else "0"
     )
 
@@ -590,14 +989,8 @@ def run_colmap_attempt(
 
     report(
         callback,
-        14,
-        (
-            "Sequential image matching"
-            if matcher ==
-            "sequential"
-            else
-            "Exhaustive image matching"
-        ),
+        15,
+        "Matching photographs",
     )
 
 
@@ -669,9 +1062,7 @@ def run_colmap_attempt(
     )
 
 
-    if (
-        not model.exists()
-    ):
+    if not model.exists():
 
         return None
 
@@ -680,7 +1071,7 @@ def run_colmap_attempt(
 
 
 # =========================================================
-# STABLE CAMERA SOLUTION
+# CAMERA SOLUTION WITH RETRIES
 # =========================================================
 
 def solve_cameras(
@@ -694,17 +1085,6 @@ def solve_cameras(
             image_dir
         )
     )
-
-
-    if (
-        input_count <
-        20
-    ):
-
-        raise RuntimeError(
-            "Too few photographs "
-            "for reliable camera reconstruction."
-        )
 
 
     attempts = [
@@ -727,11 +1107,7 @@ def solve_cameras(
     ]
 
 
-    best_model = None
-
-    best_registered = 0
-
-    best_ratio = 0.0
+    best = None
 
 
     for (
@@ -746,41 +1122,19 @@ def solve_cameras(
     ):
 
         print(
-            "\n"
-            "===================================="
-        )
-
-
-        print(
-            "COLMAP ATTEMPT",
-            attempt_number
-        )
-
-
-        print(
-            "Matcher:",
-            matcher
-        )
-
-
-        if matcher == "sequential":
-
-            print(
-                "Overlap:",
-                overlap
-            )
-
-
-        print(
-            "===================================="
+            "\nCOLMAP ATTEMPT",
+            attempt_number,
+            matcher,
         )
 
 
         attempt_dir = (
+
             workspace
             /
             f"colmap_attempt_"
             f"{attempt_number}"
+
         )
 
 
@@ -812,29 +1166,25 @@ def solve_cameras(
             continue
 
 
-        if not model:
+        if model is None:
 
             continue
 
 
-        text_dir = (
-            attempt_dir
-            /
-            "model_text"
-        )
-
-
-        convert_to_text(
+        text_model = convert_model_to_text(
 
             model,
-            text_dir,
+
+            attempt_dir
+            /
+            "text_model",
 
         )
 
 
-        names = read_registered_names(
+        infos = parse_images(
 
-            text_dir
+            text_model
             /
             "images.txt"
 
@@ -842,7 +1192,7 @@ def solve_cameras(
 
 
         registered = len(
-            names
+            infos
         )
 
 
@@ -850,7 +1200,10 @@ def solve_cameras(
 
             registered
             /
-            input_count
+            max(
+                input_count,
+                1,
+            )
 
         )
 
@@ -859,31 +1212,24 @@ def solve_cameras(
             "Registered:",
             registered,
             "/",
-            input_count
-        )
-
-
-        print(
-            "Registration ratio:",
-            f"{ratio:.1%}"
+            input_count,
+            f"({ratio:.1%})"
         )
 
 
         if (
+            best is None
+            or
             registered >
-            best_registered
+            best[
+                1
+            ]
         ):
 
-            best_registered = (
-                registered
-            )
-
-            best_model = (
-                model
-            )
-
-            best_ratio = (
-                ratio
+            best = (
+                model,
+                registered,
+                ratio,
             )
 
 
@@ -892,18 +1238,6 @@ def solve_cameras(
             MIN_REGISTRATION_RATIO
         ):
 
-            report(
-                callback,
-                35,
-                (
-                    f"Camera solution: "
-                    f"{registered}/"
-                    f"{input_count} "
-                    f"images registered"
-                ),
-            )
-
-
             return (
                 model,
                 registered,
@@ -911,38 +1245,42 @@ def solve_cameras(
             )
 
 
-    if (
-        best_model is None
-    ):
+    if best is None:
 
         raise RuntimeError(
             "COLMAP could not create "
-            "a camera reconstruction."
+            "a camera solution."
         )
 
 
+    (
+        model,
+        registered,
+        ratio,
+    ) = best
+
+
     if (
-        best_ratio <
+        ratio <
         MIN_REGISTRATION_RATIO
     ):
 
         raise RuntimeError(
 
             f"Camera registration too low. "
-            f"{best_registered}/"
-            f"{input_count} images registered "
-            f"({best_ratio:.0%}). "
-            f"Required: "
-            f"{MIN_REGISTRATION_RATIO:.0%}. "
-            f"The scan needs better overlap "
-            f"or coverage."
+            f"{registered}/{input_count} "
+            f"images registered "
+            f"({ratio:.0%}). "
+
+            f"Required at least "
+            f"{MIN_REGISTRATION_RATIO:.0%}."
 
         )
 
 
     return (
-        best_model,
-        best_registered,
+        model,
+        registered,
         input_count,
     )
 
@@ -953,16 +1291,23 @@ def solve_cameras(
 
 def undistort(
     image_dir,
-    model,
+    sparse_model,
     workspace,
     callback,
 ):
 
-    root = (
+    output = (
         workspace
         /
         "undistorted"
     )
+
+
+    if output.exists():
+
+        shutil.rmtree(
+            output
+        )
 
 
     report(
@@ -981,10 +1326,10 @@ def undistort(
         image_dir,
 
         "--input_path",
-        model,
+        sparse_model,
 
         "--output_path",
-        root,
+        output,
 
         "--output_type",
         "COLMAP",
@@ -997,594 +1342,42 @@ def undistort(
     ])
 
 
-    image_path = (
-        root
+    images = (
+        output
         /
         "images"
     )
 
 
-    sparse_path = (
-        root
+    sparse = (
+        output
         /
         "sparse"
     )
 
 
-    if (
-        not image_path.exists()
-    ):
+    if not images.exists():
 
         raise RuntimeError(
-            "COLMAP did not create "
-            "undistorted images."
+            "Undistorted images missing."
         )
 
 
-    if (
-        not sparse_path.exists()
-    ):
+    if not sparse.exists():
 
         raise RuntimeError(
-            "COLMAP did not create "
-            "the undistorted sparse model."
+            "Undistorted sparse model missing."
         )
 
 
     return (
-        image_path,
-        sparse_path,
+        images,
+        sparse,
     )
 
 
 # =========================================================
-# QUATERNION
-# =========================================================
-
-def quaternion_to_rotation(
-    qw,
-    qx,
-    qy,
-    qz,
-):
-
-    return np.array(
-        [
-            [
-                1 - 2 * (
-                    qy * qy +
-                    qz * qz
-                ),
-
-                2 * (
-                    qx * qy -
-                    qz * qw
-                ),
-
-                2 * (
-                    qx * qz +
-                    qy * qw
-                ),
-            ],
-
-            [
-                2 * (
-                    qx * qy +
-                    qz * qw
-                ),
-
-                1 - 2 * (
-                    qx * qx +
-                    qz * qz
-                ),
-
-                2 * (
-                    qy * qz -
-                    qx * qw
-                ),
-            ],
-
-            [
-                2 * (
-                    qx * qz -
-                    qy * qw
-                ),
-
-                2 * (
-                    qy * qz +
-                    qx * qw
-                ),
-
-                1 - 2 * (
-                    qx * qx +
-                    qy * qy
-                ),
-            ],
-        ],
-        dtype=np.float64,
-    )
-
-
-# =========================================================
-# PARSE CAMERAS
-# =========================================================
-
-def parse_cameras(
-    path,
-):
-
-    cameras = {}
-
-
-    with open(
-        path,
-        "r",
-        encoding="utf-8",
-    ) as file:
-
-        for line in file:
-
-            line = line.strip()
-
-
-            if (
-                not line
-                or
-                line.startswith(
-                    "#"
-                )
-            ):
-
-                continue
-
-
-            parts = line.split()
-
-
-            camera_id = int(
-                parts[0]
-            )
-
-
-            model = parts[1]
-
-
-            width = int(
-                parts[2]
-            )
-
-
-            height = int(
-                parts[3]
-            )
-
-
-            parameters = [
-
-                float(
-                    value
-                )
-
-                for value
-                in parts[4:]
-
-            ]
-
-
-            if model in (
-
-                "SIMPLE_PINHOLE",
-                "SIMPLE_RADIAL",
-                "RADIAL",
-
-            ):
-
-                focal = parameters[0]
-
-                fx = focal
-                fy = focal
-
-                cx = parameters[1]
-                cy = parameters[2]
-
-
-            elif model in (
-
-                "PINHOLE",
-                "OPENCV",
-                "OPENCV_FISHEYE",
-                "FULL_OPENCV",
-
-            ):
-
-                fx = parameters[0]
-                fy = parameters[1]
-
-                cx = parameters[2]
-                cy = parameters[3]
-
-
-            else:
-
-                raise RuntimeError(
-                    f"Unsupported COLMAP "
-                    f"camera model: "
-                    f"{model}"
-                )
-
-
-            cameras[
-                camera_id
-            ] = {
-
-                "id":
-                    camera_id,
-
-                "model":
-                    model,
-
-                "width":
-                    width,
-
-                "height":
-                    height,
-
-                "fx":
-                    fx,
-
-                "fy":
-                    fy,
-
-                "cx":
-                    cx,
-
-                "cy":
-                    cy,
-
-            }
-
-
-    return cameras
-
-
-# =========================================================
-# PARSE POINTS
-# =========================================================
-
-def parse_points3d(
-    path,
-):
-
-    points = {}
-
-
-    with open(
-        path,
-        "r",
-        encoding="utf-8",
-    ) as file:
-
-        for line in file:
-
-            line = line.strip()
-
-
-            if (
-                not line
-                or
-                line.startswith(
-                    "#"
-                )
-            ):
-
-                continue
-
-
-            parts = line.split()
-
-
-            if (
-                len(
-                    parts
-                )
-                <
-                4
-            ):
-
-                continue
-
-
-            point_id = int(
-                parts[0]
-            )
-
-
-            points[
-                point_id
-            ] = np.array(
-                [
-
-                    float(
-                        parts[1]
-                    ),
-
-                    float(
-                        parts[2]
-                    ),
-
-                    float(
-                        parts[3]
-                    ),
-
-                ],
-                dtype=np.float64,
-            )
-
-
-    return points
-
-
-# =========================================================
-# PARSE IMAGES
-# =========================================================
-
-def parse_images(
-    path,
-):
-
-    images = {}
-
-
-    with open(
-        path,
-        "r",
-        encoding="utf-8",
-    ) as file:
-
-        raw_lines = file.readlines()
-
-
-    lines = [
-
-        line.rstrip(
-            "\n"
-        )
-
-        for line
-        in raw_lines
-
-        if not line.startswith(
-            "#"
-        )
-
-    ]
-
-
-    index = 0
-
-
-    while (
-        index <
-        len(
-            lines
-        )
-    ):
-
-        header = (
-            lines[
-                index
-            ]
-            .strip()
-        )
-
-
-        index += 1
-
-
-        if not header:
-
-            continue
-
-
-        parts = header.split()
-
-
-        if (
-            len(
-                parts
-            )
-            <
-            10
-        ):
-
-            continue
-
-
-        try:
-
-            image_id = int(
-                parts[0]
-            )
-
-        except ValueError:
-
-            continue
-
-
-        qw = float(
-            parts[1]
-        )
-
-        qx = float(
-            parts[2]
-        )
-
-        qy = float(
-            parts[3]
-        )
-
-        qz = float(
-            parts[4]
-        )
-
-
-        tx = float(
-            parts[5]
-        )
-
-        ty = float(
-            parts[6]
-        )
-
-        tz = float(
-            parts[7]
-        )
-
-
-        camera_id = int(
-            parts[8]
-        )
-
-
-        name = " ".join(
-            parts[
-                9:
-            ]
-        )
-
-
-        rotation = (
-            quaternion_to_rotation(
-                qw,
-                qx,
-                qy,
-                qz,
-            )
-        )
-
-
-        translation = np.array(
-            [
-                tx,
-                ty,
-                tz,
-            ],
-            dtype=np.float64,
-        )
-
-
-        observations = []
-
-
-        if (
-            index <
-            len(
-                lines
-            )
-        ):
-
-            observation_line = (
-                lines[
-                    index
-                ]
-                .strip()
-            )
-
-
-            index += 1
-
-
-            values = (
-                observation_line.split()
-            )
-
-
-            for position in range(
-
-                0,
-
-                len(
-                    values
-                )
-                -
-                2,
-
-                3,
-
-            ):
-
-                try:
-
-                    x = float(
-                        values[
-                            position
-                        ]
-                    )
-
-
-                    y = float(
-                        values[
-                            position + 1
-                        ]
-                    )
-
-
-                    point_id = int(
-                        values[
-                            position + 2
-                        ]
-                    )
-
-
-                except (
-                    ValueError,
-                    IndexError,
-                ):
-
-                    continue
-
-
-                if point_id < 0:
-
-                    continue
-
-
-                observations.append(
-                    (
-                        x,
-                        y,
-                        point_id,
-                    )
-                )
-
-
-        images[
-            name
-        ] = {
-
-            "id":
-                image_id,
-
-            "camera_id":
-                camera_id,
-
-            "rotation":
-                rotation,
-
-            "translation":
-                translation,
-
-            "observations":
-                observations,
-
-        }
-
-
-    return images
-
-
-# =========================================================
-# VIEW SELECTION
+# SELECT DEPTH VIEWS
 # =========================================================
 
 def select_distributed_views(
@@ -1640,7 +1433,7 @@ def select_distributed_views(
     )
 
 
-    selected = [
+    return [
 
         available[
             index
@@ -1652,15 +1445,8 @@ def select_distributed_views(
     ]
 
 
-    return list(
-        dict.fromkeys(
-            selected
-        )
-    )
-
-
 # =========================================================
-# LOAD DEPTH MODEL
+# DEPTH MODEL
 # =========================================================
 
 def load_depth_model(
@@ -1705,7 +1491,7 @@ def load_depth_model(
 
 
 # =========================================================
-# DEPTH PREDICTION
+# PREDICT DEPTH
 # =========================================================
 
 @torch.inference_mode()
@@ -1717,8 +1503,7 @@ def predict_depth(
 
     inputs = processor(
 
-        images=
-            image,
+        images=image,
 
         return_tensors=
             "pt",
@@ -1726,7 +1511,7 @@ def predict_depth(
     )
 
 
-    converted = {}
+    model_inputs = {}
 
 
     for (
@@ -1738,7 +1523,7 @@ def predict_depth(
             value
         ):
 
-            converted[
+            model_inputs[
                 key
             ] = value.to(
                 DEVICE
@@ -1746,23 +1531,24 @@ def predict_depth(
 
         else:
 
-            converted[
+            model_inputs[
                 key
             ] = value
 
 
-    output = model(
-        **converted
+    result = model(
+        **model_inputs
     )
 
 
     depth = (
-        output
+        result
         .predicted_depth
     )
 
 
     depth = (
+
         torch.nn.functional
         .interpolate(
 
@@ -1771,10 +1557,8 @@ def predict_depth(
             ),
 
             size=(
-
                 image.height,
                 image.width,
-
             ),
 
             mode=
@@ -1790,6 +1574,7 @@ def predict_depth(
         .squeeze(
             0
         )
+
     )
 
 
@@ -1804,7 +1589,7 @@ def predict_depth(
 
 
 # =========================================================
-# ROBUST LINEAR FIT
+# ROBUST SCALE FIT
 # =========================================================
 
 def robust_linear_fit(
@@ -1879,7 +1664,7 @@ def robust_linear_fit(
 
 
     for _ in range(
-        6
+        5
     ):
 
         if (
@@ -1891,8 +1676,9 @@ def robust_linear_fit(
             return None
 
 
-        design = np.column_stack(
+        matrix = np.column_stack(
             [
+
                 x[
                     mask
                 ],
@@ -1900,6 +1686,7 @@ def robust_linear_fit(
                 np.ones(
                     mask.sum()
                 ),
+
             ]
         )
 
@@ -1908,7 +1695,7 @@ def robust_linear_fit(
             np.linalg
             .lstsq(
 
-                design,
+                matrix,
 
                 y[
                     mask
@@ -1920,17 +1707,21 @@ def robust_linear_fit(
         )
 
 
-        prediction = (
+        predicted = (
+
             coefficients[0]
             *
             x
+
             +
+
             coefficients[1]
+
         )
 
 
         residual = np.abs(
-            prediction
+            predicted
             -
             y
         )
@@ -1947,11 +1738,13 @@ def robust_linear_fit(
 
 
         mad = np.median(
+
             np.abs(
                 active
                 -
                 median
             )
+
         )
 
 
@@ -1972,17 +1765,14 @@ def robust_linear_fit(
 
 
         new_mask = (
-            residual
-            <=
+            residual <=
             threshold
         )
 
 
-        if (
-            np.array_equal(
-                new_mask,
-                mask,
-            )
+        if np.array_equal(
+            mask,
+            new_mask,
         ):
 
             break
@@ -1991,25 +1781,27 @@ def robust_linear_fit(
         mask = new_mask
 
 
-    if (
-        coefficients is None
-    ):
+    if coefficients is None:
 
         return None
 
 
     prediction = (
+
         coefficients[0]
         *
         x[
             mask
         ]
+
         +
+
         coefficients[1]
+
     )
 
 
-    relative_error = np.median(
+    error = np.median(
 
         np.abs(
 
@@ -2054,19 +1846,14 @@ def robust_linear_fit(
 
         "error":
             float(
-                relative_error
-            ),
-
-        "count":
-            int(
-                mask.sum()
+                error
             ),
 
     }
 
 
 # =========================================================
-# ALIGN DEPTH WITH COLMAP
+# ALIGN NEURAL DEPTH
 # =========================================================
 
 def align_depth_to_sparse(
@@ -2076,9 +1863,9 @@ def align_depth_to_sparse(
     points3d,
 ):
 
-    predicted_values = []
+    neural_values = []
 
-    true_depth_values = []
+    colmap_values = []
 
 
     height, width = (
@@ -2086,7 +1873,7 @@ def align_depth_to_sparse(
     )
 
 
-    scale_x = (
+    sx = (
         width
         /
         camera[
@@ -2095,7 +1882,7 @@ def align_depth_to_sparse(
     )
 
 
-    scale_y = (
+    sy = (
         height
         /
         camera[
@@ -2126,17 +1913,12 @@ def align_depth_to_sparse(
         "observations"
     ]:
 
-        world_point = (
-            points3d.get(
-                point_id
-            )
+        world_point = points3d.get(
+            point_id
         )
 
 
-        if (
-            world_point
-            is None
-        ):
+        if world_point is None:
 
             continue
 
@@ -2154,58 +1936,43 @@ def align_depth_to_sparse(
         )
 
 
-        true_depth = float(
+        real_depth = float(
             camera_point[
                 2
             ]
         )
 
 
-        if (
-            true_depth <=
-            0
-        ):
+        if real_depth <= 0:
 
             continue
 
 
         px = int(
             round(
-                x
-                *
-                scale_x
+                x *
+                sx
             )
         )
 
 
         py = int(
             round(
-                y
-                *
-                scale_y
+                y *
+                sy
             )
         )
 
 
         if (
 
-            px <
-            0
-
+            px < 0
             or
-
-            py <
-            0
-
+            py < 0
             or
-
-            px >=
-            width
-
+            px >= width
             or
-
-            py >=
-            height
+            py >= height
 
         ):
 
@@ -2220,28 +1987,26 @@ def align_depth_to_sparse(
         )
 
 
-        if (
-            not math.isfinite(
-                predicted
-            )
+        if not math.isfinite(
+            predicted
         ):
 
             continue
 
 
-        predicted_values.append(
+        neural_values.append(
             predicted
         )
 
 
-        true_depth_values.append(
-            true_depth
+        colmap_values.append(
+            real_depth
         )
 
 
     if (
         len(
-            predicted_values
+            neural_values
         )
         <
         MIN_SPARSE_ALIGNMENT_POINTS
@@ -2250,44 +2015,46 @@ def align_depth_to_sparse(
         return None
 
 
-    predicted_values = np.asarray(
-        predicted_values,
+    neural_values = np.asarray(
+        neural_values,
         dtype=np.float64,
     )
 
 
-    true_depth_values = np.asarray(
-        true_depth_values,
+    colmap_values = np.asarray(
+        colmap_values,
         dtype=np.float64,
     )
 
 
-    direct_fit = robust_linear_fit(
+    direct = robust_linear_fit(
 
-        predicted_values,
-        true_depth_values,
+        neural_values,
+
+        colmap_values,
 
     )
 
 
-    inverse_values = (
+    inverse_input = (
 
         1.0
 
         /
 
         np.maximum(
-            predicted_values,
+            neural_values,
             1e-8,
         )
 
     )
 
 
-    inverse_fit = robust_linear_fit(
+    inverse = robust_linear_fit(
 
-        inverse_values,
-        true_depth_values,
+        inverse_input,
+
+        colmap_values,
 
     )
 
@@ -2295,32 +2062,28 @@ def align_depth_to_sparse(
     candidates = []
 
 
-    if direct_fit:
+    if direct:
 
         candidates.append(
             (
-                direct_fit[
+                direct[
                     "error"
                 ],
-
                 "direct",
-
-                direct_fit,
+                direct,
             )
         )
 
 
-    if inverse_fit:
+    if inverse:
 
         candidates.append(
             (
-                inverse_fit[
+                inverse[
                     "error"
                 ],
-
                 "inverse",
-
-                inverse_fit,
+                inverse,
             )
         )
 
@@ -2414,7 +2177,7 @@ def align_depth_to_sparse(
 
 
 # =========================================================
-# BACKPROJECT
+# DEPTH TO WORLD
 # =========================================================
 
 def depth_to_world_points(
@@ -2430,8 +2193,7 @@ def depth_to_world_points(
 
 
     sx = (
-        width
-        /
+        width /
         camera[
             "width"
         ]
@@ -2439,8 +2201,7 @@ def depth_to_world_points(
 
 
     sy = (
-        height
-        /
+        height /
         camera[
             "height"
         ]
@@ -2489,10 +2250,7 @@ def depth_to_world_points(
     ]
 
 
-    if (
-        valid_depth.size ==
-        0
-    ):
+    if valid_depth.size == 0:
 
         return (
             np.empty(
@@ -2594,26 +2352,34 @@ def depth_to_world_points(
 
 
     x = (
+
         (
             u -
             cx
         )
+
         /
         fx
+
         *
         z
+
     )
 
 
     y = (
+
         (
             v -
             cy
         )
+
         /
         fy
+
         *
         z
+
     )
 
 
@@ -2658,10 +2424,13 @@ def depth_to_world_points(
     rgb = (
 
         np.asarray(
+
             image.convert(
                 "RGB"
             ),
+
             dtype=np.float32,
+
         )
 
         /
@@ -2688,7 +2457,7 @@ def depth_to_world_points(
 
 
 # =========================================================
-# BUILD MULTI-VIEW CLOUD
+# MULTIVIEW CLOUD
 # =========================================================
 
 def build_point_cloud(
@@ -2704,21 +2473,14 @@ def build_point_cloud(
     selected = select_distributed_views(
 
         image_infos,
+
         image_dir,
 
     )
 
 
     print(
-        "Registered views available:",
-        len(
-            image_infos
-        )
-    )
-
-
-    print(
-        "Neural depth views selected:",
+        "Neural depth views:",
         len(
             selected
         )
@@ -2741,7 +2503,7 @@ def build_point_cloud(
         start=1,
     ):
 
-        progress = (
+        progress = int(
 
             50
 
@@ -2767,9 +2529,7 @@ def build_point_cloud(
 
             callback,
 
-            int(
-                progress
-            ),
+            progress,
 
             (
                 f"Neural depth "
@@ -2781,7 +2541,9 @@ def build_point_cloud(
 
 
         image_path = (
-            image_dir
+            Path(
+                image_dir
+            )
             /
             name
         )
@@ -2789,37 +2551,33 @@ def build_point_cloud(
 
         try:
 
-            image = (
-                Image
-                .open(
-                    image_path
-                )
-                .convert(
+            with Image.open(
+                image_path
+            ) as source:
+
+                image = source.convert(
                     "RGB"
                 )
-            )
 
 
-            info = (
-                image_infos[
-                    name
+            info = image_infos[
+                name
+            ]
+
+
+            camera = cameras[
+                info[
+                    "camera_id"
                 ]
-            )
+            ]
 
 
-            camera = (
-                cameras[
-                    info[
-                        "camera_id"
-                    ]
-                ]
-            )
-
-
-            relative_depth = predict_depth(
+            neural_depth = predict_depth(
 
                 image,
+
                 processor,
+
                 model,
 
             )
@@ -2827,23 +2585,23 @@ def build_point_cloud(
 
             metric_depth = align_depth_to_sparse(
 
-                relative_depth,
+                neural_depth,
+
                 info,
+
                 camera,
+
                 points3d,
 
             )
 
 
-            if (
-                metric_depth
-                is None
-            ):
+            if metric_depth is None:
 
                 print(
-                    "Skipping:",
+                    "Skipping",
                     name,
-                    "— insufficient sparse alignment."
+                    "- insufficient sparse alignment."
                 )
 
                 continue
@@ -2855,26 +2613,19 @@ def build_point_cloud(
             ) = depth_to_world_points(
 
                 metric_depth,
+
                 image,
+
                 info,
+
                 camera,
 
             )
 
 
-            if (
-                len(
-                    points
-                )
-                <
-                100
-            ):
-
-                print(
-                    "Skipping:",
-                    name,
-                    "— insufficient depth points."
-                )
+            if len(
+                points
+            ) < 100:
 
                 continue
 
@@ -2905,10 +2656,7 @@ def build_point_cloud(
             )
 
 
-        if (
-            DEVICE.type ==
-            "mps"
-        ):
+        if DEVICE.type == "mps":
 
             try:
 
@@ -2928,7 +2676,7 @@ def build_point_cloud(
                 selected
             )
             *
-            0.45
+            0.40
         ),
 
     )
@@ -2941,8 +2689,7 @@ def build_point_cloud(
 
         raise RuntimeError(
 
-            f"Too few views produced usable "
-            f"depth geometry. "
+            f"Too few usable depth views. "
             f"{valid_views}/"
             f"{len(selected)} valid. "
             f"Required at least "
@@ -2963,10 +2710,7 @@ def build_point_cloud(
     )
 
 
-    cloud = (
-        o3d.geometry
-        .PointCloud()
-    )
+    cloud = o3d.geometry.PointCloud()
 
 
     cloud.points = (
@@ -2986,13 +2730,13 @@ def build_point_cloud(
 
 
     print(
-        "Valid neural views:",
+        "Valid depth views:",
         valid_views
     )
 
 
     print(
-        "Raw fused points:",
+        "Raw points:",
         len(
             cloud.points
         )
@@ -3003,7 +2747,7 @@ def build_point_cloud(
 
 
 # =========================================================
-# CLEAN POINT CLOUD
+# CLEAN CLOUD
 # =========================================================
 
 def clean_point_cloud(
@@ -3036,12 +2780,11 @@ def clean_point_cloud(
             diagonal
         )
         or
-        diagonal <=
-        0
+        diagonal <= 0
     ):
 
         raise RuntimeError(
-            "Point cloud has invalid scale."
+            "Invalid point-cloud size."
         )
 
 
@@ -3056,19 +2799,8 @@ def clean_point_cloud(
     )
 
 
-    cloud = (
-        cloud
-        .voxel_down_sample(
-            voxel_size
-        )
-    )
-
-
-    print(
-        "After voxel downsample:",
-        len(
-            cloud.points
-        )
+    cloud = cloud.voxel_down_sample(
+        voxel_size
     )
 
 
@@ -3103,8 +2835,8 @@ def clean_point_cloud(
     ):
 
         raise RuntimeError(
-            "Point-cloud cleanup left "
-            "too little geometry."
+            "Too few points remain "
+            "after cleanup."
         )
 
 
@@ -3141,14 +2873,11 @@ def clean_point_cloud(
         )
 
 
-    return (
-        cloud,
-        voxel_size,
-    )
+    return cloud
 
 
 # =========================================================
-# GENERATE MESH
+# MESH
 # =========================================================
 
 def point_cloud_to_mesh(
@@ -3160,7 +2889,7 @@ def point_cloud_to_mesh(
     report(
         callback,
         90,
-        "Generating ear surface mesh",
+        "Generating surface mesh",
     )
 
 
@@ -3186,10 +2915,7 @@ def point_cloud_to_mesh(
     )
 
 
-    if (
-        densities.size >
-        0
-    ):
+    if densities.size:
 
         threshold = np.quantile(
 
@@ -3201,15 +2927,10 @@ def point_cloud_to_mesh(
 
 
         mesh.remove_vertices_by_mask(
-
-            densities
-            <
+            densities <
             threshold
-
         )
 
-
-    # Restrict Poisson surface to observed region.
 
     bbox = (
         cloud
@@ -3251,8 +2972,7 @@ def point_cloud_to_mesh(
     ):
 
         raise RuntimeError(
-            "Generated mesh contains "
-            "too few vertices."
+            "Generated mesh is too small."
         )
 
 
@@ -3280,15 +3000,14 @@ def point_cloud_to_mesh(
     ):
 
         raise RuntimeError(
-            "Open3D could not save "
-            "the reconstructed mesh."
+            "Unable to save raw mesh."
         )
 
 
     report(
         callback,
         100,
-        "Raw ear mesh complete",
+        "Raw mesh complete",
     )
 
 
@@ -3296,7 +3015,7 @@ def point_cloud_to_mesh(
 
 
 # =========================================================
-# MAIN
+# MAIN RECONSTRUCTION
 # =========================================================
 
 def reconstruct(
@@ -3331,8 +3050,8 @@ def reconstruct(
         raise RuntimeError(
 
             f"Only "
-            f"{len(images)} photographs "
-            f"were found."
+            f"{len(images)} "
+            f"images found."
 
         )
 
@@ -3357,7 +3076,7 @@ def reconstruct(
 
 
     print(
-        "HAMMER CRAFT RECONSTRUCTION V2"
+        "HAMMER CRAFT RECONSTRUCTION"
     )
 
 
@@ -3370,7 +3089,7 @@ def reconstruct(
 
 
     print(
-        "Operating system:",
+        "OS:",
         platform.system()
     )
 
@@ -3394,25 +3113,14 @@ def reconstruct(
 
 
     print(
-        "Depth model:",
-        DEPTH_MODEL_NAME
-    )
-
-
-    print(
         "============================================"
-        "\n"
     )
 
-
-    # -----------------------------------------------------
-    # CAMERA RECONSTRUCTION
-    # -----------------------------------------------------
 
     (
         sparse_model,
-        registered_count,
-        original_count,
+        registered,
+        total,
     ) = solve_cameras(
 
         image_dir,
@@ -3423,16 +3131,12 @@ def reconstruct(
 
 
     print(
-        "Camera registration:",
-        registered_count,
+        "Registered cameras:",
+        registered,
         "/",
-        original_count
+        total
     )
 
-
-    # -----------------------------------------------------
-    # UNDISTORT
-    # -----------------------------------------------------
 
     (
         undistorted_images,
@@ -3447,17 +3151,13 @@ def reconstruct(
     )
 
 
-    # -----------------------------------------------------
-    # MODEL TO TEXT
-    # -----------------------------------------------------
-
-    text_model = convert_to_text(
+    text_model = convert_model_to_text(
 
         undistorted_sparse,
 
         workspace
         /
-        "undistorted_model_text",
+        "undistorted_text",
 
     )
 
@@ -3489,23 +3189,26 @@ def reconstruct(
     )
 
 
+    if not cameras:
+
+        raise RuntimeError(
+            "No COLMAP cameras found."
+        )
+
+
     if not image_infos:
 
         raise RuntimeError(
-            "COLMAP produced no registered images."
+            "No registered images found."
         )
 
 
     if not points3d:
 
         raise RuntimeError(
-            "COLMAP produced no sparse geometry."
+            "No sparse 3D points found."
         )
 
-
-    # -----------------------------------------------------
-    # NEURAL DEPTH MODEL
-    # -----------------------------------------------------
 
     (
         processor,
@@ -3514,10 +3217,6 @@ def reconstruct(
         progress_callback
     )
 
-
-    # -----------------------------------------------------
-    # DEPTH FUSION
-    # -----------------------------------------------------
 
     cloud = build_point_cloud(
 
@@ -3537,10 +3236,6 @@ def reconstruct(
 
     )
 
-
-    # -----------------------------------------------------
-    # RELEASE GPU/MPS MEMORY
-    # -----------------------------------------------------
 
     del model
 
@@ -3563,32 +3258,28 @@ def reconstruct(
             pass
 
 
-    # -----------------------------------------------------
-    # POINT CLOUD CLEANUP
-    # -----------------------------------------------------
-
-    (
-        cloud,
-        _
-    ) = clean_point_cloud(
+    cloud = clean_point_cloud(
 
         cloud,
+
         progress_callback,
 
     )
 
 
-    fused_path = (
+    fused_cloud_path = (
+
         workspace
         /
         "fused-neural.ply"
+
     )
 
 
     o3d.io.write_point_cloud(
 
         str(
-            fused_path
+            fused_cloud_path
         ),
 
         cloud,
@@ -3596,21 +3287,21 @@ def reconstruct(
     )
 
 
-    # -----------------------------------------------------
-    # SURFACE
-    # -----------------------------------------------------
+    raw_mesh_path = (
 
-    raw_mesh = (
         workspace
         /
         "raw-mesh.ply"
+
     )
 
 
     return point_cloud_to_mesh(
 
         cloud,
-        raw_mesh,
+
+        raw_mesh_path,
+
         progress_callback,
 
     )
