@@ -1,3 +1,9 @@
+/* =========================================================
+   HAMMER CRAFT
+   EAR SCAN PROCESSOR
+========================================================= */
+
+
 *,
 *::before,
 *::after {
@@ -8,430 +14,1719 @@
 
 
 :root {
-    --paper: #f2eee7;
-    --paper-dark: #e7e0d6;
-    --ink: #252321;
-    --brown: #9b6739;
-    --muted: #706b64;
-    --line: rgba(37,35,33,.16);
-    --error: #8d3d35;
+
+    --paper:
+        #f2eee7;
+
+    --paper-dark:
+        #e7e0d6;
+
+    --ink:
+        #252321;
+
+    --brown:
+        #9b6739;
+
+    --muted:
+        #706b64;
+
+    --line:
+        rgba(
+            37,
+            35,
+            33,
+            0.16
+        );
+
+    --danger:
+        #8e3934;
+
+    --white:
+        #ffffff;
+
+}
+
+
+/* =========================================================
+   BASE
+========================================================= */
+
+html {
+    scroll-behavior: smooth;
 }
 
 
 body {
-    min-height: 100vh;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: Arial, Helvetica, sans-serif;
+
+    min-height:
+        100vh;
+
+    background:
+        var(--paper);
+
+    color:
+        var(--ink);
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
 }
 
+
+button,
+select,
+input {
+    font: inherit;
+}
+
+
+button,
+a {
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
 
 .processor-header {
-    min-height: 88px;
-    padding: 0 6vw;
 
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    min-height:
+        88px;
 
-    border-bottom: 1px solid var(--line);
+    padding:
+        0
+        5vw;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr
+        auto
+        1fr;
+
+    align-items:
+        center;
+
+    border-bottom:
+        1px
+        solid
+        var(--line);
+
 }
 
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+.processor-brand {
 
-    text-decoration: none;
-    color: var(--ink);
+    display:
+        flex;
 
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 3px;
+    align-items:
+        center;
+
+    gap:
+        14px;
+
+    width:
+        fit-content;
+
+    color:
+        var(--ink);
+
+    text-decoration:
+        none;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        3px;
+
 }
 
 
-.brand img {
-    width: 52px;
-    height: 52px;
-    object-fit: contain;
+.processor-brand img {
+
+    width:
+        52px;
+
+    height:
+        52px;
+
+    object-fit:
+        contain;
+
 }
 
 
-.back-link {
-    color: var(--ink);
-    text-decoration: none;
-    font-size: 9px;
-    font-weight: 700;
+.processor-header nav {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        28px;
+
 }
 
+
+.processor-header nav a,
+.processor-header-right a {
+
+    color:
+        var(--ink);
+
+    text-decoration:
+        none;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1.2px;
+
+}
+
+
+.processor-header nav a:hover,
+.processor-header-right a:hover {
+
+    color:
+        var(--brown);
+
+}
+
+
+.processor-header-right {
+
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    align-items:
+        center;
+
+    gap:
+        20px;
+
+}
+
+
+.processor-header-right span {
+
+    color:
+        var(--muted);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 .processor-page {
-    padding: 90px 7vw 120px;
+
+    padding:
+        90px
+        7vw
+        130px;
+
 }
 
+
+/* =========================================================
+   EYEBROW
+========================================================= */
 
 .eyebrow {
-    color: var(--brown);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 3px;
+
+    color:
+        var(--brown);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        2.2px;
+
 }
 
 
-.processor-heading h1 {
-    margin-top: 18px;
+/* =========================================================
+   HERO
+========================================================= */
+
+.processor-hero {
+
+    max-width:
+        1100px;
+
+}
+
+
+.processor-hero h1 {
+
+    margin-top:
+        18px;
 
     font-size:
         clamp(
-            65px,
+            68px,
             8vw,
-            120px
+            125px
         );
 
-    line-height: .88;
-    letter-spacing: -.06em;
+    line-height:
+        0.87;
+
+    letter-spacing:
+        -0.06em;
+
 }
 
 
-.processor-heading h1 em {
-    display: block;
+.processor-hero h1 em {
 
-    color: var(--brown);
+    display:
+        block;
 
-    font-family: Georgia, serif;
-    font-style: italic;
-    font-weight: 400;
+    color:
+        var(--brown);
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-style:
+        italic;
+
+    font-weight:
+        400;
+
 }
 
 
-.processor-heading p {
-    max-width: 680px;
+.processor-hero p {
 
-    margin-top: 30px;
+    max-width:
+        720px;
 
-    color: var(--muted);
+    margin-top:
+        32px;
 
-    line-height: 1.7;
+    color:
+        var(--muted);
+
+    font-size:
+        14px;
+
+    line-height:
+        1.8;
+
 }
 
 
-.processor-summary {
-    margin-top: 60px;
+/* =========================================================
+   STATS
+========================================================= */
 
-    display: grid;
+.processor-stats {
+
+    margin-top:
+        65px;
+
+    display:
+        grid;
 
     grid-template-columns:
-        repeat(4, 1fr);
+        repeat(
+            5,
+            1fr
+        );
 
-    border: 1px solid var(--line);
+    border:
+        1px
+        solid
+        var(--line);
+
 }
 
 
-.processor-summary article {
-    min-height: 130px;
+.processor-stats article {
 
-    padding: 22px;
+    min-height:
+        130px;
+
+    padding:
+        20px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    justify-content:
+        space-between;
 
     border-right:
-        1px solid var(--line);
+        1px
+        solid
+        var(--line);
 
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
 }
 
 
-.processor-summary article:last-child {
-    border-right: none;
+.processor-stats article:last-child {
+
+    border-right:
+        0;
+
 }
 
 
-.processor-summary span {
-    color: var(--brown);
+.processor-stats span {
 
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
+    color:
+        var(--brown);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1.4px;
+
 }
 
 
-.processor-summary strong {
-    font-size: 34px;
+.processor-stats strong {
+
+    font-size:
+        34px;
+
 }
 
 
-.scan-list-section {
-    margin-top: 80px;
+/* =========================================================
+   SECTION HEADINGS
+========================================================= */
+
+.scan-heading {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-end;
+
+    gap:
+        30px;
+
 }
 
 
-.scan-list-heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.scan-heading h2 {
+
+    margin-top:
+        8px;
+
+    font-size:
+        clamp(
+            36px,
+            5vw,
+            54px
+        );
+
+    letter-spacing:
+        -0.04em;
+
 }
 
 
-.scan-list-heading h2 {
-    font-size: 42px;
+.section-description {
+
+    max-width:
+        650px;
+
+    margin-top:
+        20px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        12px;
+
+    line-height:
+        1.8;
+
 }
 
 
-.scan-list-heading button {
-    min-height: 42px;
+/* =========================================================
+   PROCESSOR COMPUTERS
+========================================================= */
 
-    padding: 0 15px;
+.processor-machines-section {
 
-    border: 1px solid var(--ink);
+    margin-top:
+        95px;
 
-    background: transparent;
+    padding-top:
+        20px;
 
-    font-size: 8px;
-    font-weight: 700;
+}
 
-    cursor: pointer;
+
+.processor-machine-grid {
+
+    margin-top:
+        28px;
+
+    display:
+        grid;
+
+    gap:
+        16px;
+
+}
+
+
+.processor-machine-card {
+
+    padding:
+        26px;
+
+    border:
+        1px
+        solid
+        var(--line);
+
+    transition:
+        border-color
+        0.2s
+        ease;
+
+}
+
+
+.processor-machine-card:hover {
+
+    border-color:
+        rgba(
+            37,
+            35,
+            33,
+            0.42
+        );
+
+}
+
+
+.processor-machine-top {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-start;
+
+    gap:
+        24px;
+
+}
+
+
+.processor-machine-top h3 {
+
+    margin-top:
+        8px;
+
+    font-size:
+        25px;
+
+    letter-spacing:
+        -0.02em;
+
+}
+
+
+.machine-status {
+
+    flex:
+        0
+        0
+        auto;
+
+    padding:
+        8px
+        11px;
+
+    border:
+        1px
+        solid
+        var(--line);
+
+    font-size:
+        7px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1px;
+
+}
+
+
+.machine-online {
+
+    border-color:
+        var(--ink);
+
+    color:
+        var(--ink);
+
+}
+
+
+.machine-offline {
+
+    border-color:
+        var(--danger);
+
+    color:
+        var(--danger);
+
+}
+
+
+.download-processor-button {
+
+    text-decoration:
+        none;
+
+}
+
+
+/* =========================================================
+   SCANS
+========================================================= */
+
+.scan-section {
+
+    margin-top:
+        100px;
+
+}
+
+
+.scan-tools {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+}
+
+
+.scan-tools select {
+
+    min-height:
+        44px;
+
+    padding:
+        0
+        14px;
+
+    border:
+        1px
+        solid
+        var(--line);
+
+    background:
+        transparent;
+
+    color:
+        var(--ink);
+
+    outline:
+        none;
+
+}
+
+
+.scan-tools select:focus {
+
+    border-color:
+        var(--ink);
+
 }
 
 
 .processor-message {
-    margin-top: 15px;
 
-    color: var(--brown);
+    min-height:
+        18px;
 
-    font-size: 11px;
+    margin-top:
+        18px;
+
+    color:
+        var(--brown);
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+
 }
 
 
-.scan-list {
-    margin-top: 25px;
+/* =========================================================
+   SCAN GRID
+========================================================= */
 
-    display: grid;
+.processor-scan-grid {
 
-    gap: 18px;
+    margin-top:
+        15px;
+
+    display:
+        grid;
+
+    gap:
+        18px;
+
 }
 
 
+.processor-scan-card,
 .scan-card {
-    padding: 26px;
 
-    border: 1px solid var(--line);
+    padding:
+        28px;
+
+    border:
+        1px
+        solid
+        var(--line);
+
 }
 
 
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.scan-card-header,
 .scan-card-top {
-    display: flex;
 
-    justify-content: space-between;
-    align-items: flex-start;
+    display:
+        flex;
 
-    gap: 30px;
+    justify-content:
+        space-between;
+
+    align-items:
+        flex-start;
+
+    gap:
+        30px;
+
 }
 
 
+.card-label {
+
+    color:
+        var(--brown);
+
+    font-size:
+        7px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1.5px;
+
+}
+
+
+.scan-card-header h3 {
+
+    margin-top:
+        7px;
+
+    font-size:
+        28px;
+
+}
+
+
+.scan-full-id,
 .scan-id {
-    margin-top: 8px;
 
-    color: var(--muted);
+    margin-top:
+        7px;
 
-    font-size: 10px;
+    color:
+        var(--muted);
 
-    overflow-wrap: anywhere;
+    font-size:
+        9px;
+
+    overflow-wrap:
+        anywhere;
+
 }
 
 
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status-badge,
 .scan-status {
-    padding: 9px 12px;
 
-    border: 1px solid var(--brown);
+    padding:
+        8px
+        11px;
 
-    color: var(--brown);
+    border:
+        1px
+        solid
+        var(--line);
 
-    font-size: 8px;
-    font-weight: 700;
+    font-size:
+        7px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1px;
+
 }
 
 
-.scan-info {
-    margin-top: 24px;
+.status-capturing {
 
-    display: grid;
+    color:
+        var(--muted);
+
+}
+
+
+.status-uploaded,
+.status-queued,
+.status-processing {
+
+    color:
+        var(--brown);
+
+    border-color:
+        var(--brown);
+
+}
+
+
+.status-complete {
+
+    color:
+        var(--ink);
+
+    border-color:
+        var(--ink);
+
+}
+
+
+.status-failed {
+
+    color:
+        var(--danger);
+
+    border-color:
+        var(--danger);
+
+}
+
+
+/* =========================================================
+   CARD INFORMATION
+========================================================= */
+
+.scan-data-grid,
+.scan-info {
+
+    margin-top:
+        24px;
+
+    display:
+        grid;
 
     grid-template-columns:
-        repeat(4, 1fr);
+        repeat(
+            4,
+            1fr
+        );
 
-    gap: 10px;
+    gap:
+        8px;
+
 }
 
 
-.scan-info div {
-    padding: 13px;
+.scan-data-grid article {
 
-    border: 1px solid var(--line);
+    min-width:
+        0;
+
+    padding:
+        14px;
+
+    border:
+        1px
+        solid
+        var(--line);
+
 }
 
 
-.scan-info span {
-    display: block;
+.scan-data-grid span {
 
-    color: var(--muted);
+    display:
+        block;
 
-    font-size: 7px;
-    font-weight: 700;
+    color:
+        var(--muted);
+
+    font-size:
+        7px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1px;
+
 }
 
 
-.scan-info strong {
-    display: block;
+.scan-data-grid strong {
 
-    margin-top: 7px;
+    display:
+        block;
 
-    font-size: 11px;
+    margin-top:
+        8px;
+
+    font-size:
+        10px;
+
+    overflow-wrap:
+        anywhere;
+
 }
 
 
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.scan-progress,
 .progress-area {
-    margin-top: 24px;
+
+    margin-top:
+        24px;
+
 }
 
 
+.progress-heading,
 .progress-top {
-    display: flex;
-    justify-content: space-between;
 
-    gap: 20px;
+    display:
+        flex;
 
-    color: var(--muted);
+    justify-content:
+        space-between;
 
-    font-size: 10px;
+    gap:
+        20px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        10px;
+
 }
 
 
 .progress-track {
-    height: 7px;
 
-    margin-top: 9px;
+    height:
+        7px;
 
-    background: var(--paper-dark);
+    margin-top:
+        9px;
+
+    overflow:
+        hidden;
+
+    background:
+        var(--paper-dark);
+
 }
 
 
+.progress-fill,
 .progress-bar {
-    height: 100%;
 
-    background: var(--ink);
+    height:
+        100%;
+
+    width:
+        0;
+
+    background:
+        var(--ink);
+
+    transition:
+        width
+        0.25s
+        ease;
+
 }
 
+
+/* =========================================================
+   ERROR
+========================================================= */
 
 .scan-error {
-    margin-top: 18px;
 
-    padding: 14px;
+    margin-top:
+        20px;
 
-    border: 1px solid var(--error);
+    padding:
+        16px;
 
-    color: var(--error);
+    border:
+        1px
+        solid
+        var(--danger);
 
-    font-size: 11px;
-    line-height: 1.6;
+    color:
+        var(--danger);
+
+    font-size:
+        11px;
+
+    line-height:
+        1.6;
+
+    white-space:
+        pre-wrap;
+
 }
 
 
+.scan-error strong {
+
+    display:
+        block;
+
+    margin-bottom:
+        6px;
+
+    font-size:
+        8px;
+
+    letter-spacing:
+        1px;
+
+}
+
+
+/* =========================================================
+   META
+========================================================= */
+
+.scan-meta {
+
+    margin-top:
+        18px;
+
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        20px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        7px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.7px;
+
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.scan-card-actions,
 .scan-actions {
-    margin-top: 22px;
 
-    display: flex;
-    flex-wrap: wrap;
+    margin-top:
+        24px;
 
-    gap: 10px;
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        9px;
+
 }
 
 
-.scan-actions button {
-    min-height: 44px;
+/* =========================================================
+   BUTTONS
+========================================================= */
 
-    padding: 0 16px;
+.primary-button,
+.outline-button,
+.danger-button {
 
-    border: 1px solid var(--ink);
+    min-height:
+        44px;
 
-    background: var(--ink);
+    padding:
+        0
+        16px;
 
-    color: white;
+    display:
+        inline-flex;
 
-    font-size: 8px;
-    font-weight: 700;
+    align-items:
+        center;
 
-    cursor: pointer;
+    justify-content:
+        center;
+
+    border-radius:
+        0;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.7px;
+
+    cursor:
+        pointer;
+
+    transition:
+        background
+        0.18s
+        ease,
+        color
+        0.18s
+        ease,
+        border-color
+        0.18s
+        ease;
+
 }
 
 
-.scan-actions button.secondary {
-    background: transparent;
-    color: var(--ink);
+.primary-button {
+
+    border:
+        1px
+        solid
+        var(--ink);
+
+    background:
+        var(--ink);
+
+    color:
+        var(--white);
+
 }
 
 
-.scan-actions button:disabled {
-    opacity: .4;
-    cursor: not-allowed;
+.outline-button {
+
+    border:
+        1px
+        solid
+        var(--ink);
+
+    background:
+        transparent;
+
+    color:
+        var(--ink);
+
 }
 
+
+.danger-button {
+
+    border:
+        1px
+        solid
+        var(--danger);
+
+    background:
+        var(--danger);
+
+    color:
+        var(--white);
+
+}
+
+
+.primary-button:hover,
+.outline-button:hover {
+
+    border-color:
+        var(--brown);
+
+    background:
+        var(--brown);
+
+    color:
+        var(--white);
+
+}
+
+
+.danger-button:hover {
+
+    opacity:
+        0.82;
+
+}
+
+
+button:disabled {
+
+    opacity:
+        0.35;
+
+    cursor:
+        not-allowed;
+
+}
+
+
+/* =========================================================
+   EMPTY / LOADING
+========================================================= */
+
+.loading-card,
+.empty-card {
+
+    padding:
+        40px;
+
+    border:
+        1px
+        solid
+        var(--line);
+
+    color:
+        var(--muted);
+
+    font-size:
+        12px;
+
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal {
+
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        999;
+
+    display:
+        none;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        20px;
+
+}
+
+
+.modal.open {
+
+    display:
+        flex;
+
+}
+
+
+.modal-backdrop {
+
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.55
+        );
+
+}
+
+
+.modal-panel {
+
+    position:
+        relative;
+
+    z-index:
+        2;
+
+    width:
+        min(
+            520px,
+            100%
+        );
+
+    padding:
+        30px;
+
+    background:
+        var(--paper);
+
+    border:
+        1px
+        solid
+        var(--ink);
+
+}
+
+
+.modal-label {
+
+    color:
+        var(--danger);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1.5px;
+
+}
+
+
+.modal-panel h3 {
+
+    margin-top:
+        12px;
+
+    font-size:
+        32px;
+
+}
+
+
+.modal-panel p {
+
+    margin-top:
+        16px;
+
+    color:
+        var(--muted);
+
+    font-size:
+        12px;
+
+    line-height:
+        1.7;
+
+}
+
+
+.modal-scan-id {
+
+    margin-top:
+        18px;
+
+    padding:
+        12px;
+
+    background:
+        var(--paper-dark);
+
+    font-family:
+        monospace;
+
+    font-size:
+        10px;
+
+    overflow-wrap:
+        anywhere;
+
+}
+
+
+.modal-warning {
+
+    margin-top:
+        18px;
+
+    color:
+        var(--danger);
+
+    font-size:
+        9px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1px;
+
+}
+
+
+.modal-actions {
+
+    margin-top:
+        28px;
+
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    gap:
+        10px;
+
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
 
 @media
-(max-width: 850px) {
+(max-width: 1000px) {
 
-    .processor-summary {
+    .processor-header {
+
         grid-template-columns:
-            repeat(2, 1fr);
+            1fr
+            auto;
+
     }
 
 
-    .scan-info {
+    .processor-header nav {
+
+        display:
+            none;
+
+    }
+
+
+    .processor-stats {
+
         grid-template-columns:
-            repeat(2, 1fr);
+            repeat(
+                2,
+                1fr
+            );
+
+    }
+
+
+    .processor-stats article {
+
+        border-bottom:
+            1px
+            solid
+            var(--line);
+
+    }
+
+
+    .scan-data-grid {
+
+        grid-template-columns:
+            repeat(
+                2,
+                1fr
+            );
+
     }
 
 }
 
 
+/* =========================================================
+   MOBILE
+========================================================= */
+
 @media
-(max-width: 550px) {
+(max-width: 650px) {
+
+    .processor-header {
+
+        min-height:
+            72px;
+
+        padding:
+            0
+            18px;
+
+    }
+
+
+    .processor-brand img {
+
+        width:
+            42px;
+
+        height:
+            42px;
+
+    }
+
+
+    .processor-brand span {
+
+        display:
+            none;
+
+    }
+
+
+    .processor-header-right span {
+
+        display:
+            none;
+
+    }
+
 
     .processor-page {
+
         padding:
             65px
             18px
             90px;
+
     }
 
 
-    .processor-heading h1 {
-        font-size: 58px;
+    .processor-hero h1 {
+
+        font-size:
+            57px;
+
     }
 
 
-    .processor-summary {
+    .processor-stats {
+
         grid-template-columns:
             1fr;
+
     }
 
 
-    .processor-summary article {
-        border-right: none;
-        border-bottom:
-            1px solid var(--line);
+    .processor-stats article {
+
+        border-right:
+            0;
+
     }
 
 
-    .scan-card-top {
-        flex-direction: column;
+    .scan-heading {
+
+        align-items:
+            stretch;
+
+        flex-direction:
+            column;
+
     }
 
 
-    .scan-info {
+    .scan-tools {
+
+        flex-direction:
+            column;
+
+        align-items:
+            stretch;
+
+    }
+
+
+    .scan-tools select,
+    .scan-tools button {
+
+        width:
+            100%;
+
+    }
+
+
+    .download-processor-button {
+
+        width:
+            100%;
+
+    }
+
+
+    .processor-machine-top {
+
+        flex-direction:
+            column;
+
+    }
+
+
+    .scan-data-grid {
+
         grid-template-columns:
             1fr;
+
+    }
+
+
+    .scan-card-header {
+
+        flex-direction:
+            column;
+
+    }
+
+
+    .scan-card-actions {
+
+        flex-direction:
+            column;
+
+    }
+
+
+    .scan-card-actions button {
+
+        width:
+            100%;
+
+    }
+
+
+    .modal-actions {
+
+        flex-direction:
+            column-reverse;
+
+    }
+
+
+    .modal-actions button {
+
+        width:
+            100%;
+
     }
 
 }

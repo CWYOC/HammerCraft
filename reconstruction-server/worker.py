@@ -4,11 +4,14 @@ import shutil
 import socket
 import time
 
-from datetime import datetime, timezone
+from datetime import (
+    datetime,
+    timezone,
+)
+
 from pathlib import Path
 
 from dotenv import load_dotenv
-from supabase import create_client
 
 from reconstruct import reconstruct
 from mesh_cleanup import clean_mesh
@@ -21,27 +24,9 @@ from mesh_cleanup import clean_mesh
 load_dotenv()
 
 
-SUPABASE_URL = os.environ[
-    "SUPABASE_URL"
-]
-
-
-SUPABASE_SERVICE_ROLE_KEY = os.environ[
-    "SUPABASE_SERVICE_ROLE_KEY"
-]
-
-
 SUPABASE_BUCKET = os.getenv(
     "SUPABASE_BUCKET",
     "ear-scans",
-)
-
-
-WORK_ROOT = Path(
-    os.getenv(
-        "WORK_DIR",
-        "./work",
-    )
 )
 
 
@@ -105,16 +90,109 @@ PROCESSOR_PLATFORM = (
 )
 
 
-WORK_ROOT.mkdir(
-    parents=True,
-    exist_ok=True,
-)
+# =========================================================
+# RUNTIME VALUES
+#
+# These are supplied by processor_app.py after admin login.
+# =========================================================
+
+supabase = None
+
+PROCESSOR_ID = None
+
+WORK_ROOT = None
 
 
-supabase = create_client(
-    SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY,
-)
+# =========================================================
+# CONFIGURE WORKER
+# =========================================================
+
+def configure_worker(
+    supabase_client,
+    processor_id,
+    user_data_dir,
+):
+
+    global supabase
+    global PROCESSOR_ID
+    global WORK_ROOT
+
+
+    supabase = (
+        supabase_client
+    )
+
+
+    PROCESSOR_ID = (
+        processor_id
+    )
+
+
+    WORK_ROOT = (
+
+        Path(
+            user_data_dir
+        )
+        /
+        "work"
+
+    )
+
+
+    WORK_ROOT.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+
+    print(
+        "Worker configured."
+    )
+
+
+    print(
+        "Processor ID:",
+        PROCESSOR_ID
+    )
+
+
+    print(
+        "Work directory:",
+        WORK_ROOT
+    )
+
+
+# =========================================================
+# VALIDATE CONFIGURATION
+# =========================================================
+
+def ensure_configured():
+
+    if (
+        supabase is None
+    ):
+
+        raise RuntimeError(
+            "Hammer Craft worker has not been configured."
+        )
+
+
+    if (
+        PROCESSOR_ID is None
+    ):
+
+        raise RuntimeError(
+            "Processor ID is missing."
+        )
+
+
+    if (
+        WORK_ROOT is None
+    ):
+
+        raise RuntimeError(
+            "Worker directory is missing."
+        )
 
 
 # =========================================================
@@ -141,12 +219,16 @@ def update_scan(
     values,
 ):
 
+    ensure_configured()
+
+
     values[
         "updated_at"
     ] = utc_now()
 
 
     return (
+
         supabase
         .table(
             "ear_scans"
@@ -159,6 +241,37 @@ def update_scan(
             scan_id
         )
         .execute()
+
+    )
+
+
+def update_processor(
+    values,
+):
+
+    ensure_configured()
+
+
+    values[
+        "updated_at"
+    ] = utc_now()
+
+
+    return (
+
+        supabase
+        .table(
+            "processors"
+        )
+        .update(
+            values
+        )
+        .eq(
+            "id",
+            PROCESSOR_ID
+        )
+        .execute()
+
     )
 
 
@@ -185,7 +298,8 @@ def set_progress(
 
 
     print(
-        f"[{percent:3d}%] {stage}",
+        f"[{percent:3d}%] "
+        f"{stage}",
         flush=True,
     )
 
@@ -222,10 +336,16 @@ def set_progress(
         )
 
 
-    except Exception:
+    except Exception as error:
 
-        # Allows compatibility with databases that
-        # do not yet contain processor_accelerator.
+        # Compatibility fallback in case your DB
+        # does not yet have processor_accelerator.
+
+        print(
+            "Progress update warning:",
+            error
+        )
+
 
         values.pop(
             "processor_accelerator",
@@ -249,6 +369,9 @@ def get_storage_images(
     side,
 ):
 
+    ensure_configured()
+
+
     prefix = (
         f"{user_id}/"
         f"{scan_id}/"
@@ -256,7 +379,14 @@ def get_storage_images(
     )
 
 
+    print(
+        "Listing storage:",
+        prefix
+    )
+
+
     entries = (
+
         supabase
         .storage
         .from_(
@@ -265,6 +395,7 @@ def get_storage_images(
         .list(
             prefix
         )
+
     )
 
 
@@ -282,6 +413,7 @@ def get_storage_images(
                 "name"
             )
 
+
         else:
 
             name = getattr(
@@ -291,16 +423,15 @@ def get_storage_images(
             )
 
 
-        if not name:
-
-            continue
-
-
-        if name.lower().endswith(
-            (
-                ".jpg",
-                ".jpeg",
-                ".png",
+        if (
+            name
+            and
+            name.lower().endswith(
+                (
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                )
             )
         ):
 
@@ -319,7 +450,7 @@ def get_storage_images(
 
 
 # =========================================================
-# DOWNLOAD EAR
+# DOWNLOAD EAR IMAGES
 # =========================================================
 
 def download_side(
@@ -328,6 +459,9 @@ def download_side(
     side,
     destination,
 ):
+
+    ensure_configured()
+
 
     destination = Path(
         destination
@@ -356,19 +490,25 @@ def download_side(
 
 
     print(
-        f"\n{side.upper()} EAR"
+        "\n"
+        "--------------------------------------"
     )
 
 
     print(
-        "Storage:",
-        prefix,
+        side.upper(),
+        "EAR"
+    )
+
+
+    print(
+        "--------------------------------------"
     )
 
 
     print(
         "Images:",
-        count,
+        count
     )
 
 
@@ -395,19 +535,22 @@ def download_side(
 
         print(
 
-            f"WARNING: target is "
-            f"{TARGET_IMAGES_PER_EAR}, "
+            f"WARNING: "
+            f"target is "
+            f"{TARGET_IMAGES_PER_EAR}; "
             f"using {count}."
 
         )
 
 
     bucket = (
+
         supabase
         .storage
         .from_(
             SUPABASE_BUCKET
         )
+
     )
 
 
@@ -426,14 +569,19 @@ def download_side(
 
 
         print(
+
             f"Downloading "
+            f"{side} "
             f"{index}/{count}: "
             f"{filename}"
+
         )
 
 
-        data = bucket.download(
-            remote_path
+        file_bytes = (
+            bucket.download(
+                remote_path
+            )
         )
 
 
@@ -445,7 +593,7 @@ def download_side(
 
 
         local_path.write_bytes(
-            data
+            file_bytes
         )
 
 
@@ -463,6 +611,9 @@ def upload_stl(
     local_path,
 ):
 
+    ensure_configured()
+
+
     local_path = Path(
         local_path
     )
@@ -473,8 +624,21 @@ def upload_stl(
     ):
 
         raise RuntimeError(
-            f"STL missing: "
+
+            f"STL file missing: "
             f"{local_path}"
+
+        )
+
+
+    if (
+        local_path.stat().st_size
+        <=
+        0
+    ):
+
+        raise RuntimeError(
+            "Generated STL is empty."
         )
 
 
@@ -488,14 +652,26 @@ def upload_stl(
     )
 
 
+    print(
+        "Uploading STL:",
+        remote_path
+    )
+
+
     bucket = (
+
         supabase
         .storage
         .from_(
             SUPABASE_BUCKET
         )
+
     )
 
+
+    # -----------------------------------------------------
+    # REMOVE PREVIOUS FILE IF IT EXISTS
+    # -----------------------------------------------------
 
     try:
 
@@ -505,10 +681,18 @@ def upload_stl(
             ]
         )
 
-    except Exception:
 
-        pass
+    except Exception as error:
 
+        print(
+            "Previous STL removal warning:",
+            error
+        )
+
+
+    # -----------------------------------------------------
+    # UPLOAD
+    # -----------------------------------------------------
 
     bucket.upload(
 
@@ -529,8 +713,7 @@ def upload_stl(
 
 
     print(
-        "Uploaded STL:",
-        remote_path,
+        "STL uploaded."
     )
 
 
@@ -560,10 +743,14 @@ def process_side(
 
 
     side_title = (
+
         "Left"
+
         if side ==
         "left"
+
         else "Right"
+
     )
 
 
@@ -605,15 +792,21 @@ def process_side(
     )
 
 
+    # =====================================================
+    # DOWNLOAD
+    # =====================================================
+
     set_progress(
 
         scan_id,
 
         progress_start,
 
-        f"Downloading "
-        f"{side_title.lower()} "
-        f"ear images",
+        (
+            f"Downloading "
+            f"{side_title.lower()} "
+            f"ear images"
+        ),
 
     )
 
@@ -621,18 +814,28 @@ def process_side(
     image_count = download_side(
 
         user_id,
+
         scan_id,
+
         side,
+
         images_dir,
 
     )
 
 
     print(
-        f"{side_title}: "
-        f"{image_count} images downloaded."
+
+        f"{side_title} ear: "
+        f"{image_count} "
+        f"images downloaded."
+
     )
 
+
+    # =====================================================
+    # RECONSTRUCTION PROGRESS MAPPING
+    # =====================================================
 
     progress_range = (
         progress_end
@@ -681,8 +884,10 @@ def process_side(
 
             overall,
 
-            f"{side_title}: "
-            f"{stage}",
+            (
+                f"{side_title}: "
+                f"{stage}"
+            ),
 
             accelerator=
                 accelerator,
@@ -690,9 +895,14 @@ def process_side(
         )
 
 
+    # =====================================================
+    # RECONSTRUCT
+    # =====================================================
+
     raw_mesh = reconstruct(
 
         images_dir,
+
         reconstruction_dir,
 
         progress_callback=
@@ -711,10 +921,16 @@ def process_side(
     ):
 
         raise RuntimeError(
+
             f"{side_title} reconstruction "
             f"did not create a mesh."
+
         )
 
+
+    # =====================================================
+    # CLEAN
+    # =====================================================
 
     set_progress(
 
@@ -722,8 +938,11 @@ def process_side(
 
         progress_end - 3,
 
-        f"Cleaning "
-        f"{side_title.lower()} mesh",
+        (
+            f"Cleaning "
+            f"{side_title.lower()} "
+            f"ear mesh"
+        ),
 
     )
 
@@ -731,6 +950,7 @@ def process_side(
     final_stl = clean_mesh(
 
         raw_mesh,
+
         output_stl,
 
         force_solid=
@@ -742,14 +962,21 @@ def process_side(
     )
 
 
+    # =====================================================
+    # UPLOAD
+    # =====================================================
+
     set_progress(
 
         scan_id,
 
         progress_end - 1,
 
-        f"Uploading "
-        f"{side_title.lower()} STL",
+        (
+            f"Uploading "
+            f"{side_title.lower()} "
+            f"ear STL"
+        ),
 
     )
 
@@ -757,20 +984,42 @@ def process_side(
     return upload_stl(
 
         user_id,
+
         scan_id,
+
         side,
+
         final_stl,
 
     )
 
 
 # =========================================================
-# CLAIM JOB
+# CLAIM SCAN
 # =========================================================
 
 def claim_scan(
     scan,
 ):
+
+    ensure_configured()
+
+
+    scan_id = scan[
+        "id"
+    ]
+
+
+    old_status = scan[
+        "status"
+    ]
+
+
+    print(
+        "Claiming scan:",
+        scan_id
+    )
+
 
     response = (
 
@@ -810,20 +1059,19 @@ def claim_scan(
         })
         .eq(
             "id",
-            scan[
-                "id"
-            ]
+            scan_id
         )
         .eq(
             "status",
-            scan[
-                "status"
-            ]
+            old_status
         )
         .execute()
 
     )
 
+
+    # Supabase can return an empty data array if
+    # another worker claimed the same scan first.
 
     if (
         response.data
@@ -836,6 +1084,11 @@ def claim_scan(
         0
     ):
 
+        print(
+            "Scan was already claimed."
+        )
+
+
         return False
 
 
@@ -843,38 +1096,38 @@ def claim_scan(
 
 
 # =========================================================
-# PROCESS FULL SCAN
+# PROCESS COMPLETE SCAN
 # =========================================================
 
 def process_scan(
     scan,
 ):
 
+    ensure_configured()
+
+
     scan_id = scan[
         "id"
     ]
 
 
-    if not claim_scan(
-        scan
-    ):
-
-        print(
-            "Scan already claimed:",
-            scan_id,
+    if (
+        not claim_scan(
+            scan
         )
+    ):
 
         return
 
 
     print(
-        "\n"
+        "\n\n"
         "=============================================="
     )
 
 
     print(
-        " HAMMER CRAFT EAR RECONSTRUCTION"
+        "HAMMER CRAFT EAR SCAN"
     )
 
 
@@ -901,6 +1154,12 @@ def process_scan(
     )
 
 
+    print(
+        "=============================================="
+        "\n"
+    )
+
+
     workspace = (
         WORK_ROOT
         /
@@ -921,31 +1180,67 @@ def process_scan(
     )
 
 
+    # =====================================================
+    # PROCESSOR STATUS
+    # =====================================================
+
+    update_processor({
+
+        "status":
+            "processing",
+
+        "worker_enabled":
+            True,
+
+        "current_scan_id":
+            scan_id,
+
+    })
+
+
     try:
+
+        # =================================================
+        # LEFT
+        # =================================================
 
         left_path = process_side(
 
             scan,
+
             "left",
+
             workspace,
 
             4,
+
             48,
 
         )
 
 
+        # =================================================
+        # RIGHT
+        # =================================================
+
         right_path = process_side(
 
             scan,
+
             "right",
+
             workspace,
 
             52,
+
             96,
 
         )
 
+
+        # =================================================
+        # COMPLETE
+        # =================================================
 
         update_scan(
             scan_id,
@@ -995,33 +1290,72 @@ def process_scan(
         )
 
 
-        update_scan(
-            scan_id,
-            {
+        try:
+
+            update_scan(
+                scan_id,
+                {
+
+                    "status":
+                        "failed",
+
+                    "progress_stage":
+                        "Reconstruction failed",
+
+                    "processing_finished_at":
+                        utc_now(),
+
+                    "error_message":
+                        str(
+                            error
+                        )[:10000],
+
+                },
+            )
+
+
+        except Exception as database_error:
+
+            print(
+                "Unable to save failure status:",
+                database_error
+            )
+
+
+    finally:
+
+        try:
+
+            update_processor({
 
                 "status":
-                    "failed",
+                    "idle",
 
-                "progress_stage":
-                    "Reconstruction failed",
+                "worker_enabled":
+                    True,
 
-                "processing_finished_at":
-                    utc_now(),
+                "current_scan_id":
+                    None,
 
-                "error_message":
-                    str(
-                        error
-                    )[:10000],
+            })
 
-            },
-        )
+
+        except Exception as processor_error:
+
+            print(
+                "Unable to reset processor state:",
+                processor_error
+            )
 
 
 # =========================================================
-# QUEUE
+# GET PENDING SCANS
 # =========================================================
 
 def get_pending_scans():
+
+    ensure_configured()
+
 
     statuses = [
         "queued"
@@ -1049,7 +1383,8 @@ def get_pending_scans():
             statuses
         )
         .order(
-            "updated_at"
+            "updated_at",
+            desc=False,
         )
         .limit(
             1
@@ -1066,13 +1401,51 @@ def get_pending_scans():
 
 
 # =========================================================
-# MAIN
+# WAIT
 # =========================================================
 
-def main():
+def wait_for_next_poll(
+    stop_event=None,
+):
+
+    if stop_event:
+
+        stop_event.wait(
+            POLL_SECONDS
+        )
+
+
+    else:
+
+        time.sleep(
+            POLL_SECONDS
+        )
+
+
+# =========================================================
+# MAIN WORKER LOOP
+# =========================================================
+
+def main(
+    stop_event=None,
+):
+
+    ensure_configured()
+
 
     print(
-        "\nHammer Craft Local Reconstruction Processor"
+        "\n"
+        "=============================================="
+    )
+
+
+    print(
+        " HAMMER CRAFT RECONSTRUCTION WORKER"
+    )
+
+
+    print(
+        "=============================================="
     )
 
 
@@ -1096,7 +1469,7 @@ def main():
 
     print(
         "Work directory:",
-        WORK_ROOT.resolve()
+        WORK_ROOT
     )
 
 
@@ -1113,72 +1486,126 @@ def main():
 
 
     print(
-        "Automatically process uploaded:",
+        "Poll interval:",
+        POLL_SECONDS,
+        "seconds"
+    )
+
+
+    print(
+        "Auto process uploaded:",
         AUTO_PROCESS_UPLOADED
     )
 
 
     print(
-        "Polling every",
-        POLL_SECONDS,
-        "seconds."
+        "=============================================="
+        "\n"
     )
 
 
-    print(
-        "\nWaiting for reconstruction jobs..."
-    )
+    update_processor({
+
+        "status":
+            "idle",
+
+        "worker_enabled":
+            True,
+
+        "current_scan_id":
+            None,
+
+    })
 
 
-    while True:
+    try:
+
+        while True:
+
+            # -------------------------------------------------
+            # STOP REQUEST
+            # -------------------------------------------------
+
+            if (
+                stop_event
+                and
+                stop_event.is_set()
+            ):
+
+                break
+
+
+            try:
+
+                scans = (
+                    get_pending_scans()
+                )
+
+
+                if scans:
+
+                    for scan in scans:
+
+                        if (
+                            stop_event
+                            and
+                            stop_event.is_set()
+                        ):
+
+                            break
+
+
+                        process_scan(
+                            scan
+                        )
+
+
+                else:
+
+                    wait_for_next_poll(
+                        stop_event
+                    )
+
+
+            except Exception as error:
+
+                print(
+                    "Worker loop error:",
+                    error
+                )
+
+
+                wait_for_next_poll(
+                    stop_event
+                )
+
+
+    finally:
 
         try:
 
-            scans = get_pending_scans()
+            update_processor({
 
+                "status":
+                    "stopped",
 
-            if not scans:
+                "worker_enabled":
+                    False,
 
-                time.sleep(
-                    POLL_SECONDS
-                )
+                "current_scan_id":
+                    None,
 
-                continue
-
-
-            for scan in scans:
-
-                process_scan(
-                    scan
-                )
-
-
-        except KeyboardInterrupt:
-
-            print(
-                "\nWorker stopped."
-            )
-
-            break
+            })
 
 
         except Exception as error:
 
             print(
-                "\nWorker loop error:"
-            )
-
-
-            print(
+                "Unable to mark processor stopped:",
                 error
             )
 
 
-            time.sleep(
-                POLL_SECONDS
-            )
-
-
-if __name__ == "__main__":
-
-    main()
+        print(
+            "\nHammer Craft reconstruction worker stopped."
+        )

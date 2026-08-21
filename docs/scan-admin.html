@@ -1,74 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
-
 <head>
 
     <meta charset="UTF-8">
 
     <meta
-
         name="viewport"
-
         content="width=device-width, initial-scale=1.0"
-
     >
 
     <title>
-
         Ear Scan Processor | Hammer Craft
-
     </title>
 
+
+    <!-- =================================================
+         FAVICON
+    ================================================== -->
+
     <link
-
         rel="icon"
-
         type="image/png"
-
         sizes="32x32"
-
         href="assets/favicon-32.png"
-
     >
 
     <link
-
         rel="icon"
-
         type="image/png"
-
         sizes="16x16"
-
         href="assets/favicon-16.png"
-
     >
 
     <link
-
         rel="apple-touch-icon"
-
         sizes="180x180"
-
-        href="assets/favicon-180.png"
-
+        href="assets/apple-touch-icon.png"
     >
 
     <link
-
         rel="shortcut icon"
-
         href="assets/favicon.ico"
-
     >
 
+
     <link
-
         rel="stylesheet"
-
-        href="scan-admin.css?v=40"
-
+        href="scan-admin.css?v=50"
     >
 
 </head>
@@ -77,11 +56,15 @@
 <body>
 
 
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
 <header class="processor-header">
 
     <a
         href="admin.html"
-        class="brand"
+        class="processor-brand"
     >
 
         <img
@@ -96,12 +79,35 @@
     </a>
 
 
-    <a
-        href="admin.html"
-        class="back-link"
-    >
-        ← ADMIN
-    </a>
+    <nav>
+
+        <a href="admin.html">
+            ADMIN
+        </a>
+
+        <a href="#processors">
+            PROCESSORS
+        </a>
+
+        <a href="#scans">
+            SCANS
+        </a>
+
+    </nav>
+
+
+    <div class="processor-header-right">
+
+        <span id="processorAdminEmail">
+            ADMIN
+        </span>
+
+
+        <a href="admin.html">
+            ← DASHBOARD
+        </a>
+
+    </div>
 
 </header>
 
@@ -110,141 +116,400 @@
 <main class="processor-page">
 
 
-    <section class="processor-heading">
+<!-- =====================================================
+     HERO
+===================================================== -->
 
-        <div class="eyebrow">
-            HAMMER CRAFT / LOCAL PROCESSOR
+<section class="processor-hero">
+
+    <div class="eyebrow">
+        HAMMER CRAFT / LOCAL PROCESSING
+    </div>
+
+
+    <h1>
+
+        Ear scan
+
+        <em>
+            processor.
+        </em>
+
+    </h1>
+
+
+    <p>
+
+        Manage customer ear reconstruction jobs and
+        Hammer Craft processing computers.
+
+        Queue scans, monitor reconstruction progress,
+        download completed STL files and manage the
+        local processing network.
+
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     STATS
+===================================================== -->
+
+<section class="processor-stats">
+
+    <article>
+
+        <span>
+            UPLOADED
+        </span>
+
+        <strong id="uploadedCount">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            QUEUED
+        </span>
+
+        <strong id="queuedCount">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            PROCESSING
+        </span>
+
+        <strong id="processingCount">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            COMPLETE
+        </span>
+
+        <strong id="completeCount">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            FAILED
+        </span>
+
+        <strong id="failedCount">
+            —
+        </strong>
+
+    </article>
+
+</section>
+
+
+
+<!-- =====================================================
+     PROCESSOR COMPUTERS
+===================================================== -->
+
+<section
+    id="processors"
+    class="processor-machines-section"
+>
+
+    <div class="scan-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                LOCAL RECONSTRUCTION NETWORK
+            </div>
+
+
+            <h2>
+                Processors.
+            </h2>
+
         </div>
 
 
-        <h1>
+        <a
+            class="primary-button download-processor-button"
+            href="downloads/Hammer-Craft-Processor.dmg"
+            download
+        >
+            DOWNLOAD PROCESSOR APP
+        </a>
 
-            Ear scan
-
-            <em>
-                processing.
-            </em>
-
-        </h1>
-
-
-        <p>
-
-            Queue ear reconstructions from the web.
-            Processing is performed by your local
-            Hammer Craft Mac processor.
-
-        </p>
-
-    </section>
+    </div>
 
 
+    <p class="section-description">
 
-    <section class="processor-summary">
+        Computers running the Hammer Craft Processor
+        application appear here automatically.
 
-        <article>
+        A computer is considered online while its processor
+        application continues reporting to Hammer Craft.
 
-            <span>
-                QUEUED
-            </span>
-
-            <strong id="queuedCount">
-                0
-            </strong>
-
-        </article>
+    </p>
 
 
-        <article>
+    <div
+        id="processorMachineList"
+        class="processor-machine-grid"
+    >
 
-            <span>
-                PROCESSING
-            </span>
+        <div class="loading-card">
 
-            <strong id="processingCount">
-                0
-            </strong>
+            Loading processor computers...
 
-        </article>
+        </div>
 
+    </div>
 
-        <article>
-
-            <span>
-                COMPLETE
-            </span>
-
-            <strong id="completeCount">
-                0
-            </strong>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                FAILED
-            </span>
-
-            <strong id="failedCount">
-                0
-            </strong>
-
-        </article>
-
-    </section>
+</section>
 
 
 
-    <section class="scan-list-section">
+<!-- =====================================================
+     EAR SCANS
+===================================================== -->
 
-        <div class="scan-list-heading">
+<section
+    id="scans"
+    class="scan-section"
+>
+
+    <div class="scan-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                DIGITAL FIT / RECONSTRUCTION
+            </div>
+
 
             <h2>
-                Ear scans
+                Ear scans.
             </h2>
+
+        </div>
+
+
+        <div class="scan-tools">
+
+            <select
+                id="processorStatusFilter"
+            >
+
+                <option value="">
+                    All statuses
+                </option>
+
+
+                <option value="capturing">
+                    Capturing
+                </option>
+
+
+                <option value="uploaded">
+                    Uploaded
+                </option>
+
+
+                <option value="queued">
+                    Queued
+                </option>
+
+
+                <option value="processing">
+                    Processing
+                </option>
+
+
+                <option value="complete">
+                    Complete
+                </option>
+
+
+                <option value="failed">
+                    Failed
+                </option>
+
+            </select>
 
 
             <button
-                id="refreshButton"
+                id="processorRefreshButton"
                 type="button"
+                class="outline-button"
             >
                 REFRESH
             </button>
 
         </div>
 
-
-        <div
-            id="processorMessage"
-            class="processor-message"
-        ></div>
+    </div>
 
 
-        <div
-            id="scanList"
-            class="scan-list"
-        >
+    <div
+        id="processorMessage"
+        class="processor-message"
+    ></div>
+
+
+    <div
+        id="processorScanList"
+        class="processor-scan-grid"
+    >
+
+        <div class="loading-card">
 
             Loading scans...
 
         </div>
 
-    </section>
+    </div>
+
+</section>
 
 
 </main>
 
 
 
+<!-- =====================================================
+     DELETE SCAN MODAL
+===================================================== -->
+
+<div
+    id="deleteScanModal"
+    class="modal"
+    aria-hidden="true"
+>
+
+    <div class="modal-backdrop"></div>
+
+
+    <section
+        class="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deleteScanTitle"
+    >
+
+        <span class="modal-label">
+            PERMANENT ACTION
+        </span>
+
+
+        <h3 id="deleteScanTitle">
+
+            Delete this scan?
+
+        </h3>
+
+
+        <p>
+
+            This permanently removes the uploaded left
+            and right ear photographs, reconstruction
+            files, generated STL files and the ear scan
+            database record.
+
+        </p>
+
+
+        <div
+            id="deleteScanId"
+            class="modal-scan-id"
+        ></div>
+
+
+        <div class="modal-warning">
+
+            THIS CANNOT BE UNDONE.
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button
+                id="cancelDeleteScanButton"
+                type="button"
+                class="outline-button"
+            >
+                CANCEL
+            </button>
+
+
+            <button
+                id="confirmDeleteScanButton"
+                type="button"
+                class="danger-button"
+            >
+                DELETE SCAN
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+
+<!-- =====================================================
+     SUPABASE
+===================================================== -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="supabase-client.js"></script>
 
-<script src="scan-admin.js?v=40"></script>
+<script
+    src="supabase-client.js"
+></script>
+
+
+<!-- =====================================================
+     EAR SCAN MANAGEMENT
+===================================================== -->
+
+<script
+    src="scan-admin.js?v=50"
+></script>
+
+
+<!-- =====================================================
+     COMPUTER / PROCESSOR MONITOR
+===================================================== -->
+
+<script
+    src="admin-processors.js?v=1"
+></script>
 
 
 </body>

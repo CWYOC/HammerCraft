@@ -6,7 +6,7 @@ import pymeshfix
 
 
 # =========================================================
-# LOAD
+# LOAD MAIN COMPONENT
 # =========================================================
 
 def load_main_mesh(
@@ -23,14 +23,20 @@ def load_main_mesh(
     ):
 
         raise RuntimeError(
-            f"Input mesh not found: "
+
+            f"Input mesh does not exist: "
             f"{input_mesh}"
+
         )
 
 
     mesh = trimesh.load(
+
         input_mesh,
-        force="mesh",
+
+        force=
+            "mesh",
+
     )
 
 
@@ -45,16 +51,21 @@ def load_main_mesh(
 
 
     components = mesh.split(
-        only_watertight=False
+        only_watertight=
+            False
     )
 
 
-    if not components:
+    if (
+        not components
+    ):
 
         raise RuntimeError(
-            "No usable mesh components."
+            "No usable mesh components found."
         )
 
+
+    # Keep biggest reconstructed object.
 
     mesh = max(
 
@@ -75,56 +86,19 @@ def load_main_mesh(
 
 
 # =========================================================
-# REPAIR
+# BASIC REPAIR
 # =========================================================
 
-def repair_mesh(
-    mesh: trimesh.Trimesh
-) -> trimesh.Trimesh:
-
-    print(
-        "\n"
-        "--------------------------------------"
-    )
-
-
-    print(
-        "MESH REPAIR"
-    )
-
-
-    print(
-        "--------------------------------------"
-    )
-
-
-    print(
-        "Vertices:",
-        len(
-            mesh.vertices
-        )
-    )
-
-
-    print(
-        "Faces:",
-        len(
-            mesh.faces
-        )
-    )
-
-
-    print(
-        "Watertight:",
-        mesh.is_watertight
-    )
-
+def trimesh_basic_repair(
+    mesh
+):
 
     try:
 
         trimesh.repair.fix_normals(
             mesh
         )
+
 
     except Exception as error:
 
@@ -140,6 +114,7 @@ def repair_mesh(
             mesh
         )
 
+
     except Exception as error:
 
         print(
@@ -154,6 +129,7 @@ def repair_mesh(
             mesh
         )
 
+
     except Exception as error:
 
         print(
@@ -165,11 +141,70 @@ def repair_mesh(
     mesh.remove_unreferenced_vertices()
 
 
+    return mesh
+
+
+# =========================================================
+# PYMeshFix
+# =========================================================
+
+def repair_mesh(
+    mesh: trimesh.Trimesh
+) -> trimesh.Trimesh:
+
+    print(
+        "\n"
+        "======================================"
+    )
+
+
+    print(
+        "MESH REPAIR"
+    )
+
+
+    print(
+        "======================================"
+    )
+
+
+    print(
+        "Original vertices:",
+        len(
+            mesh.vertices
+        )
+    )
+
+
+    print(
+        "Original faces:",
+        len(
+            mesh.faces
+        )
+    )
+
+
+    print(
+        "Original watertight:",
+        mesh.is_watertight
+    )
+
+
+    # -----------------------------------------------------
+    # TRIMESH
+    # -----------------------------------------------------
+
+    mesh = trimesh_basic_repair(
+        mesh
+    )
+
+
     vertices = np.asarray(
 
         mesh.vertices,
 
-        dtype=np.float64,
+        dtype=
+            np.float64,
 
     )
 
@@ -178,7 +213,8 @@ def repair_mesh(
 
         mesh.faces,
 
-        dtype=np.int32,
+        dtype=
+            np.int32,
 
     )
 
@@ -189,7 +225,14 @@ def repair_mesh(
         )
         ==
         0
-        or
+    ):
+
+        raise RuntimeError(
+            "Mesh has no vertices."
+        )
+
+
+    if (
         len(
             faces
         )
@@ -198,7 +241,7 @@ def repair_mesh(
     ):
 
         raise RuntimeError(
-            "Mesh is empty before PyMeshFix."
+            "Mesh has no faces."
         )
 
 
@@ -211,8 +254,20 @@ def repair_mesh(
     ):
 
         raise RuntimeError(
-            "Mesh contains invalid coordinates."
+
+            "Mesh contains "
+            "invalid coordinates."
+
         )
+
+
+    # -----------------------------------------------------
+    # PYMeshFix
+    # -----------------------------------------------------
+
+    print(
+        "Running PyMeshFix..."
+    )
 
 
     meshfix = pymeshfix.MeshFix(
@@ -224,18 +279,23 @@ def repair_mesh(
     )
 
 
-    # Installed PyMeshFix signature:
+    # Your installed version reports:
     #
-    # repair(
+    # MeshFix.repair(
+    #   self,
     #   joincomp=False,
     #   remove_smallest_components=True
     # )
+    #
+    # Therefore do NOT use verbose=.
 
     meshfix.repair(
 
-        joincomp=True,
+        joincomp=
+            True,
 
-        remove_smallest_components=True,
+        remove_smallest_components=
+            True,
 
     )
 
@@ -244,7 +304,8 @@ def repair_mesh(
 
         meshfix.v,
 
-        dtype=np.float64,
+        dtype=
+            np.float64,
 
     )
 
@@ -253,7 +314,8 @@ def repair_mesh(
 
         meshfix.f,
 
-        dtype=np.int64,
+        dtype=
+            np.int64,
 
     )
 
@@ -273,7 +335,10 @@ def repair_mesh(
     ):
 
         raise RuntimeError(
-            "PyMeshFix produced an empty mesh."
+
+            "PyMeshFix produced "
+            "an empty mesh."
+
         )
 
 
@@ -294,26 +359,9 @@ def repair_mesh(
     repaired.remove_unreferenced_vertices()
 
 
-    try:
-
-        trimesh.repair.fix_normals(
-            repaired
-        )
-
-    except Exception:
-
-        pass
-
-
-    try:
-
-        trimesh.repair.fix_winding(
-            repaired
-        )
-
-    except Exception:
-
-        pass
+    repaired = trimesh_basic_repair(
+        repaired
+    )
 
 
     print(
@@ -342,7 +390,7 @@ def repair_mesh(
 
 
 # =========================================================
-# VOXEL FALLBACK
+# VOXEL SOLIDIFICATION
 # =========================================================
 
 def solidify_with_voxels(
@@ -350,11 +398,28 @@ def solidify_with_voxels(
     resolution=350,
 ) -> trimesh.Trimesh:
 
+    print(
+        "\n"
+        "======================================"
+    )
+
+
+    print(
+        "VOXEL SOLIDIFICATION"
+    )
+
+
+    print(
+        "======================================"
+    )
+
+
     bounds = np.asarray(
 
         mesh.bounds,
 
-        dtype=np.float64,
+        dtype=
+            np.float64,
 
     )
 
@@ -375,9 +440,11 @@ def solidify_with_voxels(
 
 
     longest_dimension = float(
+
         np.max(
             dimensions
         )
+
     )
 
 
@@ -391,7 +458,7 @@ def solidify_with_voxels(
     ):
 
         raise RuntimeError(
-            "Invalid mesh size."
+            "Invalid mesh dimensions."
         )
 
 
@@ -408,6 +475,16 @@ def solidify_with_voxels(
     )
 
 
+    if (
+        pitch <=
+        0
+    ):
+
+        raise RuntimeError(
+            "Invalid voxel pitch."
+        )
+
+
     print(
         "Voxel resolution:",
         resolution
@@ -421,7 +498,10 @@ def solidify_with_voxels(
 
 
     voxel_grid = mesh.voxelized(
-        pitch=pitch
+
+        pitch=
+            pitch
+
     )
 
 
@@ -437,40 +517,48 @@ def solidify_with_voxels(
     if solid.is_empty:
 
         raise RuntimeError(
-            "Voxel solidification failed."
+
+            "Voxel conversion "
+            "produced an empty mesh."
+
         )
 
 
     solid.remove_unreferenced_vertices()
 
 
-    try:
+    solid = trimesh_basic_repair(
+        solid
+    )
 
-        trimesh.repair.fix_normals(
-            solid
+
+    print(
+        "Voxel solid vertices:",
+        len(
+            solid.vertices
         )
-
-    except Exception:
-
-        pass
+    )
 
 
-    try:
-
-        trimesh.repair.fix_winding(
-            solid
+    print(
+        "Voxel solid faces:",
+        len(
+            solid.faces
         )
+    )
 
-    except Exception:
 
-        pass
+    print(
+        "Voxel solid watertight:",
+        solid.is_watertight
+    )
 
 
     return solid
 
 
 # =========================================================
-# SMOOTH
+# LIGHT SMOOTHING
 # =========================================================
 
 def smooth_mesh(
@@ -478,7 +566,10 @@ def smooth_mesh(
     iterations=2,
 ) -> trimesh.Trimesh:
 
-    if iterations <= 0:
+    if (
+        iterations <=
+        0
+    ):
 
         return mesh
 
@@ -513,7 +604,7 @@ def smooth_mesh(
 
 
 # =========================================================
-# CENTRE
+# CENTRE MESH
 # =========================================================
 
 def centre_mesh(
@@ -526,7 +617,8 @@ def centre_mesh(
         .bounding_box
         .centroid,
 
-        dtype=np.float64,
+        dtype=
+            np.float64,
 
     )
 
@@ -553,11 +645,11 @@ def centre_mesh(
 
 
 # =========================================================
-# VALIDATION
+# FINAL VALIDATION
 # =========================================================
 
 def validate_mesh(
-    mesh: trimesh.Trimesh
+    mesh
 ):
 
     if mesh.is_empty:
@@ -576,8 +668,10 @@ def validate_mesh(
     ):
 
         raise RuntimeError(
+
             "Final mesh contains "
             "too few vertices."
+
         )
 
 
@@ -590,22 +684,72 @@ def validate_mesh(
     ):
 
         raise RuntimeError(
+
             "Final mesh contains "
             "too few faces."
+
         )
+
+
+    vertices = np.asarray(
+
+        mesh.vertices,
+
+        dtype=
+            np.float64,
+
+    )
 
 
     if (
         not np.all(
             np.isfinite(
-                mesh.vertices
+                vertices
             )
         )
     ):
 
         raise RuntimeError(
+
             "Final mesh contains "
             "invalid coordinates."
+
+        )
+
+
+    dimensions = np.asarray(
+
+        mesh.extents,
+
+        dtype=
+            np.float64,
+
+    )
+
+
+    if (
+        not np.all(
+            np.isfinite(
+                dimensions
+            )
+        )
+    ):
+
+        raise RuntimeError(
+            "Final mesh dimensions are invalid."
+        )
+
+
+    if (
+        np.max(
+            dimensions
+        )
+        <=
+        0
+    ):
+
+        raise RuntimeError(
+            "Final mesh has zero size."
         )
 
 
@@ -658,15 +802,27 @@ def clean_mesh(
     )
 
 
+    # =====================================================
+    # LOAD
+    # =====================================================
+
     mesh = load_main_mesh(
         input_mesh
     )
 
 
+    # =====================================================
+    # REPAIR
+    # =====================================================
+
     mesh = repair_mesh(
         mesh
     )
 
+
+    # =====================================================
+    # FORCE SOLID IF STILL OPEN
+    # =====================================================
 
     if (
         force_solid
@@ -675,7 +831,7 @@ def clean_mesh(
     ):
 
         print(
-            "Mesh remains open."
+            "\nMesh remains open."
         )
 
 
@@ -694,6 +850,10 @@ def clean_mesh(
         )
 
 
+    # =====================================================
+    # SMOOTH
+    # =====================================================
+
     mesh = smooth_mesh(
 
         mesh,
@@ -704,10 +864,18 @@ def clean_mesh(
     )
 
 
+    # =====================================================
+    # CENTRE
+    # =====================================================
+
     mesh = centre_mesh(
         mesh
     )
 
+
+    # =====================================================
+    # FINAL PROCESSING
+    # =====================================================
 
     mesh.remove_unreferenced_vertices()
 
@@ -718,13 +886,18 @@ def clean_mesh(
             validate=True
         )
 
+
     except Exception as error:
 
         print(
-            "Final processing warning:",
+            "Final mesh processing warning:",
             error
         )
 
+
+    # =====================================================
+    # VALIDATE
+    # =====================================================
 
     validate_mesh(
         mesh
@@ -732,7 +905,7 @@ def clean_mesh(
 
 
     print(
-        "Final vertices:",
+        "\nFinal vertices:",
         len(
             mesh.vertices
         )
@@ -758,6 +931,25 @@ def clean_mesh(
         mesh.extents
     )
 
+
+    if mesh.is_watertight:
+
+        try:
+
+            print(
+                "Final volume:",
+                mesh.volume
+            )
+
+
+        except Exception:
+
+            pass
+
+
+    # =====================================================
+    # EXPORT
+    # =====================================================
 
     output_stl.parent.mkdir(
 
@@ -794,7 +986,7 @@ def clean_mesh(
 
 
     print(
-        "STL saved:",
+        "\nSTL saved:",
         output_stl
     )
 
