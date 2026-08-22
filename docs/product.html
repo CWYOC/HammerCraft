@@ -1,1376 +1,484 @@
-/* =========================================================
-   HAMMER CRAFT
-   PRODUCT CATALOGUE
-   product.js
-========================================================= */
-
-"use strict";
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
 
-/* =========================================================
-   STATE
-========================================================= */
+    <meta charset="UTF-8">
 
-let catalogueProducts =
-    [];
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
+    <meta
+        name="description"
+        content="Explore Hammer Craft IEMs, including reference, custom-tuned, custom-fit and full-custom configurations."
+    >
 
-let activeCategory =
-    "all";
+    <title>
+        Products | Hammer Craft
+    </title>
 
 
-/* =========================================================
-   HELPERS
-========================================================= */
+    <!-- =====================================================
+         FAVICON / TAB LOGO
+    ====================================================== -->
 
-function escapeHtml(
-    value
-) {
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="32x32"
+        href="assets/favicon-32.png"
+    >
 
-    return String(
-        value ?? ""
-    )
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            "\"",
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="16x16"
+        href="assets/favicon-16.png"
+    >
 
-}
+    <link
+        rel="apple-touch-icon"
+        sizes="180x180"
+        href="assets/apple-touch-icon.png"
+    >
 
+    <link
+        rel="shortcut icon"
+        href="assets/favicon.ico"
+    >
 
-/* =========================================================
-   CATEGORY LABEL
-========================================================= */
 
-function getCategoryLabel(
-    category
-) {
+    <!-- =====================================================
+         CSS
+    ====================================================== -->
 
-    const labels = {
+    <link
+        rel="stylesheet"
+        href="style.css?v=83"
+    >
 
-        reference:
-            "REFERENCE",
+    <link
+        rel="stylesheet"
+        href="product-list.css?v=13"
+    >
 
-        custom_tune:
-            "CUSTOM SOUND",
+</head>
 
-        custom_fit:
-            "CUSTOM FIT",
 
-        full_custom:
-            "FULL CUSTOM"
 
-    };
+<body>
 
 
-    return (
-        labels[
-            category
-        ]
-        ||
-        String(
-            category ?? "PRODUCT"
-        )
-            .replaceAll(
-                "_",
-                " "
-            )
-            .toUpperCase()
-    );
+<!-- =========================================================
+     HEADER
+========================================================= -->
 
-}
+<header class="site-header">
 
+    <a
+        href="index.html"
+        class="site-brand"
+        aria-label="Hammer Craft home"
+    >
 
-/* =========================================================
-   STATUS LABEL
-========================================================= */
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
 
-function getStatusLabel(
-    status
-) {
+    </a>
 
-    const labels = {
 
-        coming_soon:
-            "COMING SOON",
+    <nav class="site-nav">
 
-        in_stock:
-            "IN STOCK",
+        <a href="product.html">
+            PRODUCTS
+        </a>
 
-        low_stock:
-            "LOW STOCK",
+        <a href="index.html#technology">
+            TECHNOLOGY
+        </a>
 
-        out_of_stock:
-            "OUT OF STOCK",
+        <a href="index.html#customTuning">
+            FIND YOUR SOUND
+        </a>
 
-        hidden:
-            "HIDDEN"
+        <a href="index.html#digitalFit">
+            DIGITAL FIT
+        </a>
 
-    };
+    </nav>
 
 
-    return (
-        labels[
-            status
-        ]
-        ||
-        String(
-            status ?? ""
-        )
-            .replaceAll(
-                "_",
-                " "
-            )
-            .toUpperCase()
-    );
+    <div class="site-header-actions">
 
-}
+        <a
+            href="login.html"
+            class="header-account-link"
+        >
+            ACCOUNT
+        </a>
 
+    </div>
 
-/* =========================================================
-   FIT LABEL
-========================================================= */
+</header>
 
-function getFitLabel(
-    fitType
-) {
 
-    const labels = {
 
-        universal:
-            "UNIVERSAL FIT",
+<main class="catalogue-page">
 
-        ear_specific:
-            "EAR-SPECIFIC FIT",
 
-        custom:
-            "CUSTOM FIT",
+<!-- =========================================================
+     HERO
+========================================================= -->
 
-        custom_fit:
-            "CUSTOM FIT"
+<section class="catalogue-hero">
 
-    };
+    <div class="catalogue-hero-inner">
 
+        <div class="catalogue-hero-copy">
 
-    return (
-        labels[
-            fitType
-        ]
-        ||
-        String(
-            fitType ?? ""
-        )
-            .replaceAll(
-                "_",
-                " "
-            )
-            .toUpperCase()
-    );
-
-}
-
-
-/* =========================================================
-   SOUND SIGNATURE
-========================================================= */
-
-function getSoundSignatureLabel(
-    signature
-) {
-
-    const labels = {
-
-        clear:
-            "CLEAR",
-
-        warm:
-            "WARM",
-
-        balanced:
-            "BALANCED",
-
-        classical:
-            "CLASSICAL",
-
-        vocal:
-            "VOCAL",
-
-        bass:
-            "BASS FOCUSED",
-
-        bright:
-            "BRIGHT",
-
-        smooth:
-            "SMOOTH",
-
-        v_shape:
-            "V-SHAPE",
-
-        studio:
-            "STUDIO",
-
-        custom:
-            "CUSTOM"
-
-    };
-
-
-    return (
-        labels[
-            signature
-        ]
-        ||
-        String(
-            signature ?? ""
-        )
-            .replaceAll(
-                "_",
-                " "
-            )
-            .toUpperCase()
-    );
-
-}
-
-
-/* =========================================================
-   RECOMMENDED FOR
-========================================================= */
-
-function getRecommendedForLabel(
-    value
-) {
-
-    const labels = {
-
-        pop:
-            "POP",
-
-        rock:
-            "ROCK",
-
-        edm:
-            "EDM",
-
-        hiphop:
-            "HIP-HOP",
-
-        hip_hop:
-            "HIP-HOP",
-
-        classical:
-            "CLASSICAL",
-
-        jazz:
-            "JAZZ",
-
-        vocal:
-            "VOCAL",
-
-        studio:
-            "STUDIO",
-
-        gaming:
-            "GAMING",
-
-        acoustic:
-            "ACOUSTIC",
-
-        electronic:
-            "ELECTRONIC",
-
-        all_round:
-            "ALL-ROUND",
-
-        allround:
-            "ALL-ROUND"
-
-    };
-
-
-    return (
-        labels[
-            value
-        ]
-        ||
-        String(
-            value ?? ""
-        )
-            .replaceAll(
-                "_",
-                " "
-            )
-            .toUpperCase()
-    );
-
-}
-
-
-/* =========================================================
-   PRODUCT URL
-========================================================= */
-
-function getProductUrl(
-    product
-) {
-
-    if (
-        product.detail_page
-    ) {
-
-        return product.detail_page;
-
-    }
-
-
-    if (
-        product.slug
-    ) {
-
-        return (
-            `products/${product.slug}.html`
-        );
-
-    }
-
-
-    return "#";
-
-}
-
-
-/* =========================================================
-   PRODUCT IMAGE
-========================================================= */
-
-function getProductImage(
-    product
-) {
-
-    if (
-        product.image_url
-    ) {
-
-        return product.image_url;
-
-    }
-
-
-    if (
-        product.image_path
-    ) {
-
-        return product.image_path;
-
-    }
-
-
-    return "";
-
-}
-
-
-/* =========================================================
-   DESCRIPTION
-========================================================= */
-
-function getProductDescription(
-    product
-) {
-
-    return (
-        product.short_description
-        ||
-        product.subtitle
-        ||
-        product.description
-        ||
-        ""
-    );
-
-}
-
-
-/* =========================================================
-   PRICE
-========================================================= */
-
-function getProductPrice(
-    product
-) {
-
-    if (
-        product.price_gbp ===
-            null
-        ||
-        product.price_gbp ===
-            undefined
-        ||
-        product.price_gbp ===
-            ""
-    ) {
-
-        return "TBC";
-
-    }
-
-
-    const price =
-        Number(
-            product.price_gbp
-        );
-
-
-    if (
-        !Number.isFinite(
-            price
-        )
-    ) {
-
-        return "TBC";
-
-    }
-
-
-    return (
-        `£${price.toFixed(2)}`
-    );
-
-}
-
-
-/* =========================================================
-   ACTION LABEL
-========================================================= */
-
-function getProductActionText(
-    product
-) {
-
-    if (
-        product.status ===
-        "coming_soon"
-    ) {
-
-        return "LEARN MORE →";
-
-    }
-
-
-    return "VIEW PRODUCT →";
-
-}
-
-
-/* =========================================================
-   SOUND SIGNATURE FALLBACK
-========================================================= */
-
-function getProductSoundSignature(
-    product
-) {
-
-    if (
-        product.sound_signature
-    ) {
-
-        return product.sound_signature;
-
-    }
-
-
-    if (
-        product.tuning_type ===
-            "custom"
-        ||
-        product.category ===
-            "custom_tune"
-        ||
-        product.category ===
-            "full_custom"
-    ) {
-
-        return "custom";
-
-    }
-
-
-    return "";
-
-}
-
-
-/* =========================================================
-   NORMALISE RECOMMENDATIONS
-========================================================= */
-
-function getProductRecommendedFor(
-    product
-) {
-
-    const value =
-        product.recommended_for;
-
-
-    if (
-        Array.isArray(
-            value
-        )
-    ) {
-
-        return value
-            .filter(
-                Boolean
-            )
-            .map(
-                item =>
-                    String(
-                        item
-                    )
-                        .trim()
-                        .toLowerCase()
-            );
-
-    }
-
-
-    if (
-        typeof value ===
-        "string"
-    ) {
-
-        return value
-            .split(
-                ","
-            )
-            .map(
-                item =>
-                    item
-                        .trim()
-                        .toLowerCase()
-            )
-            .filter(
-                Boolean
-            );
-
-    }
-
-
-    return [];
-
-}
-
-
-/* =========================================================
-   RENDER RECOMMENDED FOR
-========================================================= */
-
-function renderRecommendedFor(
-    product
-) {
-
-    const recommendations =
-        getProductRecommendedFor(
-            product
-        );
-
-
-    if (
-        recommendations.length ===
-        0
-    ) {
-
-        return "";
-
-    }
-
-
-    return `
-
-        <div class="dynamic-product-recommended">
-
-            <span class="recommended-title">
-                RECOMMENDED FOR
-            </span>
-
-
-            <div class="recommended-tags">
-
-                ${
-                    recommendations
-                        .map(
-                            recommendation => `
-
-                                <span>
-
-                                    ${
-                                        escapeHtml(
-                                            getRecommendedForLabel(
-                                                recommendation
-                                            )
-                                        )
-                                    }
-
-                                </span>
-
-                            `
-                        )
-                        .join("")
-                }
-
+            <div class="eyebrow">
+                HAMMER CRAFT / PRODUCTS
             </div>
+
+
+            <h1>
+
+                Find the right
+
+                <em>
+                    configuration.
+                </em>
+
+            </h1>
+
+
+            <p>
+
+                Browse current Hammer Craft products by how far
+                you want to customise the sound and fit.
+
+            </p>
 
         </div>
 
-    `;
 
-}
+        <div class="catalogue-hero-mark">
+            HC
+        </div>
 
+    </div>
 
-/* =========================================================
-   PRODUCT CARD
-========================================================= */
+</section>
 
-function renderProductCard(
-    product
-) {
 
-    const url =
-        getProductUrl(
-            product
-        );
 
+<!-- =========================================================
+     PRODUCT TYPES
+========================================================= -->
 
-    const image =
-        getProductImage(
-            product
-        );
+<section class="catalogue-types">
 
+    <div class="catalogue-types-inner">
 
-    const description =
-        getProductDescription(
-            product
-        );
+        <article>
 
+            <span>
+                01 / REFERENCE
+            </span>
 
-    const price =
-        getProductPrice(
-            product
-        );
+            <h2>
+                Our sound.
+            </h2>
 
-
-    const actionText =
-        getProductActionText(
-            product
-        );
-
-
-    const soundSignature =
-        getProductSoundSignature(
-            product
-        );
-
-
-    const categoryLabel =
-        getCategoryLabel(
-            product.category
-        );
-
-
-    const statusLabel =
-        getStatusLabel(
-            product.status
-        );
-
-
-    const fitLabel =
-        getFitLabel(
-            product.fit_type
-        );
-
-
-    return `
-
-        <article
-            class="dynamic-product-card"
-            data-category="${
-                escapeHtml(
-                    product.category
-                    ||
-                    ""
-                )
-            }"
-        >
-
-            <a
-                href="${
-                    escapeHtml(
-                        url
-                    )
-                }"
-                class="dynamic-product-image"
-            >
-
-                ${
-                    image
-                    ?
-                    `
-
-                        <img
-                            src="${
-                                escapeHtml(
-                                    image
-                                )
-                            }"
-                            alt="${
-                                escapeHtml(
-                                    product.name
-                                    ||
-                                    "Hammer Craft IEM"
-                                )
-                            }"
-                            loading="lazy"
-
-                            onerror="
-                                this.style.display='none';
-                                this.parentElement.classList.add('image-missing');
-                            "
-                        >
-
-                    `
-                    :
-                    ""
-                }
-
-
-                <div class="dynamic-product-image-fallback">
-
-                    <span>
-                        ${
-                            escapeHtml(
-                                categoryLabel
-                            )
-                        }
-                    </span>
-
-
-                    <strong>
-                        ${
-                            escapeHtml(
-                                product.name
-                                ||
-                                "Hammer Craft"
-                            )
-                        }
-                    </strong>
-
-                </div>
-
-            </a>
-
-
-            <div class="dynamic-product-body">
-
-                <div class="dynamic-product-topline">
-
-                    <span>
-                        ${
-                            escapeHtml(
-                                categoryLabel
-                            )
-                        }
-                    </span>
-
-
-                    <span>
-                        ${
-                            escapeHtml(
-                                statusLabel
-                            )
-                        }
-                    </span>
-
-                </div>
-
-
-                <h2>
-
-                    ${
-                        escapeHtml(
-                            product.name
-                            ||
-                            "Unnamed product"
-                        )
-                    }
-
-                </h2>
-
-
-                ${
-                    product.subtitle
-                    ?
-                    `
-
-                        <span class="dynamic-product-subtitle">
-
-                            ${
-                                escapeHtml(
-                                    product.subtitle
-                                )
-                            }
-
-                        </span>
-
-                    `
-                    :
-                    ""
-                }
-
-
-                ${
-                    description
-                    ?
-                    `
-
-                        <p>
-
-                            ${
-                                escapeHtml(
-                                    description
-                                )
-                            }
-
-                        </p>
-
-                    `
-                    :
-                    ""
-                }
-
-
-                <div class="dynamic-product-tags">
-
-                    ${
-                        soundSignature
-                        ?
-                        `
-
-                            <span class="sound-signature-tag">
-
-                                ${
-                                    escapeHtml(
-                                        getSoundSignatureLabel(
-                                            soundSignature
-                                        )
-                                    )
-                                }
-
-                            </span>
-
-                        `
-                        :
-                        ""
-                    }
-
-
-                    ${
-                        product.fit_type
-                        ?
-                        `
-
-                            <span>
-
-                                ${
-                                    escapeHtml(
-                                        fitLabel
-                                    )
-                                }
-
-                            </span>
-
-                        `
-                        :
-                        ""
-                    }
-
-                </div>
-
-
-                ${
-                    renderRecommendedFor(
-                        product
-                    )
-                }
-
-
-                <div class="dynamic-product-capabilities">
-
-                    ${
-                        product.custom_tuning ===
-                            true
-                        ||
-                        product.custom_tuning_available ===
-                            true
-                        ?
-                        `
-
-                            <span>
-                                CUSTOM SOUND AVAILABLE
-                            </span>
-
-                        `
-                        :
-                        ""
-                    }
-
-
-                    ${
-                        product.custom_fit ===
-                            true
-                        ||
-                        product.custom_fit_available ===
-                            true
-                        ?
-                        `
-
-                            <span>
-                                CUSTOM FIT AVAILABLE
-                            </span>
-
-                        `
-                        :
-                        ""
-                    }
-
-                </div>
-
-
-                <div class="dynamic-product-footer">
-
-                    <strong>
-                        ${price}
-                    </strong>
-
-
-                    <a
-                        href="${
-                            escapeHtml(
-                                url
-                            )
-                        }"
-                    >
-                        ${actionText}
-                    </a>
-
-                </div>
-
-            </div>
+            <p>
+                Finished Hammer Craft tunings, ready to choose
+                as designed.
+            </p>
 
         </article>
 
-    `;
 
-}
+        <article>
 
+            <span>
+                02 / CUSTOM SOUND
+            </span>
 
-/* =========================================================
-   RENDER CATALOGUE
-========================================================= */
+            <h2>
+                Your target.
+            </h2>
 
-function renderCatalogue() {
+            <p>
+                Keep the universal fit while changing the tuning
+                around your preference.
+            </p>
 
-    const grid =
-        document.getElementById(
-            "dynamicProductGrid"
-        );
+        </article>
 
 
-    const status =
-        document.getElementById(
-            "catalogueStatus"
-        );
+        <article>
 
+            <span>
+                03 / CUSTOM FIT
+            </span>
 
-    if (
-        !grid
-        ||
-        !status
-    ) {
+            <h2>
+                Your geometry.
+            </h2>
 
-        return;
+            <p>
+                Use digital ear reconstruction to build around
+                your own ear shape.
+            </p>
 
-    }
+        </article>
 
 
-    const visibleProducts =
-        catalogueProducts.filter(
-            product => {
+        <article>
 
-                if (
-                    activeCategory ===
-                    "all"
-                ) {
+            <span>
+                04 / FULL CUSTOM
+            </span>
 
-                    return true;
+            <h2>
+                Both.
+            </h2>
 
-                }
+            <p>
+                Combine your preferred response with an
+                ear-specific shell.
+            </p>
 
+        </article>
 
-                return (
-                    product.category ===
-                    activeCategory
-                );
+    </div>
 
-            }
-        );
+</section>
 
 
-    if (
-        visibleProducts.length ===
-        0
-    ) {
 
-        grid.innerHTML =
-            "";
+<!-- =========================================================
+     FILTERS
+========================================================= -->
 
+<section class="catalogue-filter-section">
 
-        status.hidden =
-            false;
+    <div class="catalogue-filter-inner">
 
+        <button
+            class="catalogue-filter-button active"
+            type="button"
+            data-category="all"
+        >
+            ALL
+        </button>
 
-        status.textContent =
-            activeCategory ===
-            "all"
 
-            ?
-            "No public products are currently available."
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="reference"
+        >
+            REFERENCE
+        </button>
 
-            :
-            "No products are currently available in this category.";
 
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="custom_tune"
+        >
+            CUSTOM SOUND
+        </button>
 
-        return;
 
-    }
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="custom_fit"
+        >
+            CUSTOM FIT
+        </button>
 
 
-    status.hidden =
-        true;
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="full_custom"
+        >
+            FULL CUSTOM
+        </button>
 
+    </div>
 
-    status.textContent =
-        "";
+</section>
 
 
-    grid.innerHTML =
-        visibleProducts
-            .map(
-                renderProductCard
-            )
-            .join("");
 
-}
+<!-- =========================================================
+     PRODUCT GRID
+========================================================= -->
 
+<section class="dynamic-catalogue-section">
 
-/* =========================================================
-   LOAD PRODUCTS
-========================================================= */
+    <div
+        id="catalogueStatus"
+        class="catalogue-status"
+    >
+        Loading products...
+    </div>
 
-async function loadCatalogueProducts() {
 
-    const status =
-        document.getElementById(
-            "catalogueStatus"
-        );
+    <div
+        id="dynamicProductGrid"
+        class="dynamic-product-grid"
+    ></div>
 
+</section>
 
-    if (
-        !status
-    ) {
 
-        return;
 
-    }
+<!-- =========================================================
+     FIND YOUR SOUND CTA
+========================================================= -->
 
+<section class="catalogue-tuning-cta">
 
-    status.hidden =
-        false;
+    <div class="catalogue-tuning-copy">
 
+        <div class="eyebrow">
+            NOT SURE WHICH PRODUCT?
+        </div>
 
-    status.textContent =
-        "Loading products...";
 
+        <h2>
 
-    if (
-        !window.hcSupabase
-    ) {
+            Find your
 
-        console.error(
-            "Hammer Craft Supabase client is unavailable."
-        );
+            <em>
+                sound first.
+            </em>
 
+        </h2>
 
-        status.textContent =
-            "Unable to connect to the product catalogue.";
 
+        <p>
 
-        return;
+            Build a target with the Hammer Craft public tuning
+            tool and compare it against measured products.
 
-    }
+            If one of our existing models is already close,
+            we will show it before suggesting a custom build.
 
+        </p>
 
-    try {
+    </div>
 
-        const {
-            data,
-            error
-        } =
-            await window.hcSupabase
-                .from(
-                    "products"
-                )
-                .select("*")
-                .eq(
-                    "public_visible",
-                    true
-                )
-                .order(
-                    "display_order",
-                    {
-                        ascending:
-                            true
-                    }
-                )
-                .order(
-                    "name",
-                    {
-                        ascending:
-                            true
-                    }
-                );
 
+    <div class="catalogue-tuning-action">
 
-        if (
-            error
-        ) {
+        <a
+            href="index.html#customTuning"
+            class="catalogue-dark-button"
+        >
+            FIND YOUR SOUND →
+        </a>
 
-            throw error;
+    </div>
 
-        }
+</section>
 
 
-        catalogueProducts =
-            (
-                data
-                ||
-                []
-            )
-                .filter(
-                    product =>
+</main>
 
-                        product.public_visible ===
-                            true
 
-                        &&
 
-                        product.status !==
-                            "hidden"
-                );
+<!-- =========================================================
+     FOOTER
+========================================================= -->
 
+<footer class="site-footer">
 
-        console.log(
-            "Hammer Craft catalogue:",
-            catalogueProducts
-        );
+    <div class="footer-logo">
 
+        <a href="index.html">
 
-        renderCatalogue();
+            <img
+                src="assets/logo.png"
+                alt="Hammer Craft"
+            >
 
-    }
+        </a>
 
-    catch (
-        error
-    ) {
+    </div>
 
-        console.error(
-            "Unable to load catalogue:",
-            error
-        );
 
+    <div class="footer-origin">
 
-        status.hidden =
-            false;
+        <span>
+            HAMMER CRAFT
+        </span>
 
+        <span>
+            BRISTOL / UNITED KINGDOM
+        </span>
 
-        status.textContent =
-            "Product catalogue is temporarily unavailable.";
+        <span>
+            SMALL BATCH. BUILT LOCALLY.
+        </span>
 
-    }
+    </div>
 
-}
 
+    <div class="footer-links">
 
-/* =========================================================
-   FILTER
-========================================================= */
+        <a href="index.html">
+            HOME
+        </a>
 
-function setCatalogueCategory(
-    category
-) {
+        <a href="product.html">
+            PRODUCTS
+        </a>
 
-    activeCategory =
-        category
-        ||
-        "all";
+        <a href="index.html#technology">
+            TECHNOLOGY
+        </a>
 
+        <a href="index.html#customTuning">
+            FIND YOUR SOUND
+        </a>
 
-    document
-        .querySelectorAll(
-            ".catalogue-filter-button"
-        )
-        .forEach(
-            button => {
+        <a href="index.html#contact">
+            CONTACT
+        </a>
 
-                button.classList.toggle(
+        <a href="login.html">
+            ACCOUNT
+        </a>
 
-                    "active",
+    </div>
 
-                    button.dataset.category ===
-                    activeCategory
+</footer>
 
-                );
 
-            }
-        );
 
+<!-- =========================================================
+     SCRIPTS
+========================================================= -->
 
-    renderCatalogue();
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
 
-}
+<script src="supabase-client.js"></script>
 
+<script src="product.js?v=2"></script>
 
-/* =========================================================
-   FILTER EVENTS
-========================================================= */
 
-function setupCatalogueFilters() {
+</body>
 
-    document
-        .querySelectorAll(
-            ".catalogue-filter-button"
-        )
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-
-                        setCatalogueCategory(
-                            button.dataset.category
-                            ||
-                            "all"
-                        );
-
-                    }
-                );
-
-            }
-        );
-
-}
-
-
-/* =========================================================
-   URL CATEGORY
-========================================================= */
-
-function loadCategoryFromUrl() {
-
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
-
-    const requestedCategory =
-        params.get(
-            "category"
-        );
-
-
-    const validCategories =
-        new Set([
-
-            "all",
-
-            "reference",
-
-            "custom_tune",
-
-            "custom_fit",
-
-            "full_custom"
-
-        ]);
-
-
-    if (
-        requestedCategory
-        &&
-        validCategories.has(
-            requestedCategory
-        )
-    ) {
-
-        activeCategory =
-            requestedCategory;
-
-    }
-
-}
-
-
-/* =========================================================
-   START
-========================================================= */
-
-async function startProductCatalogue() {
-
-    loadCategoryFromUrl();
-
-
-    setupCatalogueFilters();
-
-
-    setCatalogueCategory(
-        activeCategory
-    );
-
-
-    await loadCatalogueProducts();
-
-}
-
-
-document.addEventListener(
-    "DOMContentLoaded",
-    startProductCatalogue
-);
+</html>
