@@ -1,494 +1,489 @@
 /* =========================================================
-   HAMMER CRAFT AUTH
+   HAMMER CRAFT
+   SHARED AUTHENTICATION
+   auth.js
+
+   One role source for the whole website:
+       public.profiles.is_admin
 ========================================================= */
 
+(function () {
 
-const hcAuth =
-    window.hcSupabase;
+    "use strict";
 
 
+    function getSupabase() {
 
-/* =========================================================
-   MESSAGE HELPER
-========================================================= */
+        if (!window.hcSupabase) {
 
-
-function setMessage(
-    element,
-    text,
-    type = ""
-) {
-
-    if (!element) {
-        return;
-    }
-
-
-    element.textContent =
-        text;
-
-
-    element.className =
-        "form-message";
-
-
-    if (type) {
-
-        element
-            .classList
-            .add(
-                type
-            );
-
-    }
-
-}
-
-
-
-/* =========================================================
-   GET SESSION
-========================================================= */
-
-
-async function getSession() {
-
-    const {
-        data,
-        error
-    } =
-        await hcAuth
-            .auth
-            .getSession();
-
-
-    if (error) {
-
-        console.error(
-            "Session error:",
-            error
-        );
-
-        return null;
-
-    }
-
-
-    return data.session;
-
-}
-
-
-
-/* =========================================================
-   CHECK ADMIN
-========================================================= */
-
-
-async function isAdmin(
-    userID
-) {
-
-    const {
-        data,
-        error
-    } =
-        await hcAuth
-            .from(
-                "admin_users"
-            )
-            .select(
-                "user_id"
-            )
-            .eq(
-                "user_id",
-                userID
-            )
-            .maybeSingle();
-
-
-    if (error) {
-
-        console.error(
-            "Admin check error:",
-            error
-        );
-
-        return false;
-
-    }
-
-
-    return Boolean(
-        data
-    );
-
-}
-
-
-
-/* =========================================================
-   REGISTER
-========================================================= */
-
-
-const registerForm =
-    document.getElementById(
-        "registerForm"
-    );
-
-
-if (registerForm) {
-
-    registerForm.addEventListener(
-        "submit",
-
-        async event => {
-
-            event.preventDefault();
-
-
-            const name =
-                document
-                    .getElementById(
-                        "registerName"
-                    )
-                    .value
-                    .trim();
-
-
-            const email =
-                document
-                    .getElementById(
-                        "registerEmail"
-                    )
-                    .value
-                    .trim();
-
-
-            const password =
-                document
-                    .getElementById(
-                        "registerPassword"
-                    )
-                    .value;
-
-
-            const confirmation =
-                document
-                    .getElementById(
-                        "registerPasswordConfirm"
-                    )
-                    .value;
-
-
-            const message =
-                document.getElementById(
-                    "registerMessage"
-                );
-
-
-            if (
-                password !==
-                confirmation
-            ) {
-
-                setMessage(
-                    message,
-                    "Passwords do not match.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            if (
-                password.length < 8
-            ) {
-
-                setMessage(
-                    message,
-                    "Password must contain at least 8 characters.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            setMessage(
-                message,
-                "Creating your account..."
-            );
-
-
-            const {
-                data,
-                error
-            } =
-                await hcAuth
-                    .auth
-                    .signUp({
-
-                        email,
-
-                        password,
-
-                        options: {
-
-                            data: {
-
-                                full_name:
-                                    name
-
-                            },
-
-                            emailRedirectTo:
-                                "https://www.hammer-craft.co.uk/login.html"
-
-                        }
-
-                    });
-
-
-            if (error) {
-
-                setMessage(
-                    message,
-                    error.message,
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            if (
-                data.session
-            ) {
-
-                const admin =
-                    await isAdmin(
-                        data.user.id
-                    );
-
-
-                window.location.href =
-                    admin
-                    ? "admin.html"
-                    : "account.html";
-
-
-                return;
-
-            }
-
-
-            setMessage(
-                message,
-                "Account created. Please check your email to confirm your address.",
-                "success"
+            throw new Error(
+                "Hammer Craft could not connect to Supabase."
             );
 
         }
 
-    );
+        return window.hcSupabase;
 
-}
-
-
-
-/* =========================================================
-   LOGIN
-========================================================= */
+    }
 
 
-const loginForm =
-    document.getElementById(
-        "loginForm"
-    );
+    async function getSession() {
+
+        const {
+            data,
+            error
+        } = await getSupabase()
+            .auth
+            .getSession();
 
 
-if (loginForm) {
-
-    loginForm.addEventListener(
-        "submit",
-
-        async event => {
-
-            event.preventDefault();
+        if (error) {
+            throw error;
+        }
 
 
-            const email =
-                document
-                    .getElementById(
-                        "loginEmail"
-                    )
-                    .value
-                    .trim();
+        return data.session || null;
+
+    }
 
 
-            const password =
-                document
-                    .getElementById(
-                        "loginPassword"
-                    )
-                    .value;
+    async function getProfile(userId) {
+
+        if (!userId) {
+            return null;
+        }
 
 
-            const message =
-                document.getElementById(
-                    "loginMessage"
-                );
+        const {
+            data,
+            error
+        } = await getSupabase()
+            .from("profiles")
+            .select(`
+                id,
+                email,
+                full_name,
+                is_admin,
+                created_at
+            `)
+            .eq("id", userId)
+            .maybeSingle();
 
 
-            setMessage(
-                message,
-                "Logging in..."
+        if (error) {
+            throw error;
+        }
+
+
+        return data || null;
+
+    }
+
+
+    async function ensureProfile(user) {
+
+        if (!user) {
+            return null;
+        }
+
+
+        const existing =
+            await getProfile(user.id);
+
+
+        if (existing) {
+            return existing;
+        }
+
+
+        const fullName =
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            null;
+
+
+        const {
+            data,
+            error
+        } = await getSupabase()
+            .from("profiles")
+            .insert({
+                id: user.id,
+                email: user.email || null,
+                full_name: fullName,
+                is_admin: false
+            })
+            .select(`
+                id,
+                email,
+                full_name,
+                is_admin,
+                created_at
+            `)
+            .single();
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        return data;
+
+    }
+
+
+    async function getCurrentState() {
+
+        const session =
+            await getSession();
+
+
+        if (!session?.user) {
+
+            return {
+                session: null,
+                user: null,
+                profile: null,
+                isAdmin: false
+            };
+
+        }
+
+
+        const profile =
+            await ensureProfile(
+                session.user
             );
 
 
-            const {
-                data,
-                error
-            } =
-                await hcAuth
-                    .auth
-                    .signInWithPassword({
+        return {
+            session,
+            user: session.user,
+            profile,
+            isAdmin:
+                profile?.is_admin === true
+        };
 
-                        email,
-                        password
-
-                    });
+    }
 
 
-            if (
-                error ||
-                !data.user
-            ) {
+    async function requireLogin() {
 
-                setMessage(
-                    message,
-                    error?.message ||
-                    "Unable to login.",
-                    "error"
-                );
-
-                return;
-
-            }
+        const state =
+            await getCurrentState();
 
 
-            setMessage(
-                message,
-                "Checking account..."
+        if (!state.user) {
+
+            const current =
+                window.location.href;
+
+            window.location.replace(
+                `login.html?redirect=${
+                    encodeURIComponent(current)
+                }`
             );
 
+            return null;
 
-            const admin =
-                await isAdmin(
-                    data.user.id
-                );
+        }
 
 
-            /*
-                Optional return page.
+        return state;
 
-                If customer was sent to login
-                from ear-scan.html, return them
-                to that page.
-
-                Admin always goes to admin.html.
-            */
-
-            const returnPage =
-                sessionStorage.getItem(
-                    "hc-after-login"
-                );
+    }
 
 
-            sessionStorage.removeItem(
-                "hc-after-login"
+    async function requireCustomer() {
+
+        const state =
+            await requireLogin();
+
+
+        if (!state) {
+            return null;
+        }
+
+
+        if (state.isAdmin) {
+
+            window.location.replace(
+                "admin.html"
             );
 
+            return null;
 
-            if (admin) {
-
-                window.location.replace(
-                    "admin.html"
-                );
-
-                return;
-
-            }
+        }
 
 
-            if (returnPage) {
+        return state;
 
-                window.location.replace(
-                    returnPage
-                );
+    }
 
-                return;
 
-            }
+    async function requireAdmin() {
 
+        const state =
+            await requireLogin();
+
+
+        if (!state) {
+            return null;
+        }
+
+
+        if (!state.isAdmin) {
 
             window.location.replace(
                 "account.html"
             );
 
+            return null;
+
         }
 
-    );
 
-}
+        return state;
 
-
-
-/* =========================================================
-   PASSWORD RESET
-========================================================= */
+    }
 
 
-const forgotPasswordButton =
-    document.getElementById(
-        "forgotPasswordButton"
-    );
+    async function logout(destination = "login.html") {
+
+        const {
+            error
+        } = await getSupabase()
+            .auth
+            .signOut();
 
 
-if (forgotPasswordButton) {
+        if (error) {
+            throw error;
+        }
 
-    forgotPasswordButton
-        .addEventListener(
-            "click",
 
-            async () => {
+        window.location.replace(
+            destination
+        );
+
+    }
+
+
+    function safeRedirectFromQuery() {
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const redirect =
+            params.get("redirect");
+
+
+        if (!redirect) {
+            return null;
+        }
+
+
+        try {
+
+            const target =
+                new URL(
+                    redirect,
+                    window.location.href
+                );
+
+
+            if (
+                target.origin !==
+                window.location.origin
+            ) {
+                return null;
+            }
+
+
+            return target.href;
+
+        }
+
+        catch (error) {
+            return null;
+        }
+
+    }
+
+
+    async function routeAfterLogin(user) {
+
+        const profile =
+            await ensureProfile(user);
+
+
+        /* Admin always opens the admin dashboard. */
+        if (
+            profile?.is_admin === true
+        ) {
+
+            window.location.replace(
+                "admin.html"
+            );
+
+            return;
+
+        }
+
+
+        /* Only customers use requested return destinations. */
+        const redirect =
+            safeRedirectFromQuery();
+
+
+        if (redirect) {
+
+            window.location.replace(
+                redirect
+            );
+
+            return;
+
+        }
+
+
+        const storedRedirect =
+            sessionStorage.getItem(
+                "hc-after-login"
+            );
+
+
+        sessionStorage.removeItem(
+            "hc-after-login"
+        );
+
+
+        if (storedRedirect) {
+
+            try {
+
+                const target =
+                    new URL(
+                        storedRedirect,
+                        window.location.href
+                    );
+
+
+                if (
+                    target.origin ===
+                    window.location.origin
+                ) {
+
+                    window.location.replace(
+                        target.href
+                    );
+
+                    return;
+
+                }
+
+            }
+
+            catch (error) {
+                console.warn(
+                    "Ignored invalid stored redirect.",
+                    error
+                );
+            }
+
+        }
+
+
+        window.location.replace(
+            "account.html"
+        );
+
+    }
+
+
+    function setFormMessage(
+        element,
+        text,
+        type = ""
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+
+        element.textContent = text || "";
+        element.className = "form-message";
+
+
+        if (type) {
+            element.classList.add(type);
+        }
+
+    }
+
+
+    async function initialiseRegistration() {
+
+        const registerForm =
+            document.getElementById(
+                "registerForm"
+            );
+
+
+        if (!registerForm) {
+            return;
+        }
+
+
+        registerForm.addEventListener(
+            "submit",
+            async event => {
+
+                event.preventDefault();
+
+
+                const name =
+                    document.getElementById(
+                        "registerName"
+                    ).value.trim();
+
 
                 const email =
-                    document
-                        .getElementById(
-                            "loginEmail"
-                        )
-                        .value
-                        .trim();
+                    document.getElementById(
+                        "registerEmail"
+                    ).value.trim();
+
+
+                const password =
+                    document.getElementById(
+                        "registerPassword"
+                    ).value;
+
+
+                const confirmation =
+                    document.getElementById(
+                        "registerPasswordConfirm"
+                    ).value;
 
 
                 const message =
                     document.getElementById(
-                        "loginMessage"
+                        "registerMessage"
                     );
 
 
-                if (!email) {
+                if (
+                    password !== confirmation
+                ) {
 
-                    setMessage(
+                    setFormMessage(
                         message,
-                        "Enter your email address first.",
+                        "Passwords do not match.",
                         "error"
                     );
 
@@ -497,418 +492,114 @@ if (forgotPasswordButton) {
                 }
 
 
-                setMessage(
+                if (
+                    password.length < 8
+                ) {
+
+                    setFormMessage(
+                        message,
+                        "Password must contain at least 8 characters.",
+                        "error"
+                    );
+
+                    return;
+
+                }
+
+
+                setFormMessage(
                     message,
-                    "Sending password reset email..."
+                    "Creating your account..."
                 );
 
 
-                const {
-                    error
-                } =
-                    await hcAuth
+                try {
+
+                    const {
+                        data,
+                        error
+                    } = await getSupabase()
                         .auth
-                        .resetPasswordForEmail(
-
+                        .signUp({
                             email,
-
-                            {
-
-                                redirectTo:
+                            password,
+                            options: {
+                                data: {
+                                    full_name: name
+                                },
+                                emailRedirectTo:
                                     "https://www.hammer-craft.co.uk/login.html"
-
                             }
+                        });
 
+
+                    if (error) {
+                        throw error;
+                    }
+
+
+                    if (
+                        data.user &&
+                        data.session
+                    ) {
+
+                        await ensureProfile(
+                            data.user
                         );
 
 
-                if (error) {
+                        await routeAfterLogin(
+                            data.user
+                        );
 
-                    setMessage(
+                        return;
+
+                    }
+
+
+                    setFormMessage(
                         message,
-                        error.message,
+                        "Account created. Please check your email to confirm your address.",
+                        "success"
+                    );
+
+                }
+
+                catch (error) {
+
+                    setFormMessage(
+                        message,
+                        error.message ||
+                        "Unable to create account.",
                         "error"
                     );
 
-                    return;
-
                 }
-
-
-                setMessage(
-                    message,
-                    "Password reset email sent.",
-                    "success"
-                );
 
             }
-
         );
 
-}
+    }
 
 
+    window.HCAuth = {
+        getSupabase,
+        getSession,
+        getProfile,
+        ensureProfile,
+        getCurrentState,
+        requireLogin,
+        requireCustomer,
+        requireAdmin,
+        logout,
+        safeRedirectFromQuery,
+        routeAfterLogin
+    };
 
-/* =========================================================
-   LOGOUT
-========================================================= */
 
-
-const logoutButton =
-    document.getElementById(
-        "logoutButton"
+    document.addEventListener(
+        "DOMContentLoaded",
+        initialiseRegistration
     );
 
-
-if (logoutButton) {
-
-    logoutButton.addEventListener(
-        "click",
-
-        async () => {
-
-            await hcAuth
-                .auth
-                .signOut();
-
-
-            window.location.replace(
-                "index.html"
-            );
-
-        }
-
-    );
-
-}
-
-
-
-/* =========================================================
-   LOAD CUSTOMER ACCOUNT
-========================================================= */
-
-
-async function loadAccountPage() {
-
-    const accountPage =
-        document.querySelector(
-            ".account-page"
-        );
-
-
-    if (!accountPage) {
-        return;
-    }
-
-
-    const session =
-        await getSession();
-
-
-    if (!session) {
-
-        window.location.replace(
-            "login.html"
-        );
-
-        return;
-
-    }
-
-
-    const user =
-        session.user;
-
-
-    /*
-        If an admin manually opens account.html,
-        send them to admin.html.
-    */
-
-    const admin =
-        await isAdmin(
-            user.id
-        );
-
-
-    if (admin) {
-
-        window.location.replace(
-            "admin.html"
-        );
-
-        return;
-
-    }
-
-
-    const {
-        data: profile,
-        error: profileError
-    } =
-        await hcAuth
-            .from(
-                "profiles"
-            )
-            .select(
-                "id,email,full_name,created_at"
-            )
-            .eq(
-                "id",
-                user.id
-            )
-            .maybeSingle();
-
-
-    if (profileError) {
-
-        console.error(
-            profileError
-        );
-
-    }
-
-
-    const nameElement =
-        document.getElementById(
-            "customerName"
-        );
-
-
-    if (nameElement) {
-
-        nameElement.textContent =
-            profile?.full_name ||
-            user.user_metadata
-                ?.full_name ||
-            "Hammer Craft Customer";
-
-    }
-
-
-    const emailElement =
-        document.getElementById(
-            "customerEmail"
-        );
-
-
-    if (emailElement) {
-
-        emailElement.textContent =
-            user.email;
-
-    }
-
-
-    const {
-        data: scans,
-        error: scansError
-    } =
-        await hcAuth
-            .from(
-                "ear_scans"
-            )
-            .select(
-                `
-                id,
-                status,
-                left_image_count,
-                right_image_count,
-                left_stl_path,
-                right_stl_path,
-                created_at,
-                updated_at
-                `
-            )
-            .eq(
-                "user_id",
-                user.id
-            )
-            .order(
-                "created_at",
-                {
-                    ascending:
-                        false
-                }
-            );
-
-
-    const list =
-        document.getElementById(
-            "scanList"
-        );
-
-
-    if (!list) {
-        return;
-    }
-
-
-    if (scansError) {
-
-        console.error(
-            scansError
-        );
-
-
-        list.innerHTML = `
-
-            <div class="loading-card">
-                Unable to load scan history.
-            </div>
-
-        `;
-
-
-        return;
-
-    }
-
-
-    if (
-        !scans ||
-        scans.length === 0
-    ) {
-
-        list.innerHTML = `
-
-            <div class="empty-scans">
-
-                <strong>
-                    NO EAR SCANS YET
-                </strong>
-
-                <p>
-                    Create your first digital ear capture.
-                </p>
-
-                <a href="ear-scan.html">
-                    START EAR SCAN →
-                </a>
-
-            </div>
-
-        `;
-
-
-        return;
-
-    }
-
-
-    list.innerHTML =
-        "";
-
-
-    scans.forEach(
-        scan => {
-
-            const date =
-                new Date(
-                    scan.created_at
-                )
-                .toLocaleDateString(
-                    "en-GB",
-                    {
-
-                        day:
-                            "2-digit",
-
-                        month:
-                            "short",
-
-                        year:
-                            "numeric"
-
-                    }
-                );
-
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-
-            card.className =
-                "scan-history-card";
-
-
-            card.innerHTML = `
-
-                <div class="scan-card-top">
-
-                    <span>
-                        ${date}
-                    </span>
-
-                    <strong>
-                        ${String(scan.status).toUpperCase()}
-                    </strong>
-
-                </div>
-
-
-                <h3>
-                    EAR SCAN
-                </h3>
-
-
-                <div class="scan-stats">
-
-                    <div>
-
-                        <span>
-                            LEFT
-                        </span>
-
-                        <strong>
-                            ${scan.left_image_count}
-                            IMAGES
-                        </strong>
-
-                    </div>
-
-
-                    <div>
-
-                        <span>
-                            RIGHT
-                        </span>
-
-                        <strong>
-                            ${scan.right_image_count}
-                            IMAGES
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                <div class="scan-id">
-                    ${scan.id}
-                </div>
-
-            `;
-
-
-            list.appendChild(
-                card
-            );
-
-        }
-
-    );
-
-}
-
-
-
-/* =========================================================
-   INITIALISE
-========================================================= */
-
-
-loadAccountPage();
+})();

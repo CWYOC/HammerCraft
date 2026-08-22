@@ -10,23 +10,23 @@
 ========================================================= */
 
 :root {
-    --account-bg: #080808;
-    --account-surface: #0d0d0d;
-    --account-surface-2: #111111;
-    --account-surface-3: #161616;
+    --account-bg: #f2eee8;
+    --account-surface: #f8f5f0;
+    --account-surface-2: #ffffff;
+    --account-surface-3: #ebe5dd;
 
-    --account-border: rgba(255, 255, 255, 0.10);
-    --account-border-strong: rgba(255, 255, 255, 0.18);
+    --account-border: rgba(23, 23, 23, 0.12);
+    --account-border-strong: rgba(23, 23, 23, 0.24);
 
-    --account-text: #f4f4f4;
-    --account-muted: #969696;
-    --account-dim: #666666;
+    --account-text: #171717;
+    --account-muted: #6f6a64;
+    --account-dim: #99928a;
 
-    --account-accent: #ff6a00;
+    --account-accent: #d86a2b;
 
-    --account-success: #64c783;
-    --account-warning: #e5b75a;
-    --account-danger: #e86a6a;
+    --account-success: #357249;
+    --account-warning: #a87617;
+    --account-danger: #a43f36;
 
     --account-radius: 2px;
 
@@ -45,8 +45,8 @@
     background:
         linear-gradient(
             180deg,
-            #080808 0%,
-            #0a0a0a 100%
+            #f2eee8 0%,
+            #eee8e0 100%
         );
 
     color: var(--account-text);
@@ -513,7 +513,7 @@
 .status-badge.uploaded,
 .status-badge.pending {
     color:
-        #aeb9ff;
+        #465f93;
 
     border-color:
         rgba(174, 185, 255, 0.35);
@@ -640,7 +640,7 @@
         var(--account-text);
 
     color:
-        #080808;
+        #f2eee8;
 
     border-color:
         var(--account-text);
@@ -929,7 +929,7 @@
         var(--account-text);
 
     color:
-        #080808;
+        #f2eee8;
 
     border-color:
         var(--account-text);
@@ -957,7 +957,7 @@
         var(--account-accent);
 
     color:
-        #080808;
+        #f2eee8;
 
     font-size: 10px;
 

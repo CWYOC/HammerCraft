@@ -12,16 +12,16 @@
 :root {
 
     --admin-bg:
-        #080808;
+        #f2eee8;
 
     --admin-surface:
-        #0d0d0d;
+        #f8f5f0;
 
     --admin-surface-2:
-        #111111;
+        #ebe5dd;
 
     --admin-surface-3:
-        #171717;
+        #e9e3db;
 
     --admin-border:
         rgba(
@@ -40,28 +40,28 @@
         );
 
     --admin-text:
-        #f2f2f2;
+        #171717;
 
     --admin-muted:
-        #8c8c8c;
+        #6f6a64;
 
     --admin-dim:
-        #5d5d5d;
+        #99928a;
 
     --admin-accent:
-        #ff6a00;
+        #d86a2b;
 
     --admin-success:
-        #68c985;
+        #357249;
 
     --admin-warning:
-        #e4b65a;
+        #a87617;
 
     --admin-danger:
-        #e86c6c;
+        #a43f36;
 
     --admin-blue:
-        #9eacff;
+        #465f93;
 
     --admin-max:
         1500px;
@@ -425,7 +425,7 @@ textarea {
         );
 
     color:
-        #080808;
+        #f2eee8;
 
     border-color:
         var(
@@ -801,7 +801,7 @@ textarea {
         );
 
     background:
-        #0a0a0a;
+        #f8f5f0;
 
     color:
         var(
@@ -895,7 +895,7 @@ textarea {
         );
 
     background:
-        #0f0f0f;
+        #ffffff;
 
 }
 
@@ -994,7 +994,7 @@ textarea {
         );
 
     color:
-        #080808;
+        #f2eee8;
 
     border-color:
         var(
@@ -1017,7 +1017,7 @@ textarea {
         );
 
     color:
-        #090909;
+        #e9e3db;
 
 }
 
@@ -1059,7 +1059,7 @@ textarea {
         );
 
     color:
-        #080808;
+        #f2eee8;
 
     border-color:
         var(
@@ -1634,7 +1634,7 @@ button:disabled {
         );
 
     color:
-        #080808;
+        #f2eee8;
 
 }
 
@@ -1665,7 +1665,7 @@ button:disabled {
         );
 
     color:
-        #080808;
+        #f2eee8;
 
 }
 
@@ -1890,7 +1890,7 @@ button:disabled {
         );
 
     background:
-        #0a0a0a;
+        #f8f5f0;
 
     cursor:
         pointer;
@@ -2018,7 +2018,7 @@ button:disabled {
         linear-gradient(
             145deg,
             #111,
-            #1a1a1a
+            #ded6cc
         );
 
     color:
@@ -2329,7 +2329,7 @@ button:disabled {
         20px;
 
     background:
-        #0a0a0a;
+        #f8f5f0;
 
     border:
         1px solid
@@ -2475,7 +2475,7 @@ button:disabled {
         34px;
 
     background:
-        #0d0d0d;
+        #f8f5f0;
 
     border:
         1px solid

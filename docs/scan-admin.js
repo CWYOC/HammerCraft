@@ -187,13 +187,13 @@ async function initialiseProcessor() {
     } =
         await processorDB
             .from(
-                "admin_users"
+                "profiles"
             )
             .select(
-                "user_id"
+                "is_admin"
             )
             .eq(
-                "user_id",
+                "id",
                 currentAdmin.id
             )
             .maybeSingle();
@@ -213,6 +213,8 @@ async function initialiseProcessor() {
 
     if (
         !adminRow
+        ||
+        adminRow.is_admin !== true
     ) {
 
         console.error(

@@ -2841,7 +2841,7 @@ async function startCustomBuild() {
     ) {
 
         window.location.href =
-            "account.html?next=custom-build";
+            `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
 
         return;
@@ -2874,7 +2874,7 @@ async function startCustomBuild() {
         ) {
 
             window.location.href =
-                "account.html?next=custom-build";
+                `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
 
             return;
@@ -2890,7 +2890,7 @@ async function startCustomBuild() {
          */
 
         window.location.href =
-            "account.html?next=custom-build";
+            `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
     }
 
@@ -2905,7 +2905,7 @@ async function startCustomBuild() {
 
 
         window.location.href =
-            "account.html?next=custom-build";
+            `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
     }
 

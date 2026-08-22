@@ -250,41 +250,11 @@ async function redirectLoggedInUser(
 ) {
 
     /*
-        First check whether the URL contains:
+        Admin routing is checked FIRST.
 
-        login.html?redirect=...
-
-        This is used by:
-        - basket
-        - order
-        - ear scan
-        - checkout-related pages
-
-        The redirect takes priority over the
-        normal account/admin redirect.
-    */
-
-    const redirect =
-        getSafeRedirect();
-
-
-    if (
-        redirect
-    ) {
-
-        window.location.replace(
-            redirect
-        );
-
-        return;
-
-    }
-
-
-    /*
-        No explicit redirect.
-
-        Check whether this account is an admin.
+        That means an administrator always lands on
+        admin.html, even if login.html was opened with
+        a customer redirect parameter.
     */
 
     const isAdmin =
@@ -307,8 +277,26 @@ async function redirectLoggedInUser(
 
 
     /*
-        Normal customer.
+        Normal customers may return to the page/action
+        that originally asked them to sign in.
     */
+
+    const redirect =
+        getSafeRedirect();
+
+
+    if (
+        redirect
+    ) {
+
+        window.location.replace(
+            redirect
+        );
+
+        return;
+
+    }
+
 
     window.location.replace(
         "account.html"
@@ -416,53 +404,48 @@ async function checkIsAdmin(
 
     try {
 
-        const {
-            data,
-            error
-        } =
-            await loginDB
-                .from(
-                    "admin_users"
-                )
-                .select(
-                    "user_id"
-                )
-                .eq(
-                    "user_id",
-                    userID
-                )
-                .maybeSingle();
-
-
         if (
-            error
+            window.HCAuth
         ) {
 
-            /*
-                Do not block normal customers
-                if the admin check itself fails.
-            */
+            const profile =
+                await window.HCAuth
+                    .getProfile(
+                        userID
+                    );
 
-            console.warn(
-                "Admin check failed:",
-                error
+
+            return (
+                profile?.is_admin ===
+                true
             );
-
-
-            return false;
 
         }
 
 
-        return Boolean(
-            data
+        const {
+            data,
+            error
+        } = await loginDB
+            .from("profiles")
+            .select("is_admin")
+            .eq("id", userID)
+            .maybeSingle();
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        return (
+            data?.is_admin ===
+            true
         );
 
     }
 
-    catch (
-        error
-    ) {
+    catch (error) {
 
         console.warn(
             "Admin lookup error:",
@@ -473,9 +456,7 @@ async function checkIsAdmin(
         return false;
 
     }
-
 }
-
 
 
 /* =========================================================

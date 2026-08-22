@@ -191,112 +191,40 @@ function setMessage(
 
 async function ensureAdmin() {
 
-    if (
-        !window.hcSupabase
-    ) {
+    if (!window.HCAuth) {
 
         throw new Error(
-            "Supabase client unavailable."
+            "Hammer Craft authentication helper is unavailable."
         );
 
     }
 
 
-    const {
-        data,
-        error
-    } =
-        await window.hcSupabase
-            .auth
-            .getSession();
+    const state =
+        await window.HCAuth
+            .requireAdmin();
 
 
-    if (
-        error
-    ) {
-
-        throw error;
-
-    }
-
-
-    if (
-        !data.session
-    ) {
-
-        window.location.href =
-            "account.html?next=admin";
-
-
+    if (!state) {
         return false;
-
     }
 
 
     currentAdminUser =
-        data.session.user;
+        state.user;
 
 
-    document
-        .getElementById(
+    const emailElement =
+        document.getElementById(
             "adminEmail"
-        )
-        .textContent =
-            currentAdminUser.email
-            ||
-            "ADMIN";
-
-
-    /*
-     * Change the following admin check if
-     * your schema stores admin permissions
-     * somewhere else.
-     */
-
-    const {
-        data: profile,
-        error: profileError
-    } =
-        await window.hcSupabase
-            .from(
-                "profiles"
-            )
-            .select(
-                "is_admin"
-            )
-            .eq(
-                "id",
-                currentAdminUser.id
-            )
-            .maybeSingle();
-
-
-    if (
-        profileError
-    ) {
-
-        throw profileError;
-
-    }
-
-
-    if (
-        !profile
-        ||
-        profile.is_admin !==
-            true
-    ) {
-
-        alert(
-            "This account does not have admin access."
         );
 
 
-        window.location.href =
-            "index.html";
+    if (emailElement) {
 
-
-        return false;
+        emailElement.textContent =
+            currentAdminUser.email ||
+            "ADMIN";
 
     }
 
@@ -312,13 +240,26 @@ async function ensureAdmin() {
 
 async function logoutAdmin() {
 
-    await window.hcSupabase
-        .auth
-        .signOut();
+    try {
 
+        await window.HCAuth
+            .logout();
 
-    window.location.href =
-        "index.html";
+    }
+
+    catch (error) {
+
+        console.error(
+            "Admin logout error:",
+            error
+        );
+
+        alert(
+            error.message ||
+            "Unable to sign out."
+        );
+
+    }
 
 }
 

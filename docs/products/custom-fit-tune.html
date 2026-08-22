@@ -119,7 +119,7 @@
     <div class="site-header-actions">
 
         <a
-            href="../account.html"
+            href="../login.html"
             class="header-account-link"
         >
             ACCOUNT
@@ -1728,7 +1728,7 @@
             EAR SCAN
         </a>
 
-        <a href="../account.html">
+        <a href="../login.html">
             ACCOUNT
         </a>
 
@@ -2206,7 +2206,7 @@
         ) {
 
             window.location.href =
-                "../account.html?next=full-custom";
+                `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
             return;
 
@@ -2238,7 +2238,7 @@
             ) {
 
                 window.location.href =
-                    "../account.html?next=full-custom";
+                    `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
                 return;
 
@@ -2253,7 +2253,7 @@
              */
 
             window.location.href =
-                "../account.html?next=full-custom";
+                `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
         }
 
@@ -2268,7 +2268,7 @@
 
 
             window.location.href =
-                "../account.html?next=full-custom";
+                `../login.html?redirect=${encodeURIComponent(window.location.href)}`;
 
         }
 
