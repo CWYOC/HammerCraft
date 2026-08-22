@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Explore Hammer Craft IEMs, including reference, custom-tuned, custom-fit and full-custom models."
+    >
+
+    <title>
+        Products | Hammer Craft
+    </title>
+
+
+    <!-- =====================================================
+         FAVICON
+    ====================================================== -->
+
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="32x32"
+        href="assets/favicon-32.png"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        sizes="16x16"
+        href="assets/favicon-16.png"
+    >
+
+    <link
+        rel="apple-touch-icon"
+        sizes="180x180"
+        href="assets/apple-touch-icon.png"
+    >
+
+    <link
+        rel="shortcut icon"
+        href="assets/favicon.ico"
+    >
+
+
+    <!-- =====================================================
+         CSS
+    ====================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="style.css?v=70"
+    >
+
+    <link
+        rel="stylesheet"
+        href="product-list.css?v=2"
+    >
+
+</head>
+
+
+
+<body>
+
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header class="site-header">
+
+    <a
+        href="index.html"
+        class="site-brand"
+        aria-label="Hammer Craft home"
+    >
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+    </a>
+
+
+    <nav class="site-nav">
+
+        <a href="product.html">
+            PRODUCTS
+        </a>
+
+        <a href="index.html#technology">
+            TECHNOLOGY
+        </a>
+
+        <a href="index.html#customTuning">
+            FIND YOUR SOUND
+        </a>
+
+        <a href="index.html#digitalFit">
+            DIGITAL FIT
+        </a>
+
+    </nav>
+
+
+    <div class="site-header-actions">
+
+        <a
+            href="account.html"
+            class="header-account-link"
+        >
+            ACCOUNT
+        </a>
+
+    </div>
+
+</header>
+
+
+
+<main class="catalogue-page">
+
+
+<!-- =========================================================
+     HERO
+========================================================= -->
+
+<section class="catalogue-hero">
+
+    <div class="eyebrow">
+        HAMMER CRAFT / PRODUCTS
+    </div>
+
+
+    <h1>
+
+        Find the right
+
+        <em>
+            configuration.
+        </em>
+
+    </h1>
+
+
+    <p>
+
+        Browse current Hammer Craft products by how far
+        you want to customise the sound and fit.
+
+    </p>
+
+</section>
+
+
+
+<!-- =========================================================
+     FILTER
+========================================================= -->
+
+<section class="catalogue-filter-section">
+
+    <div class="catalogue-filter-inner">
+
+        <button
+            class="catalogue-filter-button active"
+            type="button"
+            data-category="all"
+        >
+            ALL
+        </button>
+
+
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="reference"
+        >
+            REFERENCE
+        </button>
+
+
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="custom_tune"
+        >
+            CUSTOM SOUND
+        </button>
+
+
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="custom_fit"
+        >
+            CUSTOM FIT
+        </button>
+
+
+        <button
+            class="catalogue-filter-button"
+            type="button"
+            data-category="full_custom"
+        >
+            FULL CUSTOM
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     PRODUCT CATALOGUE
+========================================================= -->
+
+<section class="dynamic-catalogue-section">
+
+    <div
+        id="catalogueStatus"
+        class="catalogue-status"
+    >
+        Loading products...
+    </div>
+
+
+    <div
+        id="dynamicProductGrid"
+        class="dynamic-product-grid"
+    ></div>
+
+</section>
+
+
+
+<!-- =========================================================
+     TUNING CTA
+========================================================= -->
+
+<section class="catalogue-tuning-cta">
+
+    <div>
+
+        <div class="eyebrow">
+            NOT SURE WHICH PRODUCT?
+        </div>
+
+
+        <h2>
+            Find your sound first.
+        </h2>
+
+
+        <p>
+
+            Use the public Hammer Craft tuning tool to
+            build a target and compare it against real
+            measured products.
+
+        </p>
+
+    </div>
+
+
+    <a
+        href="index.html#customTuning"
+        class="primary-button"
+    >
+        OPEN TUNING TOOL
+    </a>
+
+</section>
+
+
+</main>
+
+
+
+<!-- =========================================================
+     FOOTER
+========================================================= -->
+
+<footer class="site-footer">
+
+    <div>
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+    </div>
+
+
+    <div>
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+        <span>
+            BRISTOL / UNITED KINGDOM
+        </span>
+
+    </div>
+
+
+    <div>
+
+        <a href="index.html">
+            HOME
+        </a>
+
+        <a href="index.html#technology">
+            TECHNOLOGY
+        </a>
+
+        <a href="index.html#customTuning">
+            FIND YOUR SOUND
+        </a>
+
+        <a href="account.html">
+            ACCOUNT
+        </a>
+
+    </div>
+
+</footer>
+
+
+
+<!-- =========================================================
+     SUPABASE
+========================================================= -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+<script src="supabase-client.js"></script>
+
+
+
+<!-- =========================================================
+     DYNAMIC PRODUCT CATALOGUE
+========================================================= -->
+
+<script>
+
+    let catalogueProducts =
+        [];
+
+
+    let activeCategory =
+        "all";
+
+
+    /* =====================================================
+       HTML ESCAPE
+    ====================================================== */
+
+    function escapeHtml(
+        value
+    ) {
+
+        return String(
+            value ?? ""
+        )
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                "\"",
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+
+    }
+
+
+    /* =====================================================
+       CATEGORY LABEL
+    ====================================================== */
+
+    function getCategoryLabel(
+        category
+    ) {
+
+        const labels = {
+
+            reference:
+                "REFERENCE",
+
+            custom_tune:
+                "CUSTOM SOUND",
+
+            custom_fit:
+                "CUSTOM FIT",
+
+            full_custom:
+                "FULL CUSTOM"
+
+        };
+
+
+        return labels[
+            category
+        ]
+        ||
+        "PRODUCT";
+
+    }
+
+
+    /* =====================================================
+       FIT LABEL
+    ====================================================== */
+
+    function getFitLabel(
+        fitType
+    ) {
+
+        const labels = {
+
+            universal:
+                "UNIVERSAL FIT",
+
+            custom:
+                "CUSTOM FIT",
+
+            ear_specific:
+                "EAR-SPECIFIC FIT"
+
+        };
+
+
+        return labels[
+            fitType
+        ]
+        ||
+        String(
+            fitType ?? ""
+        )
+            .replaceAll(
+                "_",
+                " "
+            )
+            .toUpperCase();
+
+    }
+
+
+    /* =====================================================
+       TUNING LABEL
+    ====================================================== */
+
+    function getTuningLabel(
+        tuningType
+    ) {
+
+        const labels = {
+
+            reference:
+                "REFERENCE TUNE",
+
+            custom:
+                "CUSTOM TUNE",
+
+            custom_tune:
+                "CUSTOM TUNE"
+
+        };
+
+
+        return labels[
+            tuningType
+        ]
+        ||
+        String(
+            tuningType ?? ""
+        )
+            .replaceAll(
+                "_",
+                " "
+            )
+            .toUpperCase();
+
+    }
+
+
+    /* =====================================================
+       STATUS LABEL
+    ====================================================== */
+
+    function getStatusLabel(
+        status
+    ) {
+
+        const labels = {
+
+            in_stock:
+                "IN STOCK",
+
+            low_stock:
+                "LOW STOCK",
+
+            out_of_stock:
+                "OUT OF STOCK",
+
+            coming_soon:
+                "COMING SOON"
+
+        };
+
+
+        return labels[
+            status
+        ]
+        ||
+        String(
+            status ?? ""
+        )
+            .replaceAll(
+                "_",
+                " "
+            )
+            .toUpperCase();
+
+    }
+
+
+    /* =====================================================
+       PRODUCT PAGE URL
+    ====================================================== */
+
+    function getProductUrl(
+        product
+    ) {
+
+        if (
+            product.detail_page
+        ) {
+
+            return product.detail_page;
+
+        }
+
+
+        if (
+            product.slug
+        ) {
+
+            return `products/${product.slug}.html`;
+
+        }
+
+
+        return "#";
+
+    }
+
+
+    /* =====================================================
+       PRODUCT IMAGE
+    ====================================================== */
+
+    function getProductImage(
+        product
+    ) {
+
+        if (
+            product.image_url
+        ) {
+
+            return product.image_url;
+
+        }
+
+
+        if (
+            product.slug
+        ) {
+
+            return `assets/products/${product.slug}/hero.jpg`;
+
+        }
+
+
+        return "";
+
+    }
+
+
+    /* =====================================================
+       RENDER PRODUCT
+    ====================================================== */
+
+    function renderProductCard(
+        product
+    ) {
+
+        const url =
+            getProductUrl(
+                product
+            );
+
+
+        const image =
+            getProductImage(
+                product
+            );
+
+
+        const price =
+
+            product.price_gbp !==
+                null
+            &&
+            product.price_gbp !==
+                undefined
+
+            ?
+            `£${Number(
+                product.price_gbp
+            ).toFixed(2)}`
+
+            :
+            "TBC";
+
+
+        const description =
+
+            product.short_description
+
+            ||
+            product.subtitle
+
+            ||
+            product.description
+
+            ||
+            "";
+
+
+        return `
+
+            <article
+                class="dynamic-product-card"
+                data-category="${
+                    escapeHtml(
+                        product.category
+                    )
+                }"
+            >
+
+                <a
+                    href="${
+                        escapeHtml(
+                            url
+                        )
+                    }"
+                    class="dynamic-product-image"
+                >
+
+                    ${
+                        image
+                        ?
+                        `
+
+                            <img
+                                src="${
+                                    escapeHtml(
+                                        image
+                                    )
+                                }"
+                                alt="${
+                                    escapeHtml(
+                                        product.name
+                                    )
+                                }"
+                                loading="lazy"
+                                onerror="
+                                    this.style.display='none';
+                                    this.parentElement.classList.add('image-missing');
+                                "
+                            >
+
+                        `
+                        :
+                        ""
+                    }
+
+
+                    <div class="dynamic-product-image-fallback">
+
+                        <span>
+
+                            ${
+                                escapeHtml(
+                                    getCategoryLabel(
+                                        product.category
+                                    )
+                                )
+                            }
+
+                        </span>
+
+
+                        <strong>
+
+                            ${
+                                escapeHtml(
+                                    product.name
+                                )
+                            }
+
+                        </strong>
+
+                    </div>
+
+                </a>
+
+
+                <div class="dynamic-product-body">
+
+                    <div class="dynamic-product-topline">
+
+                        <span>
+
+                            ${
+                                escapeHtml(
+                                    getCategoryLabel(
+                                        product.category
+                                    )
+                                )
+                            }
+
+                        </span>
+
+
+                        <span>
+
+                            ${
+                                escapeHtml(
+                                    getStatusLabel(
+                                        product.status
+                                    )
+                                )
+                            }
+
+                        </span>
+
+                    </div>
+
+
+                    <h2>
+
+                        ${
+                            escapeHtml(
+                                product.name
+                            )
+                        }
+
+                    </h2>
+
+
+                    ${
+                        description
+                        ?
+                        `
+
+                            <p>
+
+                                ${
+                                    escapeHtml(
+                                        description
+                                    )
+                                }
+
+                            </p>
+
+                        `
+                        :
+                        ""
+                    }
+
+
+                    <div class="dynamic-product-tags">
+
+                        ${
+                            product.tuning_type
+                            ?
+                            `
+
+                                <span>
+
+                                    ${
+                                        escapeHtml(
+                                            getTuningLabel(
+                                                product.tuning_type
+                                            )
+                                        )
+                                    }
+
+                                </span>
+
+                            `
+                            :
+                            ""
+                        }
+
+
+                        ${
+                            product.fit_type
+                            ?
+                            `
+
+                                <span>
+
+                                    ${
+                                        escapeHtml(
+                                            getFitLabel(
+                                                product.fit_type
+                                            )
+                                        )
+                                    }
+
+                                </span>
+
+                            `
+                            :
+                            ""
+                        }
+
+                    </div>
+
+
+                    <div class="dynamic-product-footer">
+
+                        <strong>
+
+                            ${price}
+
+                        </strong>
+
+
+                        <a
+                            href="${
+                                escapeHtml(
+                                    url
+                                )
+                            }"
+                        >
+                            VIEW PRODUCT →
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        `;
+
+    }
+
+
+    /* =====================================================
+       RENDER CATALOGUE
+    ====================================================== */
+
+    function renderCatalogue() {
+
+        const grid =
+            document.getElementById(
+                "dynamicProductGrid"
+            );
+
+
+        const status =
+            document.getElementById(
+                "catalogueStatus"
+            );
+
+
+        const visibleProducts =
+
+            catalogueProducts.filter(
+                product =>
+
+                    activeCategory ===
+                        "all"
+
+                    ||
+
+                    product.category ===
+                        activeCategory
+            );
+
+
+        if (
+            visibleProducts.length ===
+            0
+        ) {
+
+            grid.innerHTML =
+                "";
+
+
+            status.hidden =
+                false;
+
+
+            status.textContent =
+                activeCategory ===
+                    "all"
+
+                ?
+                "No public products are currently available."
+
+                :
+                "No products are currently available in this category.";
+
+
+            return;
+
+        }
+
+
+        status.hidden =
+            true;
+
+
+        grid.innerHTML =
+
+            visibleProducts
+                .map(
+                    renderProductCard
+                )
+                .join("");
+
+    }
+
+
+    /* =====================================================
+       LOAD PRODUCTS
+    ====================================================== */
+
+    async function loadCatalogueProducts() {
+
+        const status =
+            document.getElementById(
+                "catalogueStatus"
+            );
+
+
+        if (
+            !window.hcSupabase
+        ) {
+
+            status.textContent =
+                "Unable to connect to product catalogue.";
+
+            return;
+
+        }
+
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await window.hcSupabase
+                    .from(
+                        "products"
+                    )
+                    .select(`
+                        id,
+                        name,
+                        sku,
+                        slug,
+                        subtitle,
+                        description,
+                        short_description,
+                        category,
+                        fit_type,
+                        tuning_type,
+                        price_gbp,
+                        stock_quantity,
+                        low_stock_threshold,
+                        status,
+                        image_url,
+                        public_visible,
+                        detail_page,
+                        display_order,
+                        featured,
+                        ordering_enabled
+                    `)
+                    .eq(
+                        "public_visible",
+                        true
+                    )
+                    .neq(
+                        "status",
+                        "hidden"
+                    )
+                    .order(
+                        "display_order",
+                        {
+                            ascending:
+                                true
+                        }
+                    )
+                    .order(
+                        "name",
+                        {
+                            ascending:
+                                true
+                        }
+                    );
+
+
+            if (
+                error
+            ) {
+
+                throw error;
+
+            }
+
+
+            catalogueProducts =
+                data
+                ||
+                [];
+
+
+            renderCatalogue();
+
+        }
+
+        catch (
+            error
+        ) {
+
+            console.error(
+                "Unable to load catalogue:",
+                error
+            );
+
+
+            status.hidden =
+                false;
+
+
+            status.textContent =
+                "Product catalogue is temporarily unavailable.";
+
+        }
+
+    }
+
+
+    /* =====================================================
+       FILTERS
+    ====================================================== */
+
+    document
+        .querySelectorAll(
+            ".catalogue-filter-button"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        document
+                            .querySelectorAll(
+                                ".catalogue-filter-button"
+                            )
+                            .forEach(
+                                item => {
+
+                                    item.classList.remove(
+                                        "active"
+                                    );
+
+                                }
+                            );
+
+
+                        button.classList.add(
+                            "active"
+                        );
+
+
+                        activeCategory =
+                            button.dataset.category
+                            ||
+                            "all";
+
+
+                        renderCatalogue();
+
+                    }
+                );
+
+            }
+        );
+
+
+    /* =====================================================
+       START
+    ====================================================== */
+
+    loadCatalogueProducts();
+
+</script>
+
+
+</body>
+
+</html>

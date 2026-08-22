@@ -1,82 +1,324 @@
-const adminDB =
-    window.hcSupabase;
+/* =========================================================
+   HAMMER CRAFT
+   ADMIN DASHBOARD
+========================================================= */
 
 
-let cachedAccounts = [];
-let cachedScans = [];
-let cachedProducts = [];
-
-let selectedAccountUserID =
+let currentAdminUser =
     null;
+
+
+let allProducts =
+    [];
+
+
+let allScans =
+    [];
+
+
+let allAccounts =
+    [];
+
+
+let parsedFrequencyResponse =
+    [];
+
 
 let confirmCallback =
     null;
 
 
 /* =========================================================
-   ADMIN AUTH
+   HELPERS
 ========================================================= */
 
-async function requireAdmin() {
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            "\"",
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+
+function safeNumber(
+    value,
+    fallback = 0
+) {
+
+    const numeric =
+        Number(
+            value
+        );
+
+
+    return Number.isFinite(
+        numeric
+    )
+        ?
+        numeric
+        :
+        fallback;
+
+}
+
+
+function slugify(
+    value
+) {
+
+    return String(
+        value ?? ""
+    )
+        .toLowerCase()
+        .trim()
+        .replace(
+            /[^a-z0-9]+/g,
+            "-"
+        )
+        .replace(
+            /^-+|-+$/g,
+            ""
+        );
+
+}
+
+
+function formatDate(
+    value
+) {
+
+    if (
+        !value
+    ) {
+
+        return "—";
+
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "—";
+
+    }
+
+
+    return date.toLocaleString();
+
+}
+
+
+function setMessage(
+    elementId,
+    message,
+    type = ""
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (
+        !element
+    ) {
+
+        return;
+
+    }
+
+
+    element.textContent =
+        message;
+
+
+    element.classList.remove(
+        "success",
+        "error"
+    );
+
+
+    if (
+        type
+    ) {
+
+        element.classList.add(
+            type
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+async function ensureAdmin() {
+
+    if (
+        !window.hcSupabase
+    ) {
+
+        throw new Error(
+            "Supabase client unavailable."
+        );
+
+    }
+
 
     const {
         data,
         error
     } =
-        await adminDB
+        await window.hcSupabase
             .auth
-            .getUser();
+            .getSession();
 
 
     if (
-        error ||
-        !data.user
+        error
     ) {
 
-        window.location.replace(
-            "login.html"
-        );
+        throw error;
 
-        return null;
     }
 
 
-    const user =
-        data.user;
+    if (
+        !data.session
+    ) {
 
+        window.location.href =
+            "account.html?next=admin";
+
+
+        return false;
+
+    }
+
+
+    currentAdminUser =
+        data.session.user;
+
+
+    document
+        .getElementById(
+            "adminEmail"
+        )
+        .textContent =
+            currentAdminUser.email
+            ||
+            "ADMIN";
+
+
+    /*
+     * Change the following admin check if
+     * your schema stores admin permissions
+     * somewhere else.
+     */
 
     const {
-        data: admin,
-        error: adminError
+        data: profile,
+        error: profileError
     } =
-        await adminDB
+        await window.hcSupabase
             .from(
-                "admin_users"
+                "profiles"
             )
             .select(
-                "user_id"
+                "is_admin"
             )
             .eq(
-                "user_id",
-                user.id
+                "id",
+                currentAdminUser.id
             )
             .maybeSingle();
 
 
     if (
-        adminError ||
-        !admin
+        profileError
     ) {
 
-        window.location.replace(
-            "account.html"
-        );
+        throw profileError;
 
-        return null;
     }
 
 
-    return user;
+    if (
+        !profile
+        ||
+        profile.is_admin !==
+            true
+    ) {
+
+        alert(
+            "This account does not have admin access."
+        );
+
+
+        window.location.href =
+            "index.html";
+
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+async function logoutAdmin() {
+
+    await window.hcSupabase
+        .auth
+        .signOut();
+
+
+    window.location.href =
+        "index.html";
 
 }
 
@@ -91,12 +333,16 @@ function showConfirm(
     callback
 ) {
 
+    confirmCallback =
+        callback;
+
+
     document
         .getElementById(
             "confirmTitle"
         )
         .textContent =
-        title;
+            title;
 
 
     document
@@ -104,11 +350,7 @@ function showConfirm(
             "confirmText"
         )
         .textContent =
-        text;
-
-
-    confirmCallback =
-        callback;
+            text;
 
 
     document
@@ -153,235 +395,81 @@ async function loadAccounts() {
         );
 
 
-    if (
-        container
-    ) {
-
-        container.innerHTML = `
-            <div class="loading-card">
-                Loading accounts...
-            </div>
-        `;
-
-    }
+    container.innerHTML =
+        `<div class="loading-card">Loading accounts...</div>`;
 
 
-    const {
-        data: profiles,
-        error
-    } =
-        await adminDB
-            .from(
-                "profiles"
-            )
-            .select(
-                "id,full_name,email,created_at"
-            )
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
+    try {
 
+        /*
+         * This assumes you have a profiles table.
+         */
 
-    if (
-        error
-    ) {
-
-        console.error(
+        const {
+            data,
             error
-        );
+        } =
+            await window.hcSupabase
+                .from(
+                    "profiles"
+                )
+                .select(`
+                    id,
+                    email,
+                    full_name,
+                    is_admin,
+                    created_at
+                `)
+                .order(
+                    "created_at",
+                    {
+                        ascending:
+                            false
+                    }
+                );
 
 
         if (
-            container
+            error
         ) {
 
-            container.innerHTML = `
-                <div class="loading-card">
-                    Unable to load accounts.
-                </div>
-            `;
+            throw error;
 
         }
 
 
-        return;
-    }
+        allAccounts =
+            data
+            ||
+            [];
 
 
-    const {
-        data: scans
-    } =
-        await adminDB
-            .from(
-                "ear_scans"
-            )
-            .select(
-                "id,user_id,status"
-            );
-
-
-    const {
-        data: admins
-    } =
-        await adminDB
-            .from(
-                "admin_users"
-            )
-            .select(
-                "user_id"
-            );
-
-
-    const adminSet =
-        new Set(
-            (admins || [])
-                .map(
-                    admin =>
-                        admin.user_id
-                )
+        renderAccounts(
+            allAccounts
         );
 
 
-    cachedAccounts =
-        (profiles || [])
-            .map(
-                profile => {
-
-                    const userScans =
-                        (scans || [])
-                            .filter(
-                                scan =>
-                                    scan.user_id ===
-                                    profile.id
-                            );
-
-
-                    return {
-
-                        ...profile,
-
-                        is_admin:
-                            adminSet.has(
-                                profile.id
-                            ),
-
-                        scan_count:
-                            userScans.length,
-
-                        complete_count:
-                            userScans
-                                .filter(
-                                    scan =>
-                                        scan.status ===
-                                        "complete"
-                                )
-                                .length
-
-                    };
-
-                }
-            );
-
-
-    updateAccountStats();
-
-
-    renderAccounts(
-        cachedAccounts
-    );
-
-}
-
-
-/* =========================================================
-   ACCOUNT STATS
-========================================================= */
-
-function updateAccountStats() {
-
-    const totalAccounts =
-        document.getElementById(
-            "totalAccounts"
-        );
-
-
-    const accountSummaryTotal =
-        document.getElementById(
-            "accountSummaryTotal"
-        );
-
-
-    const accountsWithScans =
-        document.getElementById(
-            "accountsWithScans"
-        );
-
-
-    const totalAdmins =
-        document.getElementById(
-            "totalAdmins"
-        );
-
-
-    if (
-        totalAccounts
-    ) {
-
-        totalAccounts.textContent =
-            cachedAccounts.length;
+        updateAccountStats();
 
     }
 
-
-    if (
-        accountSummaryTotal
+    catch (
+        error
     ) {
 
-        accountSummaryTotal.textContent =
-            cachedAccounts.length;
-
-    }
-
-
-    if (
-        accountsWithScans
-    ) {
-
-        accountsWithScans.textContent =
-            cachedAccounts
-                .filter(
-                    account =>
-                        account.scan_count >
-                        0
-                )
-                .length;
-
-    }
+        console.error(
+            "Account load error:",
+            error
+        );
 
 
-    if (
-        totalAdmins
-    ) {
-
-        totalAdmins.textContent =
-            cachedAccounts
-                .filter(
-                    account =>
-                        account.is_admin
-                )
-                .length;
+        container.innerHTML =
+            `<div class="loading-card">Unable to load accounts.</div>`;
 
     }
 
 }
 
-
-/* =========================================================
-   RENDER ACCOUNTS
-========================================================= */
 
 function renderAccounts(
     accounts
@@ -394,298 +482,142 @@ function renderAccounts(
 
 
     if (
-        !container
+        accounts.length ===
+        0
     ) {
+
+        container.innerHTML =
+            `<div class="loading-card">No accounts found.</div>`;
+
+
         return;
+
     }
 
 
     container.innerHTML =
-        "";
 
+        accounts
+            .map(
+                account => `
 
-    if (
-        accounts.length === 0
-    ) {
+                    <article class="account-card">
 
-        container.innerHTML = `
-            <div class="loading-card">
-                No matching accounts.
-            </div>
-        `;
+                        <span class="card-label">
 
-        return;
-    }
+                            ${
+                                account.is_admin
+                                ?
+                                "ADMIN"
+                                :
+                                "CUSTOMER"
+                            }
 
+                        </span>
 
-    accounts.forEach(
-        account => {
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-
-            card.className =
-                "account-card";
-
-
-            const joined =
-                account.created_at
-                ? new Date(
-                    account.created_at
-                )
-                    .toLocaleDateString(
-                        "en-GB"
-                    )
-                : "—";
-
-
-            card.innerHTML = `
-
-                <div class="account-card-top">
-
-                    <div>
 
                         <h3>
-                            ${escapeHTML(
-                                account.full_name ||
-                                "Customer"
-                            )}
+
+                            ${
+                                escapeHtml(
+                                    account.full_name
+                                    ||
+                                    "Unnamed account"
+                                )
+                            }
+
                         </h3>
 
-                        <div class="account-email">
-                            ${escapeHTML(
-                                account.email ||
-                                ""
-                            )}
+
+                        <p>
+
+                            ${
+                                escapeHtml(
+                                    account.email
+                                    ||
+                                    ""
+                                )
+                            }
+
+                        </p>
+
+
+                        <div class="account-meta">
+
+                            <span>
+
+                                CREATED
+
+                                ${formatDate(
+                                    account.created_at
+                                )}
+
+                            </span>
+
                         </div>
 
-                        <div class="account-id">
-                            ${escapeHTML(
-                                account.id
-                            )}
-                        </div>
-
-                    </div>
-
-
-                    <span class="
-                        role-badge
-                        ${
-                            account.is_admin
-                            ? "admin"
-                            : ""
-                        }
-                    ">
-
-                        ${
-                            account.is_admin
-                            ? "ADMIN"
-                            : "CUSTOMER"
-                        }
-
-                    </span>
-
-                </div>
-
-
-                <div class="account-info">
-
-                    <article>
-
-                        <span>
-                            JOINED
-                        </span>
-
-                        <strong>
-                            ${joined}
-                        </strong>
-
                     </article>
 
-
-                    <article>
-
-                        <span>
-                            SCANS
-                        </span>
-
-                        <strong>
-                            ${account.scan_count}
-                        </strong>
-
-                    </article>
-
-
-                    <article>
-
-                        <span>
-                            COMPLETE
-                        </span>
-
-                        <strong>
-                            ${account.complete_count}
-                        </strong>
-
-                    </article>
-
-                </div>
-
-
-                <div class="account-actions">
-
-                    <button
-                        type="button"
-                        data-view-scans
-                    >
-                        VIEW SCANS
-                    </button>
-
-                </div>
-
-            `;
-
-
-            card
-                .querySelector(
-                    "[data-view-scans]"
-                )
-                .addEventListener(
-                    "click",
-                    () => {
-
-                        selectedAccountUserID =
-                            account.id;
-
-
-                        const filter =
-                            document.getElementById(
-                                "activeScanFilter"
-                            );
-
-
-                        if (
-                            filter
-                        ) {
-
-                            filter.hidden =
-                                false;
-
-
-                            filter.textContent =
-                                `Showing scans for: ${
-                                    account.full_name ||
-                                    account.email ||
-                                    "Customer"
-                                }`;
-
-                        }
-
-
-                        applyScanFilters();
-
-
-                        document
-                            .getElementById(
-                                "scans"
-                            )
-                            ?.scrollIntoView({
-                                behavior:
-                                    "smooth"
-                            });
-
-                    }
-                );
-
-
-            container.appendChild(
-                card
-            );
-
-        }
-    );
+                `
+            )
+            .join("");
 
 }
 
 
-/* =========================================================
-   ACCOUNT SEARCH
-========================================================= */
+async function updateAccountStats() {
 
-function searchAccounts(
-    query
-) {
-
-    query =
-        query
-            .trim()
-            .toLowerCase();
+    document
+        .getElementById(
+            "totalAccounts"
+        )
+        .textContent =
+            allAccounts.length;
 
 
-    if (
-        !query
-    ) {
+    document
+        .getElementById(
+            "accountSummaryTotal"
+        )
+        .textContent =
+            allAccounts.length;
 
-        renderAccounts(
-            cachedAccounts
+
+    const admins =
+        allAccounts.filter(
+            account =>
+                account.is_admin ===
+                true
         );
 
-        return;
-    }
+
+    document
+        .getElementById(
+            "totalAdmins"
+        )
+        .textContent =
+            admins.length;
 
 
-    const filtered =
-        cachedAccounts
-            .filter(
-                account => {
-
-                    const name =
-                        (
-                            account.full_name ||
-                            ""
-                        )
-                        .toLowerCase();
-
-
-                    const email =
-                        (
-                            account.email ||
-                            ""
-                        )
-                        .toLowerCase();
+    const usersWithScans =
+        new Set(
+            allScans
+                .map(
+                    scan =>
+                        scan.user_id
+                )
+                .filter(
+                    Boolean
+                )
+        );
 
 
-                    const id =
-                        (
-                            account.id ||
-                            ""
-                        )
-                        .toLowerCase();
-
-
-                    return (
-                        name.includes(
-                            query
-                        )
-                        ||
-                        email.includes(
-                            query
-                        )
-                        ||
-                        id.includes(
-                            query
-                        )
-                    );
-
-                }
-            );
-
-
-    renderAccounts(
-        filtered
-    );
+    document
+        .getElementById(
+            "accountsWithScans"
+        )
+        .textContent =
+            usersWithScans.size;
 
 }
 
@@ -694,7 +626,7 @@ function searchAccounts(
    SCANS
 ========================================================= */
 
-async function loadAdminScans() {
+async function loadScans() {
 
     const container =
         document.getElementById(
@@ -702,173 +634,76 @@ async function loadAdminScans() {
         );
 
 
-    if (
-        container
-    ) {
+    container.innerHTML =
+        `<div class="loading-card">Loading scans...</div>`;
 
-        container.innerHTML = `
-            <div class="loading-card">
-                Loading scans...
-            </div>
-        `;
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "ear_scans"
+                )
+                .select(`
+                    *
+                `)
+                .order(
+                    "created_at",
+                    {
+                        ascending:
+                            false
+                    }
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        allScans =
+            data
+            ||
+            [];
+
+
+        renderScans();
+
+
+        updateScanStats();
+
+
+        updateAccountStats();
 
     }
 
-
-    const {
-        data,
-        error
-    } =
-        await adminDB
-            .from(
-                "ear_scans"
-            )
-            .select("*")
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            );
-
-
-    if (
+    catch (
         error
     ) {
 
         console.error(
+            "Scan load error:",
             error
         );
 
 
-        if (
-            container
-        ) {
-
-            container.innerHTML = `
-                <div class="loading-card">
-                    Unable to load scans.
-                </div>
-            `;
-
-        }
-
-
-        return;
-    }
-
-
-    cachedScans =
-        data || [];
-
-
-    updateScanStats();
-
-
-    renderScans(
-        cachedScans
-    );
-
-}
-
-
-/* =========================================================
-   SCAN STATS
-========================================================= */
-
-function updateScanStats() {
-
-    const total =
-        document.getElementById(
-            "totalScans"
-        );
-
-
-    const processing =
-        document.getElementById(
-            "processingScans"
-        );
-
-
-    const complete =
-        document.getElementById(
-            "completeScans"
-        );
-
-
-    const failed =
-        document.getElementById(
-            "failedScans"
-        );
-
-
-    if (
-        total
-    ) {
-
-        total.textContent =
-            cachedScans.length;
-
-    }
-
-
-    if (
-        processing
-    ) {
-
-        processing.textContent =
-            cachedScans
-                .filter(
-                    scan =>
-                        scan.status ===
-                        "processing"
-                )
-                .length;
-
-    }
-
-
-    if (
-        complete
-    ) {
-
-        complete.textContent =
-            cachedScans
-                .filter(
-                    scan =>
-                        scan.status ===
-                        "complete"
-                )
-                .length;
-
-    }
-
-
-    if (
-        failed
-    ) {
-
-        failed.textContent =
-            cachedScans
-                .filter(
-                    scan =>
-                        scan.status ===
-                        "failed"
-                )
-                .length;
+        container.innerHTML =
+            `<div class="loading-card">Unable to load scans.</div>`;
 
     }
 
 }
 
 
-/* =========================================================
-   RENDER SCANS
-========================================================= */
-
-function renderScans(
-    scans
-) {
+function renderScans() {
 
     const container =
         document.getElementById(
@@ -876,255 +711,622 @@ function renderScans(
         );
 
 
-    if (
-        !container
-    ) {
-        return;
-    }
-
-
-    container.innerHTML =
-        "";
-
-
-    if (
-        scans.length === 0
-    ) {
-
-        container.innerHTML = `
-            <div class="loading-card">
-                No matching scans.
-            </div>
-        `;
-
-        return;
-    }
-
-
-    scans.forEach(
-        scan => {
-
-            const profile =
-                cachedAccounts
-                    .find(
-                        account =>
-                            account.id ===
-                            scan.user_id
-                    )
-                || {};
-
-
-            const date =
-                scan.created_at
-                ? new Date(
-                    scan.created_at
-                )
-                    .toLocaleString(
-                        "en-GB"
-                    )
-                : "—";
-
-
-            const card =
-                document.createElement(
-                    "article"
-                );
-
-
-            card.className =
-                "scan-card";
-
-
-            card.innerHTML = `
-
-                <div class="scan-card-top">
-
-                    <span>
-                        ${date}
-                    </span>
-
-                    <strong class="scan-status">
-                        ${escapeHTML(
-                            String(
-                                scan.status ||
-                                ""
-                            )
-                            .toUpperCase()
-                        )}
-                    </strong>
-
-                </div>
-
-
-                <h3>
-                    ${escapeHTML(
-                        profile.full_name ||
-                        "Customer"
-                    )}
-                </h3>
-
-
-                <div class="scan-email">
-                    ${escapeHTML(
-                        profile.email ||
-                        scan.user_id
-                    )}
-                </div>
-
-
-                <div class="scan-meta">
-
-                    <article>
-
-                        <span>
-                            LEFT EAR
-                        </span>
-
-                        <strong>
-                            ${
-                                scan.left_image_count ??
-                                0
-                            }
-                            IMAGES
-                        </strong>
-
-                    </article>
-
-
-                    <article>
-
-                        <span>
-                            RIGHT EAR
-                        </span>
-
-                        <strong>
-                            ${
-                                scan.right_image_count ??
-                                0
-                            }
-                            IMAGES
-                        </strong>
-
-                    </article>
-
-                </div>
-
-
-                <div class="scan-id">
-                    SCAN:
-                    ${escapeHTML(
-                        scan.id
-                    )}
-                </div>
-
-            `;
-
-
-            container.appendChild(
-                card
-            );
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   SCAN FILTER
-========================================================= */
-
-function applyScanFilters() {
-
-    let scans =
-        [...cachedScans];
-
-
-    const status =
+    const filter =
         document
             .getElementById(
                 "scanStatusFilter"
             )
-            ?.value
-        || "";
+            .value;
+
+
+    let scans =
+        allScans;
 
 
     if (
-        status
+        filter
     ) {
 
         scans =
             scans.filter(
                 scan =>
                     scan.status ===
-                    status
+                    filter
             );
 
     }
 
 
     if (
-        selectedAccountUserID
+        scans.length ===
+        0
     ) {
 
-        scans =
-            scans.filter(
-                scan =>
-                    scan.user_id ===
-                    selectedAccountUserID
-            );
+        container.innerHTML =
+            `<div class="loading-card">No scans found.</div>`;
+
+
+        return;
 
     }
 
 
-    renderScans(
+    container.innerHTML =
+
         scans
+            .map(
+                scan => `
+
+                    <article class="scan-card">
+
+                        <div class="scan-card-top">
+
+                            <span class="status-badge ${escapeHtml(scan.status)}">
+
+                                ${
+                                    escapeHtml(
+                                        scan.status
+                                    )
+                                }
+
+                            </span>
+
+
+                            <span>
+
+                                ${
+                                    formatDate(
+                                        scan.created_at
+                                    )
+                                }
+
+                            </span>
+
+                        </div>
+
+
+                        <h3>
+
+                            ${
+                                escapeHtml(
+                                    scan.side
+                                    ||
+                                    "Ear scan"
+                                )
+                            }
+
+                        </h3>
+
+
+                        <p>
+
+                            ID:
+                            ${
+                                escapeHtml(
+                                    scan.id
+                                )
+                            }
+
+                        </p>
+
+
+                        ${
+                            scan.error_message
+                            ?
+                            `
+
+                                <p class="scan-error">
+
+                                    ${
+                                        escapeHtml(
+                                            scan.error_message
+                                        )
+                                    }
+
+                                </p>
+
+                            `
+                            :
+                            ""
+                        }
+
+
+                        <div class="scan-actions">
+
+                            <button
+                                type="button"
+                                onclick="queueScan('${scan.id}')"
+                            >
+                                PROCESS
+                            </button>
+
+
+                            <button
+                                type="button"
+                                onclick="retryScan('${scan.id}')"
+                            >
+                                RETRY
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="danger-button"
+                                onclick="confirmDeleteScan('${scan.id}')"
+                            >
+                                DELETE
+                            </button>
+
+                        </div>
+
+                    </article>
+
+                `
+            )
+            .join("");
+
+}
+
+
+function updateScanStats() {
+
+    document
+        .getElementById(
+            "totalScans"
+        )
+        .textContent =
+            allScans.length;
+
+
+    document
+        .getElementById(
+            "processingScans"
+        )
+        .textContent =
+
+            allScans.filter(
+                scan =>
+                    scan.status ===
+                    "processing"
+            ).length;
+
+
+    document
+        .getElementById(
+            "completeScans"
+        )
+        .textContent =
+
+            allScans.filter(
+                scan =>
+                    scan.status ===
+                    "complete"
+            ).length;
+
+
+    document
+        .getElementById(
+            "failedScans"
+        )
+        .textContent =
+
+            allScans.filter(
+                scan =>
+                    scan.status ===
+                    "failed"
+            ).length;
+
+}
+
+
+async function queueScan(
+    scanId
+) {
+
+    const {
+        error
+    } =
+        await window.hcSupabase
+            .from(
+                "ear_scans"
+            )
+            .update({
+
+                status:
+                    "queued",
+
+                error_message:
+                    null
+
+            })
+            .eq(
+                "id",
+                scanId
+            );
+
+
+    if (
+        error
+    ) {
+
+        alert(
+            error.message
+        );
+
+
+        return;
+
+    }
+
+
+    await loadScans();
+
+}
+
+
+async function retryScan(
+    scanId
+) {
+
+    await queueScan(
+        scanId
     );
 
 }
 
 
-function clearScanFilters() {
+/* =========================================================
+   DELETE SCAN
+========================================================= */
 
-    selectedAccountUserID =
-        null;
+function confirmDeleteScan(
+    scanId
+) {
 
+    showConfirm(
 
-    const statusFilter =
-        document.getElementById(
-            "scanStatusFilter"
-        );
+        "Delete scan?",
 
+        "This will permanently delete the scan database entry and attempt to remove its storage files.",
 
-    if (
-        statusFilter
-    ) {
+        async () => {
 
-        statusFilter.value =
-            "";
+            await deleteScan(
+                scanId
+            );
 
-    }
+        }
 
-
-    const activeFilter =
-        document.getElementById(
-            "activeScanFilter"
-        );
-
-
-    if (
-        activeFilter
-    ) {
-
-        activeFilter.hidden =
-            true;
-
-    }
-
-
-    renderScans(
-        cachedScans
     );
+
+}
+
+
+async function deleteScan(
+    scanId
+) {
+
+    try {
+
+        const scan =
+            allScans.find(
+                item =>
+                    item.id ===
+                    scanId
+            );
+
+
+        /*
+         * If you store a storage prefix on the scan,
+         * delete objects under it here.
+         *
+         * Database deletion still works even if the
+         * scan has no known prefix.
+         */
+
+        if (
+            scan
+            &&
+            scan.storage_prefix
+        ) {
+
+            try {
+
+                const {
+                    data: files
+                } =
+                    await window.hcSupabase
+                        .storage
+                        .from(
+                            "ear-scans"
+                        )
+                        .list(
+                            scan.storage_prefix,
+                            {
+                                limit:
+                                    1000
+                            }
+                        );
+
+
+                if (
+                    files
+                    &&
+                    files.length >
+                        0
+                ) {
+
+                    const paths =
+                        files.map(
+                            file =>
+                                `${scan.storage_prefix}/${file.name}`
+                        );
+
+
+                    await window.hcSupabase
+                        .storage
+                        .from(
+                            "ear-scans"
+                        )
+                        .remove(
+                            paths
+                        );
+
+                }
+
+            }
+
+            catch (
+                storageError
+            ) {
+
+                console.warn(
+                    "Unable to remove every scan storage file:",
+                    storageError
+                );
+
+            }
+
+        }
+
+
+        const {
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "ear_scans"
+                )
+                .delete()
+                .eq(
+                    "id",
+                    scanId
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        closeConfirm();
+
+
+        await loadScans();
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            "Delete scan error:",
+            error
+        );
+
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   PROCESSORS
+========================================================= */
+
+async function loadProcessors() {
+
+    const container =
+        document.getElementById(
+            "processorList"
+        );
+
+
+    container.innerHTML =
+        `<div class="loading-card">Loading processors...</div>`;
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "reconstruction_processors"
+                )
+                .select(
+                    "*"
+                )
+                .order(
+                    "last_seen_at",
+                    {
+                        ascending:
+                            false
+                    }
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        const processors =
+            data
+            ||
+            [];
+
+
+        if (
+            processors.length ===
+            0
+        ) {
+
+            container.innerHTML =
+                `<div class="loading-card">No processors registered.</div>`;
+
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+
+            processors
+                .map(
+                    processor => {
+
+                        const lastSeen =
+                            new Date(
+                                processor.last_seen_at
+                            );
+
+
+                        const age =
+                            Date.now()
+                            -
+                            lastSeen.getTime();
+
+
+                        const online =
+                            age <
+                            30000;
+
+
+                        return `
+
+                            <article class="processor-card">
+
+                                <span class="status-badge ${
+                                    online
+                                    ?
+                                    "complete"
+                                    :
+                                    "failed"
+                                }">
+
+                                    ${
+                                        online
+                                        ?
+                                        "ONLINE"
+                                        :
+                                        "OFFLINE"
+                                    }
+
+                                </span>
+
+
+                                <h3>
+
+                                    ${
+                                        escapeHtml(
+                                            processor.name
+                                            ||
+                                            "Processor"
+                                        )
+                                    }
+
+                                </h3>
+
+
+                                <p>
+
+                                    ${
+                                        escapeHtml(
+                                            processor.platform
+                                            ||
+                                            ""
+                                        )
+                                    }
+
+                                </p>
+
+
+                                <p>
+
+                                    Accelerator:
+                                    ${
+                                        escapeHtml(
+                                            processor.accelerator
+                                            ||
+                                            "Unknown"
+                                        )
+                                    }
+
+                                </p>
+
+
+                                <p>
+
+                                    Last seen:
+                                    ${
+                                        formatDate(
+                                            processor.last_seen_at
+                                        )
+                                    }
+
+                                </p>
+
+                            </article>
+
+                        `;
+
+                    }
+                )
+                .join("");
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            "Processor load error:",
+            error
+        );
+
+
+        container.innerHTML =
+            `<div class="loading-card">Unable to load processors.</div>`;
+
+    }
 
 }
 
@@ -1141,261 +1343,69 @@ async function loadProducts() {
         );
 
 
-    if (
-        container
-    ) {
-
-        container.innerHTML = `
-            <div class="loading-card">
-                Loading products...
-            </div>
-        `;
-
-    }
+    container.innerHTML =
+        `<div class="loading-card">Loading products...</div>`;
 
 
-    const {
-        data,
-        error
-    } =
-        await adminDB
-            .from(
-                "products"
-            )
-            .select("*")
-            .order(
-                "display_order",
-                {
-                    ascending: true
-                }
-            );
+    try {
 
-
-    if (
-        error
-    ) {
-
-        console.error(
+        const {
+            data,
             error
-        );
+        } =
+            await window.hcSupabase
+                .from(
+                    "products"
+                )
+                .select(
+                    "*"
+                )
+                .order(
+                    "display_order",
+                    {
+                        ascending:
+                            true
+                    }
+                );
 
 
         if (
-            container
+            error
         ) {
 
-            container.innerHTML = `
-                <div class="loading-card">
-                    Unable to load products.
-                </div>
-            `;
+            throw error;
 
         }
 
 
-        return;
+        allProducts =
+            data
+            ||
+            [];
+
+
+        renderProducts();
+
+
+        updateProductStats();
+
+
+        populateFrProductSelect();
+
     }
 
-
-    cachedProducts =
-        data || [];
-
-
-    updateProductStats();
-
-
-    renderProducts();
-
-}
-
-
-/* =========================================================
-   EFFECTIVE STOCK
-========================================================= */
-
-function effectiveStockState(
-    product
-) {
-
-    if (
-        product.status ===
-        "coming_soon"
+    catch (
+        error
     ) {
 
-        return "coming_soon";
-
-    }
-
-
-    if (
-        product.status ===
-        "hidden"
-    ) {
-
-        return "hidden";
-
-    }
-
-
-    if (
-        product.status ===
-        "out_of_stock"
-    ) {
-
-        return "out_of_stock";
-
-    }
-
-
-    const stock =
-        Number(
-            product.stock_quantity ??
-            0
+        console.error(
+            "Product load error:",
+            error
         );
 
 
-    const threshold =
-        Number(
-            product.low_stock_threshold ??
-            3
-        );
-
-
-    if (
-        stock <= 0
-    ) {
-
-        return "out_of_stock";
-
-    }
-
-
-    if (
-        stock <= threshold
-    ) {
-
-        return "low_stock";
-
-    }
-
-
-    return "in_stock";
-
-}
-
-
-/* =========================================================
-   PRODUCT STATS
-========================================================= */
-
-function updateProductStats() {
-
-    const total =
-        document.getElementById(
-            "totalProducts"
-        );
-
-
-    const inStock =
-        document.getElementById(
-            "productsInStock"
-        );
-
-
-    const lowStock =
-        document.getElementById(
-            "productsLowStock"
-        );
-
-
-    const outStock =
-        document.getElementById(
-            "productsOutStock"
-        );
-
-
-    const comingSoon =
-        document.getElementById(
-            "productsComingSoon"
-        );
-
-
-    if (
-        total
-    ) {
-
-        total.textContent =
-            cachedProducts.length;
-
-    }
-
-
-    if (
-        inStock
-    ) {
-
-        inStock.textContent =
-            cachedProducts
-                .filter(
-                    product =>
-                        effectiveStockState(
-                            product
-                        ) ===
-                        "in_stock"
-                )
-                .length;
-
-    }
-
-
-    if (
-        lowStock
-    ) {
-
-        lowStock.textContent =
-            cachedProducts
-                .filter(
-                    product =>
-                        effectiveStockState(
-                            product
-                        ) ===
-                        "low_stock"
-                )
-                .length;
-
-    }
-
-
-    if (
-        outStock
-    ) {
-
-        outStock.textContent =
-            cachedProducts
-                .filter(
-                    product =>
-                        effectiveStockState(
-                            product
-                        ) ===
-                        "out_of_stock"
-                )
-                .length;
-
-    }
-
-
-    if (
-        comingSoon
-    ) {
-
-        comingSoon.textContent =
-            cachedProducts
-                .filter(
-                    product =>
-                        product.status ===
-                        "coming_soon"
-                )
-                .length;
+        container.innerHTML =
+            `<div class="loading-card">Unable to load products.</div>`;
 
     }
 
@@ -1403,7 +1413,7 @@ function updateProductStats() {
 
 
 /* =========================================================
-   PRODUCT LIST
+   PRODUCT CARD
 ========================================================= */
 
 function renderProducts() {
@@ -1415,1176 +1425,339 @@ function renderProducts() {
 
 
     if (
-        !container
+        allProducts.length ===
+        0
     ) {
+
+        container.innerHTML =
+            `<div class="loading-card">No products yet.</div>`;
+
+
         return;
+
     }
 
 
     container.innerHTML =
-        "";
+
+        allProducts
+            .map(
+                product => `
+
+                    <article class="admin-product-card">
+
+                        <div class="admin-product-image">
+
+                            ${
+                                product.image_url
+                                ?
+                                `
+
+                                    <img
+                                        src="${escapeHtml(product.image_url)}"
+                                        alt="${escapeHtml(product.name)}"
+                                    >
+
+                                `
+                                :
+                                `
+
+                                    <div class="product-image-placeholder">
+
+                                        ${
+                                            escapeHtml(
+                                                product.name
+                                            )
+                                        }
+
+                                    </div>
+
+                                `
+                            }
+
+                        </div>
 
 
-    if (
-        cachedProducts.length === 0
-    ) {
+                        <div class="admin-product-content">
 
-        container.innerHTML = `
-            <div class="loading-card">
-                No products yet.
-            </div>
-        `;
+                            <div class="admin-product-topline">
 
-        return;
-    }
+                                <span>
+
+                                    ${
+                                        escapeHtml(
+                                            product.category
+                                            ||
+                                            "reference"
+                                        )
+                                    }
+
+                                </span>
 
 
-    cachedProducts.forEach(
-        product => {
+                                ${
+                                    product.is_reference_target
+                                    ?
+                                    `<span>REFERENCE TARGET</span>`
+                                    :
+                                    ""
+                                }
 
-            container.appendChild(
-                createProductCard(
-                    product
-                )
-            );
+                            </div>
 
-        }
+
+                            <h3>
+
+                                ${
+                                    escapeHtml(
+                                        product.name
+                                    )
+                                }
+
+                            </h3>
+
+
+                            <p>
+
+                                ${
+                                    escapeHtml(
+                                        product.subtitle
+                                        ||
+                                        ""
+                                    )
+                                }
+
+                            </p>
+
+
+                            <div class="product-admin-meta">
+
+                                <span>
+
+                                    £${
+                                        safeNumber(
+                                            product.price_gbp
+                                        ).toFixed(2)
+                                    }
+
+                                </span>
+
+
+                                <span>
+
+                                    STOCK
+                                    ${
+                                        safeNumber(
+                                            product.stock_quantity
+                                        )
+                                    }
+
+                                </span>
+
+
+                                <span>
+
+                                    ${
+                                        escapeHtml(
+                                            product.status
+                                        )
+                                    }
+
+                                </span>
+
+                            </div>
+
+
+                            <div class="product-admin-switches">
+
+                                <label>
+
+                                    <input
+                                        type="checkbox"
+                                        ${
+                                            product.public_visible
+                                            ?
+                                            "checked"
+                                            :
+                                            ""
+                                        }
+                                        onchange="updateProductBoolean(
+                                            '${product.id}',
+                                            'public_visible',
+                                            this.checked
+                                        )"
+                                    >
+
+                                    PUBLIC
+
+                                </label>
+
+
+                                <label>
+
+                                    <input
+                                        type="checkbox"
+                                        ${
+                                            product.ordering_enabled
+                                            ?
+                                            "checked"
+                                            :
+                                            ""
+                                        }
+                                        onchange="updateProductBoolean(
+                                            '${product.id}',
+                                            'ordering_enabled',
+                                            this.checked
+                                        )"
+                                    >
+
+                                    ORDERING
+
+                                </label>
+
+
+                                <label>
+
+                                    <input
+                                        type="checkbox"
+                                        ${
+                                            product.featured
+                                            ?
+                                            "checked"
+                                            :
+                                            ""
+                                        }
+                                        onchange="updateProductBoolean(
+                                            '${product.id}',
+                                            'featured',
+                                            this.checked
+                                        )"
+                                    >
+
+                                    FEATURED
+
+                                </label>
+
+                            </div>
+
+
+                            <div class="scan-actions">
+
+                                <button
+                                    type="button"
+                                    onclick="setReferenceProduct('${product.id}')"
+                                >
+                                    SET REFERENCE
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    onclick="openProductPage('${product.id}')"
+                                >
+                                    VIEW
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="danger-button"
+                                    onclick="confirmDeleteProduct('${product.id}')"
+                                >
+                                    DELETE
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                `
+            )
+            .join("");
+
+}
+
+
+/* =========================================================
+   PRODUCT STATS
+========================================================= */
+
+function updateProductStats() {
+
+    document
+        .getElementById(
+            "totalProducts"
+        )
+        .textContent =
+            allProducts.length;
+
+
+    document
+        .getElementById(
+            "productsInStock"
+        )
+        .textContent =
+
+            allProducts.filter(
+                product =>
+                    product.status ===
+                    "in_stock"
+            ).length;
+
+
+    document
+        .getElementById(
+            "productsLowStock"
+        )
+        .textContent =
+
+            allProducts.filter(
+                product =>
+                    product.status ===
+                    "low_stock"
+            ).length;
+
+
+    document
+        .getElementById(
+            "productsOutStock"
+        )
+        .textContent =
+
+            allProducts.filter(
+                product =>
+                    product.status ===
+                    "out_of_stock"
+            ).length;
+
+
+    document
+        .getElementById(
+            "productsComingSoon"
+        )
+        .textContent =
+
+            allProducts.filter(
+                product =>
+                    product.status ===
+                    "coming_soon"
+            ).length;
+
+}
+
+
+/* =========================================================
+   CREATE PRODUCT
+========================================================= */
+
+async function createProduct() {
+
+    setMessage(
+        "addProductMessage",
+        ""
     );
-
-}
-
-
-/* =========================================================
-   PRODUCT CARD
-========================================================= */
-
-function createProductCard(
-    product
-) {
-
-    const card =
-        document.createElement(
-            "article"
-        );
-
-
-    card.className =
-        "product-card";
-
-
-    const hasImage =
-        Boolean(
-            product.image_path &&
-            String(
-                product.image_path
-            ).trim()
-        );
-
-
-    const imageSource =
-        hasImage
-        ? product.image_path
-        : "assets/logo.png";
-
-
-    const state =
-        effectiveStockState(
-            product
-        );
-
-
-    card.innerHTML = `
-
-        <div class="product-image-area">
-
-            <img
-                src="${escapeHTML(
-                    imageSource
-                )}"
-                alt="${escapeHTML(
-                    product.name ||
-                    "Hammer Craft"
-                )}"
-                class="
-                    product-image
-                    ${
-                        hasImage
-                        ? ""
-                        : "product-image-placeholder"
-                    }
-                "
-                data-product-image
-            >
-
-
-            <span class="product-status-badge">
-                ${formatStatus(
-                    product.status
-                )}
-            </span>
-
-        </div>
-
-
-        <div class="product-card-content">
-
-            <div class="product-card-top">
-
-                <div>
-
-                    <h3>
-                        ${escapeHTML(
-                            product.name ||
-                            "Unnamed model"
-                        )}
-                    </h3>
-
-
-                    <div class="product-slug">
-
-                        ${escapeHTML(
-                            product.sku ||
-                            "NO SKU"
-                        )}
-
-                        /
-
-                        ${escapeHTML(
-                            product.slug ||
-                            ""
-                        )}
-
-                    </div>
-
-                </div>
-
-
-                <span class="
-                    inventory-indicator
-                    ${inventoryClass(
-                        state
-                    )}
-                ">
-
-                    ${inventoryText(
-                        product
-                    )}
-
-                </span>
-
-            </div>
-
-
-
-            <div class="product-editor-grid">
-
-
-                <!-- NEW: EDIT PRODUCT NAME -->
-
-                <label class="full-control">
-
-                    MODEL NAME
-
-                    <input
-                        data-name
-                        type="text"
-                        value="${escapeHTML(
-                            product.name ||
-                            ""
-                        )}"
-                    >
-
-                </label>
-
-
-
-                <label>
-
-                    STATUS
-
-                    <select data-status>
-                        ${productStatusOptions(
-                            product.status
-                        )}
-                    </select>
-
-                </label>
-
-
-
-                <label>
-
-                    STOCK
-
-                    <input
-                        data-stock
-                        type="number"
-                        min="0"
-                        value="${
-                            product.stock_quantity ??
-                            0
-                        }"
-                    >
-
-                </label>
-
-
-
-                <label>
-
-                    LOW STOCK AT
-
-                    <input
-                        data-threshold
-                        type="number"
-                        min="0"
-                        value="${
-                            product.low_stock_threshold ??
-                            3
-                        }"
-                    >
-
-                </label>
-
-
-
-                <label>
-
-                    PRICE GBP
-
-                    <input
-                        data-price
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value="${
-                            product.price_gbp ??
-                            ""
-                        }"
-                    >
-
-                </label>
-
-
-
-                <label>
-
-                    SKU
-
-                    <input
-                        data-sku
-                        type="text"
-                        value="${escapeHTML(
-                            product.sku ||
-                            ""
-                        )}"
-                    >
-
-                </label>
-
-
-
-                <label>
-
-                    DISPLAY ORDER
-
-                    <input
-                        data-order
-                        type="number"
-                        value="${
-                            product.display_order ??
-                            0
-                        }"
-                    >
-
-                </label>
-
-
-
-                <label class="full-control">
-
-                    SUBTITLE
-
-                    <input
-                        data-subtitle
-                        type="text"
-                        value="${escapeHTML(
-                            product.subtitle ||
-                            ""
-                        )}"
-                    >
-
-                </label>
-
-
-
-                <label class="full-control">
-
-                    DESCRIPTION
-
-                    <textarea
-                        data-description
-                    >${escapeHTML(
-                        product.description ||
-                        ""
-                    )}</textarea>
-
-                </label>
-
-            </div>
-
-
-
-            <div class="product-switch-grid">
-
-                ${productSwitch(
-                    "data-featured",
-                    "FEATURED",
-                    product.featured
-                )}
-
-
-                ${productSwitch(
-                    "data-ordering",
-                    "ORDERING ENABLED",
-                    product.ordering_enabled
-                )}
-
-
-                ${productSwitch(
-                    "data-preorder",
-                    "PREORDER",
-                    product.preorder_enabled
-                )}
-
-
-                ${productSwitch(
-                    "data-custom-fit",
-                    "CUSTOM FIT",
-                    product.custom_fit_available
-                )}
-
-
-                ${productSwitch(
-                    "data-custom-tuning",
-                    "CUSTOM TUNING",
-                    product.custom_tuning_available
-                )}
-
-            </div>
-
-
-
-            <div class="product-image-upload">
-
-                <label>
-
-                    CHANGE PRODUCT IMAGE
-
-                    <input
-                        data-image-file
-                        type="file"
-                        accept="
-                            image/png,
-                            image/jpeg,
-                            image/webp
-                        "
-                    >
-
-                </label>
-
-            </div>
-
-
-
-            <div class="product-card-actions">
-
-                <button
-                    class="primary-button"
-                    type="button"
-                    data-save
-                >
-                    SAVE CHANGES
-                </button>
-
-
-                <button
-                    class="outline-button"
-                    type="button"
-                    data-upload
-                >
-                    UPLOAD IMAGE
-                </button>
-
-
-                <button
-                    class="danger-button"
-                    type="button"
-                    data-delete
-                >
-                    DELETE PRODUCT
-                </button>
-
-            </div>
-
-
-            <div
-                class="admin-message"
-                data-message
-            ></div>
-
-        </div>
-
-    `;
-
-
-
-    /* =====================================================
-       IMAGE FALLBACK
-    ===================================================== */
-
-    const image =
-        card.querySelector(
-            "[data-product-image]"
-        );
-
-
-    image.addEventListener(
-        "error",
-        () => {
-
-            if (
-                image.dataset.fallback ===
-                "true"
-            ) {
-
-                return;
-            }
-
-
-            image.dataset.fallback =
-                "true";
-
-
-            image.src =
-                "assets/logo.png";
-
-
-            image.classList.add(
-                "product-image-placeholder"
-            );
-
-        }
-    );
-
-
-
-    /* =====================================================
-       SAVE
-    ===================================================== */
-
-    card
-        .querySelector(
-            "[data-save]"
-        )
-        .addEventListener(
-            "click",
-            () =>
-                saveProduct(
-                    product.id,
-                    card
-                )
-        );
-
-
-
-    /* =====================================================
-       IMAGE
-    ===================================================== */
-
-    card
-        .querySelector(
-            "[data-upload]"
-        )
-        .addEventListener(
-            "click",
-            () =>
-                uploadProductImage(
-                    product,
-                    card
-                )
-        );
-
-
-
-    /* =====================================================
-       DELETE
-    ===================================================== */
-
-    card
-        .querySelector(
-            "[data-delete]"
-        )
-        .addEventListener(
-            "click",
-            () => {
-
-                showConfirm(
-
-                    "Delete product?",
-
-                    `${product.name} will be permanently removed.`,
-
-                    () =>
-                        deleteProduct(
-                            product.id
-                        )
-
-                );
-
-            }
-        );
-
-
-    return card;
-
-}
-
-
-/* =========================================================
-   PRODUCT SWITCH
-========================================================= */
-
-function productSwitch(
-    attribute,
-    label,
-    checked
-) {
-
-    return `
-
-        <label class="product-switch">
-
-            <input
-                ${attribute}
-                type="checkbox"
-                ${
-                    checked
-                    ? "checked"
-                    : ""
-                }
-            >
-
-            <span>
-                ${label}
-            </span>
-
-        </label>
-
-    `;
-
-}
-
-
-/* =========================================================
-   STATUS OPTIONS
-========================================================= */
-
-function productStatusOptions(
-    current
-) {
-
-    const options = [
-
-        [
-            "in_stock",
-            "In stock"
-        ],
-
-        [
-            "low_stock",
-            "Low stock"
-        ],
-
-        [
-            "out_of_stock",
-            "Out of stock"
-        ],
-
-        [
-            "coming_soon",
-            "Coming soon"
-        ],
-
-        [
-            "hidden",
-            "Hidden"
-        ]
-
-    ];
-
-
-    return options
-        .map(
-            option => {
-
-                const [
-                    value,
-                    label
-                ] =
-                    option;
-
-
-                return `
-
-                    <option
-                        value="${value}"
-                        ${
-                            current ===
-                            value
-                            ? "selected"
-                            : ""
-                        }
-                    >
-                        ${label}
-                    </option>
-
-                `;
-
-            }
-        )
-        .join("");
-
-}
-
-
-/* =========================================================
-   INVENTORY TEXT
-========================================================= */
-
-function inventoryText(
-    product
-) {
-
-    const state =
-        effectiveStockState(
-            product
-        );
-
-
-    if (
-        state ===
-        "coming_soon"
-    ) {
-
-        return "COMING SOON";
-
-    }
-
-
-    if (
-        state ===
-        "hidden"
-    ) {
-
-        return "HIDDEN";
-
-    }
-
-
-    if (
-        state ===
-        "out_of_stock"
-    ) {
-
-        return "OUT OF STOCK";
-
-    }
-
-
-    if (
-        state ===
-        "low_stock"
-    ) {
-
-        return `ONLY ${
-            Number(
-                product.stock_quantity ??
-                0
-            )
-        } LEFT`;
-
-    }
-
-
-    return `${
-        Number(
-            product.stock_quantity ??
-            0
-        )
-    } IN STOCK`;
-
-}
-
-
-function inventoryClass(
-    state
-) {
-
-    if (
-        state ===
-        "in_stock"
-    ) {
-
-        return "inventory-good";
-
-    }
-
-
-    if (
-        state ===
-        "low_stock"
-    ) {
-
-        return "inventory-low";
-
-    }
-
-
-    return "inventory-empty";
-
-}
-
-
-/* =========================================================
-   SAVE PRODUCT
-========================================================= */
-
-async function saveProduct(
-    productID,
-    card
-) {
-
-    const message =
-        card.querySelector(
-            "[data-message]"
-        );
-
-
-    message.textContent =
-        "Saving...";
-
-
-    const name =
-        card.querySelector(
-            "[data-name]"
-        )
-        .value
-        .trim();
-
-
-    if (
-        !name
-    ) {
-
-        message.textContent =
-            "Product name cannot be empty.";
-
-        return;
-    }
-
-
-    const priceRaw =
-        card.querySelector(
-            "[data-price]"
-        )
-        .value;
-
-
-    const payload = {
-
-        /*
-            NEW:
-            PRODUCT NAME IS NOW EDITABLE
-        */
-
-        name:
-            name,
-
-
-        status:
-            card.querySelector(
-                "[data-status]"
-            )
-            .value,
-
-
-        stock_quantity:
-            Number(
-                card.querySelector(
-                    "[data-stock]"
-                )
-                .value
-            ),
-
-
-        low_stock_threshold:
-            Number(
-                card.querySelector(
-                    "[data-threshold]"
-                )
-                .value
-            ),
-
-
-        price_gbp:
-            priceRaw === ""
-            ? null
-            : Number(
-                priceRaw
-            ),
-
-
-        sku:
-            card.querySelector(
-                "[data-sku]"
-            )
-            .value
-            .trim(),
-
-
-        display_order:
-            Number(
-                card.querySelector(
-                    "[data-order]"
-                )
-                .value
-            ),
-
-
-        subtitle:
-            card.querySelector(
-                "[data-subtitle]"
-            )
-            .value
-            .trim(),
-
-
-        description:
-            card.querySelector(
-                "[data-description]"
-            )
-            .value
-            .trim(),
-
-
-        featured:
-            card.querySelector(
-                "[data-featured]"
-            )
-            .checked,
-
-
-        ordering_enabled:
-            card.querySelector(
-                "[data-ordering]"
-            )
-            .checked,
-
-
-        preorder_enabled:
-            card.querySelector(
-                "[data-preorder]"
-            )
-            .checked,
-
-
-        custom_fit_available:
-            card.querySelector(
-                "[data-custom-fit]"
-            )
-            .checked,
-
-
-        custom_tuning_available:
-            card.querySelector(
-                "[data-custom-tuning]"
-            )
-            .checked,
-
-
-        updated_at:
-            new Date()
-                .toISOString()
-
-    };
-
-
-    const {
-        error
-    } =
-        await adminDB
-            .from(
-                "products"
-            )
-            .update(
-                payload
-            )
-            .eq(
-                "id",
-                productID
-            );
-
-
-    if (
-        error
-    ) {
-
-        console.error(
-            error
-        );
-
-
-        message.textContent =
-            error.message;
-
-
-        return;
-    }
-
-
-    message.textContent =
-        "Saved.";
-
-
-    await loadProducts();
-
-}
-
-
-/* =========================================================
-   UPLOAD PRODUCT IMAGE
-========================================================= */
-
-async function uploadProductImage(
-    product,
-    card
-) {
-
-    const file =
-        card.querySelector(
-            "[data-image-file]"
-        )
-        .files?.[0];
-
-
-    const message =
-        card.querySelector(
-            "[data-message]"
-        );
-
-
-    if (
-        !file
-    ) {
-
-        message.textContent =
-            "Choose an image first.";
-
-        return;
-    }
-
-
-    const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/webp"
-    ];
-
-
-    if (
-        !allowedTypes.includes(
-            file.type
-        )
-    ) {
-
-        message.textContent =
-            "Use JPG, PNG or WebP.";
-
-        return;
-    }
-
-
-    message.textContent =
-        "Uploading image...";
-
-
-    const extension =
-        file.name
-            .split(".")
-            .pop()
-            .toLowerCase();
-
-
-    const path =
-        `${product.id}/main-${Date.now()}.${extension}`;
-
-
-    const {
-        error: uploadError
-    } =
-        await adminDB
-            .storage
-            .from(
-                "product-images"
-            )
-            .upload(
-                path,
-                file,
-                {
-                    contentType:
-                        file.type,
-
-                    upsert:
-                        false
-                }
-            );
-
-
-    if (
-        uploadError
-    ) {
-
-        console.error(
-            uploadError
-        );
-
-
-        message.textContent =
-            uploadError.message;
-
-
-        return;
-    }
-
-
-    const {
-        data
-    } =
-        adminDB
-            .storage
-            .from(
-                "product-images"
-            )
-            .getPublicUrl(
-                path
-            );
-
-
-    const {
-        error: updateError
-    } =
-        await adminDB
-            .from(
-                "products"
-            )
-            .update({
-
-                image_path:
-                    data.publicUrl,
-
-                updated_at:
-                    new Date()
-                        .toISOString()
-
-            })
-            .eq(
-                "id",
-                product.id
-            );
-
-
-    if (
-        updateError
-    ) {
-
-        console.error(
-            updateError
-        );
-
-
-        message.textContent =
-            updateError.message;
-
-
-        return;
-    }
-
-
-    message.textContent =
-        "Image updated.";
-
-
-    await loadProducts();
-
-}
-
-
-/* =========================================================
-   DELETE PRODUCT
-========================================================= */
-
-async function deleteProduct(
-    productID
-) {
-
-    const {
-        error
-    } =
-        await adminDB
-            .from(
-                "products"
-            )
-            .delete()
-            .eq(
-                "id",
-                productID
-            );
-
-
-    if (
-        error
-    ) {
-
-        console.error(
-            error
-        );
-
-
-        alert(
-            error.message
-        );
-
-
-        return;
-    }
-
-
-    await loadProducts();
-
-}
-
-
-/* =========================================================
-   ADD PRODUCT
-========================================================= */
-
-async function addProduct() {
-
-    const message =
-        document.getElementById(
-            "addProductMessage"
-        );
 
 
     const name =
@@ -2596,7 +1769,7 @@ async function addProduct() {
             .trim();
 
 
-    const slug =
+    let slug =
         document
             .getElementById(
                 "newProductSlug"
@@ -2609,10 +1782,15 @@ async function addProduct() {
         !name
     ) {
 
-        message.textContent =
-            "Product name is required.";
+        setMessage(
+            "addProductMessage",
+            "Product name is required.",
+            "error"
+        );
+
 
         return;
+
     }
 
 
@@ -2620,177 +1798,657 @@ async function addProduct() {
         !slug
     ) {
 
-        message.textContent =
-            "Slug is required.";
+        slug =
+            slugify(
+                name
+            );
 
-        return;
     }
 
 
-    const priceRaw =
+    const referenceRequested =
         document
             .getElementById(
-                "newProductPrice"
+                "newProductReferenceTarget"
             )
-            .value;
+            .checked;
 
 
-    const launchRaw =
-        document
-            .getElementById(
-                "newProductLaunchDate"
+    try {
+
+        const payload = {
+
+            name:
+                name,
+
+            sku:
+                document
+                    .getElementById(
+                        "newProductSku"
+                    )
+                    .value
+                    .trim()
+                ||
+                null,
+
+            slug:
+                slug,
+
+            category:
+                document
+                    .getElementById(
+                        "newProductCategory"
+                    )
+                    .value,
+
+            fit_type:
+                document
+                    .getElementById(
+                        "newProductFitType"
+                    )
+                    .value,
+
+            tuning_type:
+                document
+                    .getElementById(
+                        "newProductTuningType"
+                    )
+                    .value,
+
+            price_gbp:
+                safeNumber(
+                    document
+                        .getElementById(
+                            "newProductPrice"
+                        )
+                        .value,
+                    0
+                ),
+
+            stock_quantity:
+                safeNumber(
+                    document
+                        .getElementById(
+                            "newProductStock"
+                        )
+                        .value,
+                    0
+                ),
+
+            low_stock_threshold:
+                safeNumber(
+                    document
+                        .getElementById(
+                            "newProductLowThreshold"
+                        )
+                        .value,
+                    3
+                ),
+
+            status:
+                document
+                    .getElementById(
+                        "newProductStatus"
+                    )
+                    .value,
+
+            display_order:
+                safeNumber(
+                    document
+                        .getElementById(
+                            "newProductOrder"
+                        )
+                        .value,
+                    0
+                ),
+
+            max_per_order:
+                safeNumber(
+                    document
+                        .getElementById(
+                            "newProductMaxOrder"
+                        )
+                        .value,
+                    1
+                ),
+
+            featured:
+                document
+                    .getElementById(
+                        "newProductFeatured"
+                    )
+                    .checked,
+
+            ordering_enabled:
+                document
+                    .getElementById(
+                        "newProductOrdering"
+                    )
+                    .checked,
+
+            preorder_enabled:
+                document
+                    .getElementById(
+                        "newProductPreorder"
+                    )
+                    .checked,
+
+            custom_fit:
+                document
+                    .getElementById(
+                        "newProductCustomFit"
+                    )
+                    .checked,
+
+            custom_tuning:
+                document
+                    .getElementById(
+                        "newProductCustomTuning"
+                    )
+                    .checked,
+
+            public_visible:
+                document
+                    .getElementById(
+                        "newProductPublicVisible"
+                    )
+                    .checked,
+
+            is_reference_target:
+                false,
+
+            subtitle:
+                document
+                    .getElementById(
+                        "newProductSubtitle"
+                    )
+                    .value
+                    .trim()
+                ||
+                null,
+
+            short_description:
+                document
+                    .getElementById(
+                        "newProductShortDescription"
+                    )
+                    .value
+                    .trim()
+                ||
+                null,
+
+            description:
+                document
+                    .getElementById(
+                        "newProductDescription"
+                    )
+                    .value
+                    .trim()
+                ||
+                null,
+
+            detail_page:
+                document
+                    .getElementById(
+                        "newProductDetailPage"
+                    )
+                    .value
+                    .trim()
+                ||
+                null
+
+        };
+
+
+        const launchValue =
+            document
+                .getElementById(
+                    "newProductLaunchDate"
+                )
+                .value;
+
+
+        if (
+            launchValue
+        ) {
+
+            payload.launch_date =
+                new Date(
+                    launchValue
+                )
+                .toISOString();
+
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "products"
+                )
+                .insert(
+                    payload
+                )
+                .select()
+                .single();
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        const imageFile =
+            document
+                .getElementById(
+                    "newProductImage"
+                )
+                .files[
+                    0
+                ];
+
+
+        if (
+            imageFile
+        ) {
+
+            await uploadProductImage(
+                data,
+                imageFile
+            );
+
+        }
+
+
+        if (
+            referenceRequested
+        ) {
+
+            await setReferenceProduct(
+                data.id,
+                false
+            );
+
+        }
+
+
+        setMessage(
+            "addProductMessage",
+            "Product added successfully.",
+            "success"
+        );
+
+
+        resetProductForm();
+
+
+        await loadProducts();
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            "Create product error:",
+            error
+        );
+
+
+        setMessage(
+            "addProductMessage",
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   PRODUCT IMAGE
+========================================================= */
+
+async function uploadProductImage(
+    product,
+    file
+) {
+
+    const extension =
+        file.name
+            .split(
+                "."
             )
-            .value;
+            .pop()
+            .toLowerCase();
 
 
-    const payload = {
-
-        name:
-            name,
-
-        slug:
-            slug,
-
-        sku:
-            document
-                .getElementById(
-                    "newProductSku"
-                )
-                .value
-                .trim(),
-
-        subtitle:
-            document
-                .getElementById(
-                    "newProductSubtitle"
-                )
-                .value
-                .trim(),
-
-        description:
-            document
-                .getElementById(
-                    "newProductDescription"
-                )
-                .value
-                .trim(),
-
-        price_gbp:
-            priceRaw === ""
-            ? null
-            : Number(
-                priceRaw
-            ),
-
-        stock_quantity:
-            Number(
-                document
-                    .getElementById(
-                        "newProductStock"
-                    )
-                    .value
-            ),
-
-        low_stock_threshold:
-            Number(
-                document
-                    .getElementById(
-                        "newProductLowThreshold"
-                    )
-                    .value
-            ),
-
-        status:
-            document
-                .getElementById(
-                    "newProductStatus"
-                )
-                .value,
-
-        display_order:
-            Number(
-                document
-                    .getElementById(
-                        "newProductOrder"
-                    )
-                    .value
-            ),
-
-        launch_date:
-            launchRaw
-            ? new Date(
-                launchRaw
-            )
-                .toISOString()
-            : null,
-
-        max_order_quantity:
-            Number(
-                document
-                    .getElementById(
-                        "newProductMaxOrder"
-                    )
-                    .value
-            ),
-
-        featured:
-            document
-                .getElementById(
-                    "newProductFeatured"
-                )
-                .checked,
-
-        ordering_enabled:
-            document
-                .getElementById(
-                    "newProductOrdering"
-                )
-                .checked,
-
-        preorder_enabled:
-            document
-                .getElementById(
-                    "newProductPreorder"
-                )
-                .checked,
-
-        custom_fit_available:
-            document
-                .getElementById(
-                    "newProductCustomFit"
-                )
-                .checked,
-
-        custom_tuning_available:
-            document
-                .getElementById(
-                    "newProductCustomTuning"
-                )
-                .checked
-
-    };
-
-
-    message.textContent =
-        "Creating product...";
+    const path =
+        `products/${product.id}/hero.${extension}`;
 
 
     const {
-        data: product,
-        error
+        error: uploadError
     } =
-        await adminDB
+        await window.hcSupabase
+            .storage
             .from(
-                "products"
+                "product-images"
             )
-            .insert(
-                payload
-            )
-            .select()
-            .single();
+            .upload(
+                path,
+                file,
+                {
+                    upsert:
+                        true
+                }
+            );
 
 
     if (
+        uploadError
+    ) {
+
+        throw uploadError;
+
+    }
+
+
+    const {
+        data
+    } =
+        window.hcSupabase
+            .storage
+            .from(
+                "product-images"
+            )
+            .getPublicUrl(
+                path
+            );
+
+
+    const {
+        error
+    } =
+        await window.hcSupabase
+            .from(
+                "products"
+            )
+            .update({
+
+                image_url:
+                    data.publicUrl
+
+            })
+            .eq(
+                "id",
+                product.id
+            );
+
+
+    if (
+        error
+    ) {
+
+        throw error;
+
+    }
+
+}
+
+
+/* =========================================================
+   PRODUCT SWITCH
+========================================================= */
+
+async function updateProductBoolean(
+    productId,
+    field,
+    value
+) {
+
+    const allowed =
+        new Set([
+
+            "public_visible",
+            "ordering_enabled",
+            "featured"
+
+        ]);
+
+
+    if (
+        !allowed.has(
+            field
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const payload =
+        {};
+
+
+    payload[
+        field
+    ] =
+        Boolean(
+            value
+        );
+
+
+    const {
+        error
+    } =
+        await window.hcSupabase
+            .from(
+                "products"
+            )
+            .update(
+                payload
+            )
+            .eq(
+                "id",
+                productId
+            );
+
+
+    if (
+        error
+    ) {
+
+        alert(
+            error.message
+        );
+
+
+        await loadProducts();
+
+    }
+
+}
+
+
+/* =========================================================
+   SET REFERENCE
+========================================================= */
+
+async function setReferenceProduct(
+    productId,
+    reload = true
+) {
+
+    try {
+
+        const {
+            error: clearError
+        } =
+            await window.hcSupabase
+                .from(
+                    "products"
+                )
+                .update({
+
+                    is_reference_target:
+                        false
+
+                })
+                .eq(
+                    "is_reference_target",
+                    true
+                );
+
+
+        if (
+            clearError
+        ) {
+
+            throw clearError;
+
+        }
+
+
+        const {
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "products"
+                )
+                .update({
+
+                    is_reference_target:
+                        true
+
+                })
+                .eq(
+                    "id",
+                    productId
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        if (
+            reload
+        ) {
+
+            await loadProducts();
+
+        }
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            "Reference target error:",
+            error
+        );
+
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   DELETE PRODUCT
+========================================================= */
+
+function confirmDeleteProduct(
+    productId
+) {
+
+    const product =
+        allProducts.find(
+            item =>
+                item.id ===
+                productId
+        );
+
+
+    showConfirm(
+
+        "Delete product?",
+
+        `Delete ${product?.name || "this product"} and its frequency-response data?`,
+
+        async () => {
+
+            await deleteProduct(
+                productId
+            );
+
+        }
+
+    );
+
+}
+
+
+async function deleteProduct(
+    productId
+) {
+
+    try {
+
+        const {
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "products"
+                )
+                .delete()
+                .eq(
+                    "id",
+                    productId
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        closeConfirm();
+
+
+        await loadProducts();
+
+    }
+
+    catch (
         error
     ) {
 
@@ -2799,106 +2457,1635 @@ async function addProduct() {
         );
 
 
-        message.textContent =
-            error.message;
-
-
-        return;
-    }
-
-
-    const image =
-        document
-            .getElementById(
-                "newProductImage"
-            )
-            .files?.[0];
-
-
-    if (
-        image
-    ) {
-
-        const fakeCard =
-            document.createElement(
-                "div"
-            );
-
-
-        fakeCard.innerHTML = `
-
-            <input
-                data-image-file
-                type="file"
-            >
-
-            <div
-                data-message
-            ></div>
-
-        `;
+        alert(
+            error.message
+        );
 
     }
-
-
-    message.textContent =
-        `Created ${product.name}.`;
-
-
-    await loadProducts();
 
 }
 
 
 /* =========================================================
-   HELPERS
+   VIEW PRODUCT
 ========================================================= */
 
-function formatStatus(
-    value
+function openProductPage(
+    productId
 ) {
 
-    return String(
-        value ||
-        ""
-    )
-        .replaceAll(
-            "_",
-            " "
-        )
-        .toUpperCase();
+    const product =
+        allProducts.find(
+            item =>
+                item.id ===
+                productId
+        );
+
+
+    if (
+        !product
+    ) {
+
+        return;
+
+    }
+
+
+    const url =
+        product.detail_page
+        ||
+        `products/${product.slug}.html`;
+
+
+    window.open(
+        url,
+        "_blank"
+    );
 
 }
 
 
-function escapeHTML(
-    value
+/* =========================================================
+   RESET PRODUCT FORM
+========================================================= */
+
+function resetProductForm() {
+
+    const ids = [
+
+        "newProductName",
+        "newProductSku",
+        "newProductSlug",
+        "newProductPrice",
+        "newProductSubtitle",
+        "newProductShortDescription",
+        "newProductDescription",
+        "newProductDetailPage"
+
+    ];
+
+
+    ids.forEach(
+        id => {
+
+            const element =
+                document.getElementById(
+                    id
+                );
+
+
+            if (
+                element
+            ) {
+
+                element.value =
+                    "";
+
+            }
+
+        }
+    );
+
+
+    document
+        .getElementById(
+            "newProductStock"
+        )
+        .value =
+            0;
+
+
+    document
+        .getElementById(
+            "newProductLowThreshold"
+        )
+        .value =
+            3;
+
+
+    document
+        .getElementById(
+            "newProductOrder"
+        )
+        .value =
+            0;
+
+
+    document
+        .getElementById(
+            "newProductMaxOrder"
+        )
+        .value =
+            1;
+
+
+    document
+        .getElementById(
+            "newProductStatus"
+        )
+        .value =
+            "coming_soon";
+
+
+    document
+        .getElementById(
+            "newProductCategory"
+        )
+        .value =
+            "reference";
+
+
+    document
+        .getElementById(
+            "newProductFitType"
+        )
+        .value =
+            "universal";
+
+
+    document
+        .getElementById(
+            "newProductTuningType"
+        )
+        .value =
+            "reference";
+
+
+    document
+        .getElementById(
+            "newProductImage"
+        )
+        .value =
+            "";
+
+
+    document
+        .querySelectorAll(
+            ".create-product-panel input[type='checkbox']"
+        )
+        .forEach(
+            checkbox => {
+
+                checkbox.checked =
+                    checkbox.id ===
+                    "newProductPublicVisible";
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   AUTO SLUG
+========================================================= */
+
+function handleProductNameInput() {
+
+    const name =
+        document
+            .getElementById(
+                "newProductName"
+            )
+            .value;
+
+
+    const slugInput =
+        document.getElementById(
+            "newProductSlug"
+        );
+
+
+    if (
+        !slugInput.dataset.manual
+    ) {
+
+        slugInput.value =
+            slugify(
+                name
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   FREQUENCY RESPONSE
+========================================================= */
+
+function populateFrProductSelect() {
+
+    const select =
+        document.getElementById(
+            "frProductSelect"
+        );
+
+
+    const current =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Select product
+        </option>
+
+        ${
+            allProducts
+                .map(
+                    product => `
+
+                        <option
+                            value="${product.id}"
+                        >
+
+                            ${
+                                escapeHtml(
+                                    product.name
+                                )
+                            }
+
+                        </option>
+
+                    `
+                )
+                .join("")
+        }
+
+    `;
+
+
+    if (
+        allProducts.some(
+            product =>
+                product.id ===
+                current
+        )
+    ) {
+
+        select.value =
+            current;
+
+    }
+
+}
+
+
+/* =========================================================
+   FR FILE PARSER
+========================================================= */
+
+async function parseFrequencyResponseFile(
+    file
 ) {
 
-    return String(
-        value ??
-        ""
-    )
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
+    const text =
+        await file.text();
+
+
+    const lines =
+        text
+            .split(
+                /\r?\n/
+            );
+
+
+    const points =
+        [];
+
+
+    for (
+        const rawLine
+        of
+        lines
+    ) {
+
+        const line =
+            rawLine
+                .trim();
+
+
+        if (
+            !line
+            ||
+            line.startsWith(
+                "#"
+            )
+            ||
+            line.startsWith(
+                ";"
+            )
+    ) {
+
+            continue;
+
+        }
+
+
+        const columns =
+            line
+                .split(
+                    /[\s,;\t]+/
+                )
+                .filter(
+                    Boolean
+                );
+
+
+        if (
+            columns.length <
+            2
+        ) {
+
+            continue;
+
+        }
+
+
+        const frequency =
+            Number(
+                columns[
+                    0
+                ]
+            );
+
+
+        const db =
+            Number(
+                columns[
+                    1
+                ]
+            );
+
+
+        if (
+            !Number.isFinite(
+                frequency
+            )
+            ||
+            !Number.isFinite(
+                db
+            )
+            ||
+            frequency <=
+                0
+        ) {
+
+            continue;
+
+        }
+
+
+        points.push({
+
+            frequency:
+                frequency,
+
+            db:
+                db
+
+        });
+
+    }
+
+
+    points.sort(
+        (
+            first,
+            second
+        ) =>
+            first.frequency
+            -
+            second.frequency
+    );
+
+
+    /*
+     * Remove duplicate frequencies.
+     */
+
+    const unique =
+        new Map();
+
+
+    points.forEach(
+        point => {
+
+            unique.set(
+                point.frequency,
+                point
+            );
+
+        }
+    );
+
+
+    return Array.from(
+        unique.values()
+    );
+
+}
+
+
+/* =========================================================
+   INTERPOLATE
+========================================================= */
+
+function interpolateResponse(
+    points,
+    targetFrequency
+) {
+
+    if (
+        points.length ===
+        0
+    ) {
+
+        return 0;
+
+    }
+
+
+    if (
+        targetFrequency <=
+        points[
+            0
+        ].frequency
+    ) {
+
+        return points[
+            0
+        ].db;
+
+    }
+
+
+    const last =
+        points[
+            points.length - 1
+        ];
+
+
+    if (
+        targetFrequency >=
+        last.frequency
+    ) {
+
+        return last.db;
+
+    }
+
+
+    for (
+        let index = 0;
+        index <
+            points.length - 1;
+        index++
+    ) {
+
+        const left =
+            points[
+                index
+            ];
+
+
+        const right =
+            points[
+                index + 1
+            ];
+
+
+        if (
+            targetFrequency >=
+                left.frequency
+            &&
+            targetFrequency <=
+                right.frequency
+        ) {
+
+            const leftLog =
+                Math.log10(
+                    left.frequency
+                );
+
+
+            const rightLog =
+                Math.log10(
+                    right.frequency
+                );
+
+
+            const targetLog =
+                Math.log10(
+                    targetFrequency
+                );
+
+
+            const ratio =
+                (
+                    targetLog
+                    -
+                    leftLog
+                )
+                /
+                (
+                    rightLog
+                    -
+                    leftLog
+                );
+
+
+            return (
+
+                left.db
+
+                +
+
+                (
+                    right.db
+                    -
+                    left.db
+                )
+
+                *
+                ratio
+
+            );
+
+        }
+
+    }
+
+
+    return 0;
+
+}
+
+
+/* =========================================================
+   PREVIEW FR
+========================================================= */
+
+async function previewFrequencyResponse() {
+
+    const file =
+        document
+            .getElementById(
+                "frFileInput"
+            )
+            .files[
+                0
+            ];
+
+
+    if (
+        !file
+    ) {
+
+        setMessage(
+            "frMessage",
+            "Choose an FRD, CSV or TXT file first.",
+            "error"
         );
+
+
+        return;
+
+    }
+
+
+    try {
+
+        const points =
+            await parseFrequencyResponseFile(
+                file
+            );
+
+
+        if (
+            points.length <
+            10
+        ) {
+
+            throw new Error(
+                "Too few valid measurement points were found."
+            );
+
+        }
+
+
+        parsedFrequencyResponse =
+            points;
+
+
+        drawAdminFrChart(
+            points
+        );
+
+
+        updateFrSummary(
+            points
+        );
+
+
+        document
+            .getElementById(
+                "saveFrButton"
+            )
+            .disabled =
+                false;
+
+
+        setMessage(
+            "frMessage",
+            `${points.length} measurement points loaded.`,
+            "success"
+        );
+
+    }
+
+    catch (
+        error
+    ) {
+
+        parsedFrequencyResponse =
+            [];
+
+
+        document
+            .getElementById(
+                "saveFrButton"
+            )
+            .disabled =
+                true;
+
+
+        setMessage(
+            "frMessage",
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW FR
+========================================================= */
+
+function drawAdminFrChart(
+    points
+) {
+
+    const canvas =
+        document.getElementById(
+            "adminFrCanvas"
+        );
+
+
+    const ctx =
+        canvas.getContext(
+            "2d"
+        );
+
+
+    const width =
+        canvas.width;
+
+
+    const height =
+        canvas.height;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    if (
+        !points
+        ||
+        points.length <
+            2
+    ) {
+
+        return;
+
+    }
+
+
+    const normalization =
+        document
+            .getElementById(
+                "frNormalization"
+            )
+            .value;
+
+
+    let displayPoints =
+        points;
+
+
+    if (
+        normalization ===
+        "1000"
+    ) {
+
+        const reference =
+            interpolateResponse(
+                points,
+                1000
+            );
+
+
+        displayPoints =
+            points.map(
+                point => ({
+
+                    frequency:
+                        point.frequency,
+
+                    db:
+                        point.db
+                        -
+                        reference
+
+                })
+            );
+
+    }
+
+
+    const left =
+        80;
+
+
+    const right =
+        35;
+
+
+    const top =
+        40;
+
+
+    const bottom =
+        65;
+
+
+    const minFrequency =
+        Math.max(
+            20,
+            displayPoints[
+                0
+            ].frequency
+        );
+
+
+    const maxFrequency =
+        Math.min(
+            20000,
+            displayPoints[
+                displayPoints.length - 1
+            ].frequency
+        );
+
+
+    const dbValues =
+        displayPoints.map(
+            point =>
+                point.db
+        );
+
+
+    let minDb =
+        Math.floor(
+            Math.min(
+                ...dbValues
+            )
+            /
+            5
+        )
+        *
+        5
+        -
+        5;
+
+
+    let maxDb =
+        Math.ceil(
+            Math.max(
+                ...dbValues
+            )
+            /
+            5
+        )
+        *
+        5
+        +
+        5;
+
+
+    function xFromFrequency(
+        frequency
+    ) {
+
+        const minLog =
+            Math.log10(
+                minFrequency
+            );
+
+
+        const maxLog =
+            Math.log10(
+                maxFrequency
+            );
+
+
+        return (
+
+            left
+
+            +
+
+            (
+                (
+                    Math.log10(
+                        frequency
+                    )
+                    -
+                    minLog
+                )
+                /
+                (
+                    maxLog
+                    -
+                    minLog
+                )
+            )
+
+            *
+            (
+                width
+                -
+                left
+                -
+                right
+            )
+
+        );
+
+    }
+
+
+    function yFromDb(
+        db
+    ) {
+
+        return (
+
+            top
+
+            +
+
+            (
+                maxDb
+                -
+                db
+            )
+            /
+            (
+                maxDb
+                -
+                minDb
+            )
+
+            *
+            (
+                height
+                -
+                top
+                -
+                bottom
+            )
+
+        );
+
+    }
+
+
+    ctx.font =
+        "18px Arial";
+
+
+    /* GRID */
+
+    for (
+        let db = minDb;
+        db <= maxDb;
+        db += 5
+    ) {
+
+        const y =
+            yFromDb(
+                db
+            );
+
+
+        ctx.beginPath();
+
+
+        ctx.strokeStyle =
+            "rgba(255,255,255,0.10)";
+
+
+        ctx.moveTo(
+            left,
+            y
+        );
+
+
+        ctx.lineTo(
+            width - right,
+            y
+        );
+
+
+        ctx.stroke();
+
+
+        ctx.fillStyle =
+            "#8e8e8e";
+
+
+        ctx.fillText(
+            `${db > 0 ? "+" : ""}${db}`,
+            15,
+            y + 5
+        );
+
+    }
+
+
+    const frequencyLabels = [
+
+        20,
+        50,
+        100,
+        200,
+        500,
+        1000,
+        2000,
+        5000,
+        10000,
+        20000
+
+    ];
+
+
+    frequencyLabels.forEach(
+        frequency => {
+
+            if (
+                frequency <
+                    minFrequency
+                ||
+                frequency >
+                    maxFrequency
+            ) {
+
+                return;
+
+            }
+
+
+            const x =
+                xFromFrequency(
+                    frequency
+                );
+
+
+            ctx.beginPath();
+
+
+            ctx.strokeStyle =
+                "rgba(255,255,255,0.07)";
+
+
+            ctx.moveTo(
+                x,
+                top
+            );
+
+
+            ctx.lineTo(
+                x,
+                height - bottom
+            );
+
+
+            ctx.stroke();
+
+
+            ctx.fillStyle =
+                "#8e8e8e";
+
+
+            const label =
+                frequency >=
+                    1000
+                ?
+                `${frequency / 1000}k`
+                :
+                String(
+                    frequency
+                );
+
+
+            ctx.fillText(
+                label,
+                x - 15,
+                height - 20
+            );
+
+        }
+    );
+
+
+    /* CURVE */
+
+    ctx.beginPath();
+
+
+    ctx.strokeStyle =
+        "#ff6a00";
+
+
+    ctx.lineWidth =
+        4;
+
+
+    displayPoints.forEach(
+        (
+            point,
+            index
+        ) => {
+
+            if (
+                point.frequency <
+                    minFrequency
+                ||
+                point.frequency >
+                    maxFrequency
+            ) {
+
+                return;
+
+            }
+
+
+            const x =
+                xFromFrequency(
+                    point.frequency
+                );
+
+
+            const y =
+                yFromDb(
+                    point.db
+                );
+
+
+            if (
+                index ===
+                0
+            ) {
+
+                ctx.moveTo(
+                    x,
+                    y
+                );
+
+            }
+
+            else {
+
+                ctx.lineTo(
+                    x,
+                    y
+                );
+
+            }
+
+        }
+    );
+
+
+    ctx.stroke();
+
+}
+
+
+/* =========================================================
+   FR SUMMARY
+========================================================= */
+
+function updateFrSummary(
+    points
+) {
+
+    document
+        .getElementById(
+            "frPointCount"
+        )
+        .textContent =
+            points.length;
+
+
+    document
+        .getElementById(
+            "frMinFrequency"
+        )
+        .textContent =
+            `${points[0].frequency.toFixed(1)} Hz`;
+
+
+    document
+        .getElementById(
+            "frMaxFrequency"
+        )
+        .textContent =
+            `${
+                points[
+                    points.length - 1
+                ]
+                .frequency
+                .toFixed(1)
+            } Hz`;
+
+
+    document
+        .getElementById(
+            "frOneKhzLevel"
+        )
+        .textContent =
+            `${
+                interpolateResponse(
+                    points,
+                    1000
+                )
+                .toFixed(2)
+            } dB`;
+
+}
+
+
+/* =========================================================
+   SAVE FR
+========================================================= */
+
+async function saveFrequencyResponse() {
+
+    const productId =
+        document
+            .getElementById(
+                "frProductSelect"
+            )
+            .value;
+
+
+    if (
+        !productId
+    ) {
+
+        setMessage(
+            "frMessage",
+            "Select a product first.",
+            "error"
+        );
+
+
+        return;
+
+    }
+
+
+    if (
+        parsedFrequencyResponse.length ===
+        0
+    ) {
+
+        setMessage(
+            "frMessage",
+            "Preview a valid measurement first.",
+            "error"
+        );
+
+
+        return;
+
+    }
+
+
+    try {
+
+        /*
+         * Delete old response first.
+         */
+
+        const {
+            error: deleteError
+        } =
+            await window.hcSupabase
+                .from(
+                    "product_frequency_response"
+                )
+                .delete()
+                .eq(
+                    "product_id",
+                    productId
+                );
+
+
+        if (
+            deleteError
+        ) {
+
+            throw deleteError;
+
+        }
+
+
+        /*
+         * Store ORIGINAL measured values.
+         *
+         * Normalisation is done during comparison/display.
+         */
+
+        const rows =
+            parsedFrequencyResponse.map(
+                point => ({
+
+                    product_id:
+                        productId,
+
+                    frequency_hz:
+                        point.frequency,
+
+                    db:
+                        point.db
+
+                })
+            );
+
+
+        /*
+         * Insert in batches so a large measurement
+         * does not create an oversized request.
+         */
+
+        const batchSize =
+            500;
+
+
+        for (
+            let index = 0;
+            index <
+                rows.length;
+            index +=
+                batchSize
+        ) {
+
+            const batch =
+                rows.slice(
+                    index,
+                    index + batchSize
+                );
+
+
+            const {
+                error
+            } =
+                await window.hcSupabase
+                    .from(
+                        "product_frequency_response"
+                    )
+                    .insert(
+                        batch
+                    );
+
+
+            if (
+                error
+            ) {
+
+                throw error;
+
+            }
+
+        }
+
+
+        setMessage(
+            "frMessage",
+            `${rows.length} real measurement points saved.`,
+            "success"
+        );
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            "Save FR error:",
+            error
+        );
+
+
+        setMessage(
+            "frMessage",
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD EXISTING FR
+========================================================= */
+
+async function loadExistingFrequencyResponse() {
+
+    const productId =
+        document
+            .getElementById(
+                "frProductSelect"
+            )
+            .value;
+
+
+    if (
+        !productId
+    ) {
+
+        parsedFrequencyResponse =
+            [];
+
+
+        drawAdminFrChart(
+            []
+        );
+
+
+        return;
+
+    }
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "product_frequency_response"
+                )
+                .select(`
+                    frequency_hz,
+                    db
+                `)
+                .eq(
+                    "product_id",
+                    productId
+                )
+                .order(
+                    "frequency_hz",
+                    {
+                        ascending:
+                            true
+                    }
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        const points =
+            (
+                data
+                ||
+                []
+            )
+            .map(
+                point => ({
+
+                    frequency:
+                        Number(
+                            point.frequency_hz
+                        ),
+
+                    db:
+                        Number(
+                            point.db
+                        )
+
+                })
+            );
+
+
+        parsedFrequencyResponse =
+            points;
+
+
+        if (
+            points.length >
+            0
+        ) {
+
+            drawAdminFrChart(
+                points
+            );
+
+
+            updateFrSummary(
+                points
+            );
+
+
+            document
+                .getElementById(
+                    "saveFrButton"
+                )
+                .disabled =
+                    false;
+
+
+            setMessage(
+                "frMessage",
+                `${points.length} existing measurement points loaded.`,
+                "success"
+            );
+
+        }
+
+        else {
+
+            drawAdminFrChart(
+                []
+            );
+
+
+            document
+                .getElementById(
+                    "saveFrButton"
+                )
+                .disabled =
+                    true;
+
+
+            setMessage(
+                "frMessage",
+                "No frequency response saved for this product."
+            );
+
+        }
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
+
+
+        setMessage(
+            "frMessage",
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   DELETE FR
+========================================================= */
+
+function confirmDeleteFrequencyResponse() {
+
+    const productId =
+        document
+            .getElementById(
+                "frProductSelect"
+            )
+            .value;
+
+
+    if (
+        !productId
+    ) {
+
+        setMessage(
+            "frMessage",
+            "Select a product first.",
+            "error"
+        );
+
+
+        return;
+
+    }
+
+
+    showConfirm(
+
+        "Delete frequency response?",
+
+        "The product will no longer be available to the public tuning matcher until new measurement data is uploaded.",
+
+        async () => {
+
+            const {
+                error
+            } =
+                await window.hcSupabase
+                    .from(
+                        "product_frequency_response"
+                    )
+                    .delete()
+                    .eq(
+                        "product_id",
+                        productId
+                    );
+
+
+            if (
+                error
+            ) {
+
+                alert(
+                    error.message
+                );
+
+
+                return;
+
+            }
+
+
+            parsedFrequencyResponse =
+                [];
+
+
+            drawAdminFrChart(
+                []
+            );
+
+
+            document
+                .getElementById(
+                    "saveFrButton"
+                )
+                .disabled =
+                    true;
+
+
+            setMessage(
+                "frMessage",
+                "Frequency response deleted.",
+                "success"
+            );
+
+
+            closeConfirm();
+
+        }
+
+    );
 
 }
 
@@ -2909,14 +4096,11 @@ function escapeHTML(
 
 document
     .getElementById(
-        "accountSearchInput"
+        "adminLogoutButton"
     )
     ?.addEventListener(
-        "input",
-        event =>
-            searchAccounts(
-                event.target.value
-            )
+        "click",
+        logoutAdmin
     );
 
 
@@ -2936,27 +4120,17 @@ document
     )
     ?.addEventListener(
         "click",
-        loadAdminScans
+        loadScans
     );
 
 
 document
     .getElementById(
-        "scanStatusFilter"
-    )
-    ?.addEventListener(
-        "change",
-        applyScanFilters
-    );
-
-
-document
-    .getElementById(
-        "clearScanFilterButton"
+        "refreshProcessorsButton"
     )
     ?.addEventListener(
         "click",
-        clearScanFilters
+        loadProcessors
     );
 
 
@@ -2972,29 +4146,188 @@ document
 
 document
     .getElementById(
-        "addProductButton"
+        "scanStatusFilter"
     )
     ?.addEventListener(
-        "click",
-        addProduct
+        "change",
+        renderScans
     );
 
 
 document
     .getElementById(
-        "adminLogoutButton"
+        "clearScanFilterButton"
     )
     ?.addEventListener(
         "click",
-        async () => {
+        () => {
 
-            await adminDB
-                .auth
-                .signOut();
+            document
+                .getElementById(
+                    "scanStatusFilter"
+                )
+                .value =
+                    "";
 
 
-            window.location.replace(
-                "index.html"
+            renderScans();
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "accountSearchInput"
+    )
+    ?.addEventListener(
+        "input",
+        event => {
+
+            const search =
+                event.target.value
+                    .trim()
+                    .toLowerCase();
+
+
+            if (
+                !search
+            ) {
+
+                renderAccounts(
+                    allAccounts
+                );
+
+
+                return;
+
+            }
+
+
+            renderAccounts(
+
+                allAccounts.filter(
+                    account =>
+
+                        String(
+                            account.email
+                            ||
+                            ""
+                        )
+                        .toLowerCase()
+                        .includes(
+                            search
+                        )
+
+                        ||
+
+                        String(
+                            account.full_name
+                            ||
+                            ""
+                        )
+                        .toLowerCase()
+                        .includes(
+                            search
+                        )
+
+                )
+
+            );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "newProductName"
+    )
+    ?.addEventListener(
+        "input",
+        handleProductNameInput
+    );
+
+
+document
+    .getElementById(
+        "newProductSlug"
+    )
+    ?.addEventListener(
+        "input",
+        event => {
+
+            event.target.dataset.manual =
+                event.target.value
+                ?
+                "true"
+                :
+                "";
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "addProductButton"
+    )
+    ?.addEventListener(
+        "click",
+        createProduct
+    );
+
+
+document
+    .getElementById(
+        "previewFrButton"
+    )
+    ?.addEventListener(
+        "click",
+        previewFrequencyResponse
+    );
+
+
+document
+    .getElementById(
+        "saveFrButton"
+    )
+    ?.addEventListener(
+        "click",
+        saveFrequencyResponse
+    );
+
+
+document
+    .getElementById(
+        "deleteFrButton"
+    )
+    ?.addEventListener(
+        "click",
+        confirmDeleteFrequencyResponse
+    );
+
+
+document
+    .getElementById(
+        "frProductSelect"
+    )
+    ?.addEventListener(
+        "change",
+        loadExistingFrequencyResponse
+    );
+
+
+document
+    .getElementById(
+        "frNormalization"
+    )
+    ?.addEventListener(
+        "change",
+        () => {
+
+            drawAdminFrChart(
+                parsedFrequencyResponse
             );
 
         }
@@ -3019,68 +4352,74 @@ document
         "click",
         async () => {
 
-            if (
-                !confirmCallback
-            ) {
-                return;
-            }
-
-
-            const action =
+            const callback =
                 confirmCallback;
 
 
-            closeConfirm();
+            if (
+                callback
+            ) {
 
+                await callback();
 
-            await action();
+            }
 
         }
     );
 
 
 /* =========================================================
-   INITIALISE
+   START
 ========================================================= */
 
-async function initialiseAdmin() {
+async function startAdmin() {
 
-    const user =
-        await requireAdmin();
+    try {
+
+        const admin =
+            await ensureAdmin();
 
 
-    if (
-        !user
-    ) {
-        return;
+        if (
+            !admin
+        ) {
+
+            return;
+
+        }
+
+
+        await Promise.all([
+
+            loadScans(),
+
+            loadAccounts(),
+
+            loadProducts(),
+
+            loadProcessors()
+
+        ]);
+
     }
 
+    catch (
+        error
+    ) {
 
-    const adminEmail =
-        document.getElementById(
-            "adminEmail"
+        console.error(
+            "Admin startup error:",
+            error
         );
 
 
-    if (
-        adminEmail
-    ) {
-
-        adminEmail.textContent =
-            user.email;
+        alert(
+            `Unable to start admin dashboard: ${error.message}`
+        );
 
     }
-
-
-    await loadAccounts();
-
-
-    await Promise.all([
-        loadAdminScans(),
-        loadProducts()
-    ]);
 
 }
 
 
-initialiseAdmin();
+startAdmin();

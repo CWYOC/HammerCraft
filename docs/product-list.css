@@ -1,0 +1,459 @@
+/* =========================================================
+   HAMMER CRAFT PRODUCT CATALOGUE
+========================================================= */
+
+.catalogue-page {
+    background: #080808;
+    color: #f2f2f2;
+}
+
+
+.catalogue-hero {
+    min-height: 75vh;
+
+    padding:
+        180px
+        7vw
+        100px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+.catalogue-hero h1 {
+    max-width: 1100px;
+
+    margin-top: 18px;
+
+    font-size:
+        clamp(
+            68px,
+            9vw,
+            145px
+        );
+
+    line-height: 0.86;
+
+    letter-spacing: -0.065em;
+
+    font-weight: 500;
+}
+
+
+.catalogue-hero h1 em {
+    display: block;
+
+    color: #ff6a00;
+
+    font-family: Georgia, serif;
+
+    font-weight: 400;
+}
+
+
+.catalogue-hero p {
+    max-width: 620px;
+
+    margin-top: 40px;
+
+    color: #8e8e8e;
+
+    font-size: 16px;
+
+    line-height: 1.8;
+}
+
+
+/* =========================================================
+   CATEGORIES
+========================================================= */
+
+.catalogue-category {
+    width: min(
+        calc(100% - 10vw),
+        1500px
+    );
+
+    margin: 0 auto;
+
+    padding:
+        120px
+        0;
+
+    border-top:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.12
+        );
+}
+
+
+.catalogue-category-heading {
+    display: grid;
+
+    grid-template-columns:
+        260px
+        minmax(0, 1fr);
+
+    gap: 60px;
+}
+
+
+.category-number {
+    display: block;
+
+    margin-bottom: 14px;
+
+    color: #ff6a00;
+
+    font-size: 36px;
+}
+
+
+.catalogue-category-heading h2 {
+    margin: 0;
+
+    font-size:
+        clamp(
+            45px,
+            6vw,
+            86px
+        );
+
+    line-height: 0.95;
+
+    letter-spacing: -0.055em;
+}
+
+
+.catalogue-category-heading p {
+    max-width: 600px;
+
+    margin-top: 20px;
+
+    color: #8e8e8e;
+
+    line-height: 1.8;
+}
+
+
+/* =========================================================
+   PRODUCT
+========================================================= */
+
+.catalogue-product-grid {
+    margin-top: 55px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+
+    gap: 18px;
+}
+
+
+.catalogue-product-card {
+    display: grid;
+
+    grid-template-columns:
+        1.1fr
+        0.9fr;
+
+    min-height: 500px;
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.12
+        );
+
+    background: #0d0d0d;
+}
+
+
+.catalogue-image {
+    position: relative;
+
+    min-height: 500px;
+
+    overflow: hidden;
+
+    background: #111;
+
+    color: #f2f2f2;
+
+    text-decoration: none;
+}
+
+
+.catalogue-image img {
+    position: relative;
+
+    z-index: 2;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+
+.catalogue-image-fallback {
+    position: absolute;
+
+    inset: 0;
+
+    padding: 28px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: flex-end;
+
+    background:
+        linear-gradient(
+            145deg,
+            #111,
+            #1b1b1b
+        );
+}
+
+
+.catalogue-image-fallback span {
+    color: #ff6a00;
+
+    font-size: 9px;
+
+    letter-spacing: 0.15em;
+}
+
+
+.catalogue-image-fallback strong {
+    margin-top: 8px;
+
+    font-size: 38px;
+}
+
+
+.catalogue-product-info {
+    padding: 30px;
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.catalogue-product-info > span {
+    color: #ff6a00;
+
+    font-size: 9px;
+
+    letter-spacing: 0.15em;
+}
+
+
+.catalogue-product-info h3 {
+    margin-top: 55px;
+
+    font-size: 36px;
+
+    letter-spacing: -0.04em;
+}
+
+
+.catalogue-product-info p {
+    margin-top: 15px;
+
+    color: #8e8e8e;
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+
+.catalogue-tags {
+    margin-top: 25px;
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+
+.catalogue-tags span {
+    padding:
+        7px
+        9px;
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.15
+        );
+
+    color: #a0a0a0;
+
+    font-size: 8px;
+
+    letter-spacing: 0.1em;
+}
+
+
+.catalogue-product-info > a {
+    margin-top: auto;
+
+    padding-top: 40px;
+
+    color: #f2f2f2;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   CTA
+========================================================= */
+
+.catalogue-tuning-cta {
+    padding:
+        120px
+        7vw;
+
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        auto;
+
+    gap: 60px;
+
+    align-items: end;
+
+    background: #ff6a00;
+
+    color: #111;
+}
+
+
+.catalogue-tuning-cta h2 {
+    margin-top: 15px;
+
+    font-size:
+        clamp(
+            48px,
+            6vw,
+            90px
+        );
+
+    letter-spacing: -0.05em;
+}
+
+
+.catalogue-tuning-cta p {
+    max-width: 600px;
+
+    margin-top: 20px;
+
+    line-height: 1.7;
+}
+
+
+.catalogue-tuning-cta .primary-button {
+    background: #111;
+    border-color: #111;
+    color: white;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media
+(max-width: 1050px) {
+
+    .catalogue-product-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .catalogue-category-heading {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media
+(max-width: 760px) {
+
+    .catalogue-hero {
+        padding:
+            140px
+            20px
+            80px;
+    }
+
+
+    .catalogue-category {
+        width:
+            calc(
+                100% - 40px
+            );
+
+        padding:
+            80px
+            0;
+    }
+
+
+    .catalogue-product-card {
+        grid-template-columns: 1fr;
+    }
+
+
+    .catalogue-image {
+        min-height: 420px;
+    }
+
+
+    .catalogue-product-info {
+        min-height: 330px;
+    }
+
+
+    .catalogue-tuning-cta {
+        grid-template-columns: 1fr;
+
+        padding:
+            80px
+            20px;
+    }
+
+}
