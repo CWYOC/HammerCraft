@@ -2,11 +2,12 @@
    HAMMER CRAFT
    PRODUCT CATALOGUE
    product-list.css
-
-   Warm Hammer Craft palette:
-   cream / graphite / burnt orange
 ========================================================= */
 
+
+/* =========================================================
+   PAGE
+========================================================= */
 
 .catalogue-page {
 
@@ -25,99 +26,65 @@
 
 .catalogue-hero {
 
-    position:
-        relative;
+    width:
+        100%;
 
     min-height:
         72vh;
 
     padding:
-        170px
-        var(--hc-side)
-        95px;
+        calc(
+            var(--header-height)
+            +
+            85px
+        )
+        5vw
+        75px;
 
     display:
         flex;
 
-    flex-direction:
-        column;
-
-    justify-content:
+    align-items:
         center;
 
     overflow:
         hidden;
 
-    background:
-
-        radial-gradient(
-            circle at 84% 48%,
-            rgba(216,106,43,.10),
-            transparent 27%
-        ),
-
-        var(--hc-bg);
-
 }
 
 
-.catalogue-hero::after {
-
-    content:
-        "HC";
+.catalogue-hero-inner {
 
     position:
-        absolute;
+        relative;
 
-    right:
-        4vw;
-
-    top:
-        50%;
-
-    transform:
-        translateY(-50%);
-
-    font-size:
-        clamp(
-            180px,
-            28vw,
-            500px
+    width:
+        min(
+            100%,
+            var(--hc-max)
         );
 
-    line-height:
-        .75;
-
-    font-weight:
-        800;
-
-    letter-spacing:
-        -.10em;
-
-    color:
-        rgba(
-            23,
-            23,
-            23,
-            .025
-        );
-
-    pointer-events:
-        none;
+    margin:
+        0 auto;
 
 }
 
 
-.catalogue-hero h1 {
+.catalogue-hero-copy {
 
     position:
         relative;
 
     z-index:
-        1;
+        2;
 
     max-width:
-        1050px;
+        900px;
+
+}
+
+
+.catalogue-hero h1 {
 
     margin:
         18px
@@ -126,19 +93,19 @@
 
     font-size:
         clamp(
-            66px,
-            8.6vw,
-            138px
+            68px,
+            8vw,
+            132px
         );
 
     line-height:
-        .86;
-
-    letter-spacing:
-        -.065em;
+        0.84;
 
     font-weight:
         500;
+
+    letter-spacing:
+        -0.067em;
 
 }
 
@@ -156,6 +123,9 @@
         "Times New Roman",
         serif;
 
+    font-style:
+        italic;
+
     font-weight:
         400;
 
@@ -164,17 +134,11 @@
 
 .catalogue-hero p {
 
-    position:
-        relative;
-
-    z-index:
-        1;
-
     max-width:
-        620px;
+        610px;
 
     margin:
-        38px
+        30px
         0
         0;
 
@@ -182,7 +146,7 @@
         var(--hc-muted);
 
     font-size:
-        15px;
+        13px;
 
     line-height:
         1.8;
@@ -191,14 +155,75 @@
 
 
 /* =========================================================
-   FOUR PRODUCT ROUTES
+   HERO HC MARK
 ========================================================= */
 
-.catalogue-intro-strip {
+.catalogue-hero-mark {
+
+    position:
+        absolute;
+
+    z-index:
+        1;
+
+    right:
+        -2vw;
+
+    top:
+        50%;
+
+    transform:
+        translateY(-50%);
+
+    color:
+        rgba(
+            23,
+            23,
+            23,
+            0.025
+        );
+
+    font-size:
+        clamp(
+            190px,
+            27vw,
+            500px
+        );
+
+    line-height:
+        0.72;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        -0.10em;
+
+    pointer-events:
+        none;
+
+}
+
+
+/* =========================================================
+   PRODUCT TYPES
+========================================================= */
+
+.catalogue-types {
+
+    width:
+        100%;
+
+}
+
+
+.catalogue-types-inner {
 
     width:
         min(
-            calc(100% - 10vw),
+            calc(
+                100% - 10vw
+            ),
             var(--hc-max)
         );
 
@@ -228,13 +253,13 @@
 }
 
 
-.catalogue-intro-strip article {
+.catalogue-types article {
 
     min-height:
-        205px;
+        190px;
 
     padding:
-        25px;
+        24px;
 
     display:
         flex;
@@ -249,7 +274,7 @@
 }
 
 
-.catalogue-intro-strip article:last-child {
+.catalogue-types article:last-child {
 
     border-right:
         0;
@@ -257,7 +282,7 @@
 }
 
 
-.catalogue-intro-strip span {
+.catalogue-types article > span {
 
     color:
         var(--hc-orange);
@@ -269,40 +294,43 @@
         700;
 
     letter-spacing:
-        .13em;
+        0.11em;
 
 }
 
 
-.catalogue-intro-strip strong {
+.catalogue-types h2 {
 
-    margin-top:
-        auto;
+    margin:
+        auto
+        0
+        8px;
 
     font-size:
-        25px;
+        24px;
+
+    line-height:
+        1;
 
     font-weight:
         500;
 
     letter-spacing:
-        -.035em;
+        -0.035em;
 
 }
 
 
-.catalogue-intro-strip p {
+.catalogue-types p {
 
     margin:
-        10px
-        0
         0;
 
     color:
         var(--hc-muted);
 
     font-size:
-        12px;
+        11px;
 
     line-height:
         1.65;
@@ -311,14 +339,16 @@
 
 
 /* =========================================================
-   FILTER
+   FILTERS
 ========================================================= */
 
 .catalogue-filter-section {
 
     width:
         min(
-            calc(100% - 10vw),
+            calc(
+                100% - 10vw
+            ),
             var(--hc-max)
         );
 
@@ -326,9 +356,9 @@
         0 auto;
 
     padding:
-        68px
+        55px
         0
-        30px;
+        25px;
 
 }
 
@@ -360,6 +390,9 @@
         1px solid
         var(--hc-line-strong);
 
+    border-radius:
+        0;
+
     background:
         transparent;
 
@@ -373,21 +406,18 @@
         700;
 
     letter-spacing:
-        .12em;
+        0.11em;
 
     cursor:
         pointer;
 
     transition:
-
         background
-        .16s ease,
-
+        150ms ease,
         color
-        .16s ease,
-
+        150ms ease,
         border-color
-        .16s ease;
+        150ms ease;
 
 }
 
@@ -395,10 +425,10 @@
 .catalogue-filter-button:hover,
 .catalogue-filter-button.active {
 
-    background:
+    border-color:
         var(--hc-text);
 
-    border-color:
+    background:
         var(--hc-text);
 
     color:
@@ -408,14 +438,16 @@
 
 
 /* =========================================================
-   DYNAMIC CATALOGUE
+   CATALOGUE
 ========================================================= */
 
 .dynamic-catalogue-section {
 
     width:
         min(
-            calc(100% - 10vw),
+            calc(
+                100% - 10vw
+            ),
             var(--hc-max)
         );
 
@@ -423,9 +455,9 @@
         0 auto;
 
     padding:
-        20px
+        10px
         0
-        125px;
+        120px;
 
 }
 
@@ -436,7 +468,7 @@
         150px;
 
     padding:
-        30px;
+        28px;
 
     display:
         flex;
@@ -453,17 +485,14 @@
             255,
             255,
             255,
-            .22
+            0.20
         );
 
     color:
         var(--hc-muted);
 
     font-size:
-        12px;
-
-    line-height:
-        1.7;
+        11px;
 
 }
 
@@ -509,21 +538,18 @@
     min-width:
         0;
 
-    min-height:
-        620px;
+    overflow:
+        hidden;
 
     display:
         grid;
 
     grid-template-rows:
         minmax(
-            330px,
-            1.15fr
+            340px,
+            1fr
         )
         auto;
-
-    overflow:
-        hidden;
 
     border:
         1px solid
@@ -534,19 +560,16 @@
             255,
             255,
             255,
-            .28
+            0.24
         );
 
     transition:
-
         transform
-        .18s ease,
-
+        170ms ease,
         border-color
-        .18s ease,
-
+        170ms ease,
         background
-        .18s ease;
+        170ms ease;
 
 }
 
@@ -554,9 +577,7 @@
 .dynamic-product-card:hover {
 
     transform:
-        translateY(
-            -3px
-        );
+        translateY(-3px);
 
     border-color:
         var(--hc-line-strong);
@@ -566,7 +587,7 @@
             255,
             255,
             255,
-            .42
+            0.38
         );
 
 }
@@ -582,7 +603,7 @@
         relative;
 
     min-height:
-        330px;
+        340px;
 
     display:
         block;
@@ -621,7 +642,7 @@
 
     transition:
         transform
-        .35s ease;
+        250ms ease;
 
 }
 
@@ -630,9 +651,7 @@
 .dynamic-product-image img {
 
     transform:
-        scale(
-            1.015
-        );
+        scale(1.015);
 
 }
 
@@ -668,8 +687,14 @@
 
         radial-gradient(
             circle at 72% 30%,
-            rgba(216,106,43,.15),
-            transparent 34%
+            rgba(
+                216,
+                106,
+                43,
+                0.15
+            ),
+            transparent
+            34%
         ),
 
         linear-gradient(
@@ -684,42 +709,51 @@
 .dynamic-product-image-fallback::before {
 
     content:
-        "HAMMER CRAFT";
+        "HC";
 
     position:
         absolute;
 
     right:
-        -8px;
+        25px;
 
     top:
-        25px;
+        20px;
 
     color:
         rgba(
             23,
             23,
             23,
-            .045
+            0.035
         );
 
     font-size:
         clamp(
-            38px,
-            5vw,
-            78px
+            90px,
+            11vw,
+            180px
         );
+
+    line-height:
+        0.8;
 
     font-weight:
         800;
 
     letter-spacing:
-        -.07em;
+        -0.10em;
 
 }
 
 
 .dynamic-product-image-fallback span {
+
+    position:
+        relative;
+
+    z-index:
+        2;
 
     color:
         var(--hc-orange);
@@ -731,37 +765,43 @@
         700;
 
     letter-spacing:
-        .14em;
+        0.13em;
 
 }
 
 
 .dynamic-product-image-fallback strong {
 
+    position:
+        relative;
+
+    z-index:
+        2;
+
     max-width:
         80%;
 
     margin-top:
-        9px;
+        10px;
 
     color:
         var(--hc-text);
 
     font-size:
         clamp(
-            30px,
-            3vw,
-            48px
+            32px,
+            3.3vw,
+            50px
         );
 
     line-height:
-        .95;
+        0.95;
 
     font-weight:
         500;
 
     letter-spacing:
-        -.045em;
+        -0.045em;
 
 }
 
@@ -773,7 +813,7 @@
 .dynamic-product-body {
 
     min-height:
-        280px;
+        300px;
 
     padding:
         26px;
@@ -808,10 +848,7 @@
         700;
 
     letter-spacing:
-        .12em;
-
-    text-transform:
-        uppercase;
+        0.11em;
 
 }
 
@@ -833,19 +870,19 @@
 
     font-size:
         clamp(
-            30px,
-            3.2vw,
-            48px
+            32px,
+            3.3vw,
+            50px
         );
 
     line-height:
-        .95;
+        0.95;
 
     font-weight:
         500;
 
     letter-spacing:
-        -.045em;
+        -0.045em;
 
 }
 
@@ -864,7 +901,7 @@
         var(--hc-muted);
 
     font-size:
-        13px;
+        12px;
 
     line-height:
         1.7;
@@ -895,9 +932,18 @@
 
 .dynamic-product-tags span {
 
+    min-height:
+        29px;
+
     padding:
-        7px
+        0
         9px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
 
     border:
         1px solid
@@ -907,13 +953,13 @@
         var(--hc-muted);
 
     font-size:
-        8px;
+        7px;
 
     font-weight:
         700;
 
     letter-spacing:
-        .09em;
+        0.08em;
 
 }
 
@@ -954,7 +1000,7 @@
         500;
 
     letter-spacing:
-        -.035em;
+        -0.035em;
 
 }
 
@@ -971,7 +1017,7 @@
         700;
 
     letter-spacing:
-        .12em;
+        0.11em;
 
     text-decoration:
         none;
@@ -988,14 +1034,17 @@
 
 
 /* =========================================================
-   CTA
+   FIND YOUR SOUND CTA
 ========================================================= */
 
 .catalogue-tuning-cta {
 
+    width:
+        100%;
+
     padding:
         110px
-        var(--hc-side);
+        5vw;
 
     display:
         grid;
@@ -1008,7 +1057,7 @@
         auto;
 
     gap:
-        60px;
+        80px;
 
     align-items:
         end;
@@ -1022,14 +1071,23 @@
 }
 
 
-.catalogue-tuning-cta .eyebrow {
+.catalogue-tuning-copy {
+
+    max-width:
+        950px;
+
+}
+
+
+.catalogue-tuning-cta
+.eyebrow {
 
     color:
         rgba(
             23,
             23,
             23,
-            .62
+            0.60
         );
 
 }
@@ -1038,25 +1096,44 @@
 .catalogue-tuning-cta h2 {
 
     margin:
-        15px
+        17px
         0
         0;
 
     font-size:
         clamp(
-            48px,
-            6vw,
-            88px
+            55px,
+            6.5vw,
+            100px
         );
 
     line-height:
-        .95;
+        0.9;
 
     font-weight:
         500;
 
     letter-spacing:
-        -.055em;
+        -0.06em;
+
+}
+
+
+.catalogue-tuning-cta h2 em {
+
+    display:
+        block;
+
+    font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+    font-style:
+        italic;
+
+    font-weight:
+        400;
 
 }
 
@@ -1064,41 +1141,87 @@
 .catalogue-tuning-cta p {
 
     max-width:
-        620px;
+        650px;
 
     margin:
-        20px
+        25px
         0
         0;
 
+    color:
+        rgba(
+            23,
+            23,
+            23,
+            0.72
+        );
+
+    font-size:
+        13px;
+
     line-height:
-        1.75;
+        1.8;
 
 }
 
 
-.catalogue-tuning-cta
-.primary-button {
+.catalogue-dark-button {
 
-    background:
+    min-height:
+        52px;
+
+    padding:
+        0
+        22px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        1px solid
         var(--hc-text);
 
-    border-color:
+    background:
         var(--hc-text);
 
     color:
-        white;
+        var(--hc-bg);
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.12em;
+
+    text-decoration:
+        none;
+
+    transition:
+        background
+        150ms ease,
+        color
+        150ms ease,
+        border-color
+        150ms ease;
 
 }
 
 
-.catalogue-tuning-cta
-.primary-button:hover {
-
-    background:
-        var(--hc-bg);
+.catalogue-dark-button:hover {
 
     border-color:
+        var(--hc-bg);
+
+    background:
         var(--hc-bg);
 
     color:
@@ -1108,13 +1231,39 @@
 
 
 /* =========================================================
-   RESPONSIVE
+   FOOTER SAFETY
+
+   Prevents the large logo issue even if markup changes.
+========================================================= */
+
+.site-footer
+.footer-logo
+img,
+.site-footer img {
+
+    width:
+        66px;
+
+    height:
+        66px;
+
+    max-width:
+        66px;
+
+    object-fit:
+        contain;
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — 1050
 ========================================================= */
 
 @media
 (max-width: 1050px) {
 
-    .catalogue-intro-strip {
+    .catalogue-types-inner {
 
         grid-template-columns:
             repeat(
@@ -1125,8 +1274,7 @@
     }
 
 
-    .catalogue-intro-strip
-    article:nth-child(2) {
+    .catalogue-types article:nth-child(2) {
 
         border-right:
             0;
@@ -1134,8 +1282,7 @@
     }
 
 
-    .catalogue-intro-strip
-    article:nth-child(-n+2) {
+    .catalogue-types article:nth-child(-n+2) {
 
         border-bottom:
             1px solid
@@ -1154,26 +1301,30 @@
 }
 
 
+/* =========================================================
+   RESPONSIVE — 760
+========================================================= */
+
 @media
 (max-width: 760px) {
 
     .catalogue-hero {
 
         min-height:
-            650px;
+            620px;
 
         padding:
-            135px
+            125px
             20px
-            75px;
+            70px;
 
     }
 
 
-    .catalogue-hero::after {
+    .catalogue-hero-mark {
 
         right:
-            -20vw;
+            -22vw;
 
         font-size:
             80vw;
@@ -1181,7 +1332,7 @@
     }
 
 
-    .catalogue-intro-strip,
+    .catalogue-types-inner,
     .catalogue-filter-section,
     .dynamic-catalogue-section {
 
@@ -1193,7 +1344,7 @@
     }
 
 
-    .catalogue-intro-strip {
+    .catalogue-types-inner {
 
         grid-template-columns:
             1fr;
@@ -1201,7 +1352,7 @@
     }
 
 
-    .catalogue-intro-strip article {
+    .catalogue-types article {
 
         border-right:
             0;
@@ -1213,19 +1364,10 @@
     }
 
 
-    .catalogue-intro-strip
-    article:last-child {
+    .catalogue-types article:last-child {
 
         border-bottom:
             0;
-
-    }
-
-
-    .catalogue-filter-section {
-
-        padding-top:
-            50px;
 
     }
 
@@ -1242,9 +1384,6 @@
 
 
     .dynamic-product-card {
-
-        min-height:
-            0;
 
         grid-template-rows:
             300px
@@ -1270,11 +1409,13 @@
             80px
             20px;
 
+        gap:
+            40px;
+
     }
 
 
-    .catalogue-tuning-cta
-    .primary-button {
+    .catalogue-dark-button {
 
         width:
             100%;
@@ -1283,6 +1424,10 @@
 
 }
 
+
+/* =========================================================
+   RESPONSIVE — 430
+========================================================= */
 
 @media
 (max-width: 430px) {
