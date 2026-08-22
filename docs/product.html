@@ -61,7 +61,7 @@
 
     <link
         rel="stylesheet"
-        href="product-list.css?v=2"
+        href="product-list.css?v=10"
     >
 
 </head>
@@ -158,6 +158,87 @@
         you want to customise the sound and fit.
 
     </p>
+
+</section>
+
+
+
+<!-- =========================================================
+     PRODUCT APPROACH
+========================================================= -->
+
+<section class="catalogue-intro-strip">
+
+    <article>
+
+        <span>
+            01 / REFERENCE
+        </span>
+
+        <strong>
+            Our sound.
+        </strong>
+
+        <p>
+            Finished Hammer Craft tunings,
+            ready to choose as designed.
+        </p>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            02 / CUSTOM SOUND
+        </span>
+
+        <strong>
+            Your target.
+        </strong>
+
+        <p>
+            Keep the universal fit while changing
+            the tuning around your preference.
+        </p>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            03 / CUSTOM FIT
+        </span>
+
+        <strong>
+            Your geometry.
+        </strong>
+
+        <p>
+            Use digital ear reconstruction to
+            build around your own ear shape.
+        </p>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            04 / FULL CUSTOM
+        </span>
+
+        <strong>
+            Both.
+        </strong>
+
+        <p>
+            Combine your preferred response
+            with an ear-specific shell.
+        </p>
+
+    </article>
 
 </section>
 
@@ -264,9 +345,9 @@
 
         <p>
 
-            Use the public Hammer Craft tuning tool to
-            build a target and compare it against real
-            measured products.
+            Use the public Hammer Craft tuning tool
+            to build a target and compare it against
+            real measured products.
 
         </p>
 
@@ -601,6 +682,15 @@
 
 
         if (
+            product.image_path
+        ) {
+
+            return product.image_path;
+
+        }
+
+
+        if (
             product.slug
         ) {
 
@@ -636,11 +726,9 @@
 
         const price =
 
-            product.price_gbp !==
-                null
+            product.price_gbp !== null
             &&
-            product.price_gbp !==
-                undefined
+            product.price_gbp !== undefined
 
             ?
             `£${Number(
@@ -861,9 +949,7 @@
                     <div class="dynamic-product-footer">
 
                         <strong>
-
                             ${price}
-
                         </strong>
 
 
@@ -912,12 +998,12 @@
                 product =>
 
                     activeCategory ===
-                        "all"
+                    "all"
 
                     ||
 
                     product.category ===
-                        activeCategory
+                    activeCategory
             );
 
 
@@ -935,8 +1021,9 @@
 
 
             status.textContent =
+
                 activeCategory ===
-                    "all"
+                "all"
 
                 ?
                 "No public products are currently available."
@@ -984,6 +1071,7 @@
             status.textContent =
                 "Unable to connect to product catalogue.";
 
+
             return;
 
         }
@@ -1021,10 +1109,6 @@
                         featured,
                         ordering_enabled
                     `)
-                    .eq(
-                        "public_visible",
-                        true
-                    )
                     .neq(
                         "status",
                         "hidden"
@@ -1054,10 +1138,27 @@
             }
 
 
+            /*
+             * IMPORTANT:
+             *
+             * Older products may have public_visible = NULL.
+             * We only hide a product if it is explicitly false.
+             */
+
             catalogueProducts =
-                data
-                ||
-                [];
+
+                (data || [])
+                    .filter(
+                        product =>
+
+                            product.public_visible !==
+                            false
+
+                            &&
+
+                            product.status !==
+                            "hidden"
+                    );
 
 
             renderCatalogue();
