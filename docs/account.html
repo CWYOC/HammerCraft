@@ -6,80 +6,87 @@
     <meta charset="UTF-8">
 
     <meta
-
         name="viewport"
-
         content="width=device-width, initial-scale=1.0"
+    >
 
+    <meta
+        name="description"
+        content="Hammer Craft customer account, ear scans, orders and custom tuning."
     >
 
     <title>
-
-        My Account | Hammer Craft
-
+        My Hammer Craft
     </title>
 
+
+    <!-- =================================================
+         FAVICON
+    ================================================== -->
+
     <link
-
         rel="icon"
-
         type="image/png"
-
         sizes="32x32"
-
         href="assets/favicon-32.png"
-
     >
 
     <link
-
         rel="icon"
-
         type="image/png"
-
         sizes="16x16"
-
         href="assets/favicon-16.png"
-
     >
 
     <link
-
         rel="apple-touch-icon"
-
         sizes="180x180"
-
-        href="assets/favicon-180.png"
-
+        href="assets/apple-touch-icon.png"
     >
 
     <link
-
         rel="shortcut icon"
-
         href="assets/favicon.ico"
-
     >
 
+
+    <!-- =================================================
+         CSS
+    ================================================== -->
+
     <link
-
         rel="stylesheet"
+        href="style.css?v=60"
+    >
 
-        href="auth.css"
 
+    <link
+        rel="stylesheet"
+        href="account.css?v=20"
+    >
+
+
+    <link
+        rel="stylesheet"
+        href="custom-tuning.css?v=2"
     >
 
 </head>
 
 
+
 <body>
 
 
-<header class="auth-header">
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="site-header">
 
     <a
         href="index.html"
-        class="auth-brand"
+        class="site-brand"
     >
 
         <img
@@ -87,214 +94,1075 @@
             alt="Hammer Craft"
         >
 
-        <span>
-            HAMMER CRAFT
-        </span>
-
     </a>
 
 
-    <button
-        id="logoutButton"
-        class="header-button button-reset"
-    >
-        LOGOUT
-    </button>
+    <nav class="site-nav">
+
+        <a href="#orders">
+            ORDERS
+        </a>
+
+        <a href="#earScans">
+            EAR SCANS
+        </a>
+
+        <a href="#customTuning">
+            TUNING
+        </a>
+
+        <a href="#profile">
+            PROFILE
+        </a>
+
+    </nav>
+
+
+    <div class="site-header-actions">
+
+        <span id="customerEmail">
+            ACCOUNT
+        </span>
+
+
+        <button
+            id="customerLogoutButton"
+            type="button"
+            class="header-account-link"
+        >
+            LOGOUT
+        </button>
+
+    </div>
 
 </header>
 
 
 
-<main class="account-page">
+<main class="customer-page">
 
 
-    <section class="account-hero">
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="customer-hero">
+
+    <div class="eyebrow">
+        HAMMER CRAFT / CUSTOMER
+    </div>
 
 
-        <div class="eyebrow">
-            HAMMER CRAFT / CUSTOMER
+    <h1>
+
+        Your
+
+        <em>
+            Hammer Craft.
+        </em>
+
+    </h1>
+
+
+    <p>
+
+        Your orders, ear geometry and custom tuning
+        profiles in one place.
+
+    </p>
+
+</section>
+
+
+
+<!-- =====================================================
+     SUMMARY
+===================================================== -->
+
+<section class="customer-summary">
+
+    <article>
+
+        <span>
+            ORDERS
+        </span>
+
+        <strong id="customerOrderCount">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            EAR SCANS
+        </span>
+
+        <strong id="customerScanCount">
+            —
+        </strong>
+
+    </article>
+
+
+    <article>
+
+        <span>
+            SAVED TUNINGS
+        </span>
+
+        <strong id="customerTuningCount">
+            —
+        </strong>
+
+    </article>
+
+</section>
+
+
+
+<!-- =====================================================
+     ORDERS
+===================================================== -->
+
+<section
+    id="orders"
+    class="customer-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                YOUR BUILDS
+            </div>
+
+
+            <h2>
+                Orders.
+            </h2>
+
         </div>
 
 
-        <h1>
+        <a
+            href="index.html#models"
+            class="outline-button"
+        >
+            EXPLORE MODELS
+        </a>
 
-            Your
-
-            <em>
-                account.
-            </em>
-
-        </h1>
+    </div>
 
 
-        <div class="customer-info">
+    <div
+        id="customerOrderList"
+        class="customer-card-grid"
+    >
 
-            <strong id="customerName">
-                Loading...
-            </strong>
+        <div class="loading-card">
 
-            <span id="customerEmail">
-                Loading...
-            </span>
+            Loading your orders...
 
         </div>
 
+    </div>
 
-    </section>
+</section>
 
 
 
-    <section class="account-actions">
+<!-- =====================================================
+     EAR SCANS
+===================================================== -->
+
+<section
+    id="earScans"
+    class="customer-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                DIGITAL FIT
+            </div>
+
+
+            <h2>
+                Ear scans.
+            </h2>
+
+        </div>
 
 
         <a
             href="ear-scan.html"
-            class="account-action"
+            class="primary-button"
+        >
+            START NEW SCAN
+        </a>
+
+    </div>
+
+
+    <p class="customer-section-description">
+
+        Custom-fit orders can use your saved ear geometry.
+        Reconstruction status and completed scan data will
+        appear here.
+
+    </p>
+
+
+    <div
+        id="customerEarScanList"
+        class="customer-card-grid"
+    >
+
+        <div class="loading-card">
+
+            Loading your ear scans...
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CUSTOM TUNING
+===================================================== -->
+
+<section
+    id="customTuning"
+    class="custom-tuning-section customer-tuning-section"
+>
+
+    <div class="custom-tuning-heading">
+
+        <div class="eyebrow">
+            YOUR SOUND
+        </div>
+
+
+        <h2>
+
+            Custom
+
+            <em>
+                tuning.
+            </em>
+
+        </h2>
+
+
+        <p>
+
+            Create a new tuning profile or continue
+            adjusting the profile you started elsewhere
+            on the Hammer Craft website.
+
+        </p>
+
+    </div>
+
+
+
+    <div
+        id="savedTuningNotice"
+        class="saved-tuning-notice"
+        hidden
+    >
+
+        <span>
+            SAVED LOCALLY
+        </span>
+
+
+        <strong>
+            A custom tuning profile was found on this device.
+        </strong>
+
+    </div>
+
+
+
+    <!-- =================================================
+         MODE SELECTOR
+    ================================================== -->
+
+    <div class="tuning-mode-grid">
+
+        <button
+            id="guidedTuningMode"
+            class="tuning-mode-card"
+            type="button"
         >
 
-            <span class="action-number">
+            <span class="mode-number">
                 01
             </span>
 
-            <div>
 
-                <h2>
-                    NEW EAR SCAN
-                </h2>
+            <h3>
+                Guided Tuning
+            </h3>
 
-                <p>
 
-                    Capture a new left and
-                    right ear image set.
+            <p>
 
-                </p>
+                Answer a short set of listening questions
+                and let the tuning engine construct your
+                starting target.
 
-            </div>
+            </p>
 
-            <span class="action-arrow">
-                →
+
+            <span class="mode-action">
+                START GUIDED TUNING →
             </span>
 
-        </a>
+        </button>
 
 
 
-        <div class="account-action">
+        <button
+            id="advancedTuningMode"
+            class="tuning-mode-card"
+            type="button"
+        >
 
-            <span class="action-number">
+            <span class="mode-number">
                 02
             </span>
 
+
+            <h3>
+                Advanced FR Tuning
+            </h3>
+
+
+            <p>
+
+                Directly manipulate your response target
+                with frequency-specific 0.1 dB control.
+
+            </p>
+
+
+            <span class="mode-action">
+                OPEN FR EDITOR →
+            </span>
+
+        </button>
+
+    </div>
+
+
+
+    <!-- =================================================
+         GUIDED TUNING
+    ================================================== -->
+
+    <div
+        id="guidedTuningPanel"
+        class="tuning-panel"
+        hidden
+    >
+
+        <div class="panel-top">
+
             <div>
 
-                <h2>
-                    CUSTOM TUNING
-                </h2>
+                <span class="panel-label">
+                    GUIDED TUNING
+                </span>
 
-                <p>
 
-                    Your personalised tuning
-                    profile will appear here.
-
-                </p>
+                <h3>
+                    Tell us what sounds good to you.
+                </h3>
 
             </div>
 
-            <span class="action-arrow muted">
-                SOON
-            </span>
+
+            <button
+                class="text-button tuningCloseButton"
+                type="button"
+            >
+                CLOSE
+            </button>
 
         </div>
 
 
 
-        <div class="account-action">
+        <div class="tuning-question">
 
-            <span class="action-number">
+            <span class="question-number">
+                01
+            </span>
+
+            <h4>
+                How much bass do you like?
+            </h4>
+
+            <div
+                class="choice-grid"
+                data-setting="bass"
+            >
+
+                <button
+                    type="button"
+                    data-value="-2"
+                >
+                    LIGHT
+                </button>
+
+                <button
+                    type="button"
+                    data-value="0"
+                    class="selected"
+                >
+                    BALANCED
+                </button>
+
+                <button
+                    type="button"
+                    data-value="3"
+                >
+                    STRONG
+                </button>
+
+                <button
+                    type="button"
+                    data-value="5"
+                >
+                    VERY STRONG
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                02
+            </span>
+
+            <h4>
+                What kind of bass do you prefer?
+            </h4>
+
+            <div
+                class="choice-grid"
+                data-setting="bassCharacter"
+            >
+
+                <button
+                    type="button"
+                    data-value="tight"
+                >
+                    TIGHT / FAST
+                </button>
+
+                <button
+                    type="button"
+                    data-value="natural"
+                    class="selected"
+                >
+                    NATURAL
+                </button>
+
+                <button
+                    type="button"
+                    data-value="warm"
+                >
+                    WARM / FULL
+                </button>
+
+                <button
+                    type="button"
+                    data-value="subbass"
+                >
+                    DEEP / SUB-BASS
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="tuning-question">
+
+            <span class="question-number">
                 03
             </span>
 
+            <h4>
+                Where should vocals sit?
+            </h4>
+
+            <div
+                class="choice-grid"
+                data-setting="vocals"
+            >
+
+                <button
+                    type="button"
+                    data-value="-1.5"
+                >
+                    RELAXED
+                </button>
+
+                <button
+                    type="button"
+                    data-value="0"
+                    class="selected"
+                >
+                    NATURAL
+                </button>
+
+                <button
+                    type="button"
+                    data-value="2"
+                >
+                    FORWARD
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                04
+            </span>
+
+            <h4>
+                How would you like the treble?
+            </h4>
+
+            <div
+                class="choice-grid"
+                data-setting="treble"
+            >
+
+                <button
+                    type="button"
+                    data-value="-2"
+                >
+                    SMOOTH
+                </button>
+
+                <button
+                    type="button"
+                    data-value="0"
+                    class="selected"
+                >
+                    BALANCED
+                </button>
+
+                <button
+                    type="button"
+                    data-value="1.5"
+                >
+                    DETAILED
+                </button>
+
+                <button
+                    type="button"
+                    data-value="2.5"
+                >
+                    AIRY
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                05
+            </span>
+
+            <h4>
+                How sensitive are you to bright sound?
+            </h4>
+
+            <div
+                class="choice-grid"
+                data-setting="sensitivity"
+            >
+
+                <button
+                    type="button"
+                    data-value="sensitive"
+                >
+                    VERY SENSITIVE
+                </button>
+
+                <button
+                    type="button"
+                    data-value="normal"
+                    class="selected"
+                >
+                    NORMAL
+                </button>
+
+                <button
+                    type="button"
+                    data-value="energetic"
+                >
+                    I LIKE ENERGY
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                06
+            </span>
+
+            <h4>
+                What do you listen to most?
+            </h4>
+
+            <div
+                id="musicChoices"
+                class="music-choice-grid"
+            >
+
+                <button type="button" data-value="pop">
+                    POP
+                </button>
+
+                <button type="button" data-value="rock">
+                    ROCK
+                </button>
+
+                <button type="button" data-value="edm">
+                    EDM
+                </button>
+
+                <button type="button" data-value="hiphop">
+                    HIP-HOP
+                </button>
+
+                <button type="button" data-value="classical">
+                    CLASSICAL
+                </button>
+
+                <button type="button" data-value="jazz">
+                    JAZZ
+                </button>
+
+                <button type="button" data-value="vocal">
+                    VOCAL
+                </button>
+
+                <button type="button" data-value="studio">
+                    STUDIO
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="guided-actions">
+
+            <button
+                id="generateGuidedTargetButton"
+                class="primary-tuning-button"
+                type="button"
+            >
+                GENERATE MY TARGET
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         ADVANCED TUNING
+    ================================================== -->
+
+    <div
+        id="advancedTuningPanel"
+        class="tuning-panel"
+        hidden
+    >
+
+        <div class="panel-top">
+
             <div>
 
-                <h2>
-                    ORDERS
-                </h2>
+                <span class="panel-label">
+                    ADVANCED FR TUNING
+                </span>
+
+
+                <h3>
+                    Shape your target.
+                </h3>
+
 
                 <p>
 
-                    Hammer Craft build and
-                    order history.
+                    Select or drag a point.
+                    Adjustments are stored to the nearest
+                    0.1 dB.
 
                 </p>
 
             </div>
 
-            <span class="action-arrow muted">
-                SOON
+
+            <button
+                class="text-button tuningCloseButton"
+                type="button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+
+        <div class="fr-editor">
+
+            <canvas
+                id="tuningGraph"
+                width="1200"
+                height="520"
+            ></canvas>
+
+        </div>
+
+
+
+        <div class="graph-legend">
+
+            <span>
+
+                <i class="legend-line reference-line"></i>
+
+                HC REFERENCE
+
+            </span>
+
+
+            <span>
+
+                <i class="legend-line custom-line"></i>
+
+                YOUR TUNING
+
             </span>
 
         </div>
 
 
-    </section>
 
-
-
-    <section class="scan-history">
-
-
-        <div class="section-heading">
+        <div class="selected-frequency-panel">
 
             <div>
 
-                <div class="eyebrow">
-                    DIGITAL FIT
-                </div>
+                <span>
+                    FREQUENCY
+                </span>
 
-                <h2>
-                    Your ear scans.
-                </h2>
+                <strong id="selectedFrequency">
+                    1 kHz
+                </strong>
 
             </div>
 
 
-            <a
-                href="ear-scan.html"
-                class="small-button"
+            <div>
+
+                <span>
+                    ADJUSTMENT
+                </span>
+
+                <strong id="selectedAdjustment">
+                    0.0 dB
+                </strong>
+
+            </div>
+
+
+            <div class="db-controls">
+
+                <button
+                    id="decreaseDbButton"
+                    type="button"
+                >
+                    −0.1
+                </button>
+
+
+                <input
+                    id="dbAdjustmentInput"
+                    type="number"
+                    min="-6"
+                    max="6"
+                    step="0.1"
+                    value="0.0"
+                >
+
+
+                <button
+                    id="increaseDbButton"
+                    type="button"
+                >
+                    +0.1
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="advanced-actions">
+
+            <button
+                id="resetTuningButton"
+                class="secondary-tuning-button"
+                type="button"
             >
-                NEW SCAN +
-            </a>
+                RESET
+            </button>
+
+
+            <button
+                id="saveTuningButton"
+                class="primary-tuning-button"
+                type="button"
+            >
+                SAVE CUSTOM TUNING
+            </button>
 
         </div>
 
+    </div>
 
 
-        <div
-            id="scanList"
-            class="scan-list"
-        >
 
-            <div class="loading-card">
-                Loading scans...
+    <!-- =================================================
+         GENERATED RESULT
+    ================================================== -->
+
+    <div
+        id="tuningResult"
+        class="tuning-result"
+        hidden
+    >
+
+        <span class="panel-label">
+            YOUR HAMMER CRAFT TARGET
+        </span>
+
+
+        <h3>
+            Custom tuning ready.
+        </h3>
+
+
+        <p id="tuningResultText"></p>
+
+
+        <div class="advanced-actions">
+
+            <button
+                id="fineTuneResultButton"
+                class="secondary-tuning-button"
+                type="button"
+            >
+                FINE TUNE IN ADVANCED MODE
+            </button>
+
+
+            <button
+                id="confirmTuningButton"
+                class="primary-tuning-button"
+                type="button"
+            >
+                SAVE TO MY ACCOUNT
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     PROFILE
+===================================================== -->
+
+<section
+    id="profile"
+    class="customer-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                ACCOUNT
             </div>
 
+
+            <h2>
+                Profile.
+            </h2>
+
         </div>
 
+    </div>
 
-    </section>
+
+    <div class="customer-profile-grid">
+
+        <article>
+
+            <span>
+                EMAIL
+            </span>
+
+            <strong id="profileEmail">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                ACCOUNT ID
+            </span>
+
+            <strong id="profileUserId">
+                —
+            </strong>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                MEMBER SINCE
+            </span>
+
+            <strong id="profileCreatedAt">
+                —
+            </strong>
+
+        </article>
+
+    </div>
+
+</section>
 
 
 </main>
 
 
 
+<footer class="site-footer">
+
+    <div>
+
+        <img
+            src="assets/logo.png"
+            alt="Hammer Craft"
+        >
+
+    </div>
+
+
+    <div>
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+        <span>
+            BRISTOL / UNITED KINGDOM
+        </span>
+
+    </div>
+
+
+    <div>
+
+        <a href="index.html">
+            HOME
+        </a>
+
+        <a href="#orders">
+            ORDERS
+        </a>
+
+        <a href="#customTuning">
+            TUNING
+        </a>
+
+    </div>
+
+</footer>
+
+
+
+<!-- =====================================================
+     SCRIPTS
+===================================================== -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
+
 <script src="supabase-client.js"></script>
 
-<script src="auth.js"></script>
+
+<script src="customer.js?v=20"></script>
+
+
+<script src="custom-tuning.js?v=2"></script>
 
 
 </body>

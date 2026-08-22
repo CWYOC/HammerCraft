@@ -1,0 +1,737 @@
+/* =========================================================
+   CUSTOM TUNING
+========================================================= */
+
+.custom-tuning-section {
+
+    padding:
+        110px
+        7vw;
+
+    background:
+        #f2eee7;
+
+    color:
+        #252321;
+
+}
+
+
+.custom-tuning-heading {
+
+    max-width:
+        850px;
+
+}
+
+
+.custom-tuning-heading h2 {
+
+    margin-top:
+        12px;
+
+    font-size:
+        clamp(
+            52px,
+            7vw,
+            100px
+        );
+
+    line-height:
+        0.92;
+
+    letter-spacing:
+        -0.055em;
+
+}
+
+
+.custom-tuning-heading h2 em {
+
+    color:
+        #9b6739;
+
+    font-family:
+        Georgia,
+        serif;
+
+    font-weight:
+        400;
+
+}
+
+
+.custom-tuning-heading p {
+
+    max-width:
+        600px;
+
+    margin-top:
+        25px;
+
+    color:
+        #706b64;
+
+    line-height:
+        1.7;
+
+}
+
+
+/* =========================================================
+   MODE CARDS
+========================================================= */
+
+.tuning-mode-grid {
+
+    margin-top:
+        55px;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            1fr
+        );
+
+    gap:
+        15px;
+
+}
+
+
+.tuning-mode-card {
+
+    min-height:
+        330px;
+
+    padding:
+        28px;
+
+    text-align:
+        left;
+
+    border:
+        1px solid
+        rgba(
+            37,
+            35,
+            33,
+            0.2
+        );
+
+    background:
+        transparent;
+
+    color:
+        inherit;
+
+    cursor:
+        pointer;
+
+    transition:
+        transform
+        0.2s ease,
+        border-color
+        0.2s ease;
+
+}
+
+
+.tuning-mode-card:hover {
+
+    transform:
+        translateY(
+            -4px
+        );
+
+    border-color:
+        #252321;
+
+}
+
+
+.mode-number,
+.panel-label,
+.question-number {
+
+    color:
+        #9b6739;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        1.6px;
+
+}
+
+
+.tuning-mode-card h3 {
+
+    margin-top:
+        65px;
+
+    font-size:
+        32px;
+
+}
+
+
+.tuning-mode-card p {
+
+    max-width:
+        400px;
+
+    margin-top:
+        15px;
+
+    color:
+        #706b64;
+
+    line-height:
+        1.6;
+
+}
+
+
+.mode-action {
+
+    display:
+        block;
+
+    margin-top:
+        45px;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+}
+
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+.tuning-panel,
+.tuning-result {
+
+    margin-top:
+        55px;
+
+    padding:
+        35px;
+
+    border:
+        1px solid
+        rgba(
+            37,
+            35,
+            33,
+            0.2
+        );
+
+}
+
+
+.panel-top {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    gap:
+        30px;
+
+}
+
+
+.panel-top h3,
+.tuning-result h3 {
+
+    margin-top:
+        8px;
+
+    font-size:
+        38px;
+
+}
+
+
+.panel-top p,
+.tuning-result p {
+
+    margin-top:
+        12px;
+
+    color:
+        #706b64;
+
+}
+
+
+/* =========================================================
+   QUESTIONS
+========================================================= */
+
+.tuning-question {
+
+    margin-top:
+        50px;
+
+    padding-top:
+        30px;
+
+    border-top:
+        1px solid
+        rgba(
+            37,
+            35,
+            33,
+            0.15
+        );
+
+}
+
+
+.tuning-question h4 {
+
+    margin-top:
+        10px;
+
+    font-size:
+        24px;
+
+}
+
+
+.choice-grid,
+.music-choice-grid {
+
+    margin-top:
+        20px;
+
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        8px;
+
+}
+
+
+.choice-grid button,
+.music-choice-grid button {
+
+    min-height:
+        46px;
+
+    padding:
+        0
+        16px;
+
+    border:
+        1px solid
+        rgba(
+            37,
+            35,
+            33,
+            0.25
+        );
+
+    background:
+        transparent;
+
+    color:
+        #252321;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+}
+
+
+.choice-grid button.selected,
+.music-choice-grid button.selected {
+
+    background:
+        #252321;
+
+    border-color:
+        #252321;
+
+    color:
+        white;
+
+}
+
+
+/* =========================================================
+   GRAPH
+========================================================= */
+
+.fr-editor {
+
+    margin-top:
+        35px;
+
+    width:
+        100%;
+
+    overflow-x:
+        auto;
+
+}
+
+
+#tuningGraph {
+
+    display:
+        block;
+
+    width:
+        100%;
+
+    min-width:
+        750px;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.25
+        );
+
+    cursor:
+        ns-resize;
+
+}
+
+
+.graph-legend {
+
+    margin-top:
+        15px;
+
+    display:
+        flex;
+
+    gap:
+        25px;
+
+    color:
+        #706b64;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+}
+
+
+.legend-line {
+
+    display:
+        inline-block;
+
+    width:
+        30px;
+
+    margin-right:
+        8px;
+
+    vertical-align:
+        middle;
+
+    border-top:
+        3px solid;
+
+}
+
+
+.reference-line {
+
+    border-color:
+        #aaa;
+
+}
+
+
+.custom-line {
+
+    border-color:
+        #252321;
+
+}
+
+
+/* =========================================================
+   SELECTED POINT
+========================================================= */
+
+.selected-frequency-panel {
+
+    margin-top:
+        25px;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr
+        1fr
+        2fr;
+
+    gap:
+        10px;
+
+}
+
+
+.selected-frequency-panel > div {
+
+    padding:
+        18px;
+
+    border:
+        1px solid
+        rgba(
+            37,
+            35,
+            33,
+            0.15
+        );
+
+}
+
+
+.selected-frequency-panel span {
+
+    display:
+        block;
+
+    color:
+        #706b64;
+
+    font-size:
+        8px;
+
+}
+
+
+.selected-frequency-panel strong {
+
+    display:
+        block;
+
+    margin-top:
+        7px;
+
+    font-size:
+        18px;
+
+}
+
+
+.db-controls {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        auto
+        1fr
+        auto;
+
+    gap:
+        8px;
+
+}
+
+
+.db-controls button,
+.db-controls input {
+
+    min-height:
+        45px;
+
+    border:
+        1px solid
+        #252321;
+
+    background:
+        transparent;
+
+    text-align:
+        center;
+
+}
+
+
+.db-controls button {
+
+    padding:
+        0
+        18px;
+
+    cursor:
+        pointer;
+
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.guided-actions,
+.advanced-actions {
+
+    margin-top:
+        40px;
+
+    display:
+        flex;
+
+    gap:
+        10px;
+
+}
+
+
+.primary-tuning-button,
+.secondary-tuning-button,
+.text-button {
+
+    min-height:
+        48px;
+
+    padding:
+        0
+        20px;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+}
+
+
+.primary-tuning-button {
+
+    border:
+        1px solid
+        #252321;
+
+    background:
+        #252321;
+
+    color:
+        white;
+
+}
+
+
+.secondary-tuning-button {
+
+    border:
+        1px solid
+        #252321;
+
+    background:
+        transparent;
+
+    color:
+        #252321;
+
+}
+
+
+.text-button {
+
+    border:
+        0;
+
+    background:
+        none;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media
+(max-width: 760px) {
+
+    .custom-tuning-section {
+
+        padding:
+            75px
+            20px;
+
+    }
+
+
+    .tuning-mode-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .selected-frequency-panel {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .guided-actions,
+    .advanced-actions {
+
+        flex-direction:
+            column;
+
+    }
+
+
+    .primary-tuning-button,
+    .secondary-tuning-button {
+
+        width:
+            100%;
+
+    }
+
+}

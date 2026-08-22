@@ -1,0 +1,1403 @@
+/* =========================================================
+   HAMMER CRAFT
+   ACCOUNT DASHBOARD
+   account.css
+========================================================= */
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+:root {
+    --account-bg: #080808;
+    --account-surface: #0d0d0d;
+    --account-surface-2: #111111;
+    --account-surface-3: #161616;
+
+    --account-border: rgba(255, 255, 255, 0.10);
+    --account-border-strong: rgba(255, 255, 255, 0.18);
+
+    --account-text: #f4f4f4;
+    --account-muted: #969696;
+    --account-dim: #666666;
+
+    --account-accent: #ff6a00;
+
+    --account-success: #64c783;
+    --account-warning: #e5b75a;
+    --account-danger: #e86a6a;
+
+    --account-radius: 2px;
+
+    --account-max-width: 1500px;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.customer-page {
+    width: 100%;
+    min-height: 100vh;
+
+    background:
+        linear-gradient(
+            180deg,
+            #080808 0%,
+            #0a0a0a 100%
+        );
+
+    color: var(--account-text);
+}
+
+
+/* =========================================================
+   ACCOUNT HERO
+========================================================= */
+
+.customer-hero {
+    width: min(
+        calc(100% - 80px),
+        var(--account-max-width)
+    );
+
+    margin: 0 auto;
+
+    padding:
+        170px
+        0
+        90px;
+}
+
+
+.customer-hero .eyebrow {
+    margin-bottom: 28px;
+}
+
+
+.customer-hero h1 {
+    max-width: 950px;
+
+    margin: 0;
+
+    font-size: clamp(
+        64px,
+        8vw,
+        138px
+    );
+
+    line-height: 0.88;
+
+    font-weight: 500;
+
+    letter-spacing: -0.065em;
+}
+
+
+.customer-hero h1 em {
+    display: block;
+
+    color: var(--account-accent);
+
+    font-family: Georgia, serif;
+
+    font-weight: 400;
+}
+
+
+.customer-hero > p {
+    max-width: 600px;
+
+    margin:
+        45px
+        0
+        0;
+
+    color: var(--account-muted);
+
+    font-size: 17px;
+
+    line-height: 1.8;
+}
+
+
+/* =========================================================
+   ACCOUNT SUMMARY
+========================================================= */
+
+.customer-summary {
+    width: min(
+        calc(100% - 80px),
+        var(--account-max-width)
+    );
+
+    margin:
+        0
+        auto
+        100px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    border-top:
+        1px solid
+        var(--account-border);
+
+    border-bottom:
+        1px solid
+        var(--account-border);
+}
+
+
+.customer-summary article {
+    min-height: 180px;
+
+    padding: 32px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    border-right:
+        1px solid
+        var(--account-border);
+}
+
+
+.customer-summary article:last-child {
+    border-right: none;
+}
+
+
+.customer-summary span {
+    color: var(--account-muted);
+
+    font-size: 11px;
+
+    letter-spacing: 0.15em;
+}
+
+
+.customer-summary strong {
+    font-size: 54px;
+
+    font-weight: 400;
+
+    letter-spacing: -0.04em;
+}
+
+
+/* =========================================================
+   MAIN SECTIONS
+========================================================= */
+
+.customer-section {
+    width: min(
+        calc(100% - 80px),
+        var(--account-max-width)
+    );
+
+    margin:
+        0
+        auto;
+
+    padding:
+        110px
+        0;
+
+    border-top:
+        1px solid
+        var(--account-border);
+}
+
+
+.customer-section .section-heading {
+    margin-bottom: 50px;
+}
+
+
+.customer-section-description {
+    max-width: 720px;
+
+    margin:
+        -20px
+        0
+        55px;
+
+    color: var(--account-muted);
+
+    font-size: 15px;
+
+    line-height: 1.8;
+}
+
+
+/* =========================================================
+   SECTION HEADING
+========================================================= */
+
+.customer-section .section-heading {
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    gap: 40px;
+}
+
+
+.customer-section .section-heading h2 {
+    margin:
+        12px
+        0
+        0;
+
+    font-size: clamp(
+        42px,
+        5vw,
+        76px
+    );
+
+    line-height: 0.95;
+
+    font-weight: 500;
+
+    letter-spacing: -0.05em;
+}
+
+
+/* =========================================================
+   CUSTOMER CARD GRID
+========================================================= */
+
+.customer-card-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+
+/* =========================================================
+   GENERIC CUSTOMER CARD
+========================================================= */
+
+.customer-card {
+    position: relative;
+
+    min-height: 280px;
+
+    padding: 28px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    background:
+        var(--account-surface);
+
+    border:
+        1px solid
+        var(--account-border);
+
+    overflow: hidden;
+
+    transition:
+        background 180ms ease,
+        border-color 180ms ease,
+        transform 180ms ease;
+}
+
+
+.customer-card:hover {
+    background:
+        var(--account-surface-2);
+
+    border-color:
+        var(--account-border-strong);
+
+    transform:
+        translateY(-2px);
+}
+
+
+.customer-card-label {
+    color:
+        var(--account-muted);
+
+    font-size: 10px;
+
+    letter-spacing: 0.15em;
+
+    text-transform: uppercase;
+}
+
+
+.customer-card h3 {
+    margin:
+        18px
+        0
+        12px;
+
+    font-size: 27px;
+
+    font-weight: 500;
+
+    letter-spacing: -0.03em;
+}
+
+
+.customer-card p {
+    margin: 0;
+
+    color:
+        var(--account-muted);
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   CARD META
+========================================================= */
+
+.customer-card-meta {
+    margin-top: auto;
+
+    padding-top: 30px;
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.customer-card-meta span {
+    padding:
+        8px
+        10px;
+
+    border:
+        1px solid
+        var(--account-border);
+
+    color:
+        var(--account-muted);
+
+    font-size: 9px;
+
+    letter-spacing: 0.12em;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   ORDER CARDS
+========================================================= */
+
+.order-card {
+    min-height: 330px;
+}
+
+
+.order-card-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 20px;
+}
+
+
+.order-number {
+    color:
+        var(--account-muted);
+
+    font-size: 10px;
+
+    letter-spacing: 0.15em;
+}
+
+
+.order-product {
+    margin-top: 30px;
+}
+
+
+.order-product strong {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-size: 27px;
+
+    font-weight: 500;
+}
+
+
+.order-product span {
+    color:
+        var(--account-muted);
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+.status-badge {
+    display: inline-flex;
+
+    width: fit-content;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding:
+        8px
+        11px;
+
+    border:
+        1px solid
+        var(--account-border);
+
+    font-size: 9px;
+
+    line-height: 1;
+
+    letter-spacing: 0.12em;
+
+    text-transform: uppercase;
+}
+
+
+.status-badge.complete,
+.status-badge.completed,
+.status-badge.ready {
+    color:
+        var(--account-success);
+
+    border-color:
+        rgba(100, 199, 131, 0.35);
+}
+
+
+.status-badge.processing {
+    color:
+        var(--account-warning);
+
+    border-color:
+        rgba(229, 183, 90, 0.35);
+}
+
+
+.status-badge.uploaded,
+.status-badge.pending {
+    color:
+        #aeb9ff;
+
+    border-color:
+        rgba(174, 185, 255, 0.35);
+}
+
+
+.status-badge.failed,
+.status-badge.cancelled {
+    color:
+        var(--account-danger);
+
+    border-color:
+        rgba(232, 106, 106, 0.35);
+}
+
+
+/* =========================================================
+   EAR SCAN CARDS
+========================================================= */
+
+.scan-card {
+    min-height: 310px;
+}
+
+
+.scan-card-side {
+    margin:
+        24px
+        0
+        8px;
+
+    font-size: 32px;
+
+    font-weight: 500;
+
+    letter-spacing: -0.035em;
+
+    text-transform: capitalize;
+}
+
+
+.scan-progress {
+    width: 100%;
+
+    height: 2px;
+
+    margin-top: 26px;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    overflow: hidden;
+}
+
+
+.scan-progress-bar {
+    height: 100%;
+
+    width: 0%;
+
+    background:
+        var(--account-accent);
+
+    transition:
+        width 400ms ease;
+}
+
+
+/* =========================================================
+   SCAN ACTIONS
+========================================================= */
+
+.scan-actions {
+    margin-top: auto;
+
+    padding-top: 28px;
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+}
+
+
+.scan-actions a,
+.scan-actions button {
+    min-height: 40px;
+
+    padding:
+        0
+        14px;
+
+    border:
+        1px solid
+        var(--account-border);
+
+    background:
+        transparent;
+
+    color:
+        var(--account-text);
+
+    font: inherit;
+
+    font-size: 9px;
+
+    letter-spacing: 0.12em;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background 150ms ease,
+        color 150ms ease,
+        border-color 150ms ease;
+}
+
+
+.scan-actions a:hover,
+.scan-actions button:hover {
+    background:
+        var(--account-text);
+
+    color:
+        #080808;
+
+    border-color:
+        var(--account-text);
+}
+
+
+/* =========================================================
+   LOADING / EMPTY CARDS
+========================================================= */
+
+.loading-card,
+.empty-card,
+.error-card {
+    grid-column:
+        1 / -1;
+
+    min-height: 180px;
+
+    padding: 32px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid
+        var(--account-border);
+
+    background:
+        var(--account-surface);
+
+    color:
+        var(--account-muted);
+
+    font-size: 12px;
+
+    letter-spacing: 0.1em;
+
+    text-transform: uppercase;
+}
+
+
+.error-card {
+    color:
+        var(--account-danger);
+}
+
+
+/* =========================================================
+   CUSTOM TUNING ON ACCOUNT PAGE
+========================================================= */
+
+.customer-tuning-section {
+    width: min(
+        calc(100% - 80px),
+        var(--account-max-width)
+    );
+
+    margin:
+        0
+        auto;
+
+    padding:
+        110px
+        0;
+
+    border-top:
+        1px solid
+        var(--account-border);
+}
+
+
+/* =========================================================
+   SAVED TUNING NOTICE
+========================================================= */
+
+.saved-tuning-notice {
+    margin:
+        45px
+        0;
+
+    padding:
+        24px
+        28px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 30px;
+
+    background:
+        rgba(255, 106, 0, 0.06);
+
+    border:
+        1px solid
+        rgba(255, 106, 0, 0.3);
+}
+
+
+.saved-tuning-notice span {
+    color:
+        var(--account-accent);
+
+    font-size: 9px;
+
+    letter-spacing: 0.15em;
+}
+
+
+.saved-tuning-notice strong {
+    font-size: 14px;
+
+    font-weight: 400;
+
+    color:
+        var(--account-text);
+}
+
+
+/* =========================================================
+   SAVED TUNING CARDS
+========================================================= */
+
+.saved-tuning-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+
+    margin-top: 50px;
+}
+
+
+.saved-tuning-card {
+    min-height: 250px;
+
+    padding: 28px;
+
+    background:
+        var(--account-surface);
+
+    border:
+        1px solid
+        var(--account-border);
+}
+
+
+.saved-tuning-card h3 {
+    margin:
+        18px
+        0
+        10px;
+
+    font-size: 26px;
+
+    font-weight: 500;
+}
+
+
+.saved-tuning-card p {
+    color:
+        var(--account-muted);
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+.customer-profile-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    border-top:
+        1px solid
+        var(--account-border);
+
+    border-bottom:
+        1px solid
+        var(--account-border);
+}
+
+
+.customer-profile-grid article {
+    min-width: 0;
+
+    min-height: 170px;
+
+    padding: 28px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    border-right:
+        1px solid
+        var(--account-border);
+}
+
+
+.customer-profile-grid article:last-child {
+    border-right: none;
+}
+
+
+.customer-profile-grid span {
+    color:
+        var(--account-muted);
+
+    font-size: 9px;
+
+    letter-spacing: 0.15em;
+}
+
+
+.customer-profile-grid strong {
+    overflow-wrap: anywhere;
+
+    font-size: 16px;
+
+    font-weight: 400;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   ACCOUNT BUTTONS
+========================================================= */
+
+.customer-page .outline-button {
+    display: inline-flex;
+
+    min-height: 46px;
+
+    padding:
+        0
+        20px;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid
+        var(--account-border-strong);
+
+    background:
+        transparent;
+
+    color:
+        var(--account-text);
+
+    font-size: 10px;
+
+    letter-spacing: 0.13em;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease;
+}
+
+
+.customer-page .outline-button:hover {
+    background:
+        var(--account-text);
+
+    color:
+        #080808;
+
+    border-color:
+        var(--account-text);
+}
+
+
+.customer-page .primary-button {
+    display: inline-flex;
+
+    min-height: 48px;
+
+    padding:
+        0
+        22px;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid
+        var(--account-accent);
+
+    background:
+        var(--account-accent);
+
+    color:
+        #080808;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.13em;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        opacity 150ms ease,
+        transform 150ms ease;
+}
+
+
+.customer-page .primary-button:hover {
+    opacity: 0.9;
+
+    transform:
+        translateY(-1px);
+}
+
+
+/* =========================================================
+   HEADER ACCOUNT INFORMATION
+========================================================= */
+
+.site-header-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+}
+
+
+#customerEmail {
+    max-width: 220px;
+
+    overflow: hidden;
+
+    color:
+        var(--account-muted);
+
+    font-size: 9px;
+
+    letter-spacing: 0.1em;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+#customerLogoutButton {
+    appearance: none;
+
+    border:
+        1px solid
+        var(--account-border);
+
+    background:
+        transparent;
+
+    cursor: pointer;
+}
+
+
+#customerLogoutButton:hover {
+    border-color:
+        var(--account-border-strong);
+}
+
+
+/* =========================================================
+   ACCOUNT NAV ACTIVE STATE
+========================================================= */
+
+.site-nav a {
+    position: relative;
+}
+
+
+.site-nav a::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+
+    bottom: -8px;
+
+    width: 0;
+
+    height: 1px;
+
+    background:
+        var(--account-accent);
+
+    transition:
+        width 180ms ease;
+}
+
+
+.site-nav a:hover::after {
+    width: 100%;
+}
+
+
+/* =========================================================
+   SMALL INFORMATION ROWS
+========================================================= */
+
+.account-info-list {
+    display: flex;
+
+    flex-direction: column;
+
+    margin-top: 25px;
+}
+
+
+.account-info-row {
+    display: grid;
+
+    grid-template-columns:
+        140px
+        minmax(0, 1fr);
+
+    gap: 20px;
+
+    padding:
+        15px
+        0;
+
+    border-top:
+        1px solid
+        var(--account-border);
+}
+
+
+.account-info-row:last-child {
+    border-bottom:
+        1px solid
+        var(--account-border);
+}
+
+
+.account-info-row span {
+    color:
+        var(--account-muted);
+
+    font-size: 9px;
+
+    letter-spacing: 0.12em;
+}
+
+
+.account-info-row strong {
+    font-size: 13px;
+
+    font-weight: 400;
+}
+
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.account-divider {
+    width: 100%;
+
+    height: 1px;
+
+    margin:
+        60px
+        0;
+
+    background:
+        var(--account-border);
+}
+
+
+/* =========================================================
+   ACCOUNT MESSAGE
+========================================================= */
+
+.account-message {
+    min-height: 20px;
+
+    margin-top: 15px;
+
+    color:
+        var(--account-muted);
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+
+.account-message.success {
+    color:
+        var(--account-success);
+}
+
+
+.account-message.error {
+    color:
+        var(--account-danger);
+}
+
+
+/* =========================================================
+   RESPONSIVE — 1100px
+========================================================= */
+
+@media (
+    max-width: 1100px
+) {
+
+    .customer-card-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .customer-summary {
+        grid-template-columns:
+            repeat(3, 1fr);
+    }
+
+
+    .customer-profile-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .customer-profile-grid article {
+        min-height: 130px;
+
+        border-right: none;
+
+        border-bottom:
+            1px solid
+            var(--account-border);
+    }
+
+
+    .customer-profile-grid article:last-child {
+        border-bottom: none;
+    }
+
+
+    .saved-tuning-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — 800px
+========================================================= */
+
+@media (
+    max-width: 800px
+) {
+
+    .customer-hero,
+    .customer-summary,
+    .customer-section,
+    .customer-tuning-section {
+        width:
+            calc(100% - 40px);
+    }
+
+
+    .customer-hero {
+        padding:
+            130px
+            0
+            70px;
+    }
+
+
+    .customer-hero h1 {
+        font-size:
+            clamp(
+                54px,
+                15vw,
+                90px
+            );
+    }
+
+
+    .customer-summary {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .customer-summary article {
+        min-height: 120px;
+
+        border-right: none;
+
+        border-bottom:
+            1px solid
+            var(--account-border);
+    }
+
+
+    .customer-summary article:last-child {
+        border-bottom: none;
+    }
+
+
+    .customer-summary strong {
+        font-size: 42px;
+    }
+
+
+    .customer-section,
+    .customer-tuning-section {
+        padding:
+            80px
+            0;
+    }
+
+
+    .customer-section .section-heading {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+
+    .customer-card-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .saved-tuning-notice {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 12px;
+    }
+
+
+    #customerEmail {
+        display: none;
+    }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE — 520px
+========================================================= */
+
+@media (
+    max-width: 520px
+) {
+
+    .customer-hero,
+    .customer-summary,
+    .customer-section,
+    .customer-tuning-section {
+        width:
+            calc(100% - 28px);
+    }
+
+
+    .customer-hero {
+        padding-top:
+            110px;
+    }
+
+
+    .customer-hero > p {
+        font-size: 15px;
+    }
+
+
+    .customer-card,
+    .saved-tuning-card {
+        padding: 22px;
+    }
+
+
+    .customer-profile-grid article {
+        padding: 22px;
+    }
+
+
+    .account-info-row {
+        grid-template-columns:
+            1fr;
+
+        gap: 8px;
+    }
+
+
+    .scan-actions {
+        flex-direction: column;
+    }
+
+
+    .scan-actions a,
+    .scan-actions button {
+        width: 100%;
+
+        justify-content: center;
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (
+    prefers-reduced-motion: reduce
+) {
+
+    .customer-card,
+    .scan-progress-bar,
+    .customer-page .outline-button,
+    .customer-page .primary-button,
+    .site-nav a::after {
+        transition: none;
+    }
+
+}

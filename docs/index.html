@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -7,72 +6,66 @@
     <meta charset="UTF-8">
 
     <meta
-
         name="viewport"
-
         content="width=device-width, initial-scale=1.0"
+    >
 
+    <meta
+        name="description"
+        content="Hammer Craft builds small-batch custom IEMs in Bristol with custom tuning, custom-fit shells and digital ear scanning."
     >
 
     <title>
-
         Hammer Craft | Custom IEMs
-
     </title>
 
-    <!-- TAB / FAVICON -->
+
+    <!-- =================================================
+         FAVICON
+    ================================================== -->
 
     <link
-
         rel="icon"
-
         type="image/png"
-
         sizes="32x32"
-
         href="assets/favicon-32.png"
-
     >
 
     <link
-
         rel="icon"
-
         type="image/png"
-
         sizes="16x16"
-
         href="assets/favicon-16.png"
-
     >
 
     <link
-
         rel="apple-touch-icon"
-
         sizes="180x180"
-
-        href="assets/favicon-180.png"
-
+        href="assets/apple-touch-icon.png"
     >
 
     <link
-
         rel="shortcut icon"
-
         href="assets/favicon.ico"
+    >
 
+
+    <!-- =================================================
+         STYLES
+    ================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="style.css?v=60"
     >
 
     <link
-
         rel="stylesheet"
-
-        href="style.css"
-
+        href="custom-tuning.css?v=2"
     >
 
 </head>
+
 
 
 <body>
@@ -85,8 +78,9 @@
 <header class="site-header">
 
     <a
-        href="#top"
-        class="header-brand"
+        href="index.html"
+        class="site-brand"
+        aria-label="Hammer Craft home"
     >
 
         <img
@@ -94,140 +88,91 @@
             alt="Hammer Craft"
         >
 
-        <span>
-            HAMMER CRAFT
-        </span>
-
     </a>
 
 
-    <nav class="main-nav">
-
-        <a href="#about">
-            ABOUT
-        </a>
-
-        <a href="#ai">
-            AI TUNING
-        </a>
+    <nav class="site-nav">
 
         <a href="#models">
             MODELS
         </a>
 
-        <a href="#ear-scan">
-            EAR SCAN
+        <a href="#customTuning">
+            CUSTOM TUNING
         </a>
 
-
-        <a
-            href="basket.html"
-            class="nav-basket"
-        >
-
-            BASKET
-
-            <span id="basketCount">
-                0
-            </span>
-
+        <a href="#process">
+            PROCESS
         </a>
 
-
-        <a
-            href="login.html"
-            class="nav-account"
-        >
-            LOGIN
+        <a href="#about">
+            ABOUT
         </a>
 
     </nav>
 
 
-    <button
-        id="mobileMenuButton"
-        class="mobile-menu-button"
-        type="button"
-        aria-label="Open menu"
-    >
-        MENU
-    </button>
+    <div class="site-header-actions">
+
+        <a
+            href="customer.html"
+            class="header-account-link"
+        >
+            ACCOUNT
+        </a>
+
+
+        <a
+            href="#models"
+            class="header-order-link"
+        >
+            EXPLORE
+        </a>
+
+    </div>
 
 </header>
 
 
 
-<!-- =====================================================
-     MOBILE MENU
-===================================================== -->
-
-<nav
-    id="mobileMenu"
-    class="mobile-menu"
->
-
-    <a href="#about">
-        ABOUT
-    </a>
-
-    <a href="#ai">
-        AI TUNING
-    </a>
-
-    <a href="#models">
-        MODELS
-    </a>
-
-    <a href="#ear-scan">
-        EAR SCAN
-    </a>
-
-    <a href="basket.html">
-        BASKET
-    </a>
-
-    <a href="login.html">
-        LOGIN
-    </a>
-
-</nav>
-
-
-
-<main id="top">
+<main>
 
 
 <!-- =====================================================
      HERO
 ===================================================== -->
 
-<section class="hero-section">
+<section class="home-hero">
 
-    <div class="hero-copy">
+    <div class="hero-background-word">
+        HAMMER
+    </div>
+
+
+    <div class="hero-content">
 
         <div class="eyebrow">
-            HAMMER CRAFT / BRISTOL UK
+            BRISTOL / UNITED KINGDOM
         </div>
 
 
         <h1>
 
-            Sound,
+            Built around
 
             <em>
-                crafted for you.
+                your sound.
             </em>
 
         </h1>
 
 
-        <p class="hero-lead">
+        <p class="hero-description">
 
-            In-ear monitors built around sound,
-            individuality and experimentation.
-
-            From our reference tuning to custom
-            sound and custom-fit shells.
+            Small-batch in-ear monitors developed through
+            acoustic engineering, digital manufacturing and
+            a custom tuning system designed around the person
+            who will actually listen to them.
 
         </p>
 
@@ -236,23 +181,17 @@
 
             <a
                 href="#models"
-                class="primary-link"
+                class="primary-button"
             >
-
-                EXPLORE OUR IEMS
-
-                <span>
-                    →
-                </span>
-
+                EXPLORE MODELS
             </a>
 
 
             <a
-                href="ear-scan.html"
-                class="secondary-link"
+                href="#customTuning"
+                class="text-link"
             >
-                DIGITAL EAR FIT ↗
+                CREATE YOUR TUNING →
             </a>
 
         </div>
@@ -260,18 +199,19 @@
     </div>
 
 
+    <div class="hero-footer">
 
-    <div class="hero-visual">
+        <span>
+            SMALL BATCH.
+        </span>
 
-        <div class="hero-logo-frame">
+        <span>
+            BUILT LOCALLY.
+        </span>
 
-            <img
-                src="assets/logo.png"
-                alt="Hammer Craft"
-                class="hero-logo"
-            >
-
-        </div>
+        <span>
+            MADE TO LISTEN.
+        </span>
 
     </div>
 
@@ -283,45 +223,1254 @@
      INTRO
 ===================================================== -->
 
-<section class="intro-strip">
+<section class="home-intro">
 
-    <article>
+    <div class="eyebrow">
+        HAMMER CRAFT / 01
+    </div>
 
-        <span>
-            SMALL BATCH
+
+    <div class="home-intro-grid">
+
+        <h2>
+
+            One IEM does not need
+            to sound right for
+
+            <em>
+                everyone.
+            </em>
+
+        </h2>
+
+
+        <div class="home-intro-copy">
+
+            <p>
+
+                Hammer Craft approaches an IEM as a system:
+                driver behaviour, acoustic chambers, tubing,
+                damping, crossover design, nozzle geometry,
+                shell fit and the individual listener.
+
+            </p>
+
+
+            <p>
+
+                Start with one of our standard configurations,
+                personalise the tuning, build around your ear,
+                or combine both.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     MODELS
+===================================================== -->
+
+<section
+    id="models"
+    class="model-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                HAMMER CRAFT / 02
+            </div>
+
+
+            <h2>
+
+                Choose your
+
+                <em>
+                    starting point.
+                </em>
+
+            </h2>
+
+        </div>
+
+
+        <p>
+
+            Four ways into the Hammer Craft system.
+            Each has its own dedicated page with full
+            specifications and ordering information.
+
+        </p>
+
+    </div>
+
+
+
+    <div class="model-grid">
+
+
+        <!-- =============================================
+             STANDARD
+        ============================================== -->
+
+        <article class="model-card">
+
+            <a
+                href="products/standard.html"
+                class="model-card-image"
+            >
+
+                <div class="model-placeholder">
+
+                    <span>
+                        HC / 01
+                    </span>
+
+                    <strong>
+                        STANDARD
+                    </strong>
+
+                </div>
+
+            </a>
+
+
+            <div class="model-card-body">
+
+                <span class="model-index">
+                    01
+                </span>
+
+
+                <h3>
+                    Standard.
+                </h3>
+
+
+                <p>
+
+                    Our reference tuning and standard shell
+                    configuration. Designed as the most direct
+                    expression of the Hammer Craft house sound.
+
+                </p>
+
+
+                <div class="model-tags">
+
+                    <span>
+                        REFERENCE TUNE
+                    </span>
+
+                    <span>
+                        UNIVERSAL FIT
+                    </span>
+
+                </div>
+
+
+                <a
+                    href="products/standard.html"
+                    class="model-link"
+                >
+                    VIEW STANDARD →
+                </a>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =============================================
+             CUSTOM TUNE
+        ============================================== -->
+
+        <article class="model-card">
+
+            <a
+                href="products/custom-tune.html"
+                class="model-card-image"
+            >
+
+                <div class="model-placeholder">
+
+                    <span>
+                        HC / 02
+                    </span>
+
+                    <strong>
+                        CUSTOM TUNE
+                    </strong>
+
+                </div>
+
+            </a>
+
+
+            <div class="model-card-body">
+
+                <span class="model-index">
+                    02
+                </span>
+
+
+                <h3>
+                    Custom Tune.
+                </h3>
+
+
+                <p>
+
+                    Keep the standard physical fit while
+                    changing the target response around your
+                    listening preferences.
+
+                </p>
+
+
+                <div class="model-tags">
+
+                    <span>
+                        CUSTOM FR
+                    </span>
+
+                    <span>
+                        UNIVERSAL FIT
+                    </span>
+
+                </div>
+
+
+                <a
+                    href="products/custom-tune.html"
+                    class="model-link"
+                >
+                    VIEW CUSTOM TUNE →
+                </a>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =============================================
+             CUSTOM FIT
+        ============================================== -->
+
+        <article class="model-card">
+
+            <a
+                href="products/custom-fit.html"
+                class="model-card-image"
+            >
+
+                <div class="model-placeholder">
+
+                    <span>
+                        HC / 03
+                    </span>
+
+                    <strong>
+                        CUSTOM FIT
+                    </strong>
+
+                </div>
+
+            </a>
+
+
+            <div class="model-card-body">
+
+                <span class="model-index">
+                    03
+                </span>
+
+
+                <h3>
+                    Custom Fit.
+                </h3>
+
+
+                <p>
+
+                    Our reference tuning built into shells
+                    generated from the geometry of your own
+                    ears.
+
+                </p>
+
+
+                <div class="model-tags">
+
+                    <span>
+                        REFERENCE TUNE
+                    </span>
+
+                    <span>
+                        CUSTOM SHELL
+                    </span>
+
+                </div>
+
+
+                <a
+                    href="products/custom-fit.html"
+                    class="model-link"
+                >
+                    VIEW CUSTOM FIT →
+                </a>
+
+            </div>
+
+        </article>
+
+
+
+        <!-- =============================================
+             CUSTOM FIT + TUNE
+        ============================================== -->
+
+        <article class="model-card featured-model-card">
+
+            <a
+                href="products/custom-fit-tune.html"
+                class="model-card-image"
+            >
+
+                <div class="model-placeholder">
+
+                    <span>
+                        HC / 04
+                    </span>
+
+                    <strong>
+                        FULL CUSTOM
+                    </strong>
+
+                </div>
+
+            </a>
+
+
+            <div class="model-card-body">
+
+                <span class="model-index">
+                    04
+                </span>
+
+
+                <h3>
+                    Custom Fit + Tune.
+                </h3>
+
+
+                <p>
+
+                    Your ear geometry and your target response
+                    combined into the most individual version
+                    of a Hammer Craft IEM.
+
+                </p>
+
+
+                <div class="model-tags">
+
+                    <span>
+                        CUSTOM FR
+                    </span>
+
+                    <span>
+                        CUSTOM SHELL
+                    </span>
+
+                </div>
+
+
+                <a
+                    href="products/custom-fit-tune.html"
+                    class="model-link"
+                >
+                    VIEW FULL CUSTOM →
+                </a>
+
+            </div>
+
+        </article>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     CUSTOM TUNING
+===================================================== -->
+
+<section
+    id="customTuning"
+    class="custom-tuning-section"
+>
+
+    <div class="custom-tuning-heading">
+
+        <div class="eyebrow">
+            HAMMER CRAFT / 03 / CUSTOM SOUND
+        </div>
+
+
+        <h2>
+
+            Tune it
+
+            <em>
+                your way.
+            </em>
+
+        </h2>
+
+
+        <p>
+
+            You do not need to understand frequency response
+            graphs to create a custom tuning. Use Guided
+            Tuning, or open the advanced editor and directly
+            shape the response in 0.1 dB steps.
+
+        </p>
+
+    </div>
+
+
+
+    <!-- =================================================
+         MODE SELECTOR
+    ================================================== -->
+
+    <div class="tuning-mode-grid">
+
+        <button
+            id="guidedTuningMode"
+            class="tuning-mode-card"
+            type="button"
+        >
+
+            <span class="mode-number">
+                01
+            </span>
+
+
+            <h3>
+                Guided Tuning
+            </h3>
+
+
+            <p>
+
+                Tell us what you enjoy listening to.
+                We translate your answers into a custom
+                target response.
+
+            </p>
+
+
+            <span class="mode-action">
+                START GUIDED TUNING →
+            </span>
+
+        </button>
+
+
+
+        <button
+            id="advancedTuningMode"
+            class="tuning-mode-card"
+            type="button"
+        >
+
+            <span class="mode-number">
+                02
+            </span>
+
+
+            <h3>
+                Advanced FR Tuning
+            </h3>
+
+
+            <p>
+
+                Directly manipulate the target frequency
+                response with precise 0.1 dB control.
+
+            </p>
+
+
+            <span class="mode-action">
+                OPEN FR EDITOR →
+            </span>
+
+        </button>
+
+    </div>
+
+
+
+    <!-- =================================================
+         GUIDED PANEL
+    ================================================== -->
+
+    <div
+        id="guidedTuningPanel"
+        class="tuning-panel"
+        hidden
+    >
+
+        <div class="panel-top">
+
+            <div>
+
+                <span class="panel-label">
+                    GUIDED TUNING
+                </span>
+
+
+                <h3>
+                    Tell us what sounds good to you.
+                </h3>
+
+            </div>
+
+
+            <button
+                class="text-button tuningCloseButton"
+                type="button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+
+        <!-- QUESTION 01 -->
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                01
+            </span>
+
+
+            <h4>
+                How much bass do you like?
+            </h4>
+
+
+            <div
+                class="choice-grid"
+                data-setting="bass"
+            >
+
+                <button
+                    type="button"
+                    data-value="-2"
+                >
+                    LIGHT
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="0"
+                    class="selected"
+                >
+                    BALANCED
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="3"
+                >
+                    STRONG
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="5"
+                >
+                    VERY STRONG
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- QUESTION 02 -->
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                02
+            </span>
+
+
+            <h4>
+                What kind of bass do you prefer?
+            </h4>
+
+
+            <div
+                class="choice-grid"
+                data-setting="bassCharacter"
+            >
+
+                <button
+                    type="button"
+                    data-value="tight"
+                >
+                    TIGHT / FAST
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="natural"
+                    class="selected"
+                >
+                    NATURAL
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="warm"
+                >
+                    WARM / FULL
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="subbass"
+                >
+                    DEEP / SUB-BASS
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- QUESTION 03 -->
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                03
+            </span>
+
+
+            <h4>
+                Where should vocals sit?
+            </h4>
+
+
+            <div
+                class="choice-grid"
+                data-setting="vocals"
+            >
+
+                <button
+                    type="button"
+                    data-value="-1.5"
+                >
+                    RELAXED
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="0"
+                    class="selected"
+                >
+                    NATURAL
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="2"
+                >
+                    FORWARD
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- QUESTION 04 -->
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                04
+            </span>
+
+
+            <h4>
+                How would you like the treble?
+            </h4>
+
+
+            <div
+                class="choice-grid"
+                data-setting="treble"
+            >
+
+                <button
+                    type="button"
+                    data-value="-2"
+                >
+                    SMOOTH
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="0"
+                    class="selected"
+                >
+                    BALANCED
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="1.5"
+                >
+                    DETAILED
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="2.5"
+                >
+                    AIRY
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- QUESTION 05 -->
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                05
+            </span>
+
+
+            <h4>
+                How sensitive are you to bright sound?
+            </h4>
+
+
+            <div
+                class="choice-grid"
+                data-setting="sensitivity"
+            >
+
+                <button
+                    type="button"
+                    data-value="sensitive"
+                >
+                    VERY SENSITIVE
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="normal"
+                    class="selected"
+                >
+                    NORMAL
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="energetic"
+                >
+                    I LIKE ENERGY
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- QUESTION 06 -->
+
+        <div class="tuning-question">
+
+            <span class="question-number">
+                06
+            </span>
+
+
+            <h4>
+                What do you listen to most?
+            </h4>
+
+
+            <div
+                id="musicChoices"
+                class="music-choice-grid"
+            >
+
+                <button
+                    type="button"
+                    data-value="pop"
+                >
+                    POP
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="rock"
+                >
+                    ROCK
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="edm"
+                >
+                    EDM
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="hiphop"
+                >
+                    HIP-HOP
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="classical"
+                >
+                    CLASSICAL
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="jazz"
+                >
+                    JAZZ
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="vocal"
+                >
+                    VOCAL
+                </button>
+
+
+                <button
+                    type="button"
+                    data-value="studio"
+                >
+                    STUDIO / MONITORING
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="guided-actions">
+
+            <button
+                id="generateGuidedTargetButton"
+                class="primary-tuning-button"
+                type="button"
+            >
+                GENERATE MY TARGET
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         ADVANCED PANEL
+    ================================================== -->
+
+    <div
+        id="advancedTuningPanel"
+        class="tuning-panel"
+        hidden
+    >
+
+        <div class="panel-top">
+
+            <div>
+
+                <span class="panel-label">
+                    ADVANCED FR TUNING
+                </span>
+
+
+                <h3>
+                    Shape your target.
+                </h3>
+
+
+                <p>
+
+                    Drag a control point vertically or
+                    select it and change the value by
+                    exactly 0.1 dB.
+
+                </p>
+
+            </div>
+
+
+            <button
+                class="text-button tuningCloseButton"
+                type="button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+
+        <div class="fr-editor">
+
+            <canvas
+                id="tuningGraph"
+                width="1200"
+                height="520"
+            ></canvas>
+
+        </div>
+
+
+
+        <div class="graph-legend">
+
+            <span>
+
+                <i class="legend-line reference-line"></i>
+
+                HC REFERENCE
+
+            </span>
+
+
+            <span>
+
+                <i class="legend-line custom-line"></i>
+
+                YOUR TUNING
+
+            </span>
+
+        </div>
+
+
+
+        <div class="selected-frequency-panel">
+
+            <div>
+
+                <span>
+                    FREQUENCY
+                </span>
+
+                <strong id="selectedFrequency">
+                    1 kHz
+                </strong>
+
+            </div>
+
+
+            <div>
+
+                <span>
+                    ADJUSTMENT
+                </span>
+
+                <strong id="selectedAdjustment">
+                    0.0 dB
+                </strong>
+
+            </div>
+
+
+            <div class="db-controls">
+
+                <button
+                    id="decreaseDbButton"
+                    type="button"
+                >
+                    −0.1
+                </button>
+
+
+                <input
+                    id="dbAdjustmentInput"
+                    type="number"
+                    step="0.1"
+                    min="-6"
+                    max="6"
+                    value="0.0"
+                >
+
+
+                <button
+                    id="increaseDbButton"
+                    type="button"
+                >
+                    +0.1
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="advanced-actions">
+
+            <button
+                id="resetTuningButton"
+                class="secondary-tuning-button"
+                type="button"
+            >
+                RESET
+            </button>
+
+
+            <button
+                id="saveTuningButton"
+                class="primary-tuning-button"
+                type="button"
+            >
+                SAVE CUSTOM TUNING
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         RESULT
+    ================================================== -->
+
+    <div
+        id="tuningResult"
+        class="tuning-result"
+        hidden
+    >
+
+        <span class="panel-label">
+            YOUR HAMMER CRAFT TARGET
         </span>
 
-        <strong>
-            Built thoughtfully.
-        </strong>
 
-    </article>
-
-
-    <article>
-
-        <span>
-            DEVELOPED IN
-        </span>
-
-        <strong>
-            Bristol, UK.
-        </strong>
-
-    </article>
+        <h3>
+            Custom tuning ready.
+        </h3>
 
 
-    <article>
+        <p id="tuningResultText"></p>
 
-        <span>
-            BUILT AROUND
-        </span>
 
-        <strong>
-            Sound. Fit. Detail.
-        </strong>
+        <div class="advanced-actions">
 
-    </article>
+            <button
+                id="fineTuneResultButton"
+                class="secondary-tuning-button"
+                type="button"
+            >
+                FINE TUNE IN ADVANCED MODE
+            </button>
+
+
+            <button
+                id="confirmTuningButton"
+                class="primary-tuning-button"
+                type="button"
+            >
+                USE THIS TUNING
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     PROCESS
+===================================================== -->
+
+<section
+    id="process"
+    class="process-section"
+>
+
+    <div class="section-heading">
+
+        <div>
+
+            <div class="eyebrow">
+                HAMMER CRAFT / 04
+            </div>
+
+
+            <h2>
+
+                From preference
+                to
+
+                <em>
+                    physical sound.
+                </em>
+
+            </h2>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="process-grid">
+
+        <article>
+
+            <span>
+                01
+            </span>
+
+            <h3>
+                Define.
+            </h3>
+
+            <p>
+
+                Select a configuration and, where applicable,
+                build your target response.
+
+            </p>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                02
+            </span>
+
+            <h3>
+                Fit.
+            </h3>
+
+            <p>
+
+                Custom-fit orders use ear geometry captured
+                through the Hammer Craft scanning workflow.
+
+            </p>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                03
+            </span>
+
+            <h3>
+                Engineer.
+            </h3>
+
+            <p>
+
+                Acoustic parameters are selected around the
+                intended response and physical shell.
+
+            </p>
+
+        </article>
+
+
+        <article>
+
+            <span>
+                04
+            </span>
+
+            <h3>
+                Measure.
+            </h3>
+
+            <p>
+
+                The completed IEM is measured against its
+                intended target before finalisation.
+
+            </p>
+
+        </article>
+
+    </div>
 
 </section>
 
@@ -336,545 +1485,44 @@
     class="about-section"
 >
 
-    <div class="about-left">
-
-        <div class="coordinates">
-
-            <span>
-                51.4545° N
-            </span>
-
-            <span>
-                2.5879° W
-            </span>
-
-        </div>
-
-
-        <div class="eyebrow about-eyebrow">
-            BRISTOL / UNITED KINGDOM
-        </div>
-
-
-        <h2>
-
-            Small batch.
-
-            <em>
-                Built locally.
-            </em>
-
-        </h2>
-
-    </div>
-
-
-
-    <div class="about-right">
-
-        <p>
-
-            Hammer Craft is growing from Bristol,
-            one build at a time.
-
-            Starting small gives us the freedom to
-            experiment, iterate and stay close to
-            the products we create.
-
-        </p>
-
-
-        <p>
-
-            We would rather build thoughtfully
-            than build quickly.
-
-        </p>
-
-
-        <div class="about-divider"></div>
-
-
-        <span class="small-caption">
-            GROWING FROM BRISTOL, ONE BUILD AT A TIME.
-        </span>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     AI
-===================================================== -->
-
-<section
-    id="ai"
-    class="ai-section"
->
-
-    <div class="section-heading-large">
+    <div>
 
         <div class="eyebrow">
-            HAMMER CRAFT / AI-ASSISTED TUNING
+            HAMMER CRAFT / BRISTOL
         </div>
 
 
         <h2>
-
-            Engineering
-
-            <em>
-                with assistance.
-            </em>
-
+            Built thoughtfully,
+            not quickly.
         </h2>
 
     </div>
 
 
+    <div>
 
-    <div class="ai-grid">
+        <p>
 
-        <article class="feature-card">
+            Hammer Craft is being developed as a small-batch
+            IEM workshop combining software, acoustic
+            engineering and additive manufacturing.
 
-            <span class="feature-number">
-                01
-            </span>
-
-
-            <div class="feature-card-content">
-
-                <h3>
-                    TRAINED TO SUPPORT OUR TUNING PROCESS
-                </h3>
-
-
-                <p>
-
-                    Our internally developed tuning
-                    workflow uses AI-assisted analysis
-                    to help compare frequency response,
-                    tuning targets and acoustic changes.
-
-                </p>
-
-            </div>
-
-        </article>
-
-
-
-        <article class="feature-card">
-
-            <span class="feature-number">
-                02
-            </span>
-
-
-            <div class="feature-card-content">
-
-                <h3>
-                    NOT A REPLACEMENT FOR LISTENING
-                </h3>
-
-
-                <p>
-
-                    AI helps us identify patterns and
-                    move through iterations more efficiently.
-
-                    Measurements, acoustic engineering
-                    and subjective listening remain
-                    part of the final decision.
-
-                </p>
-
-            </div>
-
-        </article>
-
-    </div>
-
-
-
-    <div class="ai-process">
-
-        <article>
-
-            <span>
-                INPUT
-            </span>
-
-            <strong>
-                Target + preference
-            </strong>
-
-        </article>
-
-
-        <div class="process-arrow">
-            →
-        </div>
-
-
-        <article>
-
-            <span>
-                ANALYSIS
-            </span>
-
-            <strong>
-                AI-assisted comparison
-            </strong>
-
-        </article>
-
-
-        <div class="process-arrow">
-            →
-        </div>
-
-
-        <article>
-
-            <span>
-                OUTPUT
-            </span>
-
-            <strong>
-                Refined acoustic direction
-            </strong>
-
-        </article>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     MODELS
-===================================================== -->
-
-<section
-    id="models"
-    class="models-section"
->
-
-    <div class="models-heading">
-
-        <div>
-
-            <div class="eyebrow">
-                HAMMER CRAFT / MODELS
-            </div>
-
-
-            <h2>
-                Our builds.
-            </h2>
-
-        </div>
+        </p>
 
 
         <p>
 
-            Our models are developed in small batches.
-
-            Availability, pricing and launch status
-            are updated directly through our internal
-            Hammer Craft system.
+            Growing from Bristol, one build at a time.
 
         </p>
 
     </div>
 
-
-
-    <div
-        id="publicModelGrid"
-        class="public-model-grid"
-    >
-
-        <div class="model-loading">
-            Loading models...
-        </div>
-
-    </div>
-
 </section>
 
 
-
-<!-- =====================================================
-     BUILD OPTIONS
-===================================================== -->
-
-<section class="custom-section">
-
-    <div class="custom-heading">
-
-        <div class="eyebrow light-eyebrow">
-            HAMMER CRAFT / BUILD OPTIONS
-        </div>
-
-
-        <h2>
-
-            Built around
-
-            <em>
-                what you need.
-            </em>
-
-        </h2>
-
-    </div>
-
-
-
-    <div class="custom-grid">
-
-        <article>
-
-            <span>
-                01
-            </span>
-
-            <div>
-
-                <h3>
-                    STANDARD
-                </h3>
-
-                <p>
-                    Universal shell geometry with
-                    Hammer Craft standard tuning.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                02
-            </span>
-
-            <div>
-
-                <h3>
-                    CUSTOM TUNING
-                </h3>
-
-                <p>
-                    Universal fit with a personalised
-                    tuning direction.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                03
-            </span>
-
-            <div>
-
-                <h3>
-                    CUSTOM FIT
-                </h3>
-
-                <p>
-                    Custom ear geometry with our
-                    standard acoustic tuning.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                04
-            </span>
-
-            <div>
-
-                <h3>
-                    FULL CUSTOM
-                </h3>
-
-                <p>
-                    Personalised ear geometry combined
-                    with personalised tuning.
-                </p>
-
-            </div>
-
-        </article>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     EAR SCAN
-===================================================== -->
-
-<section
-    id="ear-scan"
-    class="ear-scan-section"
->
-
-    <div class="ear-scan-copy">
-
-        <div class="eyebrow">
-            HAMMER CRAFT / DIGITAL FIT
-        </div>
-
-
-        <h2>
-
-            Your ear.
-
-            <em>
-                Your geometry.
-            </em>
-
-        </h2>
-
-
-        <p>
-
-            Our guided browser-based scanner captures
-            overlapping views of each ear and securely
-            sends them into the Hammer Craft 3D
-            reconstruction workflow.
-
-        </p>
-
-
-        <a
-            href="ear-scan.html"
-            class="primary-link"
-        >
-
-            START EAR SCAN
-
-            <span>
-                →
-            </span>
-
-        </a>
-
-    </div>
-
-
-
-    <div class="ear-scan-process">
-
-        <article>
-
-            <span>
-                01
-            </span>
-
-            <div>
-
-                <strong>
-                    CAPTURE
-                </strong>
-
-                <p>
-                    Guided overlapping camera views.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                02
-            </span>
-
-            <div>
-
-                <strong>
-                    RECONSTRUCT
-                </strong>
-
-                <p>
-                    Images converted into 3D geometry.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                03
-            </span>
-
-            <div>
-
-                <strong>
-                    DESIGN
-                </strong>
-
-                <p>
-                    Ear geometry becomes part of the
-                    custom-fit workflow.
-                </p>
-
-            </div>
-
-        </article>
-
-    </div>
-
-</section>
-
-
-
-<!-- =====================================================
-     STATEMENT
-===================================================== -->
-
-<section class="statement-section">
-
-    <span>
-        HAMMER CRAFT
-    </span>
-
-
-    <blockquote>
-
-        We would rather build thoughtfully
-        than build quickly.
-
-    </blockquote>
-
-</section>
+</main>
 
 
 
@@ -884,148 +1532,20 @@
 
 <footer class="site-footer">
 
-
-    <div class="footer-brand">
+    <div>
 
         <img
             src="assets/logo.png"
             alt="Hammer Craft"
         >
 
+    </div>
+
+
+    <div>
+
         <span>
             HAMMER CRAFT
-        </span>
-
-    </div>
-
-
-
-    <div class="footer-column">
-
-        <span class="footer-label">
-            LOCATION
-        </span>
-
-        <p>
-            Bristol
-        </p>
-
-        <p>
-            United Kingdom
-        </p>
-
-    </div>
-
-
-
-    <div class="footer-column">
-
-        <span class="footer-label">
-            EXPLORE
-        </span>
-
-        <a href="#models">
-            Models
-        </a>
-
-        <a href="#ai">
-            AI Tuning
-        </a>
-
-        <a href="ear-scan.html">
-            Ear Scan
-        </a>
-
-    </div>
-
-
-
-    <div class="footer-column">
-
-        <span class="footer-label">
-            ACCOUNT
-        </span>
-
-        <a href="login.html">
-            Login
-        </a>
-
-        <a href="register.html">
-            Register
-        </a>
-
-        <a href="basket.html">
-            Basket
-        </a>
-
-    </div>
-
-
-
-    <div class="footer-column">
-
-        <span class="footer-label">
-            SOCIAL
-        </span>
-
-
-        <a
-            href="https://www.instagram.com/YOUR_INSTAGRAM_USERNAME/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="footer-instagram"
-        >
-
-            <svg
-                class="instagram-icon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-            >
-
-                <rect
-                    x="3"
-                    y="3"
-                    width="18"
-                    height="18"
-                    rx="5"
-                    ry="5"
-                ></rect>
-
-                <circle
-                    cx="12"
-                    cy="12"
-                    r="4"
-                ></circle>
-
-                <circle
-                    cx="17.5"
-                    cy="6.5"
-                    r="1"
-                    class="instagram-dot"
-                ></circle>
-
-            </svg>
-
-
-            <span>
-                Instagram
-            </span>
-
-
-            <span class="social-arrow">
-                ↗
-            </span>
-
-        </a>
-
-    </div>
-
-
-
-    <div class="footer-bottom">
-
-        <span>
-            © HAMMER CRAFT
         </span>
 
         <span>
@@ -1035,86 +1555,39 @@
     </div>
 
 
+    <div>
+
+        <a href="customer.html">
+            ACCOUNT
+        </a>
+
+        <a href="#models">
+            MODELS
+        </a>
+
+        <a href="#customTuning">
+            TUNING
+        </a>
+
+    </div>
+
 </footer>
 
 
-</main>
 
-
+<!-- =====================================================
+     SCRIPTS
+===================================================== -->
 
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="supabase-client.js?v=20"></script>
 
-<script src="models.js?v=60"></script>
-
+<script src="supabase-client.js"></script>
 
 
-<script>
-
-const mobileMenuButton =
-    document.getElementById(
-        "mobileMenuButton"
-    );
-
-
-const mobileMenu =
-    document.getElementById(
-        "mobileMenu"
-    );
-
-
-mobileMenuButton.addEventListener(
-    "click",
-    () => {
-
-        const open =
-            mobileMenu
-                .classList
-                .toggle(
-                    "open"
-                );
-
-
-        mobileMenuButton.textContent =
-            open
-            ? "CLOSE"
-            : "MENU";
-
-    }
-);
-
-
-mobileMenu
-    .querySelectorAll(
-        "a"
-    )
-    .forEach(
-        link => {
-
-            link.addEventListener(
-                "click",
-                () => {
-
-                    mobileMenu
-                        .classList
-                        .remove(
-                            "open"
-                        );
-
-
-                    mobileMenuButton.textContent =
-                        "MENU";
-
-                }
-            );
-
-        }
-    );
-
-</script>
+<script src="custom-tuning.js?v=2"></script>
 
 
 </body>
