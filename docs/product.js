@@ -214,6 +214,9 @@ function getSoundSignatureLabel(
         bass:
             "BASS FOCUSED",
 
+        bass_focused:
+            "BASS FOCUSED",
+
         bright:
             "BRIGHT",
 
@@ -251,7 +254,7 @@ function getSoundSignatureLabel(
 
 
 /* =========================================================
-   RECOMMENDED FOR
+   RECOMMENDED FOR LABEL
 ========================================================= */
 
 function getRecommendedForLabel(
@@ -290,17 +293,17 @@ function getRecommendedForLabel(
         gaming:
             "GAMING",
 
-        acoustic:
-            "ACOUSTIC",
-
-        electronic:
-            "ELECTRONIC",
-
         all_round:
             "ALL-ROUND",
 
         allround:
-            "ALL-ROUND"
+            "ALL-ROUND",
+
+        acoustic:
+            "ACOUSTIC",
+
+        electronic:
+            "ELECTRONIC"
 
     };
 
@@ -388,7 +391,7 @@ function getProductImage(
 
 
 /* =========================================================
-   DESCRIPTION
+   PRODUCT DESCRIPTION
 ========================================================= */
 
 function getProductDescription(
@@ -409,7 +412,7 @@ function getProductDescription(
 
 
 /* =========================================================
-   PRICE
+   PRODUCT PRICE
 ========================================================= */
 
 function getProductPrice(
@@ -457,7 +460,7 @@ function getProductPrice(
 
 
 /* =========================================================
-   ACTION LABEL
+   PRODUCT ACTION TEXT
 ========================================================= */
 
 function getProductActionText(
@@ -496,6 +499,11 @@ function getProductSoundSignature(
     }
 
 
+    /*
+     * Custom products display CUSTOM if no explicit
+     * sound signature has been assigned.
+     */
+
     if (
         product.tuning_type ===
             "custom"
@@ -518,7 +526,7 @@ function getProductSoundSignature(
 
 
 /* =========================================================
-   NORMALISE RECOMMENDATIONS
+   NORMALISE RECOMMENDED FOR
 ========================================================= */
 
 function getProductRecommendedFor(
@@ -550,6 +558,11 @@ function getProductRecommendedFor(
 
     }
 
+
+    /*
+     * This fallback also supports a comma-separated
+     * string if one ever exists in the database.
+     */
 
     if (
         typeof value ===
@@ -645,7 +658,7 @@ function renderRecommendedFor(
 
 
 /* =========================================================
-   PRODUCT CARD
+   RENDER PRODUCT CARD
 ========================================================= */
 
 function renderProductCard(
@@ -719,6 +732,10 @@ function renderProductCard(
             }"
         >
 
+            <!-- =============================================
+                 IMAGE
+            ============================================== -->
+
             <a
                 href="${
                     escapeHtml(
@@ -726,6 +743,13 @@ function renderProductCard(
                     )
                 }"
                 class="dynamic-product-image"
+                aria-label="View ${
+                    escapeHtml(
+                        product.name
+                        ||
+                        "product"
+                    )
+                }"
             >
 
                 ${
@@ -763,15 +787,18 @@ function renderProductCard(
                 <div class="dynamic-product-image-fallback">
 
                     <span>
+
                         ${
                             escapeHtml(
                                 categoryLabel
                             )
                         }
+
                     </span>
 
 
                     <strong>
+
                         ${
                             escapeHtml(
                                 product.name
@@ -779,6 +806,7 @@ function renderProductCard(
                                 "Hammer Craft"
                             )
                         }
+
                     </strong>
 
                 </div>
@@ -786,29 +814,44 @@ function renderProductCard(
             </a>
 
 
+
+            <!-- =============================================
+                 PRODUCT INFORMATION
+            ============================================== -->
+
             <div class="dynamic-product-body">
+
+
+                <!-- TOP LINE -->
 
                 <div class="dynamic-product-topline">
 
                     <span>
+
                         ${
                             escapeHtml(
                                 categoryLabel
                             )
                         }
+
                     </span>
 
 
                     <span>
+
                         ${
                             escapeHtml(
                                 statusLabel
                             )
                         }
+
                     </span>
 
                 </div>
 
+
+
+                <!-- PRODUCT NAME -->
 
                 <h2>
 
@@ -822,6 +865,9 @@ function renderProductCard(
 
                 </h2>
 
+
+
+                <!-- SUBTITLE -->
 
                 ${
                     product.subtitle
@@ -844,6 +890,9 @@ function renderProductCard(
                 }
 
 
+
+                <!-- DESCRIPTION -->
+
                 ${
                     description
                     ?
@@ -865,14 +914,24 @@ function renderProductCard(
                 }
 
 
+
+                <!-- =========================================
+                     MAIN PRODUCT TAGS
+                ========================================== -->
+
                 <div class="dynamic-product-tags">
+
+
+                    <!-- SOUND SIGNATURE -->
 
                     ${
                         soundSignature
                         ?
                         `
 
-                            <span class="sound-signature-tag">
+                            <span
+                                class="sound-signature-tag"
+                            >
 
                                 ${
                                     escapeHtml(
@@ -889,6 +948,9 @@ function renderProductCard(
                         ""
                     }
 
+
+
+                    <!-- FIT -->
 
                     ${
                         product.fit_type
@@ -913,12 +975,22 @@ function renderProductCard(
                 </div>
 
 
+
+                <!-- =========================================
+                     RECOMMENDED FOR
+                ========================================== -->
+
                 ${
                     renderRecommendedFor(
                         product
                     )
                 }
 
+
+
+                <!-- =========================================
+                     OPTIONAL CAPABILITIES
+                ========================================== -->
 
                 <div class="dynamic-product-capabilities">
 
@@ -962,10 +1034,17 @@ function renderProductCard(
                 </div>
 
 
+
+                <!-- =========================================
+                     FOOTER
+                ========================================== -->
+
                 <div class="dynamic-product-footer">
 
                     <strong>
+
                         ${price}
+
                     </strong>
 
 
@@ -976,7 +1055,9 @@ function renderProductCard(
                             )
                         }"
                     >
+
                         ${actionText}
+
                     </a>
 
                 </div>
@@ -1082,7 +1163,10 @@ function renderCatalogue() {
     grid.innerHTML =
         visibleProducts
             .map(
-                renderProductCard
+                product =>
+                    renderProductCard(
+                        product
+                    )
             )
             .join("");
 
@@ -1090,7 +1174,7 @@ function renderCatalogue() {
 
 
 /* =========================================================
-   LOAD PRODUCTS
+   LOAD PRODUCTS FROM SUPABASE
 ========================================================= */
 
 async function loadCatalogueProducts() {
@@ -1176,6 +1260,12 @@ async function loadCatalogueProducts() {
         }
 
 
+        /*
+         * COMING SOON REMAINS PUBLIC.
+         *
+         * Only hidden products are excluded.
+         */
+
         catalogueProducts =
             (
                 data
@@ -1183,15 +1273,21 @@ async function loadCatalogueProducts() {
                 []
             )
                 .filter(
-                    product =>
+                    product => {
 
-                        product.public_visible ===
-                            true
+                        return (
 
-                        &&
+                            product.public_visible ===
+                                true
 
-                        product.status !==
-                            "hidden"
+                            &&
+
+                            product.status !==
+                                "hidden"
+
+                        );
+
+                    }
                 );
 
 
@@ -1228,7 +1324,7 @@ async function loadCatalogueProducts() {
 
 
 /* =========================================================
-   FILTER
+   PRODUCT FILTER
 ========================================================= */
 
 function setCatalogueCategory(
