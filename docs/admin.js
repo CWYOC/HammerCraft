@@ -330,6 +330,10 @@ function toDateTimeLocalValue(
 }
 
 
+/* =========================================================
+   LABEL HELPERS
+========================================================= */
+
 function statusLabel(
     status
 ) {
@@ -407,6 +411,224 @@ function categoryLabel(
             )
             .toUpperCase()
     );
+
+}
+
+
+function soundSignatureLabel(
+    signature
+) {
+
+    const labels = {
+
+        clear:
+            "CLEAR",
+
+        warm:
+            "WARM",
+
+        balanced:
+            "BALANCED",
+
+        classical:
+            "CLASSICAL",
+
+        vocal:
+            "VOCAL",
+
+        bass:
+            "BASS FOCUSED",
+
+        bright:
+            "BRIGHT",
+
+        smooth:
+            "SMOOTH",
+
+        v_shape:
+            "V-SHAPE",
+
+        studio:
+            "STUDIO",
+
+        custom:
+            "CUSTOM"
+
+    };
+
+
+    return (
+        labels[
+            signature
+        ]
+        ||
+        String(
+            signature ?? ""
+        )
+            .replaceAll(
+                "_",
+                " "
+            )
+            .toUpperCase()
+    );
+
+}
+
+
+function recommendedForLabel(
+    value
+) {
+
+    const labels = {
+
+        pop:
+            "POP",
+
+        rock:
+            "ROCK",
+
+        edm:
+            "EDM",
+
+        hiphop:
+            "HIP-HOP",
+
+        hip_hop:
+            "HIP-HOP",
+
+        classical:
+            "CLASSICAL",
+
+        jazz:
+            "JAZZ",
+
+        vocal:
+            "VOCAL",
+
+        studio:
+            "STUDIO / MIXING",
+
+        gaming:
+            "GAMING",
+
+        acoustic:
+            "ACOUSTIC",
+
+        electronic:
+            "ELECTRONIC",
+
+        all_round:
+            "ALL-ROUND",
+
+        allround:
+            "ALL-ROUND"
+
+    };
+
+
+    return (
+        labels[
+            value
+        ]
+        ||
+        String(
+            value ?? ""
+        )
+            .replaceAll(
+                "_",
+                " "
+            )
+            .toUpperCase()
+    );
+
+}
+
+
+/* =========================================================
+   RECOMMENDED-FOR HELPERS
+========================================================= */
+
+function getCheckedRecommendedValues(
+    selector
+) {
+
+    return Array
+        .from(
+            document.querySelectorAll(
+                selector
+            )
+        )
+        .filter(
+            checkbox =>
+                checkbox.checked
+        )
+        .map(
+            checkbox =>
+                checkbox.value
+        );
+
+}
+
+
+function setCheckedRecommendedValues(
+    selector,
+    values
+) {
+
+    let normalizedValues =
+        [];
+
+
+    if (
+        Array.isArray(
+            values
+        )
+    ) {
+
+        normalizedValues =
+            values;
+
+    }
+
+    else if (
+        typeof values ===
+        "string"
+    ) {
+
+        normalizedValues =
+            values
+                .split(",")
+                .map(
+                    item =>
+                        item.trim()
+                )
+                .filter(
+                    Boolean
+                );
+
+    }
+
+
+    const selected =
+        new Set(
+            normalizedValues
+        );
+
+
+    document
+        .querySelectorAll(
+            selector
+        )
+        .forEach(
+            checkbox => {
+
+                checkbox.checked =
+                    selected.has(
+                        checkbox.value
+                    );
+
+            }
+        );
 
 }
 
@@ -573,10 +795,6 @@ function showConfirm(
         );
 
 
-    /*
-     * Older admin.html uses the generic confirm modal.
-     */
-
     if (
         modal
     ) {
@@ -622,10 +840,6 @@ function showConfirm(
 
     }
 
-
-    /*
-     * Fallback if the page does not contain the old modal.
-     */
 
     if (
         window.confirm(
@@ -1531,11 +1745,6 @@ async function deleteScan(
 
 async function queryProcessors() {
 
-    /*
-     * Your older code uses reconstruction_processors.
-     * Some newer schemas use processors.
-     */
-
     let result =
         await window.hcSupabase
             .from(
@@ -1925,7 +2134,19 @@ function renderProducts() {
 
         allProducts
             .map(
-                product => `
+                product => {
+
+                    const recommendedFor =
+                        Array.isArray(
+                            product.recommended_for
+                        )
+                        ?
+                        product.recommended_for
+                        :
+                        [];
+
+
+                    return `
 
                     <article class="admin-product-card">
 
@@ -2039,6 +2260,84 @@ function renderProducts() {
                                 }
 
                             </p>
+
+
+                            ${
+                                product.sound_signature
+                                ?
+                                `
+
+                                    <div class="product-sound-signature">
+
+                                        <span>
+                                            SOUND
+                                        </span>
+
+                                        <strong>
+
+                                            ${
+                                                escapeHtml(
+                                                    soundSignatureLabel(
+                                                        product.sound_signature
+                                                    )
+                                                )
+                                            }
+
+                                        </strong>
+
+                                    </div>
+
+                                `
+                                :
+                                ""
+                            }
+
+
+                            ${
+                                recommendedFor.length >
+                                0
+                                ?
+                                `
+
+                                    <div class="product-recommended-admin">
+
+                                        <span>
+                                            RECOMMENDED FOR
+                                        </span>
+
+
+                                        <div>
+
+                                            ${
+                                                recommendedFor
+                                                    .map(
+                                                        value => `
+
+                                                            <span>
+
+                                                                ${
+                                                                    escapeHtml(
+                                                                        recommendedForLabel(
+                                                                            value
+                                                                        )
+                                                                    )
+                                                                }
+
+                                                            </span>
+
+                                                        `
+                                                    )
+                                                    .join("")
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+                                `
+                                :
+                                ""
+                            }
 
 
                             <div class="product-admin-meta">
@@ -2221,7 +2520,9 @@ function renderProducts() {
 
                     </article>
 
-                `
+                `;
+
+                }
             )
             .join("");
 
@@ -2346,6 +2647,19 @@ function readCreateProductFields() {
             )
             ||
             "reference",
+
+        soundSignature:
+            getValue(
+                "newProductSoundSignature",
+                "productSoundSignature"
+            )
+            ||
+            "",
+
+        recommendedFor:
+            getCheckedRecommendedValues(
+                ".newProductRecommended"
+            ),
 
         price:
             getValue(
@@ -2551,6 +2865,14 @@ async function createProduct() {
             tuning_type:
                 fields.tuningType,
 
+            sound_signature:
+                fields.soundSignature
+                ||
+                null,
+
+            recommended_for:
+                fields.recommendedFor,
+
             price_gbp:
                 Math.max(
                     0,
@@ -2579,10 +2901,6 @@ async function createProduct() {
                         )
                     )
                 ),
-
-            /*
-             * THIS PRESERVES COMING SOON
-             */
 
             status:
                 fields.status
@@ -2618,10 +2936,6 @@ async function createProduct() {
 
             preorder_enabled:
                 fields.preorder,
-
-            /*
-             * Keep your existing database names.
-             */
 
             custom_fit:
                 fields.customFit,
@@ -2859,7 +3173,10 @@ async function uploadProductImage(
             .update({
 
                 image_url:
-                    data.publicUrl
+                    data.publicUrl,
+
+                image_path:
+                    path
 
             })
             .eq(
@@ -2894,7 +3211,10 @@ async function updateProductBoolean(
 
             "public_visible",
             "ordering_enabled",
-            "featured"
+            "featured",
+            "preorder_enabled",
+            "custom_fit",
+            "custom_tuning"
 
         ]);
 
@@ -3098,6 +3418,22 @@ function openEditProduct(
 
 
     setValue(
+        product.sound_signature
+        ||
+        "",
+        "editProductSoundSignature"
+    );
+
+
+    setCheckedRecommendedValues(
+        ".editProductRecommended",
+        product.recommended_for
+        ||
+        []
+    );
+
+
+    setValue(
         product.price_gbp
         ??
         0,
@@ -3120,10 +3456,6 @@ function openEditProduct(
         "editProductLowThreshold"
     );
 
-
-    /*
-     * COMING SOON IS FULLY SUPPORTED.
-     */
 
     setValue(
         product.status
@@ -3407,6 +3739,18 @@ async function saveProductEdit() {
                 ||
                 "reference",
 
+            sound_signature:
+                getValue(
+                    "editProductSoundSignature"
+                )
+                ||
+                null,
+
+            recommended_for:
+                getCheckedRecommendedValues(
+                    ".editProductRecommended"
+                ),
+
             price_gbp:
                 Math.max(
                     0,
@@ -3441,10 +3785,6 @@ async function saveProductEdit() {
                         )
                     )
                 ),
-
-            /*
-             * THIS IS WHERE COMING SOON IS SAVED.
-             */
 
             status:
                 getValue(
@@ -3524,10 +3864,6 @@ async function saveProductEdit() {
                 ||
                 null,
 
-            /*
-             * DESCRIPTION EDITING
-             */
-
             short_description:
                 getValue(
                     "editProductShortDescription"
@@ -3546,13 +3882,6 @@ async function saveProductEdit() {
 
         };
 
-
-        /*
-         * Your existing database uses custom_fit/custom_tuning.
-         * Some newer versions use *_available.
-         *
-         * Preserve the schema already present on this product.
-         */
 
         if (
             existingProduct
@@ -4053,10 +4382,6 @@ function resetProductForm() {
     );
 
 
-    /*
-     * DEFAULT STATUS RETURNS TO COMING SOON.
-     */
-
     setValue(
         "coming_soon",
         "newProductStatus",
@@ -4082,6 +4407,19 @@ function resetProductForm() {
         "reference",
         "newProductTuningType",
         "productTuningType"
+    );
+
+
+    setValue(
+        "",
+        "newProductSoundSignature",
+        "productSoundSignature"
+    );
+
+
+    setCheckedRecommendedValues(
+        ".newProductRecommended",
+        []
     );
 
 
@@ -4156,6 +4494,22 @@ function resetProductForm() {
         "newProductReferenceTarget"
     );
 
+
+    const slugInput =
+        byId(
+            "newProductSlug",
+            "productSlug"
+        );
+
+
+    if (
+        slugInput
+    ) {
+
+        delete slugInput.dataset.manual;
+
+    }
+
 }
 
 
@@ -4204,10 +4558,6 @@ function handleProductNameInput() {
 
 /* =========================================================
    FREQUENCY RESPONSE TABLE HELPERS
-
-   Supports both:
-   product_frequency_response
-   product_frequency_responses
 ========================================================= */
 
 async function runFrQuery(
@@ -4891,11 +5241,6 @@ function drawAdminFrChart(
         );
 
 
-    /*
-     * Give canvas a useful internal resolution if the newer
-     * admin.html did not specify width/height.
-     */
-
     if (
         canvas.width <
         500
@@ -5038,7 +5383,7 @@ function drawAdminFrChart(
         );
 
 
-    const minDb =
+    let minDb =
         Math.floor(
             Math.min(
                 ...dbValues
@@ -5052,7 +5397,7 @@ function drawAdminFrChart(
         5;
 
 
-    const maxDb =
+    let maxDb =
         Math.ceil(
             Math.max(
                 ...dbValues
@@ -5064,6 +5409,21 @@ function drawAdminFrChart(
         5
         +
         5;
+
+
+    if (
+        maxDb ===
+        minDb
+    ) {
+
+        maxDb +=
+            5;
+
+
+        minDb -=
+            5;
+
+    }
 
 
     function xFromFrequency(
@@ -5473,11 +5833,6 @@ async function saveFrequencyResponse() {
     }
 
 
-    /*
-     * Newer HTML can use one upload button without a
-     * separate Preview button.
-     */
-
     if (
         parsedFrequencyResponse.length ===
         0
@@ -5762,6 +6117,16 @@ async function loadExistingFrequencyResponse() {
                             )
 
                     })
+                )
+                .filter(
+                    point =>
+                        Number.isFinite(
+                            point.frequency
+                        )
+                        &&
+                        Number.isFinite(
+                            point.db
+                        )
                 );
 
 
@@ -5930,7 +6295,7 @@ function confirmDeleteFrequencyResponse() {
 
 
 /* =========================================================
-   SET REFERENCE FROM NEWER FR SECTION
+   SET REFERENCE FROM FR SECTION
 ========================================================= */
 
 async function setSelectedReferenceProduct() {
@@ -6050,10 +6415,6 @@ function setupAdminNavigation() {
 
 function setupEvents() {
 
-    /*
-     * LOGOUT
-     */
-
     byId(
         "adminLogoutButton",
         "logoutButton"
@@ -6063,10 +6424,6 @@ function setupEvents() {
             logoutAdmin
         );
 
-
-    /*
-     * REFRESH
-     */
 
     byId(
         "refreshAccountsButton"
@@ -6104,10 +6461,6 @@ function setupEvents() {
         );
 
 
-    /*
-     * SCAN FILTER
-     */
-
     byId(
         "scanStatusFilter"
     )
@@ -6135,10 +6488,6 @@ function setupEvents() {
             }
         );
 
-
-    /*
-     * ACCOUNT SEARCH
-     */
 
     byId(
         "accountSearchInput",
@@ -6203,10 +6552,6 @@ function setupEvents() {
         );
 
 
-    /*
-     * PRODUCT CREATE
-     */
-
     byId(
         "newProductName",
         "productName"
@@ -6225,12 +6570,21 @@ function setupEvents() {
             "input",
             event => {
 
-                event.target.dataset.manual =
+                if (
                     event.target.value
-                    ?
-                    "true"
-                    :
-                    "";
+                        .trim()
+                ) {
+
+                    event.target.dataset.manual =
+                        "true";
+
+                }
+
+                else {
+
+                    delete event.target.dataset.manual;
+
+                }
 
             }
         );
@@ -6244,10 +6598,6 @@ function setupEvents() {
             createProduct
         );
 
-
-    /*
-     * EDIT PRODUCT
-     */
 
     byId(
         "closeEditProductButton"
@@ -6287,10 +6637,6 @@ function setupEvents() {
         );
 
 
-    /*
-     * FR
-     */
-
     byId(
         "previewFrButton"
     )
@@ -6307,10 +6653,6 @@ function setupEvents() {
         ?.addEventListener(
             "click",
             async () => {
-
-                /*
-                 * Newer admin only has one upload button.
-                 */
 
                 if (
                     parsedFrequencyResponse.length ===
@@ -6388,10 +6730,6 @@ function setupEvents() {
         );
 
 
-    /*
-     * CONFIRM MODAL
-     */
-
     byId(
         "confirmCancelButton"
     )
@@ -6424,10 +6762,6 @@ function setupEvents() {
         );
 
 
-    /*
-     * ESCAPE CLOSES EDIT MODAL
-     */
-
     document.addEventListener(
         "keydown",
         event => {
@@ -6453,6 +6787,42 @@ function setupEvents() {
 
 
 /* =========================================================
+   EXPOSE INLINE FUNCTIONS
+========================================================= */
+
+window.queueScan =
+    queueScan;
+
+
+window.retryScan =
+    retryScan;
+
+
+window.confirmDeleteScan =
+    confirmDeleteScan;
+
+
+window.updateProductBoolean =
+    updateProductBoolean;
+
+
+window.openEditProduct =
+    openEditProduct;
+
+
+window.setReferenceProduct =
+    setReferenceProduct;
+
+
+window.openProductPage =
+    openProductPage;
+
+
+window.confirmDeleteProduct =
+    confirmDeleteProduct;
+
+
+/* =========================================================
    START
 ========================================================= */
 
@@ -6475,11 +6845,6 @@ async function startAdmin() {
 
         setupEvents();
 
-
-        /*
-         * Load scans first because account statistics use
-         * allScans to calculate "accounts with scans".
-         */
 
         await loadScans();
 
