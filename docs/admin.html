@@ -16,7 +16,7 @@
 
 
     <!-- =====================================================
-         FAVICON
+         FAVICONS
     ====================================================== -->
 
     <link
@@ -36,7 +36,7 @@
     <link
         rel="apple-touch-icon"
         sizes="180x180"
-        href="assets/apple-touch-icon.png"
+        href="assets/favicon-180.png"
     >
 
     <link
@@ -45,13 +45,16 @@
     >
 
 
+    <!-- =====================================================
+         CSS
+    ====================================================== -->
+
     <link
         rel="stylesheet"
-        href="admin.css?v=50"
+        href="admin.css?v=61"
     >
 
 </head>
-
 
 
 <body>
@@ -63,61 +66,91 @@
 
 <header class="admin-header">
 
-    <a
-        href="index.html"
-        class="admin-brand"
-    >
+    <div class="admin-header-inner">
 
-        <img
-            src="assets/logo.png"
-            alt="Hammer Craft"
+
+        <!-- BRAND -->
+
+        <a
+            href="index.html"
+            class="admin-brand"
         >
 
-        <span>
-            HAMMER CRAFT
-        </span>
+            <img
+                src="assets/logo.png"
+                alt="Hammer Craft"
+                class="admin-logo"
+            >
 
-    </a>
+            <span>
+                HAMMER CRAFT
+            </span>
 
-
-    <nav class="admin-nav">
-
-        <a href="#accounts">
-            ACCOUNTS
         </a>
 
-        <a href="#scans">
-            SCANS
-        </a>
-
-        <a href="#processors">
-            PROCESSORS
-        </a>
-
-        <a href="#products">
-            PRODUCTS
-        </a>
-
-        <a href="#frequencyResponse">
-            FR DATA
-        </a>
-
-    </nav>
 
 
-    <div class="admin-header-right">
+        <!-- NAVIGATION -->
 
-        <span id="adminEmail">
-            ADMIN
-        </span>
+        <nav class="admin-nav">
+
+            <button
+                type="button"
+                data-section="accounts"
+            >
+                ACCOUNTS
+            </button>
+
+            <button
+                type="button"
+                data-section="scans"
+            >
+                SCANS
+            </button>
+
+            <button
+                type="button"
+                data-section="processors"
+            >
+                PROCESSORS
+            </button>
+
+            <button
+                type="button"
+                data-section="products"
+            >
+                PRODUCTS
+            </button>
+
+            <button
+                type="button"
+                data-section="fr-data"
+            >
+                FR DATA
+            </button>
+
+        </nav>
 
 
-        <button
-            id="adminLogoutButton"
-            type="button"
-        >
-            LOGOUT
-        </button>
+
+        <!-- USER -->
+
+        <div class="admin-user-area">
+
+            <span id="adminEmail">
+                ADMIN
+            </span>
+
+            <button
+                id="logoutButton"
+                type="button"
+                class="outline-button"
+            >
+                LOGOUT
+            </button>
+
+        </div>
+
 
     </div>
 
@@ -125,266 +158,215 @@
 
 
 
-<main class="admin-page">
-
-
 <!-- =========================================================
-     HERO
+     MAIN
 ========================================================= -->
 
-<section class="admin-hero">
-
-    <div class="eyebrow">
-        HAMMER CRAFT / INTERNAL
-    </div>
+<main class="admin-main">
 
 
-    <h1>
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
 
-        Admin
+    <section class="admin-hero">
 
-        <em>
-            dashboard.
-        </em>
-
-    </h1>
-
-
-    <p>
-
-        Manage customer accounts, ear scans,
-        reconstruction processors, product catalogue,
-        stock, product imagery and measured frequency
-        response data.
-
-    </p>
-
-</section>
-
-
-
-<!-- =========================================================
-     MAIN STATS
-========================================================= -->
-
-<section class="admin-stats">
-
-    <article>
-
-        <span>
-            ACCOUNTS
+        <span class="eyebrow">
+            HAMMER CRAFT / CONTROL
         </span>
 
-        <strong id="totalAccounts">
-            —
-        </strong>
+        <h1>
+            Workshop
+            <em>control.</em>
+        </h1>
 
-    </article>
+        <p>
+            Manage customers, ear scans, reconstruction processors,
+            products and acoustic data from one place.
+        </p>
 
-
-    <article>
-
-        <span>
-            TOTAL SCANS
-        </span>
-
-        <strong id="totalScans">
-            —
-        </strong>
-
-    </article>
-
-
-    <article>
-
-        <span>
-            PROCESSING
-        </span>
-
-        <strong id="processingScans">
-            —
-        </strong>
-
-    </article>
-
-
-    <article>
-
-        <span>
-            COMPLETE
-        </span>
-
-        <strong id="completeScans">
-            —
-        </strong>
-
-    </article>
-
-
-    <article>
-
-        <span>
-            FAILED
-        </span>
-
-        <strong id="failedScans">
-            —
-        </strong>
-
-    </article>
-
-
-    <article>
-
-        <span>
-            PRODUCTS
-        </span>
-
-        <strong id="totalProducts">
-            —
-        </strong>
-
-    </article>
-
-</section>
+    </section>
 
 
 
-<!-- =========================================================
-     ACCOUNTS
-========================================================= -->
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
 
-<section
-    id="accounts"
-    class="admin-section"
->
+    <section class="admin-stats">
 
-    <div class="section-heading">
+        <article class="admin-stat-card">
 
-        <div>
+            <span>
+                ACCOUNTS
+            </span>
 
-            <div class="eyebrow">
-                CUSTOMER MANAGEMENT
+            <strong id="totalAccounts">
+                0
+            </strong>
+
+        </article>
+
+
+        <article class="admin-stat-card">
+
+            <span>
+                EAR SCANS
+            </span>
+
+            <strong id="totalScans">
+                0
+            </strong>
+
+        </article>
+
+
+        <article class="admin-stat-card">
+
+            <span>
+                PROCESSING
+            </span>
+
+            <strong id="processingScans">
+                0
+            </strong>
+
+        </article>
+
+
+        <article class="admin-stat-card">
+
+            <span>
+                COMPLETE
+            </span>
+
+            <strong id="completeScans">
+                0
+            </strong>
+
+        </article>
+
+
+        <article class="admin-stat-card">
+
+            <span>
+                PRODUCTS
+            </span>
+
+            <strong id="totalProducts">
+                0
+            </strong>
+
+        </article>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         ACCOUNTS
+    ====================================================== -->
+
+    <section
+        id="accountsSection"
+        class="admin-section"
+        data-admin-section="accounts"
+    >
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    CUSTOMER DATA
+                </span>
+
+                <h2>
+                    Accounts.
+                </h2>
+
             </div>
-
-            <h2>
-                Accounts.
-            </h2>
 
         </div>
 
 
-        <div class="section-tools">
+        <div class="admin-toolbar">
 
             <input
-                id="accountSearchInput"
-                class="admin-search"
+                id="accountSearch"
                 type="search"
                 placeholder="Search name or email"
             >
 
-
             <button
                 id="refreshAccountsButton"
-                class="outline-button"
                 type="button"
+                class="outline-button"
             >
                 REFRESH
             </button>
 
         </div>
 
-    </div>
+
+        <div
+            id="accountsMessage"
+            class="admin-message"
+        ></div>
 
 
-    <div class="account-summary">
+        <div
+            id="accountsGrid"
+            class="admin-grid"
+        >
 
-        <article>
-
-            <span>
-                TOTAL ACCOUNTS
-            </span>
-
-            <strong id="accountSummaryTotal">
-                —
-            </strong>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                WITH SCANS
-            </span>
-
-            <strong id="accountsWithScans">
-                —
-            </strong>
-
-        </article>
-
-
-        <article>
-
-            <span>
-                ADMINS
-            </span>
-
-            <strong id="totalAdmins">
-                —
-            </strong>
-
-        </article>
-
-    </div>
-
-
-    <div
-        id="adminAccountList"
-        class="account-grid"
-    >
-
-        <div class="loading-card">
-            Loading accounts...
-        </div>
-
-    </div>
-
-</section>
-
-
-
-<!-- =========================================================
-     SCANS
-========================================================= -->
-
-<section
-    id="scans"
-    class="admin-section"
->
-
-    <div class="section-heading">
-
-        <div>
-
-            <div class="eyebrow">
-                DIGITAL FIT
+            <div class="loading-card">
+                Loading accounts...
             </div>
 
-            <h2>
-                Ear scans.
-            </h2>
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         SCANS
+    ====================================================== -->
+
+    <section
+        id="scansSection"
+        class="admin-section"
+        data-admin-section="scans"
+    >
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    EAR RECONSTRUCTION
+                </span>
+
+                <h2>
+                    Ear scans.
+                </h2>
+
+            </div>
 
         </div>
 
 
-        <div class="section-tools">
+        <div class="admin-toolbar">
 
-            <select
-                id="scanStatusFilter"
-                class="admin-select"
+            <input
+                id="scanSearch"
+                type="search"
+                placeholder="Search user, order or scan"
             >
+
+
+            <select id="scanStatusFilter">
 
                 <option value="">
                     All statuses
@@ -392,10 +374,6 @@
 
                 <option value="uploaded">
                     Uploaded
-                </option>
-
-                <option value="queued">
-                    Queued
                 </option>
 
                 <option value="processing">
@@ -414,274 +392,888 @@
 
 
             <button
-                id="clearScanFilterButton"
-                class="outline-button"
-                type="button"
-            >
-                SHOW ALL
-            </button>
-
-
-            <button
                 id="refreshScansButton"
-                class="outline-button"
                 type="button"
+                class="outline-button"
             >
                 REFRESH
             </button>
 
         </div>
 
-    </div>
+
+        <div
+            id="scansMessage"
+            class="admin-message"
+        ></div>
 
 
-    <div
-        id="activeScanFilter"
-        class="active-filter"
-        hidden
-    ></div>
+        <div
+            id="scansGrid"
+            class="admin-grid"
+        >
 
-
-    <div
-        id="adminScanList"
-        class="scan-grid"
-    >
-
-        <div class="loading-card">
-            Loading scans...
-        </div>
-
-    </div>
-
-</section>
-
-
-
-<!-- =========================================================
-     PROCESSORS
-========================================================= -->
-
-<section
-    id="processors"
-    class="admin-section"
->
-
-    <div class="section-heading">
-
-        <div>
-
-            <div class="eyebrow">
-                RECONSTRUCTION NETWORK
+            <div class="loading-card">
+                Loading scans...
             </div>
 
-            <h2>
-                Processors.
-            </h2>
-
         </div>
 
-
-        <button
-            id="refreshProcessorsButton"
-            class="outline-button"
-            type="button"
-        >
-            REFRESH
-        </button>
-
-    </div>
-
-
-    <div
-        id="processorList"
-        class="processor-grid"
-    >
-
-        <div class="loading-card">
-            Loading processors...
-        </div>
-
-    </div>
-
-</section>
-
-
-
-<!-- =========================================================
-     PRODUCTS
-========================================================= -->
-
-<section
-    id="products"
-    class="admin-section"
->
-
-    <div class="section-heading">
-
-        <div>
-
-            <div class="eyebrow">
-                PRODUCT CONTROL
-            </div>
-
-            <h2>
-                Models & stock.
-            </h2>
-
-        </div>
-
-
-        <button
-            id="refreshProductsButton"
-            class="outline-button"
-            type="button"
-        >
-            REFRESH
-        </button>
-
-    </div>
+    </section>
 
 
 
     <!-- =====================================================
-         INVENTORY SUMMARY
+         PROCESSORS
     ====================================================== -->
 
-    <div class="inventory-summary">
+    <section
+        id="processorsSection"
+        class="admin-section"
+        data-admin-section="processors"
+    >
 
-        <article>
+        <div class="section-heading">
 
-            <span>
-                IN STOCK
-            </span>
+            <div>
 
-            <strong id="productsInStock">
-                —
-            </strong>
+                <span class="eyebrow">
+                    RECONSTRUCTION NETWORK
+                </span>
 
-        </article>
+                <h2>
+                    Processors.
+                </h2>
 
+            </div>
 
-        <article>
-
-            <span>
-                LOW STOCK
-            </span>
-
-            <strong id="productsLowStock">
-                —
-            </strong>
-
-        </article>
+        </div>
 
 
-        <article>
+        <div class="admin-toolbar">
 
-            <span>
-                OUT OF STOCK
-            </span>
+            <button
+                id="refreshProcessorsButton"
+                type="button"
+                class="outline-button"
+            >
+                REFRESH
+            </button>
 
-            <strong id="productsOutStock">
-                —
-            </strong>
-
-        </article>
+        </div>
 
 
-        <article>
+        <div
+            id="processorsMessage"
+            class="admin-message"
+        ></div>
 
-            <span>
-                COMING SOON
-            </span>
 
-            <strong id="productsComingSoon">
-                —
-            </strong>
+        <div
+            id="processorsGrid"
+            class="admin-grid"
+        >
 
-        </article>
+            <div class="loading-card">
+                Loading processors...
+            </div>
 
-    </div>
+        </div>
+
+    </section>
 
 
 
     <!-- =====================================================
-         CREATE PRODUCT
+         PRODUCTS
     ====================================================== -->
 
-    <div class="create-product-panel">
+    <section
+        id="productsSection"
+        class="admin-section"
+        data-admin-section="products"
+    >
 
-        <div class="panel-heading">
+        <div class="section-heading">
 
-            <span>
-                CATALOG CONTROL
+            <div>
+
+                <span class="eyebrow">
+                    PRODUCT CATALOGUE
+                </span>
+
+                <h2>
+                    Products.
+                </h2>
+
+                <p>
+                    Create products, control availability and manage
+                    the information shown on the public catalogue.
+                </p>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             CREATE PRODUCT
+        ================================================== -->
+
+        <div class="admin-panel">
+
+            <div class="panel-heading">
+
+                <span class="eyebrow">
+                    NEW PRODUCT
+                </span>
+
+                <h3>
+                    Add product.
+                </h3>
+
+            </div>
+
+
+            <div class="product-form-grid">
+
+
+                <label>
+
+                    MODEL NAME
+
+                    <input
+                        id="productName"
+                        type="text"
+                        placeholder="HC Reference 01"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    SKU
+
+                    <input
+                        id="productSku"
+                        type="text"
+                        placeholder="HC-REF-01"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    SLUG
+
+                    <input
+                        id="productSlug"
+                        type="text"
+                        placeholder="hc-reference-01"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    CATEGORY
+
+                    <select id="productCategory">
+
+                        <option value="reference">
+                            Reference
+                        </option>
+
+                        <option value="custom_tune">
+                            Custom sound
+                        </option>
+
+                        <option value="custom_fit">
+                            Custom fit
+                        </option>
+
+                        <option value="full_custom">
+                            Full custom
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+
+                <label>
+
+                    FIT TYPE
+
+                    <select id="productFitType">
+
+                        <option value="universal">
+                            Universal
+                        </option>
+
+                        <option value="ear_specific">
+                            Ear-specific
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+
+                <label>
+
+                    TUNING TYPE
+
+                    <select id="productTuningType">
+
+                        <option value="reference">
+                            Reference
+                        </option>
+
+                        <option value="custom">
+                            Custom
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+
+                <label>
+
+                    PRICE GBP
+
+                    <input
+                        id="productPrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value="0"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    STOCK QUANTITY
+
+                    <input
+                        id="productStock"
+                        type="number"
+                        min="0"
+                        value="0"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    LOW STOCK AT
+
+                    <input
+                        id="productLowThreshold"
+                        type="number"
+                        min="0"
+                        value="3"
+                    >
+
+                </label>
+
+
+
+                <!-- =========================================
+                     COMING SOON IS HERE
+                ========================================== -->
+
+                <label>
+
+                    STATUS
+
+                    <select id="productStatus">
+
+                        <option value="coming_soon">
+                            Coming soon
+                        </option>
+
+                        <option value="in_stock">
+                            In stock
+                        </option>
+
+                        <option value="low_stock">
+                            Low stock
+                        </option>
+
+                        <option value="out_of_stock">
+                            Out of stock
+                        </option>
+
+                        <option value="hidden">
+                            Hidden
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+
+                <label>
+
+                    DISPLAY ORDER
+
+                    <input
+                        id="productDisplayOrder"
+                        type="number"
+                        min="0"
+                        value="0"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    LAUNCH DATE
+
+                    <input
+                        id="productLaunchDate"
+                        type="datetime-local"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    MAX PER ORDER
+
+                    <input
+                        id="productMaxPerOrder"
+                        type="number"
+                        min="1"
+                        value="1"
+                    >
+
+                </label>
+
+
+
+                <label>
+
+                    DETAIL PAGE
+
+                    <input
+                        id="productDetailPage"
+                        type="text"
+                        placeholder="products/hc-reference-01.html"
+                    >
+
+                </label>
+
+
+            </div>
+
+
+
+            <!-- =============================================
+                 PRODUCT OPTIONS
+            ============================================== -->
+
+            <div class="product-option-grid">
+
+
+                <label>
+
+                    <input
+                        id="productPublicVisible"
+                        type="checkbox"
+                        checked
+                    >
+
+                    PUBLIC
+
+                </label>
+
+
+
+                <label>
+
+                    <input
+                        id="productOrderingEnabled"
+                        type="checkbox"
+                    >
+
+                    ORDERING
+
+                </label>
+
+
+
+                <label>
+
+                    <input
+                        id="productFeatured"
+                        type="checkbox"
+                    >
+
+                    FEATURED
+
+                </label>
+
+
+
+                <label>
+
+                    <input
+                        id="productPreorderEnabled"
+                        type="checkbox"
+                    >
+
+                    PREORDER
+
+                </label>
+
+
+
+                <label>
+
+                    <input
+                        id="productCustomFit"
+                        type="checkbox"
+                    >
+
+                    CUSTOM FIT
+
+                </label>
+
+
+
+                <label>
+
+                    <input
+                        id="productCustomTuning"
+                        type="checkbox"
+                    >
+
+                    CUSTOM TUNING
+
+                </label>
+
+
+            </div>
+
+
+
+            <!-- =============================================
+                 PRODUCT TEXT
+            ============================================== -->
+
+            <label class="product-full-field">
+
+                SUBTITLE
+
+                <input
+                    id="productSubtitle"
+                    type="text"
+                    placeholder="Hammer Craft / Universal"
+                >
+
+            </label>
+
+
+
+            <label class="product-full-field">
+
+                SHORT CATALOGUE DESCRIPTION
+
+                <textarea
+                    id="productShortDescription"
+                    placeholder="Short description shown on product.html"
+                ></textarea>
+
+            </label>
+
+
+
+            <label class="product-full-field">
+
+                FULL DESCRIPTION
+
+                <textarea
+                    id="productDescription"
+                    placeholder="Full technical and product description"
+                ></textarea>
+
+            </label>
+
+
+
+            <div
+                id="productCreateMessage"
+                class="admin-message"
+            ></div>
+
+
+
+            <button
+                id="addProductButton"
+                type="button"
+                class="primary-button"
+            >
+                ADD PRODUCT
+            </button>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             EXISTING PRODUCTS
+        ================================================== -->
+
+        <div class="product-list-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    CATALOGUE
+                </span>
+
+                <h3>
+                    Existing products.
+                </h3>
+
+            </div>
+
+
+            <button
+                id="refreshProductsButton"
+                type="button"
+                class="outline-button"
+            >
+                REFRESH
+            </button>
+
+        </div>
+
+
+        <div
+            id="productsMessage"
+            class="admin-message"
+        ></div>
+
+
+        <div
+            id="productsGrid"
+            class="product-admin-grid"
+        >
+
+            <div class="loading-card">
+                Loading products...
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         FREQUENCY RESPONSE DATA
+    ====================================================== -->
+
+    <section
+        id="frDataSection"
+        class="admin-section"
+        data-admin-section="fr-data"
+    >
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    ACOUSTIC DATA
+                </span>
+
+                <h2>
+                    Frequency response.
+                </h2>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- PRODUCT MEASUREMENT -->
+
+        <div class="admin-panel">
+
+            <span class="eyebrow">
+                PRODUCT MEASUREMENT
             </span>
 
             <h3>
-                Add a new model.
+                Upload measured response.
             </h3>
+
+            <p>
+                Upload a CSV or FRD measurement for a product.
+                The public website can use this data for product
+                response graphs and tuning comparison.
+            </p>
+
+
+            <div class="fr-form-grid">
+
+                <label>
+
+                    PRODUCT
+
+                    <select id="frProductSelect">
+
+                        <option value="">
+                            Select product
+                        </option>
+
+                    </select>
+
+                </label>
+
+
+                <label>
+
+                    MEASUREMENT FILE
+
+                    <input
+                        id="frProductFile"
+                        type="file"
+                        accept=".csv,.frd,.txt"
+                    >
+
+                </label>
+
+            </div>
+
+
+            <button
+                id="uploadProductFrButton"
+                type="button"
+                class="primary-button"
+            >
+                UPLOAD MEASUREMENT
+            </button>
+
+
+            <div
+                id="frProductMessage"
+                class="admin-message"
+            ></div>
 
         </div>
 
 
-        <div class="form-grid">
+
+        <!-- REFERENCE TARGET -->
+
+        <div class="admin-panel">
+
+            <span class="eyebrow">
+                REFERENCE TARGET
+            </span>
+
+            <h3>
+                Reference response.
+            </h3>
+
+            <p>
+                Select which product response should be used as the
+                Hammer Craft reference target.
+            </p>
 
 
-            <!-- NAME -->
+            <div class="fr-form-grid">
+
+                <label>
+
+                    REFERENCE PRODUCT
+
+                    <select id="referenceProductSelect">
+
+                        <option value="">
+                            Select product
+                        </option>
+
+                    </select>
+
+                </label>
+
+            </div>
+
+
+            <button
+                id="setReferenceButton"
+                type="button"
+                class="primary-button"
+            >
+                SET REFERENCE
+            </button>
+
+
+            <div
+                id="referenceMessage"
+                class="admin-message"
+            ></div>
+
+        </div>
+
+
+
+        <!-- GRAPH -->
+
+        <div class="admin-panel">
+
+            <span class="eyebrow">
+                RESPONSE PREVIEW
+            </span>
+
+            <h3>
+                Measurement preview.
+            </h3>
+
+
+            <div class="fr-chart-container">
+
+                <canvas id="frChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+
+<!-- =========================================================
+     EDIT PRODUCT MODAL
+========================================================= -->
+
+<div
+    id="editProductModal"
+    class="modal"
+>
+
+    <div class="modal-panel product-edit-modal">
+
+
+        <!-- HEADER -->
+
+        <div class="edit-product-header">
+
+            <div>
+
+                <span class="modal-label">
+                    PRODUCT CONTROL
+                </span>
+
+                <h3>
+                    Edit product.
+                </h3>
+
+            </div>
+
+
+            <button
+                id="closeEditProductButton"
+                class="outline-button"
+                type="button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+
+        <input
+            id="editProductId"
+            type="hidden"
+        >
+
+
+
+        <!-- =================================================
+             BASIC PRODUCT INFORMATION
+        ================================================== -->
+
+        <div class="edit-product-grid">
+
 
             <label>
 
                 MODEL NAME
 
                 <input
-                    id="newProductName"
+                    id="editProductName"
                     type="text"
-                    autocomplete="off"
                 >
 
             </label>
 
 
-
-            <!-- SKU -->
 
             <label>
 
                 SKU
 
                 <input
-                    id="newProductSku"
+                    id="editProductSku"
                     type="text"
-                    autocomplete="off"
                 >
 
             </label>
 
 
-
-            <!-- SLUG -->
 
             <label>
 
                 SLUG
 
                 <input
-                    id="newProductSlug"
+                    id="editProductSlug"
                     type="text"
-                    placeholder="hc-studio"
-                    autocomplete="off"
                 >
 
             </label>
 
 
 
-            <!-- CATEGORY -->
-
             <label>
 
                 CATEGORY
 
-                <select id="newProductCategory">
+                <select id="editProductCategory">
 
                     <option value="reference">
                         Reference
@@ -705,13 +1297,11 @@
 
 
 
-            <!-- FIT -->
-
             <label>
 
                 FIT TYPE
 
-                <select id="newProductFitType">
+                <select id="editProductFitType">
 
                     <option value="universal">
                         Universal
@@ -727,13 +1317,11 @@
 
 
 
-            <!-- TUNING -->
-
             <label>
 
                 TUNING TYPE
 
-                <select id="newProductTuningType">
+                <select id="editProductTuningType">
 
                     <option value="reference">
                         Reference
@@ -749,14 +1337,12 @@
 
 
 
-            <!-- PRICE -->
-
             <label>
 
                 PRICE GBP
 
                 <input
-                    id="newProductPrice"
+                    id="editProductPrice"
                     type="number"
                     min="0"
                     step="0.01"
@@ -766,47 +1352,43 @@
 
 
 
-            <!-- STOCK -->
-
             <label>
 
                 STOCK QUANTITY
 
                 <input
-                    id="newProductStock"
+                    id="editProductStock"
                     type="number"
                     min="0"
-                    value="0"
                 >
 
             </label>
 
 
-
-            <!-- LOW STOCK -->
 
             <label>
 
                 LOW STOCK AT
 
                 <input
-                    id="newProductLowThreshold"
+                    id="editProductLowThreshold"
                     type="number"
                     min="0"
-                    value="3"
                 >
 
             </label>
 
 
 
-            <!-- STATUS -->
+            <!-- =============================================
+                 STATUS / COMING SOON
+            ============================================== -->
 
             <label>
 
                 STATUS
 
-                <select id="newProductStatus">
+                <select id="editProductStatus">
 
                     <option value="coming_soon">
                         Coming soon
@@ -834,30 +1416,26 @@
 
 
 
-            <!-- ORDER -->
-
             <label>
 
                 DISPLAY ORDER
 
                 <input
-                    id="newProductOrder"
+                    id="editProductOrder"
                     type="number"
-                    value="0"
+                    min="0"
                 >
 
             </label>
 
 
 
-            <!-- LAUNCH -->
-
             <label>
 
                 LAUNCH DATE
 
                 <input
-                    id="newProductLaunchDate"
+                    id="editProductLaunchDate"
                     type="datetime-local"
                 >
 
@@ -865,508 +1443,301 @@
 
 
 
-            <!-- MAX ORDER -->
-
             <label>
 
                 MAX PER ORDER
 
                 <input
-                    id="newProductMaxOrder"
+                    id="editProductMaxOrder"
                     type="number"
                     min="1"
-                    value="1"
                 >
 
             </label>
 
 
-
-            <!-- DETAIL PAGE -->
 
             <label>
 
                 DETAIL PAGE
 
                 <input
-                    id="newProductDetailPage"
+                    id="editProductDetailPage"
                     type="text"
-                    placeholder="products/hc-studio.html"
+                    placeholder="products/model.html"
                 >
 
             </label>
 
 
+        </div>
 
-            <!-- IMAGE -->
+
+
+        <!-- =================================================
+             PRODUCT OPTIONS
+        ================================================== -->
+
+        <div class="edit-product-switches">
+
 
             <label>
 
-                PRODUCT IMAGE
-
                 <input
-                    id="newProductImage"
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
+                    id="editProductPublic"
+                    type="checkbox"
                 >
 
+                PUBLIC
+
             </label>
+
+
+
+            <label>
+
+                <input
+                    id="editProductOrdering"
+                    type="checkbox"
+                >
+
+                ORDERING
+
+            </label>
+
+
+
+            <label>
+
+                <input
+                    id="editProductFeatured"
+                    type="checkbox"
+                >
+
+                FEATURED
+
+            </label>
+
+
+
+            <label>
+
+                <input
+                    id="editProductPreorder"
+                    type="checkbox"
+                >
+
+                PREORDER
+
+            </label>
+
+
+
+            <label>
+
+                <input
+                    id="editProductCustomFit"
+                    type="checkbox"
+                >
+
+                CUSTOM FIT
+
+            </label>
+
+
+
+            <label>
+
+                <input
+                    id="editProductCustomTuning"
+                    type="checkbox"
+                >
+
+                CUSTOM TUNING
+
+            </label>
+
 
         </div>
 
 
 
         <!-- =================================================
-             SWITCHES
+             PRODUCT DESCRIPTION
         ================================================== -->
 
-        <div class="switch-grid">
-
-            <label class="admin-switch">
-
-                <input
-                    id="newProductFeatured"
-                    type="checkbox"
-                >
-
-                <span>
-                    FEATURED
-                </span>
-
-            </label>
-
-
-            <label class="admin-switch">
-
-                <input
-                    id="newProductOrdering"
-                    type="checkbox"
-                >
-
-                <span>
-                    ORDERING ENABLED
-                </span>
-
-            </label>
-
-
-            <label class="admin-switch">
-
-                <input
-                    id="newProductPreorder"
-                    type="checkbox"
-                >
-
-                <span>
-                    PREORDER
-                </span>
-
-            </label>
-
-
-            <label class="admin-switch">
-
-                <input
-                    id="newProductCustomFit"
-                    type="checkbox"
-                >
-
-                <span>
-                    CUSTOM FIT
-                </span>
-
-            </label>
-
-
-            <label class="admin-switch">
-
-                <input
-                    id="newProductCustomTuning"
-                    type="checkbox"
-                >
-
-                <span>
-                    CUSTOM TUNING
-                </span>
-
-            </label>
-
-
-            <label class="admin-switch">
-
-                <input
-                    id="newProductPublicVisible"
-                    type="checkbox"
-                    checked
-                >
-
-                <span>
-                    PUBLICLY VISIBLE
-                </span>
-
-            </label>
-
-
-            <label class="admin-switch">
-
-                <input
-                    id="newProductReferenceTarget"
-                    type="checkbox"
-                >
-
-                <span>
-                    HC REFERENCE TARGET
-                </span>
-
-            </label>
-
-        </div>
-
-
-
-        <!-- =================================================
-             TEXT
-        ================================================== -->
-
-        <label class="full-label">
+        <label class="edit-product-full-label">
 
             SUBTITLE
 
             <input
-                id="newProductSubtitle"
+                id="editProductSubtitle"
                 type="text"
+                placeholder="Hammer Craft / Universal"
             >
 
         </label>
 
 
-        <label class="full-label">
+
+        <label class="edit-product-full-label">
 
             SHORT CATALOGUE DESCRIPTION
 
             <textarea
-                id="newProductShortDescription"
+                id="editProductShortDescription"
                 placeholder="Short description shown on product.html"
             ></textarea>
 
         </label>
 
 
-        <label class="full-label">
+
+        <label class="edit-product-full-label">
 
             FULL DESCRIPTION
 
             <textarea
-                id="newProductDescription"
+                id="editProductDescription"
+                placeholder="Long technical and product description"
             ></textarea>
 
         </label>
 
 
 
-        <button
-            id="addProductButton"
-            class="primary-button"
-            type="button"
-        >
-            ADD PRODUCT
-        </button>
-
+        <!-- MESSAGE -->
 
         <div
-            id="addProductMessage"
+            id="editProductMessage"
             class="admin-message"
         ></div>
 
-    </div>
 
 
+        <!-- SAVE -->
 
-    <!-- =====================================================
-         PRODUCT LIST
-    ====================================================== -->
-
-    <div
-        id="adminProductList"
-        class="product-grid"
-    >
-
-        <div class="loading-card">
-            Loading products...
-        </div>
-
-    </div>
-
-</section>
-
-
-
-<!-- =========================================================
-     FREQUENCY RESPONSE
-========================================================= -->
-
-<section
-    id="frequencyResponse"
-    class="admin-section"
->
-
-    <div class="section-heading">
-
-        <div>
-
-            <div class="eyebrow">
-                ACOUSTIC DATA
-            </div>
-
-
-            <h2>
-                Frequency response.
-            </h2>
-
-        </div>
-
-    </div>
-
-
-    <div class="create-product-panel">
-
-        <div class="panel-heading">
-
-            <span>
-                PRODUCT MEASUREMENT
-            </span>
-
-
-            <h3>
-                Upload measured response.
-            </h3>
-
-        </div>
-
-
-        <p class="panel-description">
-
-            Upload a CSV or FRD measurement for a product.
-            The website will use this data for the public
-            product-matching system.
-
-        </p>
-
-
-
-        <div class="form-grid">
-
-            <label>
-
-                PRODUCT
-
-                <select id="frProductSelect">
-
-                    <option value="">
-                        Select product
-                    </option>
-
-                </select>
-
-            </label>
-
-
-
-            <label>
-
-                MEASUREMENT FILE
-
-                <input
-                    id="frFileInput"
-                    type="file"
-                    accept=".csv,.frd,.txt"
-                >
-
-            </label>
-
-
-
-            <label>
-
-                NORMALISE DISPLAY
-
-                <select id="frNormalization">
-
-                    <option value="1000">
-                        1 kHz = 0 dB
-                    </option>
-
-                    <option value="none">
-                        Keep original values
-                    </option>
-
-                </select>
-
-            </label>
-
-        </div>
-
-
-
-        <div class="fr-upload-actions">
+        <div class="edit-product-actions">
 
             <button
-                id="previewFrButton"
-                class="outline-button"
-                type="button"
-            >
-                PREVIEW
-            </button>
-
-
-            <button
-                id="saveFrButton"
+                id="saveProductEditButton"
                 class="primary-button"
                 type="button"
-                disabled
             >
-                SAVE RESPONSE
-            </button>
-
-
-            <button
-                id="deleteFrButton"
-                class="danger-button"
-                type="button"
-            >
-                DELETE RESPONSE
+                SAVE CHANGES
             </button>
 
         </div>
 
-
-
-        <div
-            id="frMessage"
-            class="admin-message"
-        ></div>
-
-
-
-        <div class="admin-fr-chart">
-
-            <canvas
-                id="adminFrCanvas"
-                width="1400"
-                height="600"
-            ></canvas>
-
-        </div>
-
-
-
-        <div class="fr-summary-grid">
-
-            <article>
-
-                <span>
-                    POINTS
-                </span>
-
-                <strong id="frPointCount">
-                    —
-                </strong>
-
-            </article>
-
-
-            <article>
-
-                <span>
-                    MIN FREQUENCY
-                </span>
-
-                <strong id="frMinFrequency">
-                    —
-                </strong>
-
-            </article>
-
-
-            <article>
-
-                <span>
-                    MAX FREQUENCY
-                </span>
-
-                <strong id="frMaxFrequency">
-                    —
-                </strong>
-
-            </article>
-
-
-            <article>
-
-                <span>
-                    1 KHZ LEVEL
-                </span>
-
-                <strong id="frOneKhzLevel">
-                    —
-                </strong>
-
-            </article>
-
-        </div>
 
     </div>
 
-</section>
-
-
-</main>
+</div>
 
 
 
 <!-- =========================================================
-     CONFIRM MODAL
+     DELETE PRODUCT MODAL
 ========================================================= -->
 
 <div
-    id="confirmModal"
+    id="deleteProductModal"
     class="modal"
 >
 
-    <div class="modal-panel">
+    <div class="modal-panel small-modal-panel">
 
         <span class="modal-label">
-            CONFIRM ACTION
+            DELETE PRODUCT
         </span>
 
-
-        <h3 id="confirmTitle">
-            Are you sure?
+        <h3>
+            Remove product?
         </h3>
 
+        <p>
+            This removes the selected product from the catalogue.
+            This action cannot be undone.
+        </p>
 
-        <p id="confirmText"></p>
+
+        <input
+            id="deleteProductId"
+            type="hidden"
+        >
 
 
         <div class="modal-actions">
 
             <button
-                id="confirmCancelButton"
-                class="outline-button"
+                id="cancelDeleteProductButton"
                 type="button"
+                class="outline-button"
             >
                 CANCEL
             </button>
 
 
             <button
-                id="confirmActionButton"
-                class="danger-button"
+                id="deleteProductButton"
                 type="button"
+                class="danger-button"
             >
-                CONFIRM
+                DELETE PRODUCT
             </button>
 
+        </div>
+
+
+        <div
+            id="deleteProductMessage"
+            class="admin-message"
+        ></div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     ACCOUNT DETAIL MODAL
+========================================================= -->
+
+<div
+    id="accountModal"
+    class="modal"
+>
+
+    <div class="modal-panel">
+
+        <div class="modal-heading">
+
+            <div>
+
+                <span class="modal-label">
+                    CUSTOMER ACCOUNT
+                </span>
+
+                <h3 id="accountModalName">
+                    Account
+                </h3>
+
+            </div>
+
+
+            <button
+                id="closeAccountModalButton"
+                type="button"
+                class="outline-button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+        <div id="accountModalContent">
         </div>
 
     </div>
@@ -1376,18 +1747,101 @@
 
 
 <!-- =========================================================
-     SCRIPTS
+     SCAN DETAIL MODAL
+========================================================= -->
+
+<div
+    id="scanModal"
+    class="modal"
+>
+
+    <div class="modal-panel">
+
+        <div class="modal-heading">
+
+            <div>
+
+                <span class="modal-label">
+                    EAR SCAN
+                </span>
+
+                <h3 id="scanModalTitle">
+                    Scan
+                </h3>
+
+            </div>
+
+
+            <button
+                id="closeScanModalButton"
+                type="button"
+                class="outline-button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+        <div id="scanModalContent">
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     PAGE FOOTER
+========================================================= -->
+
+<footer class="admin-footer">
+
+    <div>
+
+        <span>
+            HAMMER CRAFT
+        </span>
+
+        <span>
+            BRISTOL / UNITED KINGDOM
+        </span>
+
+    </div>
+
+
+    <p>
+        Small batch. Built locally.
+    </p>
+
+</footer>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT
 ========================================================= -->
 
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
 ></script>
 
-<script src="supabase-client.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+></script>
 
-<script src="auth.js?v=1"></script>
+<script
+    src="supabase-client.js"
+></script>
 
-<script src="admin.js?v=51"></script>
+<script
+    src="auth.js?v=40"
+></script>
+
+<script
+    src="admin.js?v=61"
+></script>
 
 
 </body>

@@ -3,6 +3,12 @@
    ADMIN DASHBOARD
 ========================================================= */
 
+"use strict";
+
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
 
 let currentAdminUser =
     null;
@@ -29,7 +35,132 @@ let confirmCallback =
 
 
 /* =========================================================
-   HELPERS
+   ELEMENT HELPERS
+
+   Supports both the older Hammer Craft admin.html IDs
+   and the newer IDs.
+========================================================= */
+
+function byId(
+    ...ids
+) {
+
+    for (
+        const id
+        of
+        ids
+    ) {
+
+        const element =
+            document.getElementById(
+                id
+            );
+
+
+        if (
+            element
+        ) {
+
+            return element;
+
+        }
+
+    }
+
+
+    return null;
+
+}
+
+
+function getValue(
+    ...ids
+) {
+
+    const element =
+        byId(
+            ...ids
+        );
+
+
+    return (
+        element?.value
+        ??
+        ""
+    );
+
+}
+
+
+function setValue(
+    value,
+    ...ids
+) {
+
+    const element =
+        byId(
+            ...ids
+        );
+
+
+    if (
+        element
+    ) {
+
+        element.value =
+            value
+            ??
+            "";
+
+    }
+
+}
+
+
+function getChecked(
+    ...ids
+) {
+
+    const element =
+        byId(
+            ...ids
+        );
+
+
+    return Boolean(
+        element?.checked
+    );
+
+}
+
+
+function setChecked(
+    value,
+    ...ids
+) {
+
+    const element =
+        byId(
+            ...ids
+        );
+
+
+    if (
+        element
+    ) {
+
+        element.checked =
+            Boolean(
+                value
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   GENERAL HELPERS
 ========================================================= */
 
 function escapeHtml(
@@ -136,10 +267,153 @@ function formatDate(
     }
 
 
-    return date.toLocaleString();
+    return date.toLocaleString(
+        "en-GB"
+    );
 
 }
 
+
+function toDateTimeLocalValue(
+    value
+) {
+
+    if (
+        !value
+    ) {
+
+        return "";
+
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "";
+
+    }
+
+
+    const pad =
+        number =>
+            String(
+                number
+            )
+                .padStart(
+                    2,
+                    "0"
+                );
+
+
+    return (
+        `${date.getFullYear()}-`
+        +
+        `${pad(date.getMonth() + 1)}-`
+        +
+        `${pad(date.getDate())}T`
+        +
+        `${pad(date.getHours())}:`
+        +
+        `${pad(date.getMinutes())}`
+    );
+
+}
+
+
+function statusLabel(
+    status
+) {
+
+    const labels = {
+
+        coming_soon:
+            "COMING SOON",
+
+        in_stock:
+            "IN STOCK",
+
+        low_stock:
+            "LOW STOCK",
+
+        out_of_stock:
+            "OUT OF STOCK",
+
+        hidden:
+            "HIDDEN"
+
+    };
+
+
+    return (
+        labels[
+            status
+        ]
+        ||
+        String(
+            status ?? ""
+        )
+            .replaceAll(
+                "_",
+                " "
+            )
+            .toUpperCase()
+    );
+
+}
+
+
+function categoryLabel(
+    category
+) {
+
+    const labels = {
+
+        reference:
+            "REFERENCE",
+
+        custom_tune:
+            "CUSTOM SOUND",
+
+        custom_fit:
+            "CUSTOM FIT",
+
+        full_custom:
+            "FULL CUSTOM"
+
+    };
+
+
+    return (
+        labels[
+            category
+        ]
+        ||
+        String(
+            category ?? ""
+        )
+            .replaceAll(
+                "_",
+                " "
+            )
+            .toUpperCase()
+    );
+
+}
+
+
+/* =========================================================
+   MESSAGE
+========================================================= */
 
 function setMessage(
     elementId,
@@ -163,7 +437,9 @@ function setMessage(
 
 
     element.textContent =
-        message;
+        message
+        ||
+        "";
 
 
     element.classList.remove(
@@ -191,7 +467,9 @@ function setMessage(
 
 async function ensureAdmin() {
 
-    if (!window.HCAuth) {
+    if (
+        !window.HCAuth
+    ) {
 
         throw new Error(
             "Hammer Craft authentication helper is unavailable."
@@ -205,8 +483,12 @@ async function ensureAdmin() {
             .requireAdmin();
 
 
-    if (!state) {
+    if (
+        !state
+    ) {
+
         return false;
+
     }
 
 
@@ -215,15 +497,18 @@ async function ensureAdmin() {
 
 
     const emailElement =
-        document.getElementById(
+        byId(
             "adminEmail"
         );
 
 
-    if (emailElement) {
+    if (
+        emailElement
+    ) {
 
         emailElement.textContent =
-            currentAdminUser.email ||
+            currentAdminUser.email
+            ||
             "ADMIN";
 
     }
@@ -247,15 +532,19 @@ async function logoutAdmin() {
 
     }
 
-    catch (error) {
+    catch (
+        error
+    ) {
 
         console.error(
             "Admin logout error:",
             error
         );
 
+
         alert(
-            error.message ||
+            error.message
+            ||
             "Unable to sign out."
         );
 
@@ -278,30 +567,86 @@ function showConfirm(
         callback;
 
 
-    document
-        .getElementById(
-            "confirmTitle"
-        )
-        .textContent =
-            title;
-
-
-    document
-        .getElementById(
-            "confirmText"
-        )
-        .textContent =
-            text;
-
-
-    document
-        .getElementById(
+    const modal =
+        byId(
             "confirmModal"
-        )
-        .classList
-        .add(
+        );
+
+
+    /*
+     * Older admin.html uses the generic confirm modal.
+     */
+
+    if (
+        modal
+    ) {
+
+        const titleElement =
+            byId(
+                "confirmTitle"
+            );
+
+
+        const textElement =
+            byId(
+                "confirmText"
+            );
+
+
+        if (
+            titleElement
+        ) {
+
+            titleElement.textContent =
+                title;
+
+        }
+
+
+        if (
+            textElement
+        ) {
+
+            textElement.textContent =
+                text;
+
+        }
+
+
+        modal.classList.add(
             "open"
         );
+
+
+        return;
+
+    }
+
+
+    /*
+     * Fallback if the page does not contain the old modal.
+     */
+
+    if (
+        window.confirm(
+            `${title}\n\n${text}`
+        )
+    ) {
+
+        Promise.resolve(
+            callback?.()
+        )
+            .catch(
+                error => {
+
+                    console.error(
+                        error
+                    );
+
+                }
+            );
+
+    }
 
 }
 
@@ -312,11 +657,10 @@ function closeConfirm() {
         null;
 
 
-    document
-        .getElementById(
-            "confirmModal"
-        )
-        .classList
+    byId(
+        "confirmModal"
+    )
+        ?.classList
         .remove(
             "open"
         );
@@ -331,9 +675,19 @@ function closeConfirm() {
 async function loadAccounts() {
 
     const container =
-        document.getElementById(
-            "adminAccountList"
+        byId(
+            "adminAccountList",
+            "accountsGrid"
         );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
 
 
     container.innerHTML =
@@ -341,10 +695,6 @@ async function loadAccounts() {
 
 
     try {
-
-        /*
-         * This assumes you have a profiles table.
-         */
 
         const {
             data,
@@ -417,9 +767,19 @@ function renderAccounts(
 ) {
 
     const container =
-        document.getElementById(
-            "adminAccountList"
+        byId(
+            "adminAccountList",
+            "accountsGrid"
         );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
 
 
     if (
@@ -489,9 +849,11 @@ function renderAccounts(
 
                                 CREATED
 
-                                ${formatDate(
-                                    account.created_at
-                                )}
+                                ${
+                                    formatDate(
+                                        account.created_at
+                                    )
+                                }
 
                             </span>
 
@@ -506,22 +868,41 @@ function renderAccounts(
 }
 
 
-async function updateAccountStats() {
+function setTextIfPresent(
+    id,
+    value
+) {
 
-    document
-        .getElementById(
-            "totalAccounts"
-        )
-        .textContent =
-            allAccounts.length;
+    const element =
+        byId(
+            id
+        );
 
 
-    document
-        .getElementById(
-            "accountSummaryTotal"
-        )
-        .textContent =
-            allAccounts.length;
+    if (
+        element
+    ) {
+
+        element.textContent =
+            value;
+
+    }
+
+}
+
+
+function updateAccountStats() {
+
+    setTextIfPresent(
+        "totalAccounts",
+        allAccounts.length
+    );
+
+
+    setTextIfPresent(
+        "accountSummaryTotal",
+        allAccounts.length
+    );
 
 
     const admins =
@@ -532,12 +913,10 @@ async function updateAccountStats() {
         );
 
 
-    document
-        .getElementById(
-            "totalAdmins"
-        )
-        .textContent =
-            admins.length;
+    setTextIfPresent(
+        "totalAdmins",
+        admins.length
+    );
 
 
     const usersWithScans =
@@ -553,12 +932,10 @@ async function updateAccountStats() {
         );
 
 
-    document
-        .getElementById(
-            "accountsWithScans"
-        )
-        .textContent =
-            usersWithScans.size;
+    setTextIfPresent(
+        "accountsWithScans",
+        usersWithScans.size
+    );
 
 }
 
@@ -570,9 +947,19 @@ async function updateAccountStats() {
 async function loadScans() {
 
     const container =
-        document.getElementById(
-            "adminScanList"
+        byId(
+            "adminScanList",
+            "scansGrid"
         );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
 
 
     container.innerHTML =
@@ -589,9 +976,9 @@ async function loadScans() {
                 .from(
                     "ear_scans"
                 )
-                .select(`
-                    *
-                `)
+                .select(
+                    "*"
+                )
                 .order(
                     "created_at",
                     {
@@ -647,17 +1034,31 @@ async function loadScans() {
 function renderScans() {
 
     const container =
-        document.getElementById(
-            "adminScanList"
+        byId(
+            "adminScanList",
+            "scansGrid"
+        );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
+
+
+    const filterElement =
+        byId(
+            "scanStatusFilter"
         );
 
 
     const filter =
-        document
-            .getElementById(
-                "scanStatusFilter"
-            )
-            .value;
+        filterElement?.value
+        ||
+        "";
 
 
     let scans =
@@ -702,11 +1103,21 @@ function renderScans() {
 
                         <div class="scan-card-top">
 
-                            <span class="status-badge ${escapeHtml(scan.status)}">
+                            <span
+                                class="status-badge ${
+                                    escapeHtml(
+                                        scan.status
+                                        ||
+                                        ""
+                                    )
+                                }"
+                            >
 
                                 ${
                                     escapeHtml(
                                         scan.status
+                                        ||
+                                        "unknown"
                                     )
                                 }
 
@@ -811,51 +1222,52 @@ function renderScans() {
 
 function updateScanStats() {
 
-    document
-        .getElementById(
-            "totalScans"
-        )
-        .textContent =
-            allScans.length;
+    setTextIfPresent(
+        "totalScans",
+        allScans.length
+    );
 
 
-    document
-        .getElementById(
-            "processingScans"
-        )
-        .textContent =
+    setTextIfPresent(
 
-            allScans.filter(
-                scan =>
-                    scan.status ===
-                    "processing"
-            ).length;
+        "processingScans",
+
+        allScans.filter(
+            scan =>
+                scan.status ===
+                "processing"
+        ).length
+
+    );
 
 
-    document
-        .getElementById(
-            "completeScans"
-        )
-        .textContent =
+    setTextIfPresent(
 
-            allScans.filter(
-                scan =>
-                    scan.status ===
+        "completeScans",
+
+        allScans.filter(
+            scan =>
+                scan.status ===
                     "complete"
-            ).length;
+                ||
+                scan.status ===
+                    "completed"
+        ).length
+
+    );
 
 
-    document
-        .getElementById(
-            "failedScans"
-        )
-        .textContent =
+    setTextIfPresent(
 
-            allScans.filter(
-                scan =>
-                    scan.status ===
-                    "failed"
-            ).length;
+        "failedScans",
+
+        allScans.filter(
+            scan =>
+                scan.status ===
+                "failed"
+        ).length
+
+    );
 
 }
 
@@ -864,43 +1276,58 @@ async function queueScan(
     scanId
 ) {
 
-    const {
-        error
-    } =
-        await window.hcSupabase
-            .from(
-                "ear_scans"
-            )
-            .update({
+    try {
 
-                status:
-                    "queued",
+        const {
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "ear_scans"
+                )
+                .update({
 
-                error_message:
-                    null
+                    status:
+                        "queued",
 
-            })
-            .eq(
-                "id",
-                scanId
-            );
+                    error_message:
+                        null
+
+                })
+                .eq(
+                    "id",
+                    scanId
+                );
 
 
-    if (
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        await loadScans();
+
+    }
+
+    catch (
         error
     ) {
+
+        console.error(
+            "Queue scan error:",
+            error
+        );
+
 
         alert(
             error.message
         );
 
-
-        return;
-
     }
-
-
-    await loadScans();
 
 }
 
@@ -928,7 +1355,7 @@ function confirmDeleteScan(
 
         "Delete scan?",
 
-        "This will permanently delete the scan database entry and attempt to remove its storage files.",
+        "This permanently deletes the scan database entry and attempts to remove its storage files.",
 
         async () => {
 
@@ -952,29 +1379,25 @@ async function deleteScan(
         const scan =
             allScans.find(
                 item =>
-                    item.id ===
-                    scanId
+                    String(
+                        item.id
+                    )
+                    ===
+                    String(
+                        scanId
+                    )
             );
 
 
-        /*
-         * If you store a storage prefix on the scan,
-         * delete objects under it here.
-         *
-         * Database deletion still works even if the
-         * scan has no known prefix.
-         */
-
         if (
-            scan
-            &&
-            scan.storage_prefix
+            scan?.storage_prefix
         ) {
 
             try {
 
                 const {
-                    data: files
+                    data: files,
+                    error: listError
                 } =
                     await window.hcSupabase
                         .storage
@@ -991,10 +1414,18 @@ async function deleteScan(
 
 
                 if (
-                    files
-                    &&
-                    files.length >
-                        0
+                    listError
+                ) {
+
+                    console.warn(
+                        listError
+                    );
+
+                }
+
+
+                if (
+                    files?.length
                 ) {
 
                     const paths =
@@ -1004,14 +1435,28 @@ async function deleteScan(
                         );
 
 
-                    await window.hcSupabase
-                        .storage
-                        .from(
-                            "ear-scans"
-                        )
-                        .remove(
-                            paths
+                    const {
+                        error: removeError
+                    } =
+                        await window.hcSupabase
+                            .storage
+                            .from(
+                                "ear-scans"
+                            )
+                            .remove(
+                                paths
+                            );
+
+
+                    if (
+                        removeError
+                    ) {
+
+                        console.warn(
+                            removeError
                         );
+
+                    }
 
                 }
 
@@ -1084,12 +1529,83 @@ async function deleteScan(
    PROCESSORS
 ========================================================= */
 
+async function queryProcessors() {
+
+    /*
+     * Your older code uses reconstruction_processors.
+     * Some newer schemas use processors.
+     */
+
+    let result =
+        await window.hcSupabase
+            .from(
+                "reconstruction_processors"
+            )
+            .select(
+                "*"
+            )
+            .order(
+                "last_seen_at",
+                {
+                    ascending:
+                        false
+                }
+            );
+
+
+    if (
+        !result.error
+    ) {
+
+        return result;
+
+    }
+
+
+    console.warn(
+        "reconstruction_processors unavailable, trying processors.",
+        result.error
+    );
+
+
+    result =
+        await window.hcSupabase
+            .from(
+                "processors"
+            )
+            .select(
+                "*"
+            )
+            .order(
+                "last_seen_at",
+                {
+                    ascending:
+                        false
+                }
+            );
+
+
+    return result;
+
+}
+
+
 async function loadProcessors() {
 
     const container =
-        document.getElementById(
-            "processorList"
+        byId(
+            "processorList",
+            "processorsGrid"
         );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
 
 
     container.innerHTML =
@@ -1102,20 +1618,7 @@ async function loadProcessors() {
             data,
             error
         } =
-            await window.hcSupabase
-                .from(
-                    "reconstruction_processors"
-                )
-                .select(
-                    "*"
-                )
-                .order(
-                    "last_seen_at",
-                    {
-                        ascending:
-                            false
-                    }
-                );
+            await queryProcessors();
 
 
         if (
@@ -1154,15 +1657,23 @@ async function loadProcessors() {
                     processor => {
 
                         const lastSeen =
+                            processor.last_seen_at
+                            ?
                             new Date(
                                 processor.last_seen_at
-                            );
+                            )
+                            :
+                            null;
 
 
                         const age =
+                            lastSeen
+                            ?
                             Date.now()
                             -
-                            lastSeen.getTime();
+                            lastSeen.getTime()
+                            :
+                            Infinity;
 
 
                         const online =
@@ -1174,13 +1685,15 @@ async function loadProcessors() {
 
                             <article class="processor-card">
 
-                                <span class="status-badge ${
-                                    online
-                                    ?
-                                    "complete"
-                                    :
-                                    "failed"
-                                }">
+                                <span
+                                    class="status-badge ${
+                                        online
+                                        ?
+                                        "complete"
+                                        :
+                                        "failed"
+                                    }"
+                                >
 
                                     ${
                                         online
@@ -1199,6 +1712,8 @@ async function loadProcessors() {
                                         escapeHtml(
                                             processor.name
                                             ||
+                                            processor.processor_name
+                                            ||
                                             "Processor"
                                         )
                                     }
@@ -1212,6 +1727,8 @@ async function loadProcessors() {
                                         escapeHtml(
                                             processor.platform
                                             ||
+                                            processor.os
+                                            ||
                                             ""
                                         )
                                     }
@@ -1222,6 +1739,7 @@ async function loadProcessors() {
                                 <p>
 
                                     Accelerator:
+
                                     ${
                                         escapeHtml(
                                             processor.accelerator
@@ -1236,6 +1754,7 @@ async function loadProcessors() {
                                 <p>
 
                                     Last seen:
+
                                     ${
                                         formatDate(
                                             processor.last_seen_at
@@ -1279,9 +1798,19 @@ async function loadProcessors() {
 async function loadProducts() {
 
     const container =
-        document.getElementById(
-            "adminProductList"
+        byId(
+            "adminProductList",
+            "productsGrid"
         );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
 
 
     container.innerHTML =
@@ -1333,6 +1862,9 @@ async function loadProducts() {
 
         populateFrProductSelect();
 
+
+        populateReferenceProductSelect();
+
     }
 
     catch (
@@ -1360,9 +1892,19 @@ async function loadProducts() {
 function renderProducts() {
 
     const container =
-        document.getElementById(
-            "adminProductList"
+        byId(
+            "adminProductList",
+            "productsGrid"
         );
+
+
+    if (
+        !container
+    ) {
+
+        return;
+
+    }
 
 
     if (
@@ -1395,8 +1937,19 @@ function renderProducts() {
                                 `
 
                                     <img
-                                        src="${escapeHtml(product.image_url)}"
-                                        alt="${escapeHtml(product.name)}"
+                                        src="${
+                                            escapeHtml(
+                                                product.image_url
+                                            )
+                                        }"
+                                        alt="${
+                                            escapeHtml(
+                                                product.name
+                                            )
+                                        }"
+                                        onerror="
+                                            this.style.display='none';
+                                        "
                                     >
 
                                 `
@@ -1427,9 +1980,22 @@ function renderProducts() {
 
                                     ${
                                         escapeHtml(
-                                            product.category
-                                            ||
-                                            "reference"
+                                            categoryLabel(
+                                                product.category
+                                            )
+                                        )
+                                    }
+
+                                </span>
+
+
+                                <span>
+
+                                    ${
+                                        escapeHtml(
+                                            statusLabel(
+                                                product.status
+                                            )
                                         )
                                     }
 
@@ -1452,6 +2018,8 @@ function renderProducts() {
                                 ${
                                     escapeHtml(
                                         product.name
+                                        ||
+                                        "Unnamed product"
                                     )
                                 }
 
@@ -1462,6 +2030,8 @@ function renderProducts() {
 
                                 ${
                                     escapeHtml(
+                                        product.short_description
+                                        ||
                                         product.subtitle
                                         ||
                                         ""
@@ -1478,7 +2048,10 @@ function renderProducts() {
                                     £${
                                         safeNumber(
                                             product.price_gbp
-                                        ).toFixed(2)
+                                        )
+                                            .toFixed(
+                                                2
+                                            )
                                     }
 
                                 </span>
@@ -1487,6 +2060,7 @@ function renderProducts() {
                                 <span>
 
                                     STOCK
+
                                     ${
                                         safeNumber(
                                             product.stock_quantity
@@ -1500,7 +2074,9 @@ function renderProducts() {
 
                                     ${
                                         escapeHtml(
-                                            product.status
+                                            statusLabel(
+                                                product.status
+                                            )
                                         )
                                     }
 
@@ -1522,11 +2098,13 @@ function renderProducts() {
                                             :
                                             ""
                                         }
-                                        onchange="updateProductBoolean(
-                                            '${product.id}',
-                                            'public_visible',
-                                            this.checked
-                                        )"
+                                        onchange="
+                                            updateProductBoolean(
+                                                '${product.id}',
+                                                'public_visible',
+                                                this.checked
+                                            )
+                                        "
                                     >
 
                                     PUBLIC
@@ -1545,11 +2123,13 @@ function renderProducts() {
                                             :
                                             ""
                                         }
-                                        onchange="updateProductBoolean(
-                                            '${product.id}',
-                                            'ordering_enabled',
-                                            this.checked
-                                        )"
+                                        onchange="
+                                            updateProductBoolean(
+                                                '${product.id}',
+                                                'ordering_enabled',
+                                                this.checked
+                                            )
+                                        "
                                     >
 
                                     ORDERING
@@ -1568,11 +2148,13 @@ function renderProducts() {
                                             :
                                             ""
                                         }
-                                        onchange="updateProductBoolean(
-                                            '${product.id}',
-                                            'featured',
-                                            this.checked
-                                        )"
+                                        onchange="
+                                            updateProductBoolean(
+                                                '${product.id}',
+                                                'featured',
+                                                this.checked
+                                            )
+                                        "
                                     >
 
                                     FEATURED
@@ -1586,7 +2168,24 @@ function renderProducts() {
 
                                 <button
                                     type="button"
-                                    onclick="setReferenceProduct('${product.id}')"
+                                    class="primary-button"
+                                    onclick="
+                                        openEditProduct(
+                                            '${product.id}'
+                                        )
+                                    "
+                                >
+                                    EDIT
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    onclick="
+                                        setReferenceProduct(
+                                            '${product.id}'
+                                        )
+                                    "
                                 >
                                     SET REFERENCE
                                 </button>
@@ -1594,7 +2193,11 @@ function renderProducts() {
 
                                 <button
                                     type="button"
-                                    onclick="openProductPage('${product.id}')"
+                                    onclick="
+                                        openProductPage(
+                                            '${product.id}'
+                                        )
+                                    "
                                 >
                                     VIEW
                                 </button>
@@ -1603,7 +2206,11 @@ function renderProducts() {
                                 <button
                                     type="button"
                                     class="danger-button"
-                                    onclick="confirmDeleteProduct('${product.id}')"
+                                    onclick="
+                                        confirmDeleteProduct(
+                                            '${product.id}'
+                                        )
+                                    "
                                 >
                                     DELETE
                                 </button>
@@ -1627,64 +2234,233 @@ function renderProducts() {
 
 function updateProductStats() {
 
-    document
-        .getElementById(
-            "totalProducts"
-        )
-        .textContent =
-            allProducts.length;
+    setTextIfPresent(
+        "totalProducts",
+        allProducts.length
+    );
 
 
-    document
-        .getElementById(
-            "productsInStock"
-        )
-        .textContent =
+    setTextIfPresent(
 
-            allProducts.filter(
-                product =>
-                    product.status ===
-                    "in_stock"
-            ).length;
+        "productsInStock",
 
+        allProducts.filter(
+            product =>
+                product.status ===
+                "in_stock"
+        ).length
 
-    document
-        .getElementById(
-            "productsLowStock"
-        )
-        .textContent =
-
-            allProducts.filter(
-                product =>
-                    product.status ===
-                    "low_stock"
-            ).length;
+    );
 
 
-    document
-        .getElementById(
-            "productsOutStock"
-        )
-        .textContent =
+    setTextIfPresent(
 
-            allProducts.filter(
-                product =>
-                    product.status ===
-                    "out_of_stock"
-            ).length;
+        "productsLowStock",
+
+        allProducts.filter(
+            product =>
+                product.status ===
+                "low_stock"
+        ).length
+
+    );
 
 
-    document
-        .getElementById(
-            "productsComingSoon"
-        )
-        .textContent =
+    setTextIfPresent(
 
-            allProducts.filter(
-                product =>
-                    product.status ===
-                    "coming_soon"
-            ).length;
+        "productsOutStock",
+
+        allProducts.filter(
+            product =>
+                product.status ===
+                "out_of_stock"
+        ).length
+
+    );
+
+
+    setTextIfPresent(
+
+        "productsComingSoon",
+
+        allProducts.filter(
+            product =>
+                product.status ===
+                "coming_soon"
+        ).length
+
+    );
+
+}
+
+
+/* =========================================================
+   CREATE PRODUCT FIELD ALIASES
+========================================================= */
+
+function readCreateProductFields() {
+
+    return {
+
+        name:
+            getValue(
+                "newProductName",
+                "productName"
+            )
+                .trim(),
+
+        sku:
+            getValue(
+                "newProductSku",
+                "productSku"
+            )
+                .trim(),
+
+        slug:
+            getValue(
+                "newProductSlug",
+                "productSlug"
+            )
+                .trim(),
+
+        category:
+            getValue(
+                "newProductCategory",
+                "productCategory"
+            )
+            ||
+            "reference",
+
+        fitType:
+            getValue(
+                "newProductFitType",
+                "productFitType"
+            )
+            ||
+            "universal",
+
+        tuningType:
+            getValue(
+                "newProductTuningType",
+                "productTuningType"
+            )
+            ||
+            "reference",
+
+        price:
+            getValue(
+                "newProductPrice",
+                "productPrice"
+            ),
+
+        stock:
+            getValue(
+                "newProductStock",
+                "productStock"
+            ),
+
+        lowThreshold:
+            getValue(
+                "newProductLowThreshold",
+                "productLowThreshold"
+            ),
+
+        status:
+            getValue(
+                "newProductStatus",
+                "productStatus"
+            )
+            ||
+            "coming_soon",
+
+        displayOrder:
+            getValue(
+                "newProductOrder",
+                "productDisplayOrder"
+            ),
+
+        maxPerOrder:
+            getValue(
+                "newProductMaxOrder",
+                "productMaxPerOrder"
+            ),
+
+        launchDate:
+            getValue(
+                "newProductLaunchDate",
+                "productLaunchDate"
+            ),
+
+        detailPage:
+            getValue(
+                "newProductDetailPage",
+                "productDetailPage"
+            )
+                .trim(),
+
+        subtitle:
+            getValue(
+                "newProductSubtitle",
+                "productSubtitle"
+            )
+                .trim(),
+
+        shortDescription:
+            getValue(
+                "newProductShortDescription",
+                "productShortDescription"
+            )
+                .trim(),
+
+        description:
+            getValue(
+                "newProductDescription",
+                "productDescription"
+            )
+                .trim(),
+
+        featured:
+            getChecked(
+                "newProductFeatured",
+                "productFeatured"
+            ),
+
+        ordering:
+            getChecked(
+                "newProductOrdering",
+                "productOrderingEnabled"
+            ),
+
+        preorder:
+            getChecked(
+                "newProductPreorder",
+                "productPreorderEnabled"
+            ),
+
+        customFit:
+            getChecked(
+                "newProductCustomFit",
+                "productCustomFit"
+            ),
+
+        customTuning:
+            getChecked(
+                "newProductCustomTuning",
+                "productCustomTuning"
+            ),
+
+        publicVisible:
+            getChecked(
+                "newProductPublicVisible",
+                "productPublicVisible"
+            ),
+
+        referenceTarget:
+            getChecked(
+                "newProductReferenceTarget"
+            )
+
+    };
 
 }
 
@@ -1701,31 +2477,31 @@ async function createProduct() {
     );
 
 
-    const name =
-        document
-            .getElementById(
-                "newProductName"
-            )
-            .value
-            .trim();
+    setMessage(
+        "productCreateMessage",
+        ""
+    );
 
 
-    let slug =
-        document
-            .getElementById(
-                "newProductSlug"
-            )
-            .value
-            .trim();
+    const fields =
+        readCreateProductFields();
 
 
     if (
-        !name
+        !fields.name
     ) {
 
         setMessage(
-            "addProductMessage",
+            byId(
+                "addProductMessage"
+            )
+            ?
+            "addProductMessage"
+            :
+            "productCreateMessage",
+
             "Product name is required.",
+
             "error"
         );
 
@@ -1735,24 +2511,20 @@ async function createProduct() {
     }
 
 
+    let slug =
+        fields.slug;
+
+
     if (
         !slug
     ) {
 
         slug =
             slugify(
-                name
+                fields.name
             );
 
     }
-
-
-    const referenceRequested =
-        document
-            .getElementById(
-                "newProductReferenceTarget"
-            )
-            .checked;
 
 
     try {
@@ -1760,15 +2532,10 @@ async function createProduct() {
         const payload = {
 
             name:
-                name,
+                fields.name,
 
             sku:
-                document
-                    .getElementById(
-                        "newProductSku"
-                    )
-                    .value
-                    .trim()
+                fields.sku
                 ||
                 null,
 
@@ -1776,188 +2543,130 @@ async function createProduct() {
                 slug,
 
             category:
-                document
-                    .getElementById(
-                        "newProductCategory"
-                    )
-                    .value,
+                fields.category,
 
             fit_type:
-                document
-                    .getElementById(
-                        "newProductFitType"
-                    )
-                    .value,
+                fields.fitType,
 
             tuning_type:
-                document
-                    .getElementById(
-                        "newProductTuningType"
-                    )
-                    .value,
+                fields.tuningType,
 
             price_gbp:
-                safeNumber(
-                    document
-                        .getElementById(
-                            "newProductPrice"
-                        )
-                        .value,
-                    0
+                Math.max(
+                    0,
+                    safeNumber(
+                        fields.price
+                    )
                 ),
 
             stock_quantity:
-                safeNumber(
-                    document
-                        .getElementById(
-                            "newProductStock"
+                Math.max(
+                    0,
+                    Math.round(
+                        safeNumber(
+                            fields.stock
                         )
-                        .value,
-                    0
+                    )
                 ),
 
             low_stock_threshold:
-                safeNumber(
-                    document
-                        .getElementById(
-                            "newProductLowThreshold"
+                Math.max(
+                    0,
+                    Math.round(
+                        safeNumber(
+                            fields.lowThreshold,
+                            3
                         )
-                        .value,
-                    3
+                    )
                 ),
 
+            /*
+             * THIS PRESERVES COMING SOON
+             */
+
             status:
-                document
-                    .getElementById(
-                        "newProductStatus"
-                    )
-                    .value,
+                fields.status
+                ||
+                "coming_soon",
 
             display_order:
-                safeNumber(
-                    document
-                        .getElementById(
-                            "newProductOrder"
+                Math.max(
+                    0,
+                    Math.round(
+                        safeNumber(
+                            fields.displayOrder
                         )
-                        .value,
-                    0
+                    )
                 ),
 
             max_per_order:
-                safeNumber(
-                    document
-                        .getElementById(
-                            "newProductMaxOrder"
+                Math.max(
+                    1,
+                    Math.round(
+                        safeNumber(
+                            fields.maxPerOrder,
+                            1
                         )
-                        .value,
-                    1
+                    )
                 ),
 
             featured:
-                document
-                    .getElementById(
-                        "newProductFeatured"
-                    )
-                    .checked,
+                fields.featured,
 
             ordering_enabled:
-                document
-                    .getElementById(
-                        "newProductOrdering"
-                    )
-                    .checked,
+                fields.ordering,
 
             preorder_enabled:
-                document
-                    .getElementById(
-                        "newProductPreorder"
-                    )
-                    .checked,
+                fields.preorder,
+
+            /*
+             * Keep your existing database names.
+             */
 
             custom_fit:
-                document
-                    .getElementById(
-                        "newProductCustomFit"
-                    )
-                    .checked,
+                fields.customFit,
 
             custom_tuning:
-                document
-                    .getElementById(
-                        "newProductCustomTuning"
-                    )
-                    .checked,
+                fields.customTuning,
 
             public_visible:
-                document
-                    .getElementById(
-                        "newProductPublicVisible"
-                    )
-                    .checked,
+                fields.publicVisible,
 
             is_reference_target:
                 false,
 
             subtitle:
-                document
-                    .getElementById(
-                        "newProductSubtitle"
-                    )
-                    .value
-                    .trim()
+                fields.subtitle
                 ||
                 null,
 
             short_description:
-                document
-                    .getElementById(
-                        "newProductShortDescription"
-                    )
-                    .value
-                    .trim()
+                fields.shortDescription
                 ||
                 null,
 
             description:
-                document
-                    .getElementById(
-                        "newProductDescription"
-                    )
-                    .value
-                    .trim()
+                fields.description
                 ||
                 null,
 
             detail_page:
-                document
-                    .getElementById(
-                        "newProductDetailPage"
-                    )
-                    .value
-                    .trim()
+                fields.detailPage
                 ||
                 null
 
         };
 
 
-        const launchValue =
-            document
-                .getElementById(
-                    "newProductLaunchDate"
-                )
-                .value;
-
-
         if (
-            launchValue
+            fields.launchDate
         ) {
 
             payload.launch_date =
                 new Date(
-                    launchValue
+                    fields.launchDate
                 )
-                .toISOString();
+                    .toISOString();
 
         }
 
@@ -1986,14 +2695,17 @@ async function createProduct() {
         }
 
 
+        const imageInput =
+            byId(
+                "newProductImage",
+                "productImage"
+            );
+
+
         const imageFile =
-            document
-                .getElementById(
-                    "newProductImage"
-                )
-                .files[
-                    0
-                ];
+            imageInput
+                ?.files
+                ?.[0];
 
 
         if (
@@ -2009,7 +2721,7 @@ async function createProduct() {
 
 
         if (
-            referenceRequested
+            fields.referenceTarget
         ) {
 
             await setReferenceProduct(
@@ -2020,8 +2732,18 @@ async function createProduct() {
         }
 
 
+        const messageId =
+            byId(
+                "addProductMessage"
+            )
+            ?
+            "addProductMessage"
+            :
+            "productCreateMessage";
+
+
         setMessage(
-            "addProductMessage",
+            messageId,
             "Product added successfully.",
             "success"
         );
@@ -2044,8 +2766,18 @@ async function createProduct() {
         );
 
 
+        const messageId =
+            byId(
+                "addProductMessage"
+            )
+            ?
+            "addProductMessage"
+            :
+            "productCreateMessage";
+
+
         setMessage(
-            "addProductMessage",
+            messageId,
             error.message,
             "error"
         );
@@ -2190,25 +2922,70 @@ async function updateProductBoolean(
         );
 
 
-    const {
-        error
-    } =
-        await window.hcSupabase
-            .from(
-                "products"
-            )
-            .update(
-                payload
-            )
-            .eq(
-                "id",
-                productId
+    try {
+
+        const {
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "products"
+                )
+                .update(
+                    payload
+                )
+                .eq(
+                    "id",
+                    productId
+                );
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        const product =
+            allProducts.find(
+                item =>
+                    String(
+                        item.id
+                    )
+                    ===
+                    String(
+                        productId
+                    )
             );
 
 
-    if (
+        if (
+            product
+        ) {
+
+            product[
+                field
+            ] =
+                Boolean(
+                    value
+                );
+
+        }
+
+    }
+
+    catch (
         error
     ) {
+
+        console.error(
+            "Update product boolean error:",
+            error
+        );
+
 
         alert(
             error.message
@@ -2216,6 +2993,732 @@ async function updateProductBoolean(
 
 
         await loadProducts();
+
+    }
+
+}
+
+
+/* =========================================================
+   EDIT PRODUCT
+========================================================= */
+
+function getProductById(
+    productId
+) {
+
+    return (
+        allProducts.find(
+            item =>
+                String(
+                    item.id
+                )
+                ===
+                String(
+                    productId
+                )
+        )
+        ||
+        null
+    );
+
+}
+
+
+function openEditProduct(
+    productId
+) {
+
+    const product =
+        getProductById(
+            productId
+        );
+
+
+    if (
+        !product
+    ) {
+
+        alert(
+            "Product could not be found."
+        );
+
+
+        return;
+
+    }
+
+
+    setValue(
+        product.id,
+        "editProductId"
+    );
+
+
+    setValue(
+        product.name,
+        "editProductName"
+    );
+
+
+    setValue(
+        product.sku,
+        "editProductSku"
+    );
+
+
+    setValue(
+        product.slug,
+        "editProductSlug"
+    );
+
+
+    setValue(
+        product.category
+        ||
+        "reference",
+        "editProductCategory"
+    );
+
+
+    setValue(
+        product.fit_type
+        ||
+        "universal",
+        "editProductFitType"
+    );
+
+
+    setValue(
+        product.tuning_type
+        ||
+        "reference",
+        "editProductTuningType"
+    );
+
+
+    setValue(
+        product.price_gbp
+        ??
+        0,
+        "editProductPrice"
+    );
+
+
+    setValue(
+        product.stock_quantity
+        ??
+        0,
+        "editProductStock"
+    );
+
+
+    setValue(
+        product.low_stock_threshold
+        ??
+        3,
+        "editProductLowThreshold"
+    );
+
+
+    /*
+     * COMING SOON IS FULLY SUPPORTED.
+     */
+
+    setValue(
+        product.status
+        ||
+        "coming_soon",
+        "editProductStatus"
+    );
+
+
+    setValue(
+        product.display_order
+        ??
+        0,
+        "editProductOrder"
+    );
+
+
+    setValue(
+        toDateTimeLocalValue(
+            product.launch_date
+        ),
+        "editProductLaunchDate"
+    );
+
+
+    setValue(
+        product.max_per_order
+        ??
+        1,
+        "editProductMaxOrder"
+    );
+
+
+    setValue(
+        product.detail_page,
+        "editProductDetailPage"
+    );
+
+
+    setChecked(
+        product.public_visible ===
+        true,
+        "editProductPublic"
+    );
+
+
+    setChecked(
+        product.ordering_enabled ===
+        true,
+        "editProductOrdering"
+    );
+
+
+    setChecked(
+        product.featured ===
+        true,
+        "editProductFeatured"
+    );
+
+
+    setChecked(
+        product.preorder_enabled ===
+        true,
+        "editProductPreorder"
+    );
+
+
+    setChecked(
+        product.custom_fit_available ===
+            true
+        ||
+        product.custom_fit ===
+            true,
+        "editProductCustomFit"
+    );
+
+
+    setChecked(
+        product.custom_tuning_available ===
+            true
+        ||
+        product.custom_tuning ===
+            true,
+        "editProductCustomTuning"
+    );
+
+
+    setValue(
+        product.subtitle,
+        "editProductSubtitle"
+    );
+
+
+    setValue(
+        product.short_description,
+        "editProductShortDescription"
+    );
+
+
+    setValue(
+        product.description,
+        "editProductDescription"
+    );
+
+
+    setMessage(
+        "editProductMessage",
+        ""
+    );
+
+
+    byId(
+        "editProductModal"
+    )
+        ?.classList
+        .add(
+            "open"
+        );
+
+}
+
+
+function closeEditProduct() {
+
+    byId(
+        "editProductModal"
+    )
+        ?.classList
+        .remove(
+            "open"
+        );
+
+}
+
+
+/* =========================================================
+   SAVE PRODUCT EDIT
+========================================================= */
+
+async function saveProductEdit() {
+
+    const productId =
+        getValue(
+            "editProductId"
+        );
+
+
+    if (
+        !productId
+    ) {
+
+        setMessage(
+            "editProductMessage",
+            "Product ID is missing.",
+            "error"
+        );
+
+
+        return;
+
+    }
+
+
+    const button =
+        byId(
+            "saveProductEditButton"
+        );
+
+
+    const originalText =
+        button?.textContent
+        ||
+        "SAVE CHANGES";
+
+
+    if (
+        button
+    ) {
+
+        button.disabled =
+            true;
+
+
+        button.textContent =
+            "SAVING...";
+
+    }
+
+
+    setMessage(
+        "editProductMessage",
+        ""
+    );
+
+
+    try {
+
+        const name =
+            getValue(
+                "editProductName"
+            )
+                .trim();
+
+
+        if (
+            !name
+        ) {
+
+            throw new Error(
+                "Model name is required."
+            );
+
+        }
+
+
+        let slug =
+            getValue(
+                "editProductSlug"
+            )
+                .trim();
+
+
+        if (
+            !slug
+        ) {
+
+            slug =
+                slugify(
+                    name
+                );
+
+        }
+
+
+        const launchDate =
+            getValue(
+                "editProductLaunchDate"
+            );
+
+
+        const existingProduct =
+            getProductById(
+                productId
+            );
+
+
+        const payload = {
+
+            name:
+                name,
+
+            sku:
+                getValue(
+                    "editProductSku"
+                )
+                    .trim()
+                ||
+                null,
+
+            slug:
+                slug,
+
+            category:
+                getValue(
+                    "editProductCategory"
+                )
+                ||
+                "reference",
+
+            fit_type:
+                getValue(
+                    "editProductFitType"
+                )
+                ||
+                "universal",
+
+            tuning_type:
+                getValue(
+                    "editProductTuningType"
+                )
+                ||
+                "reference",
+
+            price_gbp:
+                Math.max(
+                    0,
+                    safeNumber(
+                        getValue(
+                            "editProductPrice"
+                        )
+                    )
+                ),
+
+            stock_quantity:
+                Math.max(
+                    0,
+                    Math.round(
+                        safeNumber(
+                            getValue(
+                                "editProductStock"
+                            )
+                        )
+                    )
+                ),
+
+            low_stock_threshold:
+                Math.max(
+                    0,
+                    Math.round(
+                        safeNumber(
+                            getValue(
+                                "editProductLowThreshold"
+                            ),
+                            3
+                        )
+                    )
+                ),
+
+            /*
+             * THIS IS WHERE COMING SOON IS SAVED.
+             */
+
+            status:
+                getValue(
+                    "editProductStatus"
+                )
+                ||
+                "coming_soon",
+
+            display_order:
+                Math.max(
+                    0,
+                    Math.round(
+                        safeNumber(
+                            getValue(
+                                "editProductOrder"
+                            )
+                        )
+                    )
+                ),
+
+            launch_date:
+                launchDate
+                ?
+                new Date(
+                    launchDate
+                )
+                    .toISOString()
+                :
+                null,
+
+            max_per_order:
+                Math.max(
+                    1,
+                    Math.round(
+                        safeNumber(
+                            getValue(
+                                "editProductMaxOrder"
+                            ),
+                            1
+                        )
+                    )
+                ),
+
+            detail_page:
+                getValue(
+                    "editProductDetailPage"
+                )
+                    .trim()
+                ||
+                null,
+
+            public_visible:
+                getChecked(
+                    "editProductPublic"
+                ),
+
+            ordering_enabled:
+                getChecked(
+                    "editProductOrdering"
+                ),
+
+            featured:
+                getChecked(
+                    "editProductFeatured"
+                ),
+
+            preorder_enabled:
+                getChecked(
+                    "editProductPreorder"
+                ),
+
+            subtitle:
+                getValue(
+                    "editProductSubtitle"
+                )
+                    .trim()
+                ||
+                null,
+
+            /*
+             * DESCRIPTION EDITING
+             */
+
+            short_description:
+                getValue(
+                    "editProductShortDescription"
+                )
+                    .trim()
+                ||
+                null,
+
+            description:
+                getValue(
+                    "editProductDescription"
+                )
+                    .trim()
+                ||
+                null
+
+        };
+
+
+        /*
+         * Your existing database uses custom_fit/custom_tuning.
+         * Some newer versions use *_available.
+         *
+         * Preserve the schema already present on this product.
+         */
+
+        if (
+            existingProduct
+            &&
+            Object.prototype
+                .hasOwnProperty
+                .call(
+                    existingProduct,
+                    "custom_fit_available"
+                )
+        ) {
+
+            payload.custom_fit_available =
+                getChecked(
+                    "editProductCustomFit"
+                );
+
+        }
+
+        else {
+
+            payload.custom_fit =
+                getChecked(
+                    "editProductCustomFit"
+                );
+
+        }
+
+
+        if (
+            existingProduct
+            &&
+            Object.prototype
+                .hasOwnProperty
+                .call(
+                    existingProduct,
+                    "custom_tuning_available"
+                )
+        ) {
+
+            payload.custom_tuning_available =
+                getChecked(
+                    "editProductCustomTuning"
+                );
+
+        }
+
+        else {
+
+            payload.custom_tuning =
+                getChecked(
+                    "editProductCustomTuning"
+                );
+
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await window.hcSupabase
+                .from(
+                    "products"
+                )
+                .update(
+                    payload
+                )
+                .eq(
+                    "id",
+                    productId
+                )
+                .select()
+                .single();
+
+
+        if (
+            error
+        ) {
+
+            throw error;
+
+        }
+
+
+        const index =
+            allProducts.findIndex(
+                item =>
+                    String(
+                        item.id
+                    )
+                    ===
+                    String(
+                        productId
+                    )
+            );
+
+
+        if (
+            index >=
+            0
+        ) {
+
+            allProducts[
+                index
+            ] =
+                data;
+
+        }
+
+
+        setMessage(
+            "editProductMessage",
+            "Product updated successfully.",
+            "success"
+        );
+
+
+        await loadProducts();
+
+
+        window.setTimeout(
+            () => {
+
+                closeEditProduct();
+
+            },
+            500
+        );
+
+    }
+
+    catch (
+        error
+    ) {
+
+        console.error(
+            "Product update failed:",
+            error
+        );
+
+
+        setMessage(
+            "editProductMessage",
+            error.message
+            ||
+            "Unable to update product.",
+            "error"
+        );
+
+    }
+
+    finally {
+
+        if (
+            button
+        ) {
+
+            button.disabled =
+                false;
+
+
+            button.textContent =
+                originalText;
+
+        }
 
     }
 
@@ -2327,10 +3830,8 @@ function confirmDeleteProduct(
 ) {
 
     const product =
-        allProducts.find(
-            item =>
-                item.id ===
-                productId
+        getProductById(
+            productId
         );
 
 
@@ -2394,6 +3895,7 @@ async function deleteProduct(
     ) {
 
         console.error(
+            "Delete product error:",
             error
         );
 
@@ -2416,10 +3918,8 @@ function openProductPage(
 ) {
 
     const product =
-        allProducts.find(
-            item =>
-                item.id ===
-                productId
+        getProductById(
+            productId
         );
 
 
@@ -2435,7 +3935,13 @@ function openProductPage(
     const url =
         product.detail_page
         ||
-        `products/${product.slug}.html`;
+        (
+            product.slug
+            ?
+            `products/${product.slug}.html`
+            :
+            "product.html"
+        );
 
 
     window.open(
@@ -2452,26 +3958,57 @@ function openProductPage(
 
 function resetProductForm() {
 
-    const ids = [
+    const textFields = [
 
-        "newProductName",
-        "newProductSku",
-        "newProductSlug",
-        "newProductPrice",
-        "newProductSubtitle",
-        "newProductShortDescription",
-        "newProductDescription",
-        "newProductDetailPage"
+        [
+            "newProductName",
+            "productName"
+        ],
+
+        [
+            "newProductSku",
+            "productSku"
+        ],
+
+        [
+            "newProductSlug",
+            "productSlug"
+        ],
+
+        [
+            "newProductPrice",
+            "productPrice"
+        ],
+
+        [
+            "newProductSubtitle",
+            "productSubtitle"
+        ],
+
+        [
+            "newProductShortDescription",
+            "productShortDescription"
+        ],
+
+        [
+            "newProductDescription",
+            "productDescription"
+        ],
+
+        [
+            "newProductDetailPage",
+            "productDetailPage"
+        ]
 
     ];
 
 
-    ids.forEach(
-        id => {
+    textFields.forEach(
+        ids => {
 
             const element =
-                document.getElementById(
-                    id
+                byId(
+                    ...ids
                 );
 
 
@@ -2488,91 +4025,136 @@ function resetProductForm() {
     );
 
 
-    document
-        .getElementById(
-            "newProductStock"
-        )
-        .value =
-            0;
+    setValue(
+        0,
+        "newProductStock",
+        "productStock"
+    );
 
 
-    document
-        .getElementById(
-            "newProductLowThreshold"
-        )
-        .value =
-            3;
+    setValue(
+        3,
+        "newProductLowThreshold",
+        "productLowThreshold"
+    );
 
 
-    document
-        .getElementById(
-            "newProductOrder"
-        )
-        .value =
-            0;
+    setValue(
+        0,
+        "newProductOrder",
+        "productDisplayOrder"
+    );
 
 
-    document
-        .getElementById(
-            "newProductMaxOrder"
-        )
-        .value =
-            1;
+    setValue(
+        1,
+        "newProductMaxOrder",
+        "productMaxPerOrder"
+    );
 
 
-    document
-        .getElementById(
-            "newProductStatus"
-        )
-        .value =
-            "coming_soon";
+    /*
+     * DEFAULT STATUS RETURNS TO COMING SOON.
+     */
+
+    setValue(
+        "coming_soon",
+        "newProductStatus",
+        "productStatus"
+    );
 
 
-    document
-        .getElementById(
-            "newProductCategory"
-        )
-        .value =
-            "reference";
+    setValue(
+        "reference",
+        "newProductCategory",
+        "productCategory"
+    );
 
 
-    document
-        .getElementById(
-            "newProductFitType"
-        )
-        .value =
-            "universal";
+    setValue(
+        "universal",
+        "newProductFitType",
+        "productFitType"
+    );
 
 
-    document
-        .getElementById(
-            "newProductTuningType"
-        )
-        .value =
-            "reference";
+    setValue(
+        "reference",
+        "newProductTuningType",
+        "productTuningType"
+    );
 
 
-    document
-        .getElementById(
-            "newProductImage"
-        )
-        .value =
+    setValue(
+        "",
+        "newProductLaunchDate",
+        "productLaunchDate"
+    );
+
+
+    const image =
+        byId(
+            "newProductImage",
+            "productImage"
+        );
+
+
+    if (
+        image
+    ) {
+
+        image.value =
             "";
 
+    }
 
-    document
-        .querySelectorAll(
-            ".create-product-panel input[type='checkbox']"
-        )
-        .forEach(
-            checkbox => {
 
-                checkbox.checked =
-                    checkbox.id ===
-                    "newProductPublicVisible";
+    setChecked(
+        true,
+        "newProductPublicVisible",
+        "productPublicVisible"
+    );
 
-            }
-        );
+
+    setChecked(
+        false,
+        "newProductFeatured",
+        "productFeatured"
+    );
+
+
+    setChecked(
+        false,
+        "newProductOrdering",
+        "productOrderingEnabled"
+    );
+
+
+    setChecked(
+        false,
+        "newProductPreorder",
+        "productPreorderEnabled"
+    );
+
+
+    setChecked(
+        false,
+        "newProductCustomFit",
+        "productCustomFit"
+    );
+
+
+    setChecked(
+        false,
+        "newProductCustomTuning",
+        "productCustomTuning"
+    );
+
+
+    setChecked(
+        false,
+        "newProductReferenceTarget"
+    );
 
 }
 
@@ -2584,17 +4166,26 @@ function resetProductForm() {
 function handleProductNameInput() {
 
     const name =
-        document
-            .getElementById(
-                "newProductName"
-            )
-            .value;
+        getValue(
+            "newProductName",
+            "productName"
+        );
 
 
     const slugInput =
-        document.getElementById(
-            "newProductSlug"
+        byId(
+            "newProductSlug",
+            "productSlug"
         );
+
+
+    if (
+        !slugInput
+    ) {
+
+        return;
+
+    }
 
 
     if (
@@ -2612,15 +4203,104 @@ function handleProductNameInput() {
 
 
 /* =========================================================
-   FREQUENCY RESPONSE
+   FREQUENCY RESPONSE TABLE HELPERS
+
+   Supports both:
+   product_frequency_response
+   product_frequency_responses
+========================================================= */
+
+async function runFrQuery(
+    operation
+) {
+
+    const names = [
+
+        "product_frequency_response",
+        "product_frequency_responses"
+
+    ];
+
+
+    let lastError =
+        null;
+
+
+    for (
+        const tableName
+        of
+        names
+    ) {
+
+        try {
+
+            const result =
+                await operation(
+                    tableName
+                );
+
+
+            if (
+                !result.error
+            ) {
+
+                return {
+                    ...result,
+                    tableName
+                };
+
+            }
+
+
+            lastError =
+                result.error;
+
+        }
+
+        catch (
+            error
+        ) {
+
+            lastError =
+                error;
+
+        }
+
+    }
+
+
+    return {
+
+        data:
+            null,
+
+        error:
+            lastError
+
+    };
+
+}
+
+
+/* =========================================================
+   POPULATE FR PRODUCT SELECT
 ========================================================= */
 
 function populateFrProductSelect() {
 
     const select =
-        document.getElementById(
+        byId(
             "frProductSelect"
         );
+
+
+    if (
+        !select
+    ) {
+
+        return;
+
+    }
 
 
     const current =
@@ -2638,9 +4318,7 @@ function populateFrProductSelect() {
                 .map(
                     product => `
 
-                        <option
-                            value="${product.id}"
-                        >
+                        <option value="${product.id}">
 
                             ${
                                 escapeHtml(
@@ -2661,13 +4339,97 @@ function populateFrProductSelect() {
     if (
         allProducts.some(
             product =>
-                product.id ===
-                current
+                String(
+                    product.id
+                )
+                ===
+                String(
+                    current
+                )
         )
     ) {
 
         select.value =
             current;
+
+    }
+
+}
+
+
+function populateReferenceProductSelect() {
+
+    const select =
+        byId(
+            "referenceProductSelect"
+        );
+
+
+    if (
+        !select
+    ) {
+
+        return;
+
+    }
+
+
+    const current =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Select product
+        </option>
+
+        ${
+            allProducts
+                .map(
+                    product => `
+
+                        <option value="${product.id}">
+
+                            ${
+                                escapeHtml(
+                                    product.name
+                                )
+                            }
+
+                        </option>
+
+                    `
+                )
+                .join("")
+        }
+
+    `;
+
+
+    const reference =
+        allProducts.find(
+            product =>
+                product.is_reference_target ===
+                true
+        );
+
+
+    if (
+        current
+    ) {
+
+        select.value =
+            current;
+
+    }
+
+    else if (
+        reference
+    ) {
+
+        select.value =
+            reference.id;
 
     }
 
@@ -2687,10 +4449,9 @@ async function parseFrequencyResponseFile(
 
 
     const lines =
-        text
-            .split(
-                /\r?\n/
-            );
+        text.split(
+            /\r?\n/
+        );
 
 
     const points =
@@ -2704,8 +4465,7 @@ async function parseFrequencyResponseFile(
     ) {
 
         const line =
-            rawLine
-                .trim();
+            rawLine.trim();
 
 
         if (
@@ -2718,7 +4478,7 @@ async function parseFrequencyResponseFile(
             line.startsWith(
                 ";"
             )
-    ) {
+        ) {
 
             continue;
 
@@ -2803,10 +4563,6 @@ async function parseFrequencyResponseFile(
     );
 
 
-    /*
-     * Remove duplicate frequencies.
-     */
-
     const unique =
         new Map();
 
@@ -2865,7 +4621,8 @@ function interpolateResponse(
 
     const last =
         points[
-            points.length - 1
+            points.length -
+            1
         ];
 
 
@@ -2882,7 +4639,8 @@ function interpolateResponse(
     for (
         let index = 0;
         index <
-            points.length - 1;
+            points.length -
+            1;
         index++
     ) {
 
@@ -2894,7 +4652,8 @@ function interpolateResponse(
 
         const right =
             points[
-                index + 1
+                index +
+                1
             ];
 
 
@@ -2971,14 +4730,17 @@ function interpolateResponse(
 
 async function previewFrequencyResponse() {
 
+    const input =
+        byId(
+            "frFileInput",
+            "frProductFile"
+        );
+
+
     const file =
-        document
-            .getElementById(
-                "frFileInput"
-            )
-            .files[
-                0
-            ];
+        input
+            ?.files
+            ?.[0];
 
 
     if (
@@ -2986,8 +4748,16 @@ async function previewFrequencyResponse() {
     ) {
 
         setMessage(
-            "frMessage",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
             "Choose an FRD, CSV or TXT file first.",
+
             "error"
         );
 
@@ -3031,17 +4801,34 @@ async function previewFrequencyResponse() {
         );
 
 
-        document
-            .getElementById(
-                "saveFrButton"
-            )
-            .disabled =
+        const saveButton =
+            byId(
+                "saveFrButton",
+                "uploadProductFrButton"
+            );
+
+
+        if (
+            saveButton
+        ) {
+
+            saveButton.disabled =
                 false;
+
+        }
 
 
         setMessage(
-            "frMessage",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
             `${points.length} measurement points loaded.`,
+
             "success"
         );
 
@@ -3055,17 +4842,17 @@ async function previewFrequencyResponse() {
             [];
 
 
-        document
-            .getElementById(
-                "saveFrButton"
-            )
-            .disabled =
-                true;
-
-
         setMessage(
-            "frMessage",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
             error.message,
+
             "error"
         );
 
@@ -3083,15 +4870,52 @@ function drawAdminFrChart(
 ) {
 
     const canvas =
-        document.getElementById(
-            "adminFrCanvas"
+        byId(
+            "adminFrCanvas",
+            "frChart"
         );
+
+
+    if (
+        !canvas
+    ) {
+
+        return;
+
+    }
 
 
     const ctx =
         canvas.getContext(
             "2d"
         );
+
+
+    /*
+     * Give canvas a useful internal resolution if the newer
+     * admin.html did not specify width/height.
+     */
+
+    if (
+        canvas.width <
+        500
+    ) {
+
+        canvas.width =
+            1400;
+
+    }
+
+
+    if (
+        canvas.height <
+        300
+    ) {
+
+        canvas.height =
+            650;
+
+    }
 
 
     const width =
@@ -3114,7 +4938,7 @@ function drawAdminFrChart(
         !points
         ||
         points.length <
-            2
+        2
     ) {
 
         return;
@@ -3122,12 +4946,17 @@ function drawAdminFrChart(
     }
 
 
+    const normalizationElement =
+        byId(
+            "frNormalization"
+        );
+
+
     const normalization =
-        document
-            .getElementById(
-                "frNormalization"
-            )
-            .value;
+        normalizationElement
+            ?.value
+        ||
+        "none";
 
 
     let displayPoints =
@@ -3191,10 +5020,14 @@ function drawAdminFrChart(
 
     const maxFrequency =
         Math.min(
+
             20000,
+
             displayPoints[
-                displayPoints.length - 1
+                displayPoints.length -
+                1
             ].frequency
+
         );
 
 
@@ -3205,7 +5038,7 @@ function drawAdminFrChart(
         );
 
 
-    let minDb =
+    const minDb =
         Math.floor(
             Math.min(
                 ...dbValues
@@ -3219,7 +5052,7 @@ function drawAdminFrChart(
         5;
 
 
-    let maxDb =
+    const maxDb =
         Math.ceil(
             Math.max(
                 ...dbValues
@@ -3325,8 +5158,6 @@ function drawAdminFrChart(
         "18px Arial";
 
 
-    /* GRID */
-
     for (
         let db = minDb;
         db <= maxDb;
@@ -3343,7 +5174,7 @@ function drawAdminFrChart(
 
 
         ctx.strokeStyle =
-            "rgba(255,255,255,0.10)";
+            "rgba(23,23,23,0.10)";
 
 
         ctx.moveTo(
@@ -3353,7 +5184,8 @@ function drawAdminFrChart(
 
 
         ctx.lineTo(
-            width - right,
+            width -
+            right,
             y
         );
 
@@ -3362,13 +5194,14 @@ function drawAdminFrChart(
 
 
         ctx.fillStyle =
-            "#8e8e8e";
+            "#77716b";
 
 
         ctx.fillText(
             `${db > 0 ? "+" : ""}${db}`,
             15,
-            y + 5
+            y +
+            5
         );
 
     }
@@ -3416,7 +5249,7 @@ function drawAdminFrChart(
 
 
             ctx.strokeStyle =
-                "rgba(255,255,255,0.07)";
+                "rgba(23,23,23,0.07)";
 
 
             ctx.moveTo(
@@ -3427,7 +5260,8 @@ function drawAdminFrChart(
 
             ctx.lineTo(
                 x,
-                height - bottom
+                height -
+                bottom
             );
 
 
@@ -3435,12 +5269,12 @@ function drawAdminFrChart(
 
 
             ctx.fillStyle =
-                "#8e8e8e";
+                "#77716b";
 
 
             const label =
                 frequency >=
-                    1000
+                1000
                 ?
                 `${frequency / 1000}k`
                 :
@@ -3451,32 +5285,33 @@ function drawAdminFrChart(
 
             ctx.fillText(
                 label,
-                x - 15,
-                height - 20
+                x -
+                15,
+                height -
+                20
             );
 
         }
     );
 
 
-    /* CURVE */
-
     ctx.beginPath();
 
 
     ctx.strokeStyle =
-        "#ff6a00";
+        "#d86a2b";
 
 
     ctx.lineWidth =
         4;
 
 
+    let started =
+        false;
+
+
     displayPoints.forEach(
-        (
-            point,
-            index
-        ) => {
+        point => {
 
             if (
                 point.frequency <
@@ -3504,14 +5339,17 @@ function drawAdminFrChart(
 
 
             if (
-                index ===
-                0
+                !started
             ) {
 
                 ctx.moveTo(
                     x,
                     y
                 );
+
+
+                started =
+                    true;
 
             }
 
@@ -3541,48 +5379,60 @@ function updateFrSummary(
     points
 ) {
 
-    document
-        .getElementById(
-            "frPointCount"
-        )
-        .textContent =
-            points.length;
+    if (
+        !points?.length
+    ) {
+
+        return;
+
+    }
 
 
-    document
-        .getElementById(
-            "frMinFrequency"
-        )
-        .textContent =
-            `${points[0].frequency.toFixed(1)} Hz`;
+    setTextIfPresent(
+        "frPointCount",
+        points.length
+    );
 
 
-    document
-        .getElementById(
-            "frMaxFrequency"
-        )
-        .textContent =
-            `${
-                points[
-                    points.length - 1
-                ]
+    setTextIfPresent(
+        "frMinFrequency",
+        `${points[0].frequency.toFixed(1)} Hz`
+    );
+
+
+    setTextIfPresent(
+
+        "frMaxFrequency",
+
+        `${
+            points[
+                points.length -
+                1
+            ]
                 .frequency
-                .toFixed(1)
-            } Hz`;
-
-
-    document
-        .getElementById(
-            "frOneKhzLevel"
-        )
-        .textContent =
-            `${
-                interpolateResponse(
-                    points,
-                    1000
+                .toFixed(
+                    1
                 )
-                .toFixed(2)
-            } dB`;
+        } Hz`
+
+    );
+
+
+    setTextIfPresent(
+
+        "frOneKhzLevel",
+
+        `${
+            interpolateResponse(
+                points,
+                1000
+            )
+                .toFixed(
+                    2
+                )
+        } dB`
+
+    );
 
 }
 
@@ -3594,11 +5444,9 @@ function updateFrSummary(
 async function saveFrequencyResponse() {
 
     const productId =
-        document
-            .getElementById(
-                "frProductSelect"
-            )
-            .value;
+        getValue(
+            "frProductSelect"
+        );
 
 
     if (
@@ -3606,13 +5454,54 @@ async function saveFrequencyResponse() {
     ) {
 
         setMessage(
-            "frMessage",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
             "Select a product first.",
+
             "error"
         );
 
 
         return;
+
+    }
+
+
+    /*
+     * Newer HTML can use one upload button without a
+     * separate Preview button.
+     */
+
+    if (
+        parsedFrequencyResponse.length ===
+        0
+    ) {
+
+        const file =
+            byId(
+                "frFileInput",
+                "frProductFile"
+            )
+                ?.files
+                ?.[0];
+
+
+        if (
+            file
+        ) {
+
+            parsedFrequencyResponse =
+                await parseFrequencyResponseFile(
+                    file
+                );
+
+        }
 
     }
 
@@ -3623,8 +5512,16 @@ async function saveFrequencyResponse() {
     ) {
 
         setMessage(
-            "frMessage",
-            "Preview a valid measurement first.",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
+            "Choose and preview a valid measurement first.",
+
             "error"
         );
 
@@ -3636,38 +5533,33 @@ async function saveFrequencyResponse() {
 
     try {
 
-        /*
-         * Delete old response first.
-         */
-
-        const {
-            error: deleteError
-        } =
-            await window.hcSupabase
-                .from(
-                    "product_frequency_response"
-                )
-                .delete()
-                .eq(
-                    "product_id",
-                    productId
-                );
+        const deleteResult =
+            await runFrQuery(
+                tableName =>
+                    window.hcSupabase
+                        .from(
+                            tableName
+                        )
+                        .delete()
+                        .eq(
+                            "product_id",
+                            productId
+                        )
+            );
 
 
         if (
-            deleteError
+            deleteResult.error
         ) {
 
-            throw deleteError;
+            throw deleteResult.error;
 
         }
 
 
-        /*
-         * Store ORIGINAL measured values.
-         *
-         * Normalisation is done during comparison/display.
-         */
+        const tableName =
+            deleteResult.tableName;
+
 
         const rows =
             parsedFrequencyResponse.map(
@@ -3686,11 +5578,6 @@ async function saveFrequencyResponse() {
             );
 
 
-        /*
-         * Insert in batches so a large measurement
-         * does not create an oversized request.
-         */
-
         const batchSize =
             500;
 
@@ -3706,7 +5593,8 @@ async function saveFrequencyResponse() {
             const batch =
                 rows.slice(
                     index,
-                    index + batchSize
+                    index +
+                    batchSize
                 );
 
 
@@ -3715,7 +5603,7 @@ async function saveFrequencyResponse() {
             } =
                 await window.hcSupabase
                     .from(
-                        "product_frequency_response"
+                        tableName
                     )
                     .insert(
                         batch
@@ -3733,9 +5621,27 @@ async function saveFrequencyResponse() {
         }
 
 
+        drawAdminFrChart(
+            parsedFrequencyResponse
+        );
+
+
+        updateFrSummary(
+            parsedFrequencyResponse
+        );
+
+
         setMessage(
-            "frMessage",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
             `${rows.length} real measurement points saved.`,
+
             "success"
         );
 
@@ -3752,8 +5658,16 @@ async function saveFrequencyResponse() {
 
 
         setMessage(
-            "frMessage",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
             error.message,
+
             "error"
         );
 
@@ -3769,11 +5683,9 @@ async function saveFrequencyResponse() {
 async function loadExistingFrequencyResponse() {
 
     const productId =
-        document
-            .getElementById(
-                "frProductSelect"
-            )
-            .value;
+        getValue(
+            "frProductSelect"
+        );
 
 
     if (
@@ -3796,61 +5708,61 @@ async function loadExistingFrequencyResponse() {
 
     try {
 
-        const {
-            data,
-            error
-        } =
-            await window.hcSupabase
-                .from(
-                    "product_frequency_response"
-                )
-                .select(`
-                    frequency_hz,
-                    db
-                `)
-                .eq(
-                    "product_id",
-                    productId
-                )
-                .order(
-                    "frequency_hz",
-                    {
-                        ascending:
-                            true
-                    }
-                );
+        const result =
+            await runFrQuery(
+                tableName =>
+                    window.hcSupabase
+                        .from(
+                            tableName
+                        )
+                        .select(`
+                            frequency_hz,
+                            db
+                        `)
+                        .eq(
+                            "product_id",
+                            productId
+                        )
+                        .order(
+                            "frequency_hz",
+                            {
+                                ascending:
+                                    true
+                            }
+                        )
+            );
 
 
         if (
-            error
+            result.error
         ) {
 
-            throw error;
+            throw result.error;
 
         }
 
 
         const points =
             (
-                data
+                result.data
                 ||
                 []
             )
-            .map(
-                point => ({
+                .map(
+                    point => ({
 
-                    frequency:
-                        Number(
-                            point.frequency_hz
-                        ),
+                        frequency:
+                            Number(
+                                point.frequency_hz
+                            ),
 
-                    db:
-                        Number(
-                            point.db
-                        )
+                        db:
+                            Number(
+                                point.db
+                            )
 
-                })
-            );
+                    })
+                );
 
 
         parsedFrequencyResponse =
@@ -3872,17 +5784,17 @@ async function loadExistingFrequencyResponse() {
             );
 
 
-            document
-                .getElementById(
-                    "saveFrButton"
-                )
-                .disabled =
-                    false;
-
-
             setMessage(
-                "frMessage",
+                byId(
+                    "frMessage"
+                )
+                ?
+                "frMessage"
+                :
+                "frProductMessage",
+
                 `${points.length} existing measurement points loaded.`,
+
                 "success"
             );
 
@@ -3895,17 +5807,17 @@ async function loadExistingFrequencyResponse() {
             );
 
 
-            document
-                .getElementById(
-                    "saveFrButton"
-                )
-                .disabled =
-                    true;
-
-
             setMessage(
-                "frMessage",
+                byId(
+                    "frMessage"
+                )
+                ?
+                "frMessage"
+                :
+                "frProductMessage",
+
                 "No frequency response saved for this product."
+
             );
 
         }
@@ -3917,13 +5829,22 @@ async function loadExistingFrequencyResponse() {
     ) {
 
         console.error(
+            "Load FR error:",
             error
         );
 
 
         setMessage(
-            "frMessage",
+            byId(
+                "frMessage"
+            )
+            ?
+            "frMessage"
+            :
+            "frProductMessage",
+
             error.message,
+
             "error"
         );
 
@@ -3939,23 +5860,14 @@ async function loadExistingFrequencyResponse() {
 function confirmDeleteFrequencyResponse() {
 
     const productId =
-        document
-            .getElementById(
-                "frProductSelect"
-            )
-            .value;
+        getValue(
+            "frProductSelect"
+        );
 
 
     if (
         !productId
     ) {
-
-        setMessage(
-            "frMessage",
-            "Select a product first.",
-            "error"
-        );
-
 
         return;
 
@@ -3966,30 +5878,31 @@ function confirmDeleteFrequencyResponse() {
 
         "Delete frequency response?",
 
-        "The product will no longer be available to the public tuning matcher until new measurement data is uploaded.",
+        "The product will no longer have measurement data until a new response is uploaded.",
 
         async () => {
 
-            const {
-                error
-            } =
-                await window.hcSupabase
-                    .from(
-                        "product_frequency_response"
-                    )
-                    .delete()
-                    .eq(
-                        "product_id",
-                        productId
-                    );
+            const result =
+                await runFrQuery(
+                    tableName =>
+                        window.hcSupabase
+                            .from(
+                                tableName
+                            )
+                            .delete()
+                            .eq(
+                                "product_id",
+                                productId
+                            )
+                );
 
 
             if (
-                error
+                result.error
             ) {
 
                 alert(
-                    error.message
+                    result.error.message
                 );
 
 
@@ -4007,21 +5920,6 @@ function confirmDeleteFrequencyResponse() {
             );
 
 
-            document
-                .getElementById(
-                    "saveFrButton"
-                )
-                .disabled =
-                    true;
-
-
-            setMessage(
-                "frMessage",
-                "Frequency response deleted.",
-                "success"
-            );
-
-
             closeConfirm();
 
         }
@@ -4032,281 +5930,526 @@ function confirmDeleteFrequencyResponse() {
 
 
 /* =========================================================
+   SET REFERENCE FROM NEWER FR SECTION
+========================================================= */
+
+async function setSelectedReferenceProduct() {
+
+    const productId =
+        getValue(
+            "referenceProductSelect"
+        );
+
+
+    if (
+        !productId
+    ) {
+
+        setMessage(
+            "referenceMessage",
+            "Select a reference product.",
+            "error"
+        );
+
+
+        return;
+
+    }
+
+
+    await setReferenceProduct(
+        productId
+    );
+
+
+    setMessage(
+        "referenceMessage",
+        "Reference product updated.",
+        "success"
+    );
+
+}
+
+
+/* =========================================================
+   ADMIN NAVIGATION
+========================================================= */
+
+function setupAdminNavigation() {
+
+    document
+        .querySelectorAll(
+            "[data-section]"
+        )
+        .forEach(
+            button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        const name =
+                            button.dataset.section;
+
+
+                        const targets = {
+
+                            accounts:
+                                byId(
+                                    "accountsSection"
+                                ),
+
+                            scans:
+                                byId(
+                                    "scansSection"
+                                ),
+
+                            processors:
+                                byId(
+                                    "processorsSection"
+                                ),
+
+                            products:
+                                byId(
+                                    "productsSection"
+                                ),
+
+                            "fr-data":
+                                byId(
+                                    "frDataSection"
+                                )
+
+                        };
+
+
+                        targets[
+                            name
+                        ]
+                            ?.scrollIntoView({
+
+                                behavior:
+                                    "smooth",
+
+                                block:
+                                    "start"
+
+                            });
+
+                    }
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================================
    EVENTS
 ========================================================= */
 
-document
-    .getElementById(
-        "adminLogoutButton"
+function setupEvents() {
+
+    /*
+     * LOGOUT
+     */
+
+    byId(
+        "adminLogoutButton",
+        "logoutButton"
     )
-    ?.addEventListener(
-        "click",
-        logoutAdmin
-    );
+        ?.addEventListener(
+            "click",
+            logoutAdmin
+        );
 
 
-document
-    .getElementById(
+    /*
+     * REFRESH
+     */
+
+    byId(
         "refreshAccountsButton"
     )
-    ?.addEventListener(
-        "click",
-        loadAccounts
-    );
+        ?.addEventListener(
+            "click",
+            loadAccounts
+        );
 
 
-document
-    .getElementById(
+    byId(
         "refreshScansButton"
     )
-    ?.addEventListener(
-        "click",
-        loadScans
-    );
+        ?.addEventListener(
+            "click",
+            loadScans
+        );
 
 
-document
-    .getElementById(
+    byId(
         "refreshProcessorsButton"
     )
-    ?.addEventListener(
-        "click",
-        loadProcessors
-    );
+        ?.addEventListener(
+            "click",
+            loadProcessors
+        );
 
 
-document
-    .getElementById(
+    byId(
         "refreshProductsButton"
     )
-    ?.addEventListener(
-        "click",
-        loadProducts
-    );
+        ?.addEventListener(
+            "click",
+            loadProducts
+        );
 
 
-document
-    .getElementById(
+    /*
+     * SCAN FILTER
+     */
+
+    byId(
         "scanStatusFilter"
     )
-    ?.addEventListener(
-        "change",
-        renderScans
-    );
+        ?.addEventListener(
+            "change",
+            renderScans
+        );
 
 
-document
-    .getElementById(
+    byId(
         "clearScanFilterButton"
     )
-    ?.addEventListener(
-        "click",
-        () => {
+        ?.addEventListener(
+            "click",
+            () => {
 
-            document
-                .getElementById(
+                setValue(
+                    "",
                     "scanStatusFilter"
-                )
-                .value =
-                    "";
-
-
-            renderScans();
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "accountSearchInput"
-    )
-    ?.addEventListener(
-        "input",
-        event => {
-
-            const search =
-                event.target.value
-                    .trim()
-                    .toLowerCase();
-
-
-            if (
-                !search
-            ) {
-
-                renderAccounts(
-                    allAccounts
                 );
 
 
-                return;
+                renderScans();
 
             }
+        );
 
 
-            renderAccounts(
+    /*
+     * ACCOUNT SEARCH
+     */
 
-                allAccounts.filter(
-                    account =>
-
-                        String(
-                            account.email
-                            ||
-                            ""
-                        )
-                        .toLowerCase()
-                        .includes(
-                            search
-                        )
-
-                        ||
-
-                        String(
-                            account.full_name
-                            ||
-                            ""
-                        )
-                        .toLowerCase()
-                        .includes(
-                            search
-                        )
-
-                )
-
-            );
-
-        }
-    );
-
-
-document
-    .getElementById(
-        "newProductName"
+    byId(
+        "accountSearchInput",
+        "accountSearch"
     )
-    ?.addEventListener(
-        "input",
-        handleProductNameInput
-    );
+        ?.addEventListener(
+            "input",
+            event => {
+
+                const search =
+                    event.target.value
+                        .trim()
+                        .toLowerCase();
 
 
-document
-    .getElementById(
-        "newProductSlug"
+                if (
+                    !search
+                ) {
+
+                    renderAccounts(
+                        allAccounts
+                    );
+
+
+                    return;
+
+                }
+
+
+                renderAccounts(
+
+                    allAccounts.filter(
+                        account =>
+
+                            String(
+                                account.email
+                                ||
+                                ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    search
+                                )
+
+                            ||
+
+                            String(
+                                account.full_name
+                                ||
+                                ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    search
+                                )
+
+                    )
+
+                );
+
+            }
+        );
+
+
+    /*
+     * PRODUCT CREATE
+     */
+
+    byId(
+        "newProductName",
+        "productName"
     )
-    ?.addEventListener(
-        "input",
-        event => {
-
-            event.target.dataset.manual =
-                event.target.value
-                ?
-                "true"
-                :
-                "";
-
-        }
-    );
+        ?.addEventListener(
+            "input",
+            handleProductNameInput
+        );
 
 
-document
-    .getElementById(
+    byId(
+        "newProductSlug",
+        "productSlug"
+    )
+        ?.addEventListener(
+            "input",
+            event => {
+
+                event.target.dataset.manual =
+                    event.target.value
+                    ?
+                    "true"
+                    :
+                    "";
+
+            }
+        );
+
+
+    byId(
         "addProductButton"
     )
-    ?.addEventListener(
-        "click",
-        createProduct
-    );
+        ?.addEventListener(
+            "click",
+            createProduct
+        );
 
 
-document
-    .getElementById(
+    /*
+     * EDIT PRODUCT
+     */
+
+    byId(
+        "closeEditProductButton"
+    )
+        ?.addEventListener(
+            "click",
+            closeEditProduct
+        );
+
+
+    byId(
+        "saveProductEditButton"
+    )
+        ?.addEventListener(
+            "click",
+            saveProductEdit
+        );
+
+
+    byId(
+        "editProductModal"
+    )
+        ?.addEventListener(
+            "click",
+            event => {
+
+                if (
+                    event.target.id ===
+                    "editProductModal"
+                ) {
+
+                    closeEditProduct();
+
+                }
+
+            }
+        );
+
+
+    /*
+     * FR
+     */
+
+    byId(
         "previewFrButton"
     )
-    ?.addEventListener(
-        "click",
-        previewFrequencyResponse
-    );
+        ?.addEventListener(
+            "click",
+            previewFrequencyResponse
+        );
 
 
-document
-    .getElementById(
-        "saveFrButton"
+    byId(
+        "saveFrButton",
+        "uploadProductFrButton"
     )
-    ?.addEventListener(
-        "click",
-        saveFrequencyResponse
-    );
+        ?.addEventListener(
+            "click",
+            async () => {
+
+                /*
+                 * Newer admin only has one upload button.
+                 */
+
+                if (
+                    parsedFrequencyResponse.length ===
+                    0
+                ) {
+
+                    const file =
+                        byId(
+                            "frFileInput",
+                            "frProductFile"
+                        )
+                            ?.files
+                            ?.[0];
 
 
-document
-    .getElementById(
+                    if (
+                        file
+                    ) {
+
+                        parsedFrequencyResponse =
+                            await parseFrequencyResponseFile(
+                                file
+                            );
+
+                    }
+
+                }
+
+
+                await saveFrequencyResponse();
+
+            }
+        );
+
+
+    byId(
         "deleteFrButton"
     )
-    ?.addEventListener(
-        "click",
-        confirmDeleteFrequencyResponse
-    );
+        ?.addEventListener(
+            "click",
+            confirmDeleteFrequencyResponse
+        );
 
 
-document
-    .getElementById(
+    byId(
         "frProductSelect"
     )
-    ?.addEventListener(
-        "change",
-        loadExistingFrequencyResponse
-    );
+        ?.addEventListener(
+            "change",
+            loadExistingFrequencyResponse
+        );
 
 
-document
-    .getElementById(
+    byId(
         "frNormalization"
     )
-    ?.addEventListener(
-        "change",
-        () => {
+        ?.addEventListener(
+            "change",
+            () => {
 
-            drawAdminFrChart(
-                parsedFrequencyResponse
-            );
+                drawAdminFrChart(
+                    parsedFrequencyResponse
+                );
 
-        }
-    );
+            }
+        );
 
 
-document
-    .getElementById(
+    byId(
+        "setReferenceButton"
+    )
+        ?.addEventListener(
+            "click",
+            setSelectedReferenceProduct
+        );
+
+
+    /*
+     * CONFIRM MODAL
+     */
+
+    byId(
         "confirmCancelButton"
     )
-    ?.addEventListener(
-        "click",
-        closeConfirm
-    );
+        ?.addEventListener(
+            "click",
+            closeConfirm
+        );
 
 
-document
-    .getElementById(
+    byId(
         "confirmActionButton"
     )
-    ?.addEventListener(
-        "click",
-        async () => {
+        ?.addEventListener(
+            "click",
+            async () => {
 
-            const callback =
-                confirmCallback;
+                const callback =
+                    confirmCallback;
 
+
+                if (
+                    callback
+                ) {
+
+                    await callback();
+
+                }
+
+            }
+        );
+
+
+    /*
+     * ESCAPE CLOSES EDIT MODAL
+     */
+
+    document.addEventListener(
+        "keydown",
+        event => {
 
             if (
-                callback
+                event.key ===
+                "Escape"
             ) {
 
-                await callback();
+                closeEditProduct();
+
+                closeConfirm();
 
             }
 
         }
     );
+
+
+    setupAdminNavigation();
+
+}
 
 
 /* =========================================================
@@ -4330,9 +6473,18 @@ async function startAdmin() {
         }
 
 
-        await Promise.all([
+        setupEvents();
 
-            loadScans(),
+
+        /*
+         * Load scans first because account statistics use
+         * allScans to calculate "accounts with scans".
+         */
+
+        await loadScans();
+
+
+        await Promise.all([
 
             loadAccounts(),
 
@@ -4363,4 +6515,11 @@ async function startAdmin() {
 }
 
 
-startAdmin();
+/* =========================================================
+   RUN
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    startAdmin
+);
