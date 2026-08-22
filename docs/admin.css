@@ -14,30 +14,20 @@
     --admin-bg:
         #f2eee8;
 
+    --admin-bg-soft:
+        #e9e3db;
+
     --admin-surface:
         #f8f5f0;
 
     --admin-surface-2:
         #ebe5dd;
 
-    --admin-surface-3:
-        #e9e3db;
+    --admin-dark:
+        #111111;
 
-    --admin-border:
-        rgba(
-            255,
-            255,
-            255,
-            0.10
-        );
-
-    --admin-border-strong:
-        rgba(
-            255,
-            255,
-            255,
-            0.20
-        );
+    --admin-dark-soft:
+        #181818;
 
     --admin-text:
         #171717;
@@ -48,8 +38,27 @@
     --admin-dim:
         #99928a;
 
+    --admin-border:
+        rgba(
+            23,
+            23,
+            23,
+            0.12
+        );
+
+    --admin-border-strong:
+        rgba(
+            23,
+            23,
+            23,
+            0.24
+        );
+
     --admin-accent:
         #d86a2b;
+
+    --admin-accent-dark:
+        #b95520;
 
     --admin-success:
         #357249;
@@ -74,14 +83,18 @@
 ========================================================= */
 
 * {
+
     box-sizing:
         border-box;
+
 }
 
 
 html {
+
     scroll-behavior:
         smooth;
+
 }
 
 
@@ -166,9 +179,9 @@ textarea {
 
     background:
         rgba(
-            8,
-            8,
-            8,
+            242,
+            238,
+            232,
             0.94
         );
 
@@ -179,6 +192,11 @@ textarea {
         );
 
     backdrop-filter:
+        blur(
+            16px
+        );
+
+    -webkit-backdrop-filter:
         blur(
             16px
         );
@@ -211,10 +229,10 @@ textarea {
 .admin-brand img {
 
     width:
-        38px;
+        46px;
 
     height:
-        38px;
+        46px;
 
     object-fit:
         contain;
@@ -271,10 +289,6 @@ textarea {
 
     text-decoration:
         none;
-
-    transition:
-        color
-        160ms ease;
 
 }
 
@@ -383,7 +397,7 @@ textarea {
     border:
         1px solid
         var(
-            --admin-border
+            --admin-border-strong
         );
 
     background:
@@ -406,14 +420,6 @@ textarea {
     cursor:
         pointer;
 
-    transition:
-        background
-        160ms ease,
-        color
-        160ms ease,
-        border-color
-        160ms ease;
-
 }
 
 
@@ -424,28 +430,15 @@ textarea {
             --admin-text
         );
 
-    color:
-        #f2eee8;
-
     border-color:
         var(
             --admin-text
         );
 
-}
-
-
-/* =========================================================
-   PAGE
-========================================================= */
-
-.admin-page {
-
-    width:
-        100%;
-
-    min-height:
-        100vh;
+    color:
+        var(
+            --admin-bg
+        );
 
 }
 
@@ -453,6 +446,14 @@ textarea {
 /* =========================================================
    HERO
 ========================================================= */
+
+.admin-page {
+
+    min-height:
+        100vh;
+
+}
+
 
 .admin-hero {
 
@@ -470,9 +471,9 @@ textarea {
         0 auto;
 
     padding:
-        175px
+        170px
         0
-        95px;
+        90px;
 
 }
 
@@ -493,19 +494,16 @@ textarea {
     letter-spacing:
         0.16em;
 
-    text-transform:
-        uppercase;
-
 }
 
 
 .admin-hero h1 {
 
     max-width:
-        1100px;
+        1050px;
 
     margin:
-        20px
+        18px
         0
         0;
 
@@ -513,7 +511,7 @@ textarea {
         clamp(
             70px,
             9vw,
-            145px
+            140px
         );
 
     line-height:
@@ -540,6 +538,7 @@ textarea {
 
     font-family:
         Georgia,
+        "Times New Roman",
         serif;
 
     font-weight:
@@ -554,7 +553,7 @@ textarea {
         700px;
 
     margin:
-        42px
+        38px
         0
         0;
 
@@ -564,7 +563,7 @@ textarea {
         );
 
     font-size:
-        16px;
+        15px;
 
     line-height:
         1.8;
@@ -573,7 +572,7 @@ textarea {
 
 
 /* =========================================================
-   STATS
+   TOP STATS
 ========================================================= */
 
 .admin-stats {
@@ -590,7 +589,7 @@ textarea {
 
     margin:
         0 auto
-        110px;
+        105px;
 
     display:
         grid;
@@ -621,14 +620,11 @@ textarea {
 
 .admin-stats article {
 
-    min-width:
-        0;
-
     min-height:
-        155px;
+        145px;
 
     padding:
-        24px;
+        23px;
 
     display:
         flex;
@@ -651,7 +647,7 @@ textarea {
 .admin-stats article:last-child {
 
     border-right:
-        none;
+        0;
 
 }
 
@@ -675,7 +671,7 @@ textarea {
 .admin-stats strong {
 
     font-size:
-        42px;
+        40px;
 
     font-weight:
         400;
@@ -706,7 +702,7 @@ textarea {
         0 auto;
 
     padding:
-        110px
+        105px
         0;
 
     border-top:
@@ -721,7 +717,7 @@ textarea {
 .section-heading {
 
     margin-bottom:
-        50px;
+        46px;
 
     display:
         flex;
@@ -749,7 +745,7 @@ textarea {
         clamp(
             44px,
             5vw,
-            78px
+            76px
         );
 
     line-height:
@@ -772,17 +768,17 @@ textarea {
     align-items:
         center;
 
-    gap:
-        10px;
-
     flex-wrap:
         wrap;
+
+    gap:
+        10px;
 
 }
 
 
 /* =========================================================
-   GENERIC CONTROLS
+   INPUTS
 ========================================================= */
 
 .admin-search,
@@ -800,8 +796,11 @@ textarea {
             --admin-border
         );
 
+    border-radius:
+        0;
+
     background:
-        #f8f5f0;
+        transparent;
 
     color:
         var(
@@ -810,12 +809,6 @@ textarea {
 
     outline:
         none;
-
-    transition:
-        border-color
-        160ms ease,
-        background
-        160ms ease;
 
 }
 
@@ -948,6 +941,9 @@ textarea {
             --admin-border-strong
         );
 
+    border-radius:
+        0;
+
     font-size:
         9px;
 
@@ -959,16 +955,6 @@ textarea {
 
     cursor:
         pointer;
-
-    transition:
-        background
-        160ms ease,
-        color
-        160ms ease,
-        border-color
-        160ms ease,
-        opacity
-        160ms ease;
 
 }
 
@@ -994,7 +980,37 @@ textarea {
         );
 
     color:
-        #f2eee8;
+        var(
+            --admin-bg
+        );
+
+}
+
+
+.primary-button {
+
+    background:
+        var(
+            --admin-accent
+        );
+
+    border-color:
+        var(
+            --admin-accent
+        );
+
+    color:
+        #ffffff;
+
+}
+
+
+.primary-button:hover {
+
+    background:
+        var(
+            --admin-text
+        );
 
     border-color:
         var(
@@ -1004,39 +1020,13 @@ textarea {
 }
 
 
-.primary-button {
-
-    border-color:
-        var(
-            --admin-accent
-        );
-
-    background:
-        var(
-            --admin-accent
-        );
-
-    color:
-        #e9e3db;
-
-}
-
-
-.primary-button:hover {
-
-    opacity:
-        0.88;
-
-}
-
-
 .danger-button {
 
     border-color:
         rgba(
-            232,
-            108,
-            108,
+            164,
+            63,
+            54,
             0.35
         );
 
@@ -1059,12 +1049,7 @@ textarea {
         );
 
     color:
-        #f2eee8;
-
-    border-color:
-        var(
-            --admin-danger
-        );
+        #ffffff;
 
 }
 
@@ -1072,7 +1057,7 @@ textarea {
 button:disabled {
 
     opacity:
-        0.35;
+        0.45;
 
     cursor:
         not-allowed;
@@ -1081,12 +1066,15 @@ button:disabled {
 
 
 /* =========================================================
-   SUMMARY GRIDS
+   SUMMARY
 ========================================================= */
 
 .account-summary,
 .inventory-summary,
 .fr-summary-grid {
+
+    margin-bottom:
+        46px;
 
     display:
         grid;
@@ -1099,9 +1087,6 @@ button:disabled {
                 1fr
             )
         );
-
-    margin-bottom:
-        50px;
 
     border-top:
         1px solid
@@ -1134,10 +1119,10 @@ button:disabled {
 .fr-summary-grid article {
 
     min-height:
-        130px;
+        125px;
 
     padding:
-        24px;
+        23px;
 
     display:
         flex;
@@ -1162,7 +1147,7 @@ button:disabled {
 .fr-summary-grid article:last-child {
 
     border-right:
-        none;
+        0;
 
 }
 
@@ -1195,14 +1180,11 @@ button:disabled {
     font-weight:
         400;
 
-    letter-spacing:
-        -0.04em;
-
 }
 
 
 /* =========================================================
-   ACCOUNT GRID
+   GRIDS
 ========================================================= */
 
 .account-grid,
@@ -1237,8 +1219,11 @@ button:disabled {
         0;
 
     background:
-        var(
-            --admin-surface
+        rgba(
+            255,
+            255,
+            255,
+            0.32
         );
 
     border:
@@ -1257,10 +1242,10 @@ button:disabled {
 .account-card {
 
     min-height:
-        260px;
+        250px;
 
     padding:
-        26px;
+        25px;
 
     display:
         flex;
@@ -1290,7 +1275,7 @@ button:disabled {
 .account-card h3 {
 
     margin:
-        48px
+        44px
         0
         10px;
 
@@ -1299,9 +1284,6 @@ button:disabled {
 
     font-weight:
         500;
-
-    letter-spacing:
-        -0.03em;
 
 }
 
@@ -1316,9 +1298,6 @@ button:disabled {
             --admin-muted
         );
 
-    overflow-wrap:
-        anywhere;
-
     line-height:
         1.6;
 
@@ -1331,7 +1310,7 @@ button:disabled {
         auto;
 
     padding-top:
-        30px;
+        28px;
 
     color:
         var(
@@ -1348,13 +1327,14 @@ button:disabled {
 
 
 /* =========================================================
-   SCAN CARDS
+   SCAN / PROCESSOR
 ========================================================= */
 
-.scan-card {
+.scan-card,
+.processor-card {
 
     min-height:
-        310px;
+        300px;
 
     padding:
         25px;
@@ -1373,9 +1353,6 @@ button:disabled {
     display:
         flex;
 
-    align-items:
-        center;
-
     justify-content:
         space-between;
 
@@ -1393,31 +1370,30 @@ button:disabled {
 }
 
 
-.scan-card h3 {
+.scan-card h3,
+.processor-card h3 {
 
     margin:
-        42px
+        40px
         0
         12px;
 
     font-size:
-        30px;
+        28px;
 
     font-weight:
         500;
 
-    text-transform:
-        capitalize;
-
 }
 
 
-.scan-card p {
+.scan-card p,
+.processor-card p {
 
     margin:
         0
         0
-        10px;
+        9px;
 
     color:
         var(
@@ -1448,7 +1424,7 @@ button:disabled {
 
 
 /* =========================================================
-   STATUS BADGES
+   BADGES
 ========================================================= */
 
 .status-badge {
@@ -1498,14 +1474,6 @@ button:disabled {
             --admin-success
         );
 
-    border-color:
-        rgba(
-            104,
-            201,
-            133,
-            0.35
-        );
-
 }
 
 
@@ -1514,14 +1482,6 @@ button:disabled {
     color:
         var(
             --admin-warning
-        );
-
-    border-color:
-        rgba(
-            228,
-            182,
-            90,
-            0.35
         );
 
 }
@@ -1535,14 +1495,6 @@ button:disabled {
             --admin-blue
         );
 
-    border-color:
-        rgba(
-            158,
-            172,
-            255,
-            0.35
-        );
-
 }
 
 
@@ -1553,19 +1505,11 @@ button:disabled {
             --admin-danger
         );
 
-    border-color:
-        rgba(
-            232,
-            108,
-            108,
-            0.35
-        );
-
 }
 
 
 /* =========================================================
-   SCAN ACTIONS
+   CARD ACTIONS
 ========================================================= */
 
 .scan-actions {
@@ -1574,7 +1518,7 @@ button:disabled {
         auto;
 
     padding-top:
-        28px;
+        26px;
 
     display:
         flex;
@@ -1634,96 +1578,9 @@ button:disabled {
         );
 
     color:
-        #f2eee8;
-
-}
-
-
-.scan-actions .danger-button {
-
-    color:
         var(
-            --admin-danger
+            --admin-bg
         );
-
-    border-color:
-        rgba(
-            232,
-            108,
-            108,
-            0.35
-        );
-
-}
-
-
-.scan-actions .danger-button:hover {
-
-    background:
-        var(
-            --admin-danger
-        );
-
-    color:
-        #f2eee8;
-
-}
-
-
-/* =========================================================
-   PROCESSOR CARDS
-========================================================= */
-
-.processor-card {
-
-    min-height:
-        280px;
-
-    padding:
-        25px;
-
-    display:
-        flex;
-
-    flex-direction:
-        column;
-
-}
-
-
-.processor-card h3 {
-
-    margin:
-        42px
-        0
-        10px;
-
-    font-size:
-        25px;
-
-    font-weight:
-        500;
-
-}
-
-
-.processor-card p {
-
-    margin:
-        0
-        0
-        9px;
-
-    color:
-        var(
-            --admin-muted
-        );
-
-    font-size:
-        12px;
-
-    line-height:
-        1.6;
 
 }
 
@@ -1735,10 +1592,10 @@ button:disabled {
 .create-product-panel {
 
     margin-bottom:
-        60px;
+        58px;
 
     padding:
-        36px;
+        35px;
 
     background:
         var(
@@ -1757,7 +1614,7 @@ button:disabled {
 .panel-heading {
 
     margin-bottom:
-        35px;
+        34px;
 
 }
 
@@ -1844,7 +1701,7 @@ button:disabled {
 .switch-grid {
 
     margin:
-        32px
+        30px
         0;
 
     display:
@@ -1890,7 +1747,12 @@ button:disabled {
         );
 
     background:
-        #f8f5f0;
+        rgba(
+            255,
+            255,
+            255,
+            0.32
+        );
 
     cursor:
         pointer;
@@ -1943,19 +1805,19 @@ button:disabled {
 
 
 /* =========================================================
-   ADMIN PRODUCT CARDS
+   PRODUCT CARDS
 ========================================================= */
 
 .admin-product-card {
 
     min-height:
-        500px;
+        490px;
 
     display:
         grid;
 
     grid-template-rows:
-        220px
+        215px
         1fr;
 
     overflow:
@@ -1970,7 +1832,7 @@ button:disabled {
         relative;
 
     min-height:
-        220px;
+        215px;
 
     overflow:
         hidden;
@@ -2014,13 +1876,6 @@ button:disabled {
     align-items:
         flex-end;
 
-    background:
-        linear-gradient(
-            145deg,
-            #111,
-            #ded6cc
-        );
-
     color:
         var(
             --admin-text
@@ -2036,9 +1891,6 @@ button:disabled {
 
 
 .admin-product-content {
-
-    min-height:
-        300px;
 
     padding:
         24px;
@@ -2057,11 +1909,11 @@ button:disabled {
     display:
         flex;
 
-    flex-wrap:
-        wrap;
-
     justify-content:
         space-between;
+
+    flex-wrap:
+        wrap;
 
     gap:
         8px;
@@ -2086,7 +1938,7 @@ button:disabled {
 .admin-product-content h3 {
 
     margin:
-        30px
+        28px
         0
         10px;
 
@@ -2095,9 +1947,6 @@ button:disabled {
 
     font-weight:
         500;
-
-    letter-spacing:
-        -0.04em;
 
 }
 
@@ -2124,7 +1973,7 @@ button:disabled {
 .product-admin-meta {
 
     margin-top:
-        22px;
+        20px;
 
     display:
         flex;
@@ -2157,9 +2006,6 @@ button:disabled {
 
     font-size:
         8px;
-
-    letter-spacing:
-        0.09em;
 
 }
 
@@ -2200,104 +2046,11 @@ button:disabled {
     font-size:
         8px;
 
-    letter-spacing:
-        0.08em;
-
 }
 
 
 /* =========================================================
-   ACTIVE FILTER
-========================================================= */
-
-.active-filter {
-
-    margin-bottom:
-        25px;
-
-    padding:
-        14px
-        16px;
-
-    border:
-        1px solid
-        rgba(
-            255,
-            106,
-            0,
-            0.28
-        );
-
-    background:
-        rgba(
-            255,
-            106,
-            0,
-            0.05
-        );
-
-    color:
-        var(
-            --admin-accent
-        );
-
-    font-size:
-        9px;
-
-    letter-spacing:
-        0.10em;
-
-}
-
-
-/* =========================================================
-   ADMIN MESSAGES
-========================================================= */
-
-.admin-message {
-
-    min-height:
-        20px;
-
-    margin-top:
-        16px;
-
-    color:
-        var(
-            --admin-muted
-        );
-
-    font-size:
-        12px;
-
-    line-height:
-        1.6;
-
-}
-
-
-.admin-message.success {
-
-    color:
-        var(
-            --admin-success
-        );
-
-}
-
-
-.admin-message.error {
-
-    color:
-        var(
-            --admin-danger
-        );
-
-}
-
-
-/* =========================================================
-   FR UPLOAD
+   FR AREA
 ========================================================= */
 
 .fr-upload-actions {
@@ -2323,22 +2076,24 @@ button:disabled {
         100%;
 
     margin-top:
-        36px;
+        35px;
 
     padding:
         20px;
 
+    overflow-x:
+        auto;
+
     background:
-        #f8f5f0;
+        var(
+            --admin-dark
+        );
 
     border:
         1px solid
         var(
             --admin-border
         );
-
-    overflow-x:
-        auto;
 
 }
 
@@ -2361,6 +2116,49 @@ button:disabled {
 
 
 /* =========================================================
+   MESSAGE
+========================================================= */
+
+.admin-message {
+
+    min-height:
+        20px;
+
+    margin-top:
+        15px;
+
+    color:
+        var(
+            --admin-muted
+        );
+
+    font-size:
+        12px;
+
+}
+
+
+.admin-message.success {
+
+    color:
+        var(
+            --admin-success
+        );
+
+}
+
+
+.admin-message.error {
+
+    color:
+        var(
+            --admin-danger
+        );
+
+}
+
+
+/* =========================================================
    LOADING
 ========================================================= */
 
@@ -2370,7 +2168,7 @@ button:disabled {
         1 / -1;
 
     min-height:
-        170px;
+        165px;
 
     padding:
         30px;
@@ -2391,8 +2189,11 @@ button:disabled {
         );
 
     background:
-        var(
-            --admin-surface
+        rgba(
+            255,
+            255,
+            255,
+            0.25
         );
 
     color:
@@ -2441,9 +2242,9 @@ button:disabled {
 
     background:
         rgba(
-            0,
-            0,
-            0,
+            17,
+            17,
+            17,
             0.78
         );
 
@@ -2475,7 +2276,9 @@ button:disabled {
         34px;
 
     background:
-        #f8f5f0;
+        var(
+            --admin-bg
+        );
 
     border:
         1px solid
@@ -2517,9 +2320,6 @@ button:disabled {
 
     font-weight:
         500;
-
-    letter-spacing:
-        -0.04em;
 
 }
 
@@ -2577,25 +2377,6 @@ button:disabled {
     }
 
 
-    .admin-stats article:nth-child(3) {
-
-        border-right:
-            none;
-
-    }
-
-
-    .admin-stats article:nth-child(-n+3) {
-
-        border-bottom:
-            1px solid
-            var(
-                --admin-border
-            );
-
-    }
-
-
     .account-grid,
     .scan-grid,
     .processor-grid,
@@ -2604,10 +2385,7 @@ button:disabled {
         grid-template-columns:
             repeat(
                 2,
-                minmax(
-                    0,
-                    1fr
-                )
+                1fr
             );
 
     }
@@ -2618,10 +2396,7 @@ button:disabled {
         grid-template-columns:
             repeat(
                 2,
-                minmax(
-                    0,
-                    1fr
-                )
+                1fr
             );
 
     }
@@ -2643,16 +2418,6 @@ button:disabled {
 @media
 (max-width: 1000px) {
 
-    .admin-header {
-
-        grid-template-columns:
-            auto
-            1fr
-            auto;
-
-    }
-
-
     .admin-nav {
 
         display:
@@ -2668,27 +2433,6 @@ button:disabled {
             repeat(
                 2,
                 1fr
-            );
-
-    }
-
-
-    .inventory-summary article:nth-child(2),
-    .fr-summary-grid article:nth-child(2) {
-
-        border-right:
-            none;
-
-    }
-
-
-    .inventory-summary article:nth-child(-n+2),
-    .fr-summary-grid article:nth-child(-n+2) {
-
-        border-bottom:
-            1px solid
-            var(
-                --admin-border
             );
 
     }
@@ -2711,14 +2455,7 @@ button:disabled {
     }
 
 
-    .admin-brand span {
-
-        display:
-            none;
-
-    }
-
-
+    .admin-brand span,
     #adminEmail {
 
         display:
@@ -2749,18 +2486,6 @@ button:disabled {
     }
 
 
-    .admin-hero h1 {
-
-        font-size:
-            clamp(
-                58px,
-                17vw,
-                95px
-            );
-
-    }
-
-
     .admin-stats {
 
         grid-template-columns:
@@ -2768,31 +2493,6 @@ button:disabled {
                 2,
                 1fr
             );
-
-    }
-
-
-    .admin-stats article {
-
-        border-right:
-            1px solid
-            var(
-                --admin-border
-            );
-
-        border-bottom:
-            1px solid
-            var(
-                --admin-border
-            );
-
-    }
-
-
-    .admin-stats article:nth-child(2n) {
-
-        border-right:
-            none;
 
     }
 
@@ -2808,14 +2508,7 @@ button:disabled {
     }
 
 
-    .section-tools {
-
-        width:
-            100%;
-
-    }
-
-
+    .section-tools,
     .admin-search,
     .admin-select {
 
@@ -2828,14 +2521,7 @@ button:disabled {
     .account-grid,
     .scan-grid,
     .processor-grid,
-    .product-grid {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
+    .product-grid,
     .form-grid {
 
         grid-template-columns:
@@ -2863,28 +2549,6 @@ button:disabled {
     }
 
 
-    .account-summary article {
-
-        border-right:
-            none;
-
-        border-bottom:
-            1px solid
-            var(
-                --admin-border
-            );
-
-    }
-
-
-    .account-summary article:last-child {
-
-        border-bottom:
-            none;
-
-    }
-
-
     .create-product-panel {
 
         padding:
@@ -2898,68 +2562,9 @@ button:disabled {
 @media
 (max-width: 520px) {
 
-    .admin-hero,
     .admin-stats,
-    .admin-section {
-
-        width:
-            calc(
-                100% - 28px
-            );
-
-    }
-
-
-    .admin-section {
-
-        padding:
-            80px
-            0;
-
-    }
-
-
-    .admin-stats {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
-    .admin-stats article {
-
-        border-right:
-            none
-            !important;
-
-    }
-
-
     .inventory-summary,
-    .fr-summary-grid {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
-    .inventory-summary article,
-    .fr-summary-grid article {
-
-        border-right:
-            none;
-
-        border-bottom:
-            1px solid
-            var(
-                --admin-border
-            );
-
-    }
-
-
+    .fr-summary-grid,
     .switch-grid {
 
         grid-template-columns:
@@ -2968,38 +2573,7 @@ button:disabled {
     }
 
 
-    .scan-actions {
-
-        flex-direction:
-            column;
-
-    }
-
-
-    .scan-actions button {
-
-        width:
-            100%;
-
-    }
-
-
-    .modal {
-
-        padding:
-            14px;
-
-    }
-
-
-    .modal-panel {
-
-        padding:
-            24px;
-
-    }
-
-
+    .scan-actions,
     .modal-actions {
 
         flex-direction:
@@ -3008,32 +2582,11 @@ button:disabled {
     }
 
 
+    .scan-actions button,
     .modal-actions button {
 
         width:
             100%;
-
-    }
-
-}
-
-
-/* =========================================================
-   REDUCED MOTION
-========================================================= */
-
-@media
-(prefers-reduced-motion: reduce) {
-
-    * {
-
-        scroll-behavior:
-            auto
-            !important;
-
-        transition:
-            none
-            !important;
 
     }
 
