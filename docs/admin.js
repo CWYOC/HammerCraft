@@ -2074,6 +2074,12 @@ async function loadProducts() {
 
         populateReferenceProductSelect();
 
+
+        window.HCIemDesigner
+            ?.populateTargetProducts(
+                allProducts
+            );
+
     }
 
     catch (
@@ -6382,6 +6388,11 @@ function setupAdminNavigation() {
                             "fr-data":
                                 byId(
                                     "frDataSection"
+                                ),
+
+                            "iem-designer":
+                                byId(
+                                    "iemDesignerSection"
                                 )
 
                         };
@@ -6844,6 +6855,10 @@ async function startAdmin() {
 
 
         setupEvents();
+
+
+        window.HCIemDesigner
+            ?.init();
 
 
         await loadScans();

@@ -51,7 +51,12 @@
 
     <link
         rel="stylesheet"
-        href="admin.css?v=61"
+        href="admin.css?v=62"
+    >
+
+    <link
+        rel="stylesheet"
+        href="iem-designer.css?v=2"
     >
 
 </head>
@@ -127,6 +132,13 @@
                 data-section="fr-data"
             >
                 FR DATA
+            </button>
+
+            <button
+                type="button"
+                data-section="iem-designer"
+            >
+                IEM DESIGNER
             </button>
 
         </nav>
@@ -1171,6 +1183,254 @@
     </section>
 
 
+
+    <!-- =====================================================
+         IEM DESIGNER
+    ====================================================== -->
+
+    <section
+        id="iemDesignerSection"
+        class="admin-section"
+        data-admin-section="iem-designer"
+    >
+
+        <div class="section-heading">
+            <div>
+                <span class="eyebrow">ACOUSTIC ENGINEERING</span>
+                <h2>IEM designer.</h2>
+                <p>Build driver networks, acoustic paths and crossover concepts, then compare the predicted response against a target.</p>
+            </div>
+        </div>
+
+        <div class="iem-designer-tabs" role="tablist">
+            <button class="iem-tab active" type="button" data-iem-tab="design">DESIGN</button>
+            <button class="iem-tab" type="button" data-iem-tab="drivers">DRIVER LIBRARY</button>
+            <button class="iem-tab" type="button" data-iem-tab="measurements">MEASUREMENTS</button>
+            <button class="iem-tab" type="button" data-iem-tab="optimise">OPTIMISE</button>
+            <button class="iem-tab" type="button" data-iem-tab="reverse">REVERSE DESIGN</button>
+        </div>
+
+        <div id="iemTabDesign" class="iem-tab-panel active" data-iem-panel="design">
+            <div class="iem-project-bar">
+                <label>
+                    PROJECT NAME
+                    <input id="iemProjectName" type="text" value="Untitled IEM">
+                </label>
+                <label>
+                    TARGET PRODUCT
+                    <select id="iemTargetProduct">
+                        <option value="">No target</option>
+                    </select>
+                </label>
+                <div class="iem-project-actions">
+                    <button id="iemNewProjectButton" type="button" class="outline-button">NEW</button>
+                    <button id="iemSaveProjectButton" type="button" class="primary-button">SAVE PROJECT</button>
+                    <button id="iemLoadProjectButton" type="button" class="outline-button">LOAD PROJECT</button>
+                </div>
+            </div>
+
+            <div class="iem-workbench">
+                <aside class="iem-sidebar">
+                    <div class="admin-panel iem-compact-panel">
+                        <div class="iem-panel-title">
+                            <div>
+                                <span class="eyebrow">DRIVERS</span>
+                                <h3>Driver stack.</h3>
+                            </div>
+                            <button id="iemAddDriverButton" type="button" class="outline-button">+ DRIVER</button>
+                        </div>
+                        <div id="iemDriverList" class="iem-driver-list"></div>
+                    </div>
+
+                    <div class="admin-panel iem-compact-panel">
+                        <div class="iem-panel-title">
+                            <div>
+                                <span class="eyebrow">ENVIRONMENT</span>
+                                <h3>Conditions.</h3>
+                            </div>
+                        </div>
+                        <div class="iem-form-grid two">
+                            <label>TEMPERATURE °C<input id="iemTemperature" type="number" step="0.1" value="20"></label>
+                            <label>HUMIDITY %<input id="iemHumidity" type="number" min="0" max="100" value="50"></label>
+                            <label>OUTPUT LOAD
+                                <select id="iemAcousticLoadType">
+                                    <option value="anechoic">Anechoic / matched</option>
+                                    <option value="closed_cavity">Closed coupler cavity</option>
+                                    <option value="cavity_with_leak">Cavity with leak</option>
+                                    <option value="radiation">Free radiation</option>
+                                    <option value="generic_711_approx">Generic 711 / IEC 60318-4 approx</option>
+                                </select>
+                            </label>
+                            <label>COUPLER VOLUME mm³<input id="iemCouplerVolume" type="number" min="50" step="50" value="2000"></label>
+                            <label>LOAD LOSS R (acoustic Ω)<input id="iemLoadLossResistance" type="number" min="0" step="1000000" value="0"></label>
+                            <label>LEAK R (acoustic Ω)<input id="iemLeakResistance" type="number" min="1" step="1000000" value="500000000"></label>
+                        </div>
+                        <p class="iem-field-note">Use Anechoic for legacy behaviour. Closed cavity approximates a sealed ear/coupler volume; cavity-with-leak adds a resistive leak path. Generic 711 models the principal 7.5 mm cavity, microphone RCL termination and thermoviscous tube loss; it is an engineering approximation, not a standards-compliant calibration model.</p>
+                    </div>
+                </aside>
+
+                <div class="iem-main-column">
+                    <div class="admin-panel">
+                        <div class="iem-panel-title">
+                            <div>
+                                <span class="eyebrow">ACOUSTIC PATH</span>
+                                <h3>Selected driver path.</h3>
+                            </div>
+                            <div class="iem-path-actions">
+                                <button id="iemAddTubeButton" type="button" class="outline-button">+ TUBE</button>
+                                <button id="iemAddDamperButton" type="button" class="outline-button">+ DAMPER</button>
+                                <button id="iemAddChamberButton" type="button" class="outline-button">+ CHAMBER</button>
+                            </div>
+                        </div>
+                        <div id="iemPathEditor" class="iem-path-editor"></div>
+                    </div>
+
+                    <div class="admin-panel">
+                        <div class="iem-panel-title">
+                            <div>
+                                <span class="eyebrow">SIMULATION</span>
+                                <h3>Frequency response.</h3>
+                            </div>
+                            <button id="iemCalculateButton" type="button" class="primary-button">CALCULATE</button>
+                        </div>
+                        <div class="iem-chart-toolbar">
+                            <label><input id="iemShowTarget" type="checkbox" checked> TARGET</label>
+                            <label><input id="iemShowIndividual" type="checkbox" checked> INDIVIDUAL DRIVERS</label>
+                            <label><input id="iemShowCombined" type="checkbox" checked> COMBINED</label>
+                        </div>
+                        <div class="fr-chart-container iem-chart-container">
+                            <canvas id="iemResponseChart"></canvas>
+                        </div>
+                        <div id="iemSimulationMessage" class="admin-message"></div>
+                    </div>
+
+                    <div class="iem-result-grid">
+                        <article><span>PRIMARY RESONANCE</span><strong id="iemPrimaryResonance">—</strong></article>
+                        <article><span>EST. CROSSOVER</span><strong id="iemEstimatedCrossover">—</strong></article>
+                        <article><span>MAX TUBE DELAY</span><strong id="iemTubeDelay">—</strong></article>
+                        <article><span>TARGET RMSE</span><strong id="iemTargetRmse">—</strong></article>
+                        <article><span>TOTAL TUBE VOLUME</span><strong id="iemTubeVolume">—</strong></article>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="iemTabDrivers" class="iem-tab-panel" data-iem-panel="drivers" hidden>
+            <div class="admin-panel">
+                <div class="iem-panel-title">
+                    <div><span class="eyebrow">LIBRARY</span><h3>Reusable drivers.</h3></div>
+                    <button id="iemLibraryAddButton" type="button" class="primary-button">ADD DRIVER</button>
+                </div>
+                <div id="iemDriverLibrary" class="iem-library-grid"></div>
+            </div>
+        </div>
+
+        <div id="iemTabMeasurements" class="iem-tab-panel" data-iem-panel="measurements" hidden>
+            <div class="admin-panel">
+                <span class="eyebrow">MEASUREMENTS</span>
+                <h3>Import engineering data.</h3>
+                <p>Attach frequency-response or impedance data to the selected driver. FRD, CSV, TXT and ZMA files are accepted.</p>
+                <div class="iem-form-grid two">
+                    <label>DRIVER<select id="iemMeasurementDriver"></select></label>
+                    <label>FILE<input id="iemMeasurementFile" type="file" accept=".csv,.txt,.frd,.zma"></label>
+                </div>
+                <button id="iemImportMeasurementButton" type="button" class="primary-button">IMPORT</button>
+                <div id="iemMeasurementMessage" class="admin-message"></div>
+            </div>
+        </div>
+
+        <div id="iemTabOptimise" class="iem-tab-panel" data-iem-panel="optimise" hidden>
+            <div class="admin-panel">
+                <span class="eyebrow">PARAMETER SWEEP</span>
+                <h3>Optimise the selected driver path.</h3>
+                <p>Search practical tube dimensions and damper values against the selected target. This first implementation uses a browser-side approximation and is ready to be replaced by the Rust/WASM solver later.</p>
+                <div class="iem-form-grid four">
+                    <label>MIN ID mm<input id="iemOptMinDiameter" type="number" step="0.1" value="1"></label>
+                    <label>MAX ID mm<input id="iemOptMaxDiameter" type="number" step="0.1" value="2.5"></label>
+                    <label>MAX LENGTH mm<input id="iemOptMaxLength" type="number" step="0.5" value="15"></label>
+                    <label>DAMPERS Ω<input id="iemOptDampers" type="text" value="330,680,1000,1500,2200"></label>
+                </div>
+                <button id="iemOptimiseButton" type="button" class="primary-button">RUN OPTIMISATION</button>
+                <div id="iemOptimiseMessage" class="admin-message"></div>
+                <div id="iemOptimiseResults" class="iem-optimise-results"></div>
+            </div>
+        </div>
+
+
+        <div id="iemTabReverse" class="iem-tab-panel" data-iem-panel="reverse" hidden>
+            <div class="admin-panel">
+                <div class="iem-panel-title">
+                    <div>
+                        <span class="eyebrow">INVERSE DESIGN</span>
+                        <h3>Draw the response you want.</h3>
+                    </div>
+                    <div class="iem-path-actions">
+                        <button id="iemReverseUseTargetButton" type="button" class="outline-button">COPY TARGET</button>
+                        <button id="iemReverseUseCombinedButton" type="button" class="outline-button">COPY CURRENT</button>
+                        <button id="iemReverseClearButton" type="button" class="outline-button">RESET FLAT</button>
+                    </div>
+                </div>
+
+                <p>Click or drag on the graph to draw the response you want. The optimiser will work backwards and suggest tube, damper and electrical values for the selected driver while keeping the other drivers fixed.</p>
+
+                <div class="iem-reverse-file-import">
+                    <div>
+                        <span class="eyebrow">TARGET FILE</span>
+                        <h4>Import response from text.</h4>
+                        <p>Use TXT, CSV or FRD with frequency in the first column and dB in the second. A third phase column is accepted but ignored for reverse-target matching.</p>
+                    </div>
+                    <div class="iem-reverse-file-actions">
+                        <input id="iemReverseTargetFile" type="file" accept=".txt,.csv,.frd">
+                        <button id="iemReverseImportTargetButton" type="button" class="outline-button">IMPORT TARGET FILE</button>
+                    </div>
+                </div>
+
+                <div id="iemReverseFileMessage" class="admin-message"></div>
+
+                <div class="iem-reverse-chart-help">
+                    <span>CLICK / DRAG = SET TARGET</span>
+                    <span>RIGHT CLICK = REMOVE NEAREST POINT</span>
+                    <span>RESPONSE IS NORMALISED AT 1 kHz</span>
+                </div>
+
+                <div class="fr-chart-container iem-chart-container iem-reverse-chart-container">
+                    <canvas id="iemReverseChart"></canvas>
+                </div>
+
+                <div class="iem-form-grid four iem-reverse-controls">
+                    <label>MIN TUBE ID mm<input id="iemReverseMinDiameter" type="number" step="0.1" value="1.0"></label>
+                    <label>MAX TUBE ID mm<input id="iemReverseMaxDiameter" type="number" step="0.1" value="2.5"></label>
+                    <label>MIN LENGTH mm<input id="iemReverseMinLength" type="number" step="0.5" value="3"></label>
+                    <label>MAX LENGTH mm<input id="iemReverseMaxLength" type="number" step="0.5" value="15"></label>
+                    <label>DAMPERS Ω<input id="iemReverseDampers" type="text" value="0,330,680,1000,1500,2200"></label>
+                    <label>HP CAPS µF<input id="iemReverseCaps" type="text" value="0,4.7,10,15,22,33,47"></label>
+                    <label>SERIES R Ω<input id="iemReverseSeriesR" type="text" value="0,1,2.2,3.3,4.7,6.8,10"></label>
+                    <label>GAIN RANGE dB<input id="iemReverseGainRange" type="number" step="0.5" value="8"></label>
+                </div>
+
+                <div class="iem-reverse-action-row">
+                    <button id="iemReverseRunButton" type="button" class="primary-button">FIND DESIGN FROM GRAPH</button>
+                    <span id="iemReverseSelectedDriver" class="iem-reverse-selected-driver">Selected driver: —</span>
+                </div>
+
+                <div id="iemReverseMessage" class="admin-message"></div>
+
+                <div class="iem-reverse-summary">
+                    <article><span>BEST RMSE</span><strong id="iemReverseBestRmse">—</strong></article>
+                    <article><span>TUBE ID</span><strong id="iemReverseBestDiameter">—</strong></article>
+                    <article><span>TUBE LENGTH</span><strong id="iemReverseBestLength">—</strong></article>
+                    <article><span>DAMPER</span><strong id="iemReverseBestDamper">—</strong></article>
+                    <article><span>HP CAP</span><strong id="iemReverseBestCap">—</strong></article>
+                    <article><span>SERIES R</span><strong id="iemReverseBestSeriesR">—</strong></article>
+                    <article><span>GAIN</span><strong id="iemReverseBestGain">—</strong></article>
+                </div>
+
+                <div id="iemReverseResults" class="iem-optimise-results iem-reverse-results"></div>
+            </div>
+        </div>
+
+    </section>
+
 </main>
 
 
@@ -1840,7 +2100,15 @@
 ></script>
 
 <script
-    src="admin.js?v=61"
+    src="wasm-loader.js?v=1"
+></script>
+
+<script
+    src="iem-designer.js?v=3"
+></script>
+
+<script
+    src="admin.js?v=62"
 ></script>
 
 

@@ -1,0 +1,69 @@
+name: Build Acoustic WASM
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+    paths:
+      - "acoustic-engine/**"
+      - ".github/workflows/build-wasm.yml"
+
+  workflow_dispatch:
+
+
+permissions:
+  contents: write
+
+
+jobs:
+  build-wasm:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+
+      - name: Install wasm-pack
+        run: |
+          cargo install wasm-pack
+
+
+      - name: Build Hammer Craft acoustic engine
+        working-directory: acoustic-engine
+        run: |
+          wasm-pack build \
+            --target web \
+            --release \
+            --out-dir ../wasm \
+            --out-name acoustic_engine
+
+
+      - name: Show generated files
+        run: |
+          ls -lah wasm
+
+
+      - name: Commit WASM build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add wasm/
+
+          if git diff --cached --quiet; then
+            echo "No WASM changes to commit."
+          else
+            git commit -m "Build acoustic engine WASM"
+            git push
+          fi
