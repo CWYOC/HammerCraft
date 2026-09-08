@@ -1,6 +1,6 @@
 use crate::acoustic_path::{acoustic_path_matrix, input_diameter_mm, output_diameter_mm};
 use crate::complex::{amplitude_to_db, db_to_amplitude};
-use crate::electrical::{electrical_transfer, interpolate_impedance};
+use crate::electrical::{active_filters_transfer, circuit_netlist_transfer, electrical_transfer, interpolate_impedance};
 use crate::load::{load_impedance, load_pressure_transfer, source_impedance_at_frequency};
 use crate::models::{
     Driver, DriverResultPoint, DriverSimulationResult, Environment, SimulationRequest,
@@ -59,7 +59,18 @@ pub fn simulate_driver_at_frequency(
     environment: &Environment,
     load: &crate::models::AcousticLoad,
 ) -> (DriverResultPoint, Complex64) {
-    let raw = interpolate_frequency_response(&driver.response, frequency_hz);
+    let mut raw = interpolate_frequency_response(&driver.response, frequency_hz);
+
+    // If the imported FR is relative and a sensitivity reference is provided,
+    // anchor it to real SPL before electrical/acoustic processing.
+    if !driver.response_absolute_spl && driver.sensitivity_db != 0.0 && !driver.response.is_empty() {
+        let reference = interpolate_frequency_response(
+            &driver.response,
+            driver.sensitivity_reference_hz.max(1.0),
+        );
+        raw.db = raw.db - reference.db + driver.sensitivity_db;
+    }
+
     let mut pressure = frequency_point_to_complex(&raw);
 
     let impedance = interpolate_impedance(
@@ -68,11 +79,14 @@ pub fn simulate_driver_at_frequency(
         driver.nominal_impedance_ohm,
     );
 
-    pressure *= electrical_transfer(
-        frequency_hz,
-        impedance,
-        &driver.electrical,
-    );
+    let electrical = if let Some(netlist) = &driver.circuit_netlist {
+        circuit_netlist_transfer(frequency_hz, impedance, netlist)
+            * active_filters_transfer(&driver.electrical, frequency_hz)
+    } else {
+        electrical_transfer(frequency_hz, impedance, &driver.electrical)
+    };
+
+    pressure *= electrical;
 
     pressure *= acoustic_transfer(
         driver,

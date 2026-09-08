@@ -1,5 +1,6 @@
 use crate::models::{
-    AcousticElement, ElectricalElement, FrequencyPoint, ReverseCandidate, ReverseDesignRequest,
+    AcousticElement, CircuitComponent, CircuitComponentKind, CircuitNetlist, CircuitNode,
+    ElectricalElement, FrequencyPoint, ReverseCandidate, ReverseDesignRequest,
 };
 use crate::simulation::simulate;
 
@@ -21,27 +22,28 @@ fn interpolate_target(target: &[FrequencyPoint], frequency_hz: f64) -> f64 {
     0.0
 }
 
-fn response_at_1k(response: &[crate::models::CombinedResultPoint]) -> f64 {
+fn interpolate_combined(response: &[crate::models::CombinedResultPoint], frequency_hz: f64) -> f64 {
     if response.is_empty() { return 0.0; }
-    if 1000.0 <= response[0].frequency_hz { return response[0].db; }
+    if frequency_hz <= response[0].frequency_hz { return response[0].db; }
+    let last = &response[response.len() - 1];
+    if frequency_hz >= last.frequency_hz { return last.db; }
     for pair in response.windows(2) {
         let a = &pair[0];
         let b = &pair[1];
-        if 1000.0 >= a.frequency_hz && 1000.0 <= b.frequency_hz {
-            let r = (1000_f64.log10() - a.frequency_hz.log10())
+        if frequency_hz >= a.frequency_hz && frequency_hz <= b.frequency_hz {
+            let r = (frequency_hz.log10() - a.frequency_hz.log10())
                 / (b.frequency_hz.log10() - a.frequency_hz.log10());
             return a.db + (b.db - a.db) * r;
         }
     }
-    response[response.len() - 1].db
+    last.db
 }
 
-fn target_at_1k(target: &[FrequencyPoint]) -> f64 { interpolate_target(target, 1000.0) }
-
-fn rmse(simulation: &crate::models::SimulationResult, target: &[FrequencyPoint]) -> f64 {
+fn rmse(simulation: &crate::models::SimulationResult, target: &[FrequencyPoint], normalization_frequency_hz: f64) -> f64 {
     if simulation.combined.is_empty() || target.is_empty() { return f64::INFINITY; }
-    let sim_norm = response_at_1k(&simulation.combined);
-    let target_norm = target_at_1k(target);
+    let f_norm = normalization_frequency_hz.clamp(20.0, 20000.0);
+    let sim_norm = interpolate_combined(&simulation.combined, f_norm);
+    let target_norm = interpolate_target(target, f_norm);
     let mut sum = 0.0;
     let mut count = 0usize;
 
@@ -95,11 +97,60 @@ fn set_candidate(
         driver.acoustic_path.retain(|e| !matches!(e, AcousticElement::Damper { .. }));
     }
 
-    driver.electrical.retain(|e| !matches!(e,
-        ElectricalElement::SeriesResistor { .. } | ElectricalElement::SeriesCapacitor { .. }
+    // Reverse optimisation searches a simple passive series R/C branch, but
+    // it now writes that branch into the same nodal netlist used by the CAD.
+    // Active PEQ/HP/LP blocks remain in driver.electrical.
+    driver.electrical.retain(|e| matches!(e,
+        ElectricalElement::PeakingEq { .. }
+            | ElectricalElement::HighPass { .. }
+            | ElectricalElement::LowPass { .. }
     ));
-    if cap > 0.0 { driver.electrical.push(ElectricalElement::SeriesCapacitor { capacitance_uf: cap }); }
-    if resistor > 0.0 { driver.electrical.push(ElectricalElement::SeriesResistor { resistance_ohm: resistor }); }
+
+    let mut nodes = vec![
+        CircuitNode { id: "in".to_string(), label: "INPUT".to_string() },
+        CircuitNode { id: "gnd".to_string(), label: "GND".to_string() },
+    ];
+    let mut components = Vec::new();
+    let mut previous = "in".to_string();
+    let mut stage = 0usize;
+
+    if resistor > 0.0 {
+        stage += 1;
+        let next = format!("rev_n{}", stage);
+        nodes.push(CircuitNode { id: next.clone(), label: next.clone() });
+        components.push(CircuitComponent {
+            id: "REV_R".to_string(),
+            label: "R1".to_string(),
+            node_a: previous.clone(),
+            node_b: next.clone(),
+            kind: CircuitComponentKind::Resistor { resistance_ohm: resistor },
+            bypassed: false,
+        });
+        previous = next;
+    }
+
+    if cap > 0.0 {
+        stage += 1;
+        let next = format!("rev_n{}", stage);
+        nodes.push(CircuitNode { id: next.clone(), label: next.clone() });
+        components.push(CircuitComponent {
+            id: "REV_C".to_string(),
+            label: "C1".to_string(),
+            node_a: previous.clone(),
+            node_b: next.clone(),
+            kind: CircuitComponentKind::Capacitor { capacitance_uf: cap },
+            bypassed: false,
+        });
+        previous = next;
+    }
+
+    driver.circuit_netlist = Some(CircuitNetlist {
+        input_node: "in".to_string(),
+        output_node: previous,
+        ground_node: "gnd".to_string(),
+        nodes,
+        components,
+    });
 }
 
 fn choose(values: &[f64], index: usize, fallback: f64) -> f64 {
@@ -119,7 +170,7 @@ fn evaluate_candidate(
     let driver = &mut candidate_request.drivers[request.driver_index];
     set_candidate(driver, length, diameter, damper, cap, resistor, gain);
     let simulation = simulate(&candidate_request);
-    let score = rmse(&simulation, &request.target);
+    let score = rmse(&simulation, &request.target, request.normalization_frequency_hz);
 
     ReverseCandidate {
         score_rmse_db: score,
