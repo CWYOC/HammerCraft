@@ -8,3 +8,32 @@
 
 @media(max-width:1200px){.iem-cad-workspace{grid-template-columns:100px minmax(0,1fr)}.iem-cad-properties{grid-column:1/-1;border-left:0;border-top:1px solid var(--admin-border)}.iem-cad-palette{grid-row:1}.iem-cad-canvas-wrap{grid-row:1}.iem-filter-node{grid-template-columns:1fr 1fr 1fr}}
 @media(max-width:760px){.iem-cad-workspace{grid-template-columns:1fr}.iem-cad-palette{border-right:0;border-bottom:1px solid var(--admin-border);display:grid;grid-template-columns:repeat(3,1fr)}.iem-palette-title{grid-column:1/-1}.iem-cad-canvas-wrap{grid-row:auto;overflow-x:auto}.iem-cad-canvas{min-width:760px}.iem-cad-properties{grid-column:auto}.iem-filter-head{flex-direction:column;align-items:flex-start}.iem-filter-node{grid-template-columns:1fr}.iem-cad-tool{min-height:46px}}
+
+/* =========================================================
+   CIRCUIT CAD — STANDARD SCHEMATIC SYMBOLS
+   IEC is the default. ANSI resistor zig-zag is optional.
+========================================================= */
+
+.iem-cad-standard{display:flex;align-items:center;gap:7px;font-size:7px;font-weight:700;letter-spacing:.08em;color:var(--admin-muted)}
+.iem-cad-standard select{min-height:32px;padding:0 8px;border:1px solid var(--admin-border);background:rgba(255,255,255,.55);color:var(--admin-text);font-size:8px;font-weight:700}
+.iem-cad-tool-symbol{width:30px;height:30px;border:1px solid var(--admin-border-strong);display:flex;align-items:center;justify-content:center;background:#fff}
+.iem-cad-tool-symbol svg{width:28px;height:28px;overflow:visible}
+.iem-cad-tool-symbol svg path,.iem-cad-tool-symbol svg rect{fill:none;stroke:var(--admin-text);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.iem-cad-component .iem-cad-symbol{fill:none;stroke:var(--admin-text);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.iem-cad-component.selected .iem-cad-symbol{stroke:var(--admin-accent);stroke-width:3}
+.iem-cad-component.bypassed .iem-cad-symbol{opacity:.48}
+.iem-cad-bypass-line{fill:none;stroke:var(--admin-warning);stroke-width:2;stroke-dasharray:5 4;vector-effect:non-scaling-stroke}
+.iem-cad-component text.ref{font-size:9px;font-weight:700;fill:var(--admin-text);pointer-events:none}
+.iem-cad-component text.value{font-size:8px;font-weight:500;fill:var(--admin-muted);pointer-events:none}
+
+.iem-cad-ground-symbol path{fill:none;stroke:var(--admin-text);stroke-width:2;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.iem-cad-node.ground>circle{fill:var(--admin-text);stroke:#fff;stroke-width:1.5}
+.iem-cad-node.input .terminal{fill:#fff;stroke:var(--admin-text);stroke-width:2}
+.iem-cad-terminal-lead{fill:none;stroke:var(--admin-text);stroke-width:2;vector-effect:non-scaling-stroke}
+
+.iem-cad-driver-symbol circle,.iem-cad-driver-symbol path{fill:#fff;stroke:var(--admin-text);stroke-width:2;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.iem-cad-driver-symbol path{fill:none}
+.iem-cad-driver-symbol text{font-size:8px;font-weight:700;fill:var(--admin-text)}
+
+@media(max-width:760px){.iem-cad-standard{width:100%;justify-content:space-between}.iem-cad-history{width:100%}}

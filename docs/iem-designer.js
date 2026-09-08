@@ -20,6 +20,7 @@
         circuitClipboard: null,
         histories: new Map(),
         wireStart: null,
+        cadSymbolStandard: "iec",
     };
 
     function esc(value) {
@@ -619,6 +620,13 @@
                 <div class="iem-panel-title">
                     <div><span class="eyebrow">CIRCUIT CAD</span><h3>Passive crossover schematic.</h3></div>
                     <div class="iem-cad-history">
+                        <label class="iem-cad-standard">
+                            <span>SYMBOL STANDARD</span>
+                            <select data-cad-symbol-standard>
+                                <option value="iec" ${state.cadSymbolStandard === "iec" ? "selected" : ""}>IEC</option>
+                                <option value="ansi" ${state.cadSymbolStandard === "ansi" ? "selected" : ""}>ANSI</option>
+                            </select>
+                        </label>
                         <button class="iem-mini" data-circuit-undo="${d.id}">UNDO</button>
                         <button class="iem-mini" data-circuit-redo="${d.id}">REDO</button>
                         <button class="iem-mini" data-circuit-auto="${d.id}">AUTO ARRANGE</button>
@@ -627,12 +635,12 @@
                 <div class="iem-cad-workspace">
                     <aside class="iem-cad-palette">
                         <span class="iem-palette-title">COMPONENTS</span>
-                        ${paletteButton(d.id, "resistor", "R", "RESISTOR")}
-                        ${paletteButton(d.id, "capacitor", "C", "CAPACITOR")}
-                        ${paletteButton(d.id, "inductor", "L", "INDUCTOR")}
-                        ${paletteButton(d.id, "shunt_resistor", "R∥", "SHUNT R")}
-                        ${paletteButton(d.id, "shunt_capacitor", "C∥", "SHUNT C")}
-                        ${paletteButton(d.id, "shunt_inductor", "L∥", "SHUNT L")}
+                        ${paletteButton(d.id, "resistor", "RESISTOR")}
+                        ${paletteButton(d.id, "capacitor", "CAPACITOR")}
+                        ${paletteButton(d.id, "inductor", "INDUCTOR")}
+                        ${paletteButton(d.id, "shunt_resistor", "SHUNT R")}
+                        ${paletteButton(d.id, "shunt_capacitor", "SHUNT C")}
+                        ${paletteButton(d.id, "shunt_inductor", "SHUNT L")}
                         <button class="iem-cad-tool" data-add-junction="${d.id}" type="button"><strong>●</strong><span>JUNCTION</span></button>
                         <button class="iem-cad-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE</span></button>
                     </aside>
@@ -656,8 +664,61 @@
             </section>`;
     }
 
-    function paletteButton(driverId, type, symbol, label) {
-        return `<button class="iem-cad-tool" draggable="true" data-cad-palette="${driverId}:${type}" type="button"><strong>${symbol}</strong><span>${label}</span></button>`;
+    function paletteButton(driverId, type, label) {
+        return `<button class="iem-cad-tool" draggable="true" data-cad-palette="${driverId}:${type}" type="button"><span class="iem-cad-tool-symbol">${paletteSymbolSvg(type)}</span><span>${label}</span></button>`;
+    }
+
+    function paletteSymbolSvg(type) {
+        const kind = type.replace("shunt_", "");
+        const shunt = type.startsWith("shunt_");
+        let symbol = "";
+        if (kind === "resistor") {
+            symbol = state.cadSymbolStandard === "ansi"
+                ? '<path d="M3 15 H7 L9 9 L13 21 L17 9 L21 21 L23 15 H27"/>'
+                : '<path d="M3 15 H8 M22 15 H27"/><rect x="8" y="10" width="14" height="10"/>' ;
+        } else if (kind === "capacitor") {
+            symbol = '<path d="M3 15 H12 M18 15 H27 M12 7 V23 M18 7 V23"/>';
+        } else if (kind === "inductor") {
+            symbol = '<path d="M3 15 H7 C7 9 11 9 11 15 C11 9 15 9 15 15 C15 9 19 9 19 15 C19 9 23 9 23 15 H27"/>';
+        } else {
+            symbol = '<path d="M3 15 H27"/>';
+        }
+        const branch = shunt ? '<path d="M15 23 V28 M10 28 H20"/>' : '';
+        return `<svg viewBox="0 0 30 30" aria-hidden="true">${symbol}${branch}</svg>`;
+    }
+
+    function componentSymbolSvg(component) {
+        const bypass = component.bypassed ? '<path class="iem-cad-bypass-line" d="M-48 0 H48"/>' : '';
+        if (component.kind === "wire") {
+            return '<path class="iem-cad-symbol" d="M-48 0 H48"/>';
+        }
+        if (component.kind === "resistor") {
+            const body = state.cadSymbolStandard === "ansi"
+                ? '<path class="iem-cad-symbol" d="M-48 0 H-30 L-24 -11 L-14 11 L-4 -11 L6 11 L16 -11 L26 11 L32 0 H48"/>'
+                : '<path class="iem-cad-symbol" d="M-48 0 H-25 M25 0 H48"/><rect class="iem-cad-symbol" x="-25" y="-10" width="50" height="20"/>' ;
+            return body + bypass;
+        }
+        if (component.kind === "capacitor") {
+            return '<path class="iem-cad-symbol" d="M-48 0 H-9 M9 0 H48 M-9 -18 V18 M9 -18 V18"/>' + bypass;
+        }
+        if (component.kind === "inductor") {
+            return '<path class="iem-cad-symbol" d="M-48 0 H-28 C-28 -14 -16 -14 -16 0 C-16 -14 -4 -14 -4 0 C-4 -14 8 -14 8 0 C8 -14 20 -14 20 0 C20 -14 32 -14 32 0 H48"/>' + bypass;
+        }
+        return '<path class="iem-cad-symbol" d="M-48 0 H48"/>' + bypass;
+    }
+
+    function groundSymbolSvg(x, y) {
+        return `<g class="iem-cad-ground-symbol" transform="translate(${x},${y})">
+            <path d="M0 -12 V0 M-18 0 H18 M-12 6 H12 M-6 12 H6"/>
+        </g>`;
+    }
+
+    function driverSymbolSvg(d, x, y) {
+        return `<g class="iem-cad-driver-symbol" transform="translate(${x},${y})">
+            <circle r="30"/>
+            <path d="M-12 -16 V16 M-12 -13 L12 -23 V23 L-12 13"/>
+            <text text-anchor="middle" y="46">${esc(d.name)}</text>
+        </g>`;
     }
 
     function circuitPropertiesHtml(d) {
@@ -724,33 +785,51 @@
             component.x = x;
             component.y = y;
             const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
-            lines.push(`<path class="iem-cad-wire" d="M ${a.x} ${a.y} L ${x - 48} ${y} M ${x + 48} ${y} L ${b.x} ${b.y}"/>`);
+
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const vertical = Math.abs(dy) > Math.abs(dx);
+            const angle = vertical ? 90 : 0;
+            const rad = angle * Math.PI / 180;
+            const tx1 = x - 48 * Math.cos(rad);
+            const ty1 = y - 48 * Math.sin(rad);
+            const tx2 = x + 48 * Math.cos(rad);
+            const ty2 = y + 48 * Math.sin(rad);
+
+            lines.push(`<path class="iem-cad-wire" d="M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}"/>`);
             components.push(`
                 <g class="iem-cad-component ${selected ? "selected" : ""} ${component.bypassed ? "bypassed" : ""}" data-cad-component="${d.id}:${component.id}" transform="translate(${x},${y})">
-                    <rect x="-48" y="-22" width="96" height="44" rx="2"/>
-                    <text text-anchor="middle" y="-3">${esc(component.label || component.id)}</text>
-                    <text class="value" text-anchor="middle" y="13">${esc(component.kind === "wire" ? "WIRE" : componentLabel(component).replace(component.label || component.id, "").trim())}</text>
+                    <g transform="rotate(${angle})">${componentSymbolSvg(component)}</g>
+                    <text class="ref" text-anchor="middle" y="-25">${esc(component.label || component.id)}</text>
+                    <text class="value" text-anchor="middle" y="31">${esc(component.kind === "wire" ? "WIRE" : componentLabel(component).replace(component.label || component.id, "").trim())}</text>
                 </g>`);
         }
 
         for (const node of circuit.nodes) {
             const special = node.id === circuit.input ? "input" : node.id === circuit.ground ? "ground" : node.id === circuit.output ? "output" : "";
             const wireActive = state.wireStart?.driverId === d.id && state.wireStart.nodeId === node.id;
-            nodes.push(`
-                <g class="iem-cad-node ${special} ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}" transform="translate(${node.x},${node.y})">
-                    <circle r="7"/>
-                    <text text-anchor="middle" y="-14">${esc(node.label || node.id)}</text>
-                </g>`);
+            if (node.id === circuit.ground) {
+                nodes.push(`<g class="iem-cad-node ground ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}">${groundSymbolSvg(node.x, node.y)}<circle cx="${node.x}" cy="${node.y - 12}" r="5"/><text x="${node.x}" y="${node.y - 25}" text-anchor="middle">${esc(node.label || node.id)}</text></g>`);
+            } else if (node.id === circuit.input) {
+                nodes.push(`
+                    <g class="iem-cad-node input ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}" transform="translate(${node.x},${node.y})">
+                        <circle r="7" class="terminal"/>
+                        <path class="iem-cad-terminal-lead" d="M7 0 H24"/>
+                        <text text-anchor="middle" y="-14">${esc(node.label || node.id)}</text>
+                    </g>`);
+            } else {
+                nodes.push(`
+                    <g class="iem-cad-node ${special} ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}" transform="translate(${node.x},${node.y})">
+                        <circle r="5"/>
+                        <text text-anchor="middle" y="-14">${esc(node.label || node.id)}</text>
+                    </g>`);
+            }
         }
 
         if (driverNode) {
-            lines.push(`<path class="iem-cad-wire" d="M ${driverNode.x} ${driverNode.y} L ${Math.min(855, driverNode.x + 70)} ${driverNode.y}"/>`);
-            components.push(`
-                <g class="iem-cad-driver" transform="translate(${Math.min(835, driverNode.x + 115)},${driverNode.y})">
-                    <rect x="-42" y="-28" width="84" height="56" rx="2"/>
-                    <text text-anchor="middle" y="-4">DRIVER</text>
-                    <text class="value" text-anchor="middle" y="14">${esc(d.name)}</text>
-                </g>`);
+            const driverX = Math.min(840, driverNode.x + 120);
+            lines.push(`<path class="iem-cad-wire" d="M ${driverNode.x} ${driverNode.y} L ${driverX - 30} ${driverNode.y}"/>`);
+            components.push(driverSymbolSvg(d, driverX, driverNode.y));
         }
 
         svg.innerHTML = lines.join("") + components.join("") + nodes.join("");
@@ -1138,6 +1217,11 @@
         document.querySelectorAll("[data-circuit-undo]").forEach(button => button.onclick = () => undoCircuit(find(button.dataset.circuitUndo)));
         document.querySelectorAll("[data-circuit-redo]").forEach(button => button.onclick = () => redoCircuit(find(button.dataset.circuitRedo)));
         document.querySelectorAll("[data-circuit-auto]").forEach(button => button.onclick = () => autoArrange(find(button.dataset.circuitAuto)));
+        document.querySelectorAll("[data-cad-symbol-standard]").forEach(select => select.onchange = () => {
+            state.cadSymbolStandard = select.value === "ansi" ? "ansi" : "iec";
+            state.drivers.forEach(driver => renderCircuitSvg(driver));
+            renderDrivers();
+        });
         document.querySelectorAll("[data-cad-copy]").forEach(button => button.onclick = () => {
             const [id, componentId] = button.dataset.cadCopy.split(":");
             copyCircuitComponent(find(id), componentId);
