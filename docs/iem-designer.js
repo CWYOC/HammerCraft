@@ -24,6 +24,7 @@
         wireRouting: "orthogonal",
         cadSymbolStandard: "iec",
         cadSnapToGrid: false,
+        cadHoldToDragMs: 220,
     };
 
     function esc(value) {
@@ -177,7 +178,7 @@
         if (component.kind === "inductor") {
             return complex(0, omega * Math.max(0, component.value) * 1e-3);
         }
-        if (component.kind === "wire") return complex(1e-9, 0);
+        if (component.kind === "wire" || component.kind === "low_pass") return complex(1e-9, 0);
         return complex(Math.max(1e-12, component.value), 0);
     }
 
@@ -289,6 +290,11 @@
     function circuitH(d, frequency) {
         let result = passiveCircuitH(d, frequency);
         for (const filter of ensureDriverShape(d).circuit.filters) result = cmul(result, filterH(filter, frequency));
+        for (const component of d.circuit.components) {
+            if (component.kind === "low_pass" && !component.bypassed) {
+                result = cmul(result, filterH({ type: "low_pass", frequency: component.frequency || 400, q: component.q || 0.707 }, frequency));
+            }
+        }
         return result;
     }
 
@@ -402,7 +408,9 @@
                         ? { type: "capacitor", capacitance_uf: component.value }
                         : component.kind === "inductor"
                             ? { type: "inductor", inductance_mh: component.value }
-                            : { type: "wire" },
+                            : component.kind === "low_pass"
+                                ? { type: "wire" }
+                                : { type: "wire" },
             })),
         };
     }
@@ -429,7 +437,10 @@
                     polarity_inverted: d.polarity < 0,
                     response: d.measurement.map(p => ({ frequency_hz: p.frequency, db: p.db, phase_deg: p.phase || 0 })),
                     impedance: d.impedanceCurve.map(p => ({ frequency_hz: p.frequency, magnitude_ohm: p.ohm, phase_deg: p.phase || 0 })),
-                    electrical: d.circuit.filters.map(toRustFilter).filter(Boolean),
+                    electrical: [
+                        ...d.circuit.filters.map(toRustFilter).filter(Boolean),
+                        ...d.circuit.components.filter(component => component.kind === "low_pass" && !component.bypassed).map(component => ({ type: "low_pass", frequency_hz: component.frequency || 400, q: component.q || 0.707 }))
+                    ],
                     circuit_netlist: toRustNetlist(d),
                     acoustic_path: d.path.map(toRustPath),
                     acoustic_source: { type: "ideal_pressure" },
@@ -656,13 +667,14 @@
                         ${paletteButton(d.id, "shunt_resistor", "SHUNT R")}
                         ${paletteButton(d.id, "shunt_capacitor", "SHUNT C")}
                         ${paletteButton(d.id, "shunt_inductor", "SHUNT L")}
+                        ${paletteButton(d.id, "low_pass", "LOW PASS")}
                         <button class="iem-cad-tool" data-add-junction="${d.id}" type="button"><strong>●</strong><span>JUNCTION</span></button>
                         <button class="iem-cad-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE</span></button>
                         <label class="iem-cad-route-mode"><span>ROUTING</span><select data-wire-routing><option value="orthogonal" ${state.wireRouting === "orthogonal" ? "selected" : ""}>90°</option><option value="45" ${state.wireRouting === "45" ? "selected" : ""}>45°</option><option value="free" ${state.wireRouting === "free" ? "selected" : ""}>FREE</option></select></label>
                     </aside>
                     <div class="iem-cad-canvas-wrap">
                         <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" aria-label="Circuit schematic"></svg>
-                        <div class="iem-cad-help">Drag components/nodes freely · SNAP GRID is optional · hold Shift while dragging to temporarily disable snapping · WIRE: click a terminal, click canvas to add bends, then click another terminal · Esc cancels.</div>
+                        <div class="iem-cad-help">Press and hold a component, then drag it freely · SNAP GRID is optional · hold Shift while dragging to temporarily disable snapping · WIRE: click a terminal, click canvas to add bends, then click another terminal · Esc cancels.</div>
                     </div>
                 </div>
                 <div class="iem-filter-editor">
@@ -671,7 +683,6 @@
                         <div class="iem-filter-actions">
                             <button class="iem-mini" data-add-filter="${d.id}:peq">+ PEQ</button>
                             <button class="iem-mini" data-add-filter="${d.id}:high_pass">+ HIGH PASS</button>
-                            <button class="iem-mini" data-add-filter="${d.id}:low_pass">+ LOW PASS</button>
                         </div>
                     </div>
                     <div class="iem-filter-order-wrap"><span class="eyebrow">SIGNAL ORDER</span>${filterOrderHtml(d)}</div><div class="iem-filter-list">${d.circuit.filters.map((filter, i) => filterNode(d, filter, i)).join("") || '<div class="iem-field-note">No PEQ/HP/LP blocks.</div>'}</div>
@@ -695,6 +706,8 @@
             symbol = '<path d="M3 15 H12 M18 15 H27 M12 7 V23 M18 7 V23"/>';
         } else if (kind === "inductor") {
             symbol = '<path d="M3 15 H7 C7 9 11 9 11 15 C11 9 15 9 15 15 C15 9 19 9 19 15 C19 9 23 9 23 15 H27"/>';
+        } else if (kind === "low_pass") {
+            symbol = '<path d="M2 15 H6 M24 15 H28"/><rect x="6" y="7" width="18" height="16" rx="2"/><text x="15" y="18" text-anchor="middle" font-size="7">LP</text>';
         } else {
             symbol = '<path d="M3 15 H27"/>';
         }
@@ -718,6 +731,9 @@
         }
         if (component.kind === "inductor") {
             return '<path class="iem-cad-symbol" d="M-48 0 H-28 C-28 -14 -16 -14 -16 0 C-16 -14 -4 -14 -4 0 C-4 -14 8 -14 8 0 C8 -14 20 -14 20 0 C20 -14 32 -14 32 0 H48"/>' + bypass;
+        }
+        if (component.kind === "low_pass") {
+            return '<path class="iem-cad-symbol" d="M-48 0 H-30 M30 0 H48"/><rect class="iem-cad-symbol" x="-30" y="-16" width="60" height="32" rx="4"/><text class="iem-cad-filter-label" text-anchor="middle" y="5">LP</text>' + bypass;
         }
         return '<path class="iem-cad-symbol" d="M-48 0 H48"/>' + bypass;
     }
@@ -776,7 +792,7 @@
     }
 
     function filterOrderHtml(d) {
-        if (!d.circuit.filters.length) return '<div class="iem-field-note">No response filters. Add PEQ, High Pass or Low Pass.</div>';
+        if (!d.circuit.filters.length) return '<div class="iem-field-note">No response filters. Add PEQ or High Pass here; Low Pass is available directly in Circuit CAD.</div>';
         return `<div class="iem-order-strip" data-filter-order="${d.id}">
             <span class="iem-order-fixed">INPUT</span>
             ${d.circuit.filters.map((filter, index) => {
@@ -838,6 +854,7 @@
 
     function componentLabel(component) {
         if (component.kind === "wire") return component.label || "WIRE";
+        if (component.kind === "low_pass") return `${component.label || component.id}  ${Number(component.frequency || 400).toLocaleString()} Hz · Q ${Number(component.q || 0.707).toFixed(3)}`;
         const unit = component.kind === "resistor" ? "Ω" : component.kind === "capacitor" ? "µF" : "mH";
         return `${component.label || component.id}  ${Number(component.value).toLocaleString()} ${unit}`;
     }
@@ -860,8 +877,7 @@
     }
 
     function rotationHandleSvg(d, component, angle) {
-        const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
-        if (!selected || component.kind === "wire") return "";
+        if (component.kind === "wire") return "";
         return `
             <g class="iem-cad-rotation-handle" data-cad-rotate="${d.id}:${component.id}" aria-label="Rotate component in 45 degree steps">
                 <path class="iem-cad-rotation-stem" d="M0 -34 V-58"/>
@@ -884,6 +900,22 @@
         renderDrivers();
     }
 
+    function cadTerminalPoint(d, endpoint, fallbackNodeId) {
+        if (endpoint?.componentId) {
+            const component = d.circuit.components.find(c => c.id === endpoint.componentId);
+            if (component && component.kind !== "wire") {
+                const angle = componentDisplayAngle(d, component) * Math.PI / 180;
+                const sign = endpoint.side === "a" ? -1 : 1;
+                return {
+                    x: num(component.x, 450) + sign * 48 * Math.cos(angle),
+                    y: num(component.y, 180) + sign * 48 * Math.sin(angle),
+                };
+            }
+        }
+        const node = nodeById(d, endpoint?.nodeId || fallbackNodeId);
+        return node ? { x: node.x, y: node.y } : null;
+    }
+
     function renderCircuitSvg(d) {
         const svg = $(`cad-${d.id}`);
         if (!svg) return;
@@ -894,28 +926,33 @@
         const nodes = [];
 
         lines.push(`<defs><pattern id="grid-${d.id}" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(23,23,23,.07)" stroke-width="1"/></pattern></defs>`);
-        lines.push(`<rect width="900" height="360" fill="url(#grid-${d.id})"/>`);
+        lines.push(`<rect class="iem-cad-background" width="900" height="360" fill="url(#grid-${d.id})"/>`);
 
         for (const component of circuit.components) {
             const a = nodeById(d, component.nodeA);
             const b = nodeById(d, component.nodeB);
             if (!a || !b) continue;
+
             if (component.kind === "wire") {
-                const pts = [a, ...(Array.isArray(component.route) ? component.route : []), b];
+                const startPoint = cadTerminalPoint(d, component.endpointA, component.nodeA) || a;
+                const endPoint = cadTerminalPoint(d, component.endpointB, component.nodeB) || b;
+                const pts = [startPoint, ...(Array.isArray(component.route) ? component.route : []), endPoint];
                 const dPath = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
                 const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
-                lines.push(`<path class="iem-cad-wire user-wire ${selected ? "selected" : ""}" data-cad-wire="${d.id}:${component.id}" d="${dPath}"/>`);
+                // Wide transparent hit path fixes the old hard-to-click line behaviour.
+                lines.push(`<path class="iem-cad-wire-hit" data-cad-wire="${d.id}:${component.id}" d="${dPath}"/>`);
+                lines.push(`<path class="iem-cad-wire user-wire ${selected ? "selected" : ""}" data-cad-wire-visual="${d.id}:${component.id}" d="${dPath}"/>`);
                 if (selected) {
                     (component.route || []).forEach((p, i) => nodes.push(`<circle class="iem-wire-bend" data-wire-bend="${d.id}:${component.id}:${i}" cx="${p.x}" cy="${p.y}" r="6"/>`));
                 }
                 continue;
             }
+
             const x = Number.isFinite(component.x) ? component.x : snap((a.x + b.x) / 2);
             const y = Number.isFinite(component.y) ? component.y : snap((a.y + b.y) / 2);
             component.x = x;
             component.y = y;
             const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
-
             const angle = componentDisplayAngle(d, component);
             const rad = angle * Math.PI / 180;
             const tx1 = x - 48 * Math.cos(rad);
@@ -926,10 +963,10 @@
             lines.push(`<path class="iem-cad-wire" data-cad-lead="${d.id}:${component.id}" d="M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}"/>`);
             components.push(`
                 <g class="iem-cad-component ${selected ? "selected" : ""} ${component.bypassed ? "bypassed" : ""}" data-cad-component="${d.id}:${component.id}" transform="translate(${x},${y})">
-                    <g class="iem-cad-symbol-rotator" transform="rotate(${angle})">${componentSymbolSvg(component)}</g>
+                    <g class="iem-cad-symbol-rotator" transform="rotate(${angle})">${componentSymbolSvg(component)}<circle class="iem-cad-component-terminal" data-cad-terminal="${d.id}:${component.id}:a" cx="-48" cy="0" r="7"/><circle class="iem-cad-component-terminal" data-cad-terminal="${d.id}:${component.id}:b" cx="48" cy="0" r="7"/></g>
                     ${rotationHandleSvg(d, component, angle)}
                     <text class="ref" text-anchor="middle" y="-25">${esc(component.label || component.id)}</text>
-                    <text class="value" text-anchor="middle" y="31">${esc(component.kind === "wire" ? "WIRE" : componentLabel(component).replace(component.label || component.id, "").trim())}</text>
+                    <text class="value" text-anchor="middle" y="31">${esc(componentLabel(component).replace(component.label || component.id, "").trim())}</text>
                 </g>`);
         }
 
@@ -937,7 +974,12 @@
             const special = node.id === circuit.input ? "input" : node.id === circuit.ground ? "ground" : node.id === circuit.output ? "output" : "";
             const wireActive = state.wireStart?.driverId === d.id && state.wireStart.nodeId === node.id;
             if (node.id === circuit.ground) {
-                nodes.push(`<g class="iem-cad-node ground ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}">${groundSymbolSvg(node.x, node.y)}<circle cx="${node.x}" cy="${node.y - 12}" r="5"/><text x="${node.x}" y="${node.y - 25}" text-anchor="middle">${esc(node.label || node.id)}</text></g>`);
+                nodes.push(`
+                    <g class="iem-cad-node ground ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}" transform="translate(${node.x},${node.y})">
+                        ${groundSymbolSvg(0, 0)}
+                        <circle cx="0" cy="-12" r="5"/>
+                        <text x="0" y="-25" text-anchor="middle">${esc(node.label || node.id)}</text>
+                    </g>`);
             } else if (node.id === circuit.input) {
                 nodes.push(`
                     <g class="iem-cad-node input ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}" transform="translate(${node.x},${node.y})">
@@ -956,23 +998,31 @@
 
         if (driverNode) {
             const driverX = Math.min(840, driverNode.x + 120);
-            lines.push(`<path class="iem-cad-wire" d="M ${driverNode.x} ${driverNode.y} L ${driverX - 30} ${driverNode.y}"/>`);
-            components.push(driverSymbolSvg(d, driverX, driverNode.y));
+            lines.push(`<path class="iem-cad-wire" data-cad-driver-lead="${d.id}" d="M ${driverNode.x} ${driverNode.y} L ${driverX - 30} ${driverNode.y}"/>`);
+            components.push(`<g data-cad-driver-symbol="${d.id}">${driverSymbolSvg(d, driverX, driverNode.y)}</g>`);
         }
 
         if (state.wireDraft?.driverId === d.id && state.wireDraft.points?.length) {
-            const pts = state.wireDraft.points;
-            const dPath = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
-            lines.push(`<path class="iem-cad-wire wire-preview" d="${dPath}"/>`);
+            const fixed = state.wireDraft.points;
+            const preview = state.wireDraft.cursor ? [...fixed, state.wireDraft.cursor] : fixed;
+            const dPath = preview.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+            lines.push(`<path class="iem-cad-wire wire-preview" data-wire-preview="${d.id}" d="${dPath}"/>`);
         }
+
         svg.innerHTML = lines.join("") + components.join("") + nodes.join("");
         bindCadSvg(d, svg);
     }
 
+    function groupUpdateRotation(svg, d, component, angle) {
+        const group = svg.querySelector(`[data-cad-component="${d.id}:${component.id}"]`);
+        const rotator = group?.querySelector(".iem-cad-symbol-rotator");
+        if (rotator) rotator.setAttribute("transform", `rotate(${angle})`);
+        const text = group?.querySelector(".iem-cad-rotation-text");
+        if (text) text.textContent = `${angle}°`;
+    }
+
     function bindCadSvg(d, svg) {
-        let drag = null;
-        let moved = false;
-        function point(event) {
+        const point = event => {
             const rect = svg.getBoundingClientRect();
             const rawX = (event.clientX - rect.left) * 900 / rect.width;
             const rawY = (event.clientY - rect.top) * 360 / rect.height;
@@ -981,23 +1031,136 @@
                 x: clamp(shouldSnap ? snap(rawX) : rawX, 20, 880),
                 y: clamp(shouldSnap ? snap(rawY) : rawY, 20, 340),
             };
-        }
+        };
+
+        const setSelection = componentId => {
+            state.selectedCircuit = { driverId: d.id, componentId };
+            svg.querySelectorAll("[data-cad-component]").forEach(el => {
+                const [, id] = el.dataset.cadComponent.split(":");
+                el.classList.toggle("selected", id === componentId);
+            });
+            svg.querySelectorAll("[data-cad-wire-visual]").forEach(el => {
+                const [, id] = el.dataset.cadWireVisual.split(":");
+                el.classList.toggle("selected", id === componentId);
+            });
+        };
+
+        const updateGeometry = () => {
+            for (const component of d.circuit.components) {
+                const a = nodeById(d, component.nodeA);
+                const b = nodeById(d, component.nodeB);
+                if (!a || !b) continue;
+                if (component.kind === "wire") {
+                    const startPoint = cadTerminalPoint(d, component.endpointA, component.nodeA) || a;
+                    const endPoint = cadTerminalPoint(d, component.endpointB, component.nodeB) || b;
+                    const pts = [startPoint, ...(component.route || []), endPoint];
+                    const path = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+                    svg.querySelector(`[data-cad-wire="${d.id}:${component.id}"]`)?.setAttribute("d", path);
+                    svg.querySelector(`[data-cad-wire-visual="${d.id}:${component.id}"]`)?.setAttribute("d", path);
+                    (component.route || []).forEach((p, i) => {
+                        const bend = svg.querySelector(`[data-wire-bend="${d.id}:${component.id}:${i}"]`);
+                        if (bend) { bend.setAttribute("cx", p.x); bend.setAttribute("cy", p.y); }
+                    });
+                    continue;
+                }
+                const x = Number(component.x);
+                const y = Number(component.y);
+                const angle = componentDisplayAngle(d, component);
+                const rad = angle * Math.PI / 180;
+                const tx1 = x - 48 * Math.cos(rad);
+                const ty1 = y - 48 * Math.sin(rad);
+                const tx2 = x + 48 * Math.cos(rad);
+                const ty2 = y + 48 * Math.sin(rad);
+                svg.querySelector(`[data-cad-component="${d.id}:${component.id}"]`)?.setAttribute("transform", `translate(${x},${y})`);
+                svg.querySelector(`[data-cad-lead="${d.id}:${component.id}"]`)?.setAttribute("d", `M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}`);
+            }
+
+            for (const node of d.circuit.nodes) {
+                svg.querySelector(`[data-cad-node="${d.id}:${node.id}"]`)?.setAttribute("transform", `translate(${node.x},${node.y})`);
+            }
+
+            const out = nodeById(d, d.circuit.output) || nodeById(d, d.circuit.input);
+            if (out) {
+                const driverX = Math.min(840, out.x + 120);
+                svg.querySelector(`[data-cad-driver-lead="${d.id}"]`)?.setAttribute("d", `M ${out.x} ${out.y} L ${driverX - 30} ${out.y}`);
+                const holder = svg.querySelector(`[data-cad-driver-symbol="${d.id}"]`);
+                if (holder) holder.innerHTML = driverSymbolSvg(d, driverX, out.y);
+            }
+        };
+
+        const commitDrag = before => {
+            if (JSON.stringify(d.circuit) === before) return;
+            const history = historyFor(d);
+            history.undo.push(before);
+            if (history.undo.length > 50) history.undo.shift();
+            history.redo = [];
+        };
 
         svg.querySelectorAll("[data-cad-component]").forEach(group => {
             group.onpointerdown = event => {
+                if (event.button !== 0 || event.target.closest?.("[data-cad-rotate]")) return;
                 event.preventDefault();
+                event.stopPropagation();
                 const [, componentId] = group.dataset.cadComponent.split(":");
-                state.selectedCircuit = { driverId: d.id, componentId };
-                drag = { type: "component", id: componentId, start: point(event), before: JSON.stringify(d.circuit) };
-                moved = false;
-                svg.setPointerCapture?.(event.pointerId);
-                renderCircuitSvg(d);
+                const component = d.circuit.components.find(c => c.id === componentId);
+                if (!component) return;
+                setSelection(componentId);
+
+                const startPoint = point(event);
+                const before = JSON.stringify(d.circuit);
+                const offsetX = num(component.x) - startPoint.x;
+                const offsetY = num(component.y) - startPoint.y;
+                let armed = false;
+                let moved = false;
+                let ended = false;
+
+                group.classList.add("hold-pending");
+                const holdTimer = window.setTimeout(() => {
+                    if (ended) return;
+                    armed = true;
+                    group.classList.remove("hold-pending");
+                    group.classList.add("hold-dragging");
+                }, state.cadHoldToDragMs);
+
+                const move = ev => {
+                    ev.preventDefault();
+                    const p = point(ev);
+                    const distance = Math.hypot(p.x - startPoint.x, p.y - startPoint.y);
+                    if (!armed) {
+                        // A quick movement before the hold threshold remains a selection gesture.
+                        if (distance > 12) group.classList.add("hold-needs-pause");
+                        return;
+                    }
+                    moved = true;
+                    component.x = clamp(p.x + offsetX, 20, 880);
+                    component.y = clamp(p.y + offsetY, 20, 340);
+                    if (state.cadSnapToGrid && !ev.shiftKey) {
+                        component.x = snap(component.x);
+                        component.y = snap(component.y);
+                    }
+                    updateGeometry();
+                };
+
+                const up = () => {
+                    ended = true;
+                    window.clearTimeout(holdTimer);
+                    group.classList.remove("hold-pending", "hold-dragging", "hold-needs-pause");
+                    window.removeEventListener("pointermove", move);
+                    window.removeEventListener("pointerup", up);
+                    window.removeEventListener("pointercancel", up);
+                    if (moved) commitDrag(before);
+                    renderCircuitSvg(d);
+                };
+
+                window.addEventListener("pointermove", move, { passive: false });
+                window.addEventListener("pointerup", up, { once: true });
+                window.addEventListener("pointercancel", up, { once: true });
             };
             group.ondblclick = event => {
                 event.preventDefault();
                 event.stopPropagation();
                 const [, componentId] = group.dataset.cadComponent.split(":");
-                state.selectedCircuit = { driverId: d.id, componentId };
+                setSelection(componentId);
                 openCircuitPropertyPage(d, componentId);
             };
         });
@@ -1009,36 +1172,28 @@
                 const [, componentId] = handle.dataset.cadRotate.split(":");
                 const component = d.circuit.components.find(c => c.id === componentId);
                 if (!component) return;
-                state.selectedCircuit = { driverId: d.id, componentId };
+                setSelection(componentId);
                 const before = JSON.stringify(d.circuit);
                 const rect = svg.getBoundingClientRect();
-                const viewBox = svg.viewBox.baseVal;
                 const toSvgPoint = ev => ({
-                    x: (ev.clientX - rect.left) * viewBox.width / rect.width + viewBox.x,
-                    y: (ev.clientY - rect.top) * viewBox.height / rect.height + viewBox.y,
+                    x: (ev.clientX - rect.left) * 900 / rect.width,
+                    y: (ev.clientY - rect.top) * 360 / rect.height,
                 });
-                const rotateFromEvent = ev => {
-                    const p = toSvgPoint(ev);
-                    // Symbol's 0° axis points to the right. atan2 gives the desired visual axis.
-                    let degrees = Math.atan2(p.y - component.y, p.x - component.x) * 180 / Math.PI + 90;
-                    component.rotationDeg = normalizeRotation45(degrees);
-                    renderCircuitSvg(d);
-                };
                 const move = ev => {
                     ev.preventDefault();
-                    rotateFromEvent(ev);
+                    const p = toSvgPoint(ev);
+                    const degrees = Math.atan2(p.y - component.y, p.x - component.x) * 180 / Math.PI + 90;
+                    component.rotationDeg = normalizeRotation45(degrees);
+                    const angle = componentDisplayAngle(d, component);
+                    groupUpdateRotation(svg, d, component, angle);
+                    updateGeometry();
                 };
-                const up = ev => {
+                const up = () => {
                     window.removeEventListener("pointermove", move);
                     window.removeEventListener("pointerup", up);
                     window.removeEventListener("pointercancel", up);
-                    const history = historyFor(d);
-                    if (JSON.stringify(d.circuit) !== before) {
-                        history.undo.push(before);
-                        if (history.undo.length > 50) history.undo.shift();
-                        history.redo = [];
-                    }
-                    renderDrivers();
+                    commitDrag(before);
+                    renderCircuitSvg(d);
                     calculate();
                 };
                 window.addEventListener("pointermove", move, { passive: false });
@@ -1054,106 +1209,122 @@
             };
         });
 
+        svg.querySelectorAll("[data-cad-terminal]").forEach(terminal => {
+            terminal.onpointerdown = event => {
+                if (event.button !== 0) return;
+                event.preventDefault();
+                event.stopPropagation();
+                const [, componentId, side] = terminal.dataset.cadTerminal.split(":");
+                const component = d.circuit.components.find(c => c.id === componentId);
+                if (!component) return;
+                const nodeId = side === "a" ? component.nodeA : component.nodeB;
+                const p = cadTerminalPoint(d, { componentId, side, nodeId }, nodeId);
+                if (!state.wireStart || state.wireStart.driverId !== d.id) startWireMode(d);
+                finishWireEndpoint(d, { componentId, side, nodeId }, p);
+            };
+        });
+
         svg.querySelectorAll("[data-cad-node]").forEach(group => {
             group.onpointerdown = event => {
+                if (event.button !== 0) return;
                 event.preventDefault();
+                event.stopPropagation();
                 const [, nodeId] = group.dataset.cadNode.split(":");
                 if (state.wireStart?.driverId === d.id) {
-                    finishWireMode(d, nodeId);
+                    finishWireEndpoint(d, { nodeId }, { x: node.x, y: node.y });
                     return;
                 }
-                drag = { type: "node", id: nodeId, start: point(event), before: JSON.stringify(d.circuit) };
-                moved = false;
-                svg.setPointerCapture?.(event.pointerId);
+                const node = nodeById(d, nodeId);
+                if (!node) return;
+                const start = point(event);
+                const before = JSON.stringify(d.circuit);
+                const offsetX = node.x - start.x;
+                const offsetY = node.y - start.y;
+                let moved = false;
+                const move = ev => {
+                    ev.preventDefault();
+                    const p = point(ev);
+                    if (!moved && Math.hypot(p.x - start.x, p.y - start.y) < 3) return;
+                    moved = true;
+                    node.x = clamp(p.x + offsetX, 20, 880);
+                    node.y = clamp(p.y + offsetY, 20, 340);
+                    if (state.cadSnapToGrid && !ev.shiftKey) {
+                        node.x = snap(node.x);
+                        node.y = snap(node.y);
+                    }
+                    updateGeometry();
+                };
+                const up = () => {
+                    window.removeEventListener("pointermove", move);
+                    window.removeEventListener("pointerup", up);
+                    window.removeEventListener("pointercancel", up);
+                    if (moved) commitDrag(before);
+                    renderCircuitSvg(d);
+                };
+                window.addEventListener("pointermove", move, { passive: false });
+                window.addEventListener("pointerup", up, { once: true });
+                window.addEventListener("pointercancel", up, { once: true });
             };
         });
 
         svg.querySelectorAll("[data-cad-wire]").forEach(path => {
             path.onpointerdown = event => {
-                event.preventDefault(); event.stopPropagation();
+                event.preventDefault();
+                event.stopPropagation();
                 const [, componentId] = path.dataset.cadWire.split(":");
-                state.selectedCircuit = { driverId: d.id, componentId };
+                setSelection(componentId);
                 renderCircuitSvg(d);
             };
             path.ondblclick = event => {
-                event.preventDefault(); event.stopPropagation();
+                event.preventDefault();
+                event.stopPropagation();
                 const [, componentId] = path.dataset.cadWire.split(":");
-                state.selectedCircuit = { driverId: d.id, componentId };
+                setSelection(componentId);
                 openCircuitPropertyPage(d, componentId);
             };
         });
+
         svg.querySelectorAll("[data-wire-bend]").forEach(handle => {
             handle.onpointerdown = event => {
-                event.preventDefault(); event.stopPropagation();
+                event.preventDefault();
+                event.stopPropagation();
                 const [, componentId, indexText] = handle.dataset.wireBend.split(":");
                 const component = d.circuit.components.find(c => c.id === componentId);
                 const index = Number(indexText);
                 if (!component?.route?.[index]) return;
                 const before = JSON.stringify(d.circuit);
-                const move = ev => { component.route[index] = point(ev); renderCircuitSvg(d); };
+                const move = ev => {
+                    ev.preventDefault();
+                    component.route[index] = point(ev);
+                    updateGeometry();
+                };
                 const up = () => {
                     window.removeEventListener("pointermove", move);
-                    const history = historyFor(d); history.undo.push(before); history.redo = [];
-                    renderDrivers(); calculate();
+                    window.removeEventListener("pointerup", up);
+                    window.removeEventListener("pointercancel", up);
+                    commitDrag(before);
+                    renderCircuitSvg(d);
                 };
-                window.addEventListener("pointermove", move); window.addEventListener("pointerup", up, { once: true });
+                window.addEventListener("pointermove", move, { passive: false });
+                window.addEventListener("pointerup", up, { once: true });
+                window.addEventListener("pointercancel", up, { once: true });
             };
         });
+
+        const updateWirePreview = event => {
+            if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
+            const last = state.wireDraft.points[state.wireDraft.points.length - 1];
+            state.wireDraft.cursor = routedPoint(last, point(event));
+            const pts = [...state.wireDraft.points, state.wireDraft.cursor];
+            const path = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+            svg.querySelector(`[data-wire-preview="${d.id}"]`)?.setAttribute("d", path);
+        };
+
+        svg.onpointermove = event => updateWirePreview(event);
         svg.onclick = event => {
             if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
-            if (event.target.closest?.("[data-cad-node]")) return;
+            if (event.target.closest?.("[data-cad-node], [data-cad-component], [data-cad-wire]")) return;
             addWireBend(d, point(event));
-        };
-
-        svg.onpointermove = event => {
-            if (!drag) return;
-            const p = point(event);
-            if (Math.abs(p.x - drag.start.x) + Math.abs(p.y - drag.start.y) > 5) moved = true;
-            if (!moved) return;
-            if (drag.type === "component") {
-                const component = d.circuit.components.find(c => c.id === drag.id);
-                if (component) {
-                    component.x = p.x;
-                    component.y = p.y;
-                    const group = svg.querySelector(`[data-cad-component="${d.id}:${drag.id}"]`);
-                    group?.setAttribute("transform", `translate(${p.x},${p.y})`);
-
-                    // Keep the schematic leads visually attached while the symbol is moved.
-                    // This only changes drawing geometry; node connectivity in the Rust netlist stays unchanged.
-                    const a = nodeById(d, component.nodeA);
-                    const b = nodeById(d, component.nodeB);
-                    const lead = svg.querySelector(`[data-cad-lead="${d.id}:${drag.id}"]`);
-                    if (a && b && lead) {
-                        const angle = componentDisplayAngle(d, component);
-                        const rad = angle * Math.PI / 180;
-                        const tx1 = p.x - 48 * Math.cos(rad);
-                        const ty1 = p.y - 48 * Math.sin(rad);
-                        const tx2 = p.x + 48 * Math.cos(rad);
-                        const ty2 = p.y + 48 * Math.sin(rad);
-                        lead.setAttribute("d", `M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}`);
-                    }
-                }
-            } else {
-                const node = nodeById(d, drag.id);
-                if (node) {
-                    node.x = p.x;
-                    node.y = p.y;
-                    const group = svg.querySelector(`[data-cad-node="${d.id}:${drag.id}"]`);
-                    group?.setAttribute("transform", `translate(${p.x},${p.y})`);
-                }
-            }
-        };
-        svg.onpointerup = () => {
-            const finished = drag;
-            const shouldRender = Boolean(finished && moved);
-            drag = null;
-            if (shouldRender) {
-                const history = historyFor(d);
-                history.undo.push(finished.before);
-                if (history.undo.length > 50) history.undo.shift();
-                history.redo = [];
-                renderCircuitSvg(d);
-            }
         };
 
         svg.ondragover = event => event.preventDefault();
@@ -1199,7 +1370,7 @@
     }
 
     function nextComponentLabel(d, kind) {
-        const prefix = kind === "resistor" ? "R" : kind === "capacitor" ? "C" : kind === "inductor" ? "L" : "W";
+        const prefix = kind === "resistor" ? "R" : kind === "capacitor" ? "C" : kind === "inductor" ? "L" : kind === "low_pass" ? "LP" : "W";
         let n = 1;
         const used = new Set(d.circuit.components.map(c => c.label));
         while (used.has(`${prefix}${n}`)) n++;
@@ -1210,6 +1381,7 @@
         if (kind === "capacitor") return 22;
         if (kind === "inductor") return 0.1;
         if (kind === "wire") return 0;
+        if (kind === "low_pass") return 400;
         return 3.3;
     }
 
@@ -1232,6 +1404,7 @@
             rotationDeg: null,
             x: snap(((oldOutput?.x || 80) + newX) / 2),
             y: oldOutput?.y || 120,
+            ...(kind === "low_pass" ? { frequency: value || 400, q: 0.707 } : {}),
         });
         circuit.output = newNodeId;
         if (rerender) renderDrivers();
@@ -1272,6 +1445,7 @@
     function startWireMode(d) {
         state.wireStart = { driverId: d.id, nodeId: "__await_first__" };
         state.wireDraft = null;
+        renderCircuitSvg(d);
         const svg = $(`cad-${d.id}`);
         if (svg) svg.classList.add("wire-mode");
     }
@@ -1293,34 +1467,45 @@
         if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
         const last = state.wireDraft.points[state.wireDraft.points.length - 1];
         const p = routedPoint(last, rawPoint);
-        if (p.x === last.x && p.y === last.y) return;
+        if (Math.hypot(p.x - last.x, p.y - last.y) < 1) return;
         state.wireDraft.points.push(p);
+        state.wireDraft.cursor = null;
         renderCircuitSvg(d);
     }
 
-    function finishWireMode(d, nodeId) {
+    function finishWireEndpoint(d, endpoint, endpointPoint) {
         if (!state.wireStart || state.wireStart.driverId !== d.id) return;
+        const nodeId = endpoint?.nodeId;
         const node = nodeById(d, nodeId);
         if (!node) return;
+        const visualPoint = endpointPoint || { x: node.x, y: node.y };
+
         if (state.wireStart.nodeId === "__await_first__") {
             state.wireStart.nodeId = nodeId;
-            state.wireDraft = { driverId: d.id, startNode: nodeId, points: [{ x: node.x, y: node.y }] };
+            state.wireStart.endpoint = endpoint;
+            state.wireDraft = { driverId: d.id, startNode: nodeId, points: [visualPoint], cursor: null };
             renderCircuitSvg(d);
             return;
         }
-        const start = state.wireStart.nodeId;
-        if (start === nodeId) return;
+
+        const startNode = state.wireStart.nodeId;
+        const startEndpoint = state.wireStart.endpoint || { nodeId: startNode };
+        if (startNode === nodeId && !endpoint?.componentId && !startEndpoint?.componentId) return;
         const draft = state.wireDraft;
         const last = draft?.points?.[draft.points.length - 1];
-        const endPoint = routedPoint(last, { x: node.x, y: node.y });
         const route = (draft?.points || []).slice(1);
-        if (last && (endPoint.x !== node.x || endPoint.y !== node.y)) route.push(endPoint);
+        if (last) {
+            const routedEnd = routedPoint(last, visualPoint);
+            if (Math.hypot(routedEnd.x - visualPoint.x, routedEnd.y - visualPoint.y) > 1) route.push(routedEnd);
+        }
         state.wireStart = null;
         state.wireDraft = null;
         mutateCircuit(d, () => {
             d.circuit.components.push({
                 id: uid(), label: nextComponentLabel(d, "wire"), kind: "wire", value: 0,
-                nodeA: start, nodeB: nodeId, bypassed: false, route
+                nodeA: startNode, nodeB: nodeId, bypassed: false, route,
+                endpointA: startEndpoint,
+                endpointB: endpoint,
             });
         });
     }
@@ -1397,6 +1582,8 @@
             ? { title: "Capacitor", unit: "µF", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="10"></label><label>VOLTAGE RATING V<input data-property-extra="voltage" type="number" min="0" step="1" value="50"></label>' }
             : component.kind === "inductor"
             ? { title: "Inductor", unit: "mH", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="10"></label><label>DCR Ω<input data-property-extra="dcr" type="number" min="0" step="0.01" value="0"></label>' }
+            : component.kind === "low_pass"
+            ? { title: "Low-Pass Filter", unit: "Hz", extra: `<label>Q<input data-property-field="q" type="number" min="0.05" step="0.01" value="${component.q || 0.707}"></label>` }
             : { title: "Wire", unit: "", extra: "" };
 
         body.innerHTML = `
@@ -1407,7 +1594,7 @@
             <div class="iem-property-grid">
                 <section class="iem-property-section"><span class="eyebrow">COMPONENT</span>
                     <label>REFERENCE<input data-property-field="label" value="${esc(draft.label || "")}"></label>
-                    ${component.kind !== "wire" ? `<label>VALUE ${meta.unit}<input data-property-field="value" type="number" step="0.01" value="${draft.value}"></label>` : ""}
+                    ${component.kind === "low_pass" ? `<label>CUTOFF FREQUENCY Hz<input data-property-field="frequency" type="number" min="1" step="1" value="${draft.frequency || 400}"></label>` : component.kind !== "wire" ? `<label>VALUE ${meta.unit}<input data-property-field="value" type="number" step="0.01" value="${draft.value}"></label>` : ""}
                     ${meta.extra}
                 </section>
                 <section class="iem-property-section"><span class="eyebrow">CONNECTION</span>
@@ -1451,6 +1638,11 @@
             } else if (component.kind === "inductor") {
                 box.innerHTML = `<p>Inductive reactance</p>${[100,400,1000,3000,8000].map(f => `<div><span>${f >= 1000 ? (f/1000)+" kHz" : f+" Hz"}</span><strong>${(2*Math.PI*f*value*1e-3).toFixed(2)} Ω</strong></div>`).join("")}`;
             } else if (component.kind === "resistor") box.innerHTML = `<p>Resistance</p><div><span>Nominal</span><strong>${value.toFixed(3)} Ω</strong></div>`;
+            else if (component.kind === "low_pass") {
+                const fc = num(body.querySelector('[data-property-field="frequency"]')?.value, component.frequency || 400);
+                const q = num(body.querySelector('[data-property-field="q"]')?.value, component.q || 0.707);
+                box.innerHTML = `<p>2nd-order response-domain low-pass</p><div><span>Cutoff</span><strong>${fc.toLocaleString()} Hz</strong></div><div><span>Q</span><strong>${q.toFixed(3)}</strong></div>`;
+            }
             else box.innerHTML = '<p>Ideal wire / short connection.</p>';
         };
         body.querySelectorAll("[data-property-field]").forEach(input => input.addEventListener("input", updateCalculated));
@@ -1500,7 +1692,7 @@
             body.querySelectorAll("[data-property-field]").forEach(input => {
                 const key = input.dataset.propertyField;
                 if (key === "bypassed") component[key] = input.checked;
-                else if (key === "value") component[key] = num(input.value, component[key]);
+                else if (key === "value" || key === "frequency" || key === "q") component[key] = num(input.value, component[key]);
                 else if (key === "rotationDeg") component[key] = input.value === "auto" ? null : normalizeRotation45(input.value);
                 else component[key] = input.value;
             });

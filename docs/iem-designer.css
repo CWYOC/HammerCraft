@@ -194,3 +194,78 @@
     .iem-reverse-actions { flex-direction: column; }
     .iem-reverse-actions button { width: 100%; }
 }
+
+/* =========================================================
+   v0.16 — CIRCUIT CAD DRAG + WIRE INTERACTION FIXES
+========================================================= */
+
+/* Keep component movement responsive and prevent text selection. */
+.iem-cad-component,
+.iem-cad-node,
+.iem-wire-bend,
+.iem-cad-rotation-handle {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Rotation handle is always present in SVG but only visible on selection. */
+.iem-cad-component:not(.selected) .iem-cad-rotation-handle {
+    display: none;
+}
+
+/* A wide invisible path makes cables much easier to select/double-click. */
+.iem-cad-wire-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 16;
+    vector-effect: non-scaling-stroke;
+    pointer-events: stroke;
+    cursor: pointer;
+}
+
+.iem-cad-wire.user-wire {
+    pointer-events: none;
+}
+
+.iem-cad-wire.user-wire.selected {
+    stroke: var(--admin-accent);
+    stroke-width: 4;
+}
+
+.iem-cad-canvas.wire-mode .iem-cad-node {
+    cursor: crosshair;
+}
+
+.iem-cad-canvas.wire-mode .iem-cad-node circle,
+.iem-cad-canvas.wire-mode .iem-cad-node .terminal {
+    stroke: var(--admin-accent);
+    stroke-width: 3;
+}
+
+/* Make terminals a little easier to hit when starting/ending a cable. */
+.iem-cad-node circle,
+.iem-cad-node .terminal {
+    pointer-events: all;
+}
+
+.iem-cad-background {
+    pointer-events: all;
+}
+
+
+/* =========================================================
+   V17 HOLD-TO-DRAG + CAD LOW PASS
+========================================================= */
+.iem-cad-component.hold-pending{cursor:progress}
+.iem-cad-component.hold-dragging{cursor:grabbing}
+.iem-cad-component.hold-dragging .iem-cad-symbol,
+.iem-cad-component.hold-dragging rect{stroke:var(--admin-accent)!important;stroke-width:3!important}
+.iem-cad-component.hold-needs-pause{opacity:.72}
+.iem-cad-filter-label{font-size:12px;font-weight:800;fill:var(--admin-text);pointer-events:none}
+.iem-cad-tool .iem-cad-tool-symbol text{font-family:Arial,Helvetica,sans-serif;fill:var(--admin-text);font-weight:700}
+
+/* v0.18 manual terminal cabling */
+.iem-cad-component-terminal{fill:#fff;stroke:var(--admin-accent);stroke-width:2;vector-effect:non-scaling-stroke;cursor:crosshair;pointer-events:all}
+.iem-cad-component-terminal:hover{fill:var(--admin-accent);r:9}
+.iem-cad-canvas.wire-mode .iem-cad-component-terminal{stroke-width:3}
