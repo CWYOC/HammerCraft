@@ -94,3 +94,13 @@
 .iem-cad-wire.user-wire:hover,.iem-cad-wire.user-wire.selected{stroke:var(--admin-accent);stroke-width:4}
 .iem-cad-wire.wire-preview{stroke:var(--admin-accent);stroke-width:2.5;stroke-dasharray:7 5;pointer-events:none}
 .iem-wire-bend{fill:#fff;stroke:var(--admin-accent);stroke-width:2;cursor:move;pointer-events:all}
+
+
+/* v0.13 free component placement */
+.iem-cad-snap-toggle{min-height:32px;padding:0 8px;border:1px solid var(--admin-border);background:rgba(255,255,255,.45);display:inline-flex;align-items:center;gap:6px;color:var(--admin-muted);font-size:7px;font-weight:700;letter-spacing:.08em;cursor:pointer;user-select:none}
+.iem-cad-snap-toggle:hover{border-color:var(--admin-accent);background:#fff}
+.iem-cad-snap-toggle input{width:13px;height:13px;margin:0;accent-color:var(--admin-accent)}
+.iem-cad-component{cursor:grab}
+.iem-cad-component:active{cursor:grabbing}
+.iem-cad-node{cursor:grab}
+.iem-cad-node:active{cursor:grabbing}

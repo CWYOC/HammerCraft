@@ -23,6 +23,7 @@
         wireDraft: null,
         wireRouting: "orthogonal",
         cadSymbolStandard: "iec",
+        cadSnapToGrid: false,
     };
 
     function esc(value) {
@@ -639,6 +640,10 @@
                         <button class="iem-mini" data-circuit-undo="${d.id}">UNDO</button>
                         <button class="iem-mini" data-circuit-redo="${d.id}">REDO</button>
                         <button class="iem-mini" data-circuit-auto="${d.id}">AUTO ARRANGE</button>
+                        <label class="iem-cad-snap-toggle" title="Snap dragged schematic objects to the 20 px grid">
+                            <input type="checkbox" data-cad-snap-toggle ${state.cadSnapToGrid ? "checked" : ""}>
+                            <span>SNAP GRID</span>
+                        </label>
                         <button class="iem-mini" data-circuit-properties="${d.id}" type="button">PROPERTIES</button>
                     </div>
                 </div>
@@ -657,7 +662,7 @@
                     </aside>
                     <div class="iem-cad-canvas-wrap">
                         <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" aria-label="Circuit schematic"></svg>
-                        <div class="iem-cad-help">Drag nodes/components · WIRE: click a terminal, click canvas to add bends, then click another terminal · Esc cancels.</div>
+                        <div class="iem-cad-help">Drag components/nodes freely · SNAP GRID is optional · hold Shift while dragging to temporarily disable snapping · WIRE: click a terminal, click canvas to add bends, then click another terminal · Esc cancels.</div>
                     </div>
                 </div>
                 <div class="iem-filter-editor">
@@ -918,7 +923,7 @@
             const tx2 = x + 48 * Math.cos(rad);
             const ty2 = y + 48 * Math.sin(rad);
 
-            lines.push(`<path class="iem-cad-wire" d="M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}"/>`);
+            lines.push(`<path class="iem-cad-wire" data-cad-lead="${d.id}:${component.id}" d="M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}"/>`);
             components.push(`
                 <g class="iem-cad-component ${selected ? "selected" : ""} ${component.bypassed ? "bypassed" : ""}" data-cad-component="${d.id}:${component.id}" transform="translate(${x},${y})">
                     <g class="iem-cad-symbol-rotator" transform="rotate(${angle})">${componentSymbolSvg(component)}</g>
@@ -969,9 +974,12 @@
         let moved = false;
         function point(event) {
             const rect = svg.getBoundingClientRect();
+            const rawX = (event.clientX - rect.left) * 900 / rect.width;
+            const rawY = (event.clientY - rect.top) * 360 / rect.height;
+            const shouldSnap = state.cadSnapToGrid && !event.shiftKey;
             return {
-                x: clamp(snap((event.clientX - rect.left) * 900 / rect.width), 20, 880),
-                y: clamp(snap((event.clientY - rect.top) * 360 / rect.height), 20, 340),
+                x: clamp(shouldSnap ? snap(rawX) : rawX, 20, 880),
+                y: clamp(shouldSnap ? snap(rawY) : rawY, 20, 340),
             };
         }
 
@@ -1109,6 +1117,21 @@
                     component.y = p.y;
                     const group = svg.querySelector(`[data-cad-component="${d.id}:${drag.id}"]`);
                     group?.setAttribute("transform", `translate(${p.x},${p.y})`);
+
+                    // Keep the schematic leads visually attached while the symbol is moved.
+                    // This only changes drawing geometry; node connectivity in the Rust netlist stays unchanged.
+                    const a = nodeById(d, component.nodeA);
+                    const b = nodeById(d, component.nodeB);
+                    const lead = svg.querySelector(`[data-cad-lead="${d.id}:${drag.id}"]`);
+                    if (a && b && lead) {
+                        const angle = componentDisplayAngle(d, component);
+                        const rad = angle * Math.PI / 180;
+                        const tx1 = p.x - 48 * Math.cos(rad);
+                        const ty1 = p.y - 48 * Math.sin(rad);
+                        const tx2 = p.x + 48 * Math.cos(rad);
+                        const ty2 = p.y + 48 * Math.sin(rad);
+                        lead.setAttribute("d", `M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}`);
+                    }
                 }
             } else {
                 const node = nodeById(d, drag.id);
@@ -1609,6 +1632,12 @@
             state.cadSymbolStandard = select.value === "ansi" ? "ansi" : "iec";
             state.drivers.forEach(driver => renderCircuitSvg(driver));
             renderDrivers();
+        });
+        document.querySelectorAll("[data-cad-snap-toggle]").forEach(toggle => toggle.onchange = () => {
+            state.cadSnapToGrid = Boolean(toggle.checked);
+            document.querySelectorAll("[data-cad-snap-toggle]").forEach(other => {
+                other.checked = state.cadSnapToGrid;
+            });
         });
         document.querySelectorAll("[data-cad-copy]").forEach(button => button.onclick = () => {
             const [id, componentId] = button.dataset.cadCopy.split(":");
