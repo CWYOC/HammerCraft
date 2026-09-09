@@ -87,3 +87,10 @@
 .iem-property-rotate-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .iem-property-symbol svg{transition:transform 120ms ease;transform-origin:center}
 @media(max-width:760px){.iem-property-rotate-actions{grid-template-columns:1fr}}
+/* v0.12 manual cabling */
+.iem-cad-route-mode{display:flex;flex-direction:column;gap:4px;margin-top:5px;font-size:7px;font-weight:700;letter-spacing:.08em;color:var(--admin-muted)}
+.iem-cad-route-mode select{min-height:32px;border:1px solid var(--admin-border);background:#fff;padding:0 6px;font-size:8px}
+.iem-cad-wire.user-wire{stroke-width:3;cursor:pointer;pointer-events:stroke}
+.iem-cad-wire.user-wire:hover,.iem-cad-wire.user-wire.selected{stroke:var(--admin-accent);stroke-width:4}
+.iem-cad-wire.wire-preview{stroke:var(--admin-accent);stroke-width:2.5;stroke-dasharray:7 5;pointer-events:none}
+.iem-wire-bend{fill:#fff;stroke:var(--admin-accent);stroke-width:2;cursor:move;pointer-events:all}

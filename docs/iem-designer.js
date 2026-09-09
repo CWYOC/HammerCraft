@@ -20,6 +20,8 @@
         circuitClipboard: null,
         histories: new Map(),
         wireStart: null,
+        wireDraft: null,
+        wireRouting: "orthogonal",
         cadSymbolStandard: "iec",
     };
 
@@ -651,10 +653,11 @@
                         ${paletteButton(d.id, "shunt_inductor", "SHUNT L")}
                         <button class="iem-cad-tool" data-add-junction="${d.id}" type="button"><strong>●</strong><span>JUNCTION</span></button>
                         <button class="iem-cad-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE</span></button>
+                        <label class="iem-cad-route-mode"><span>ROUTING</span><select data-wire-routing><option value="orthogonal" ${state.wireRouting === "orthogonal" ? "selected" : ""}>90°</option><option value="45" ${state.wireRouting === "45" ? "selected" : ""}>45°</option><option value="free" ${state.wireRouting === "free" ? "selected" : ""}>FREE</option></select></label>
                     </aside>
                     <div class="iem-cad-canvas-wrap">
                         <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" aria-label="Circuit schematic"></svg>
-                        <div class="iem-cad-help">Drag nodes/components · click to select · double-click or PROPERTIES to edit · WIRE then click two nodes.</div>
+                        <div class="iem-cad-help">Drag nodes/components · WIRE: click a terminal, click canvas to add bends, then click another terminal · Esc cancels.</div>
                     </div>
                 </div>
                 <div class="iem-filter-editor">
@@ -892,6 +895,16 @@
             const a = nodeById(d, component.nodeA);
             const b = nodeById(d, component.nodeB);
             if (!a || !b) continue;
+            if (component.kind === "wire") {
+                const pts = [a, ...(Array.isArray(component.route) ? component.route : []), b];
+                const dPath = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+                const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
+                lines.push(`<path class="iem-cad-wire user-wire ${selected ? "selected" : ""}" data-cad-wire="${d.id}:${component.id}" d="${dPath}"/>`);
+                if (selected) {
+                    (component.route || []).forEach((p, i) => nodes.push(`<circle class="iem-wire-bend" data-wire-bend="${d.id}:${component.id}:${i}" cx="${p.x}" cy="${p.y}" r="6"/>`));
+                }
+                continue;
+            }
             const x = Number.isFinite(component.x) ? component.x : snap((a.x + b.x) / 2);
             const y = Number.isFinite(component.y) ? component.y : snap((a.y + b.y) / 2);
             component.x = x;
@@ -942,6 +955,11 @@
             components.push(driverSymbolSvg(d, driverX, driverNode.y));
         }
 
+        if (state.wireDraft?.driverId === d.id && state.wireDraft.points?.length) {
+            const pts = state.wireDraft.points;
+            const dPath = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
+            lines.push(`<path class="iem-cad-wire wire-preview" d="${dPath}"/>`);
+        }
         svg.innerHTML = lines.join("") + components.join("") + nodes.join("");
         bindCadSvg(d, svg);
     }
@@ -1041,6 +1059,43 @@
                 svg.setPointerCapture?.(event.pointerId);
             };
         });
+
+        svg.querySelectorAll("[data-cad-wire]").forEach(path => {
+            path.onpointerdown = event => {
+                event.preventDefault(); event.stopPropagation();
+                const [, componentId] = path.dataset.cadWire.split(":");
+                state.selectedCircuit = { driverId: d.id, componentId };
+                renderCircuitSvg(d);
+            };
+            path.ondblclick = event => {
+                event.preventDefault(); event.stopPropagation();
+                const [, componentId] = path.dataset.cadWire.split(":");
+                state.selectedCircuit = { driverId: d.id, componentId };
+                openCircuitPropertyPage(d, componentId);
+            };
+        });
+        svg.querySelectorAll("[data-wire-bend]").forEach(handle => {
+            handle.onpointerdown = event => {
+                event.preventDefault(); event.stopPropagation();
+                const [, componentId, indexText] = handle.dataset.wireBend.split(":");
+                const component = d.circuit.components.find(c => c.id === componentId);
+                const index = Number(indexText);
+                if (!component?.route?.[index]) return;
+                const before = JSON.stringify(d.circuit);
+                const move = ev => { component.route[index] = point(ev); renderCircuitSvg(d); };
+                const up = () => {
+                    window.removeEventListener("pointermove", move);
+                    const history = historyFor(d); history.undo.push(before); history.redo = [];
+                    renderDrivers(); calculate();
+                };
+                window.addEventListener("pointermove", move); window.addEventListener("pointerup", up, { once: true });
+            };
+        });
+        svg.onclick = event => {
+            if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
+            if (event.target.closest?.("[data-cad-node]")) return;
+            addWireBend(d, point(event));
+        };
 
         svg.onpointermove = event => {
             if (!drag) return;
@@ -1192,41 +1247,64 @@
     }
 
     function startWireMode(d) {
-        state.wireStart = { driverId: d.id, nodeId: null };
+        state.wireStart = { driverId: d.id, nodeId: "__await_first__" };
+        state.wireDraft = null;
         const svg = $(`cad-${d.id}`);
         if (svg) svg.classList.add("wire-mode");
-        // First node click sets start; second completes. We signal this with null.
-        state.wireStart.nodeId = "__await_first__";
+    }
+
+    function routedPoint(last, raw) {
+        if (!last || state.wireRouting === "free") return { x: raw.x, y: raw.y };
+        const dx = raw.x - last.x, dy = raw.y - last.y;
+        if (state.wireRouting === "orthogonal") {
+            return Math.abs(dx) >= Math.abs(dy) ? { x: raw.x, y: last.y } : { x: last.x, y: raw.y };
+        }
+        const angle = Math.atan2(dy, dx);
+        const step = Math.PI / 4;
+        const a = Math.round(angle / step) * step;
+        const len = Math.hypot(dx, dy);
+        return { x: snap(last.x + Math.cos(a) * len), y: snap(last.y + Math.sin(a) * len) };
+    }
+
+    function addWireBend(d, rawPoint) {
+        if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
+        const last = state.wireDraft.points[state.wireDraft.points.length - 1];
+        const p = routedPoint(last, rawPoint);
+        if (p.x === last.x && p.y === last.y) return;
+        state.wireDraft.points.push(p);
+        renderCircuitSvg(d);
     }
 
     function finishWireMode(d, nodeId) {
         if (!state.wireStart || state.wireStart.driverId !== d.id) return;
+        const node = nodeById(d, nodeId);
+        if (!node) return;
         if (state.wireStart.nodeId === "__await_first__") {
             state.wireStart.nodeId = nodeId;
+            state.wireDraft = { driverId: d.id, startNode: nodeId, points: [{ x: node.x, y: node.y }] };
             renderCircuitSvg(d);
             return;
         }
         const start = state.wireStart.nodeId;
+        if (start === nodeId) return;
+        const draft = state.wireDraft;
+        const last = draft?.points?.[draft.points.length - 1];
+        const endPoint = routedPoint(last, { x: node.x, y: node.y });
+        const route = (draft?.points || []).slice(1);
+        if (last && (endPoint.x !== node.x || endPoint.y !== node.y)) route.push(endPoint);
         state.wireStart = null;
-        if (start === nodeId) {
-            renderCircuitSvg(d);
-            return;
-        }
+        state.wireDraft = null;
         mutateCircuit(d, () => {
-            const a = nodeById(d, start);
-            const b = nodeById(d, nodeId);
             d.circuit.components.push({
-                id: uid(),
-                label: nextComponentLabel(d, "wire"),
-                kind: "wire",
-                value: 0,
-                nodeA: start,
-                nodeB: nodeId,
-                bypassed: false,
-                x: snap(((a?.x || 0) + (b?.x || 0)) / 2),
-                y: snap(((a?.y || 0) + (b?.y || 0)) / 2),
+                id: uid(), label: nextComponentLabel(d, "wire"), kind: "wire", value: 0,
+                nodeA: start, nodeB: nodeId, bypassed: false, route
             });
         });
+    }
+
+    function cancelWireMode(d) {
+        if (state.wireStart?.driverId !== d.id) return;
+        state.wireStart = null; state.wireDraft = null; renderCircuitSvg(d);
     }
 
     function autoArrange(d) {
@@ -1518,6 +1596,7 @@
         });
         document.querySelectorAll("[data-add-junction]").forEach(button => button.onclick = () => addJunction(find(button.dataset.addJunction)));
         document.querySelectorAll("[data-wire-mode]").forEach(button => button.onclick = () => startWireMode(find(button.dataset.wireMode)));
+        document.querySelectorAll("[data-wire-routing]").forEach(select => select.onchange = () => { state.wireRouting = select.value; renderDrivers(); });
         document.querySelectorAll("[data-circuit-undo]").forEach(button => button.onclick = () => undoCircuit(find(button.dataset.circuitUndo)));
         document.querySelectorAll("[data-circuit-redo]").forEach(button => button.onclick = () => redoCircuit(find(button.dataset.circuitRedo)));
         document.querySelectorAll("[data-circuit-auto]").forEach(button => button.onclick = () => autoArrange(find(button.dataset.circuitAuto)));
@@ -1982,6 +2061,13 @@
                 closeCircuitPropertyPage();
                 calculate();
             }
+        }
+    });
+
+    window.addEventListener("keydown", event => {
+        if (event.key === "Escape" && state.wireStart) {
+            const d = find(state.wireStart.driverId);
+            if (d) cancelWireMode(d);
         }
     });
 
