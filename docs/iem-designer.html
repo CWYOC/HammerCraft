@@ -126,12 +126,26 @@
     </section>
 </main>
 
+<div id="iemCadPropertyModal" class="iem-property-modal" hidden>
+  <div class="iem-property-page" role="dialog" aria-modal="true" aria-label="Component properties">
+    <header class="iem-property-header">
+      <button id="iemCadPropertyClose" class="outline-button" type="button">← BACK</button>
+      <strong>HAMMER CRAFT · CIRCUIT CAD</strong>
+    </header>
+    <div id="iemCadPropertyBody" class="iem-property-body"></div>
+    <footer class="iem-property-footer">
+      <button id="iemCadPropertyDelete" class="outline-button" type="button">DELETE COMPONENT</button>
+      <div><button id="iemCadPropertyCancel" class="outline-button" type="button">CANCEL</button> <button id="iemCadPropertyApply" class="primary-button" type="button">APPLY CHANGES</button></div>
+    </footer>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="supabase-client.js"></script>
 <script src="auth.js?v=40"></script>
-<script src="wasm-loader.js?v=7"></script>
-<script src="iem-designer.js?v=7"></script>
-<script src="iem-designer-page.js?v=7"></script>
+<script src="wasm-loader.js?v=9"></script>
+<script src="iem-designer.js?v=9"></script>
+<script src="iem-designer-page.js?v=9"></script>
 </body>
 </html>

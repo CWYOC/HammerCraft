@@ -630,6 +630,7 @@
                         <button class="iem-mini" data-circuit-undo="${d.id}">UNDO</button>
                         <button class="iem-mini" data-circuit-redo="${d.id}">REDO</button>
                         <button class="iem-mini" data-circuit-auto="${d.id}">AUTO ARRANGE</button>
+                        <button class="iem-mini" data-circuit-properties="${d.id}" type="button">PROPERTIES</button>
                     </div>
                 </div>
                 <div class="iem-cad-workspace">
@@ -646,9 +647,8 @@
                     </aside>
                     <div class="iem-cad-canvas-wrap">
                         <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" aria-label="Circuit schematic"></svg>
-                        <div class="iem-cad-help">Drag nodes/components · click a component to edit · WIRE then click two nodes · mouse wheel/trackpad scrolls the page normally.</div>
+                        <div class="iem-cad-help">Drag nodes/components · click to select · double-click or PROPERTIES to edit · WIRE then click two nodes.</div>
                     </div>
-                    <aside class="iem-cad-properties" id="cad-props-${d.id}">${circuitPropertiesHtml(d)}</aside>
                 </div>
                 <div class="iem-filter-editor">
                     <div class="iem-filter-head">
@@ -659,7 +659,7 @@
                             <button class="iem-mini" data-add-filter="${d.id}:low_pass">+ LOW PASS</button>
                         </div>
                     </div>
-                    <div class="iem-filter-list">${d.circuit.filters.map((filter, i) => filterNode(d, filter, i)).join("") || '<div class="iem-field-note">No PEQ/HP/LP blocks.</div>'}</div>
+                    <div class="iem-filter-order-wrap"><span class="eyebrow">SIGNAL ORDER</span>${filterOrderHtml(d)}</div><div class="iem-filter-list">${d.circuit.filters.map((filter, i) => filterNode(d, filter, i)).join("") || '<div class="iem-field-note">No PEQ/HP/LP blocks.</div>'}</div>
                 </div>
             </section>`;
     }
@@ -744,14 +744,77 @@
     }
 
     function filterNode(d, filter, index) {
+        const label = filter.type === "peq" ? "PEQ" : filter.type === "high_pass" ? "HIGH PASS" : "LOW PASS";
+        const details = filter.type === "peq"
+            ? `${Number(filter.frequency).toLocaleString()} Hz · ${Number(filter.gain).toFixed(1)} dB · Q ${Number(filter.q).toFixed(3)}`
+            : `${Number(filter.frequency).toLocaleString()} Hz · Q ${Number(filter.q).toFixed(3)}`;
         return `
-            <div class="iem-filter-node" data-filter-node="${d.id}:${index}">
-                <strong>${filter.type === "peq" ? "PEQ" : filter.type === "high_pass" ? "HIGH PASS" : "LOW PASS"}</strong>
-                <label>FREQUENCY Hz<input data-filter-field="frequency" type="number" value="${filter.frequency}"></label>
-                ${filter.type === "peq" ? `<label>GAIN dB<input data-filter-field="gain" type="number" step="0.1" value="${filter.gain}"></label>` : ""}
-                <label>Q<input data-filter-field="q" type="number" step="0.01" value="${filter.q}"></label>
-                <button class="iem-mini" data-remove-filter="${d.id}:${index}">REMOVE</button>
+            <div class="iem-filter-node" draggable="true" data-filter-node="${d.id}:${index}" data-filter-drag="${d.id}:${index}">
+                <div><strong>${label}</strong><span>${details}</span></div>
+                <div class="iem-filter-node-actions">
+                    <button class="iem-mini" data-filter-earlier="${d.id}:${index}" type="button">← EARLIER</button>
+                    <button class="iem-mini" data-filter-later="${d.id}:${index}" type="button">LATER →</button>
+                    <button class="iem-mini" data-filter-properties="${d.id}:${index}" type="button">PROPERTIES</button>
+                    <button class="iem-mini" data-remove-filter="${d.id}:${index}" type="button">REMOVE</button>
+                </div>
             </div>`;
+    }
+
+    function filterOrderHtml(d) {
+        if (!d.circuit.filters.length) return '<div class="iem-field-note">No response filters. Add PEQ, High Pass or Low Pass.</div>';
+        return `<div class="iem-order-strip" data-filter-order="${d.id}">
+            <span class="iem-order-fixed">INPUT</span>
+            ${d.circuit.filters.map((filter, index) => {
+                const name = filter.type === "peq" ? "PEQ" : filter.type === "high_pass" ? "HP" : "LP";
+                return `<button class="iem-order-chip" draggable="true" data-filter-chip="${d.id}:${index}" type="button"><strong>${name}${index + 1}</strong><span>${Number(filter.frequency).toLocaleString()} Hz</span></button><span class="iem-order-arrow">→</span>`;
+            }).join("")}
+            <span class="iem-order-fixed">DRIVER</span>
+        </div>`;
+    }
+
+    function openFilterPropertyPage(d, index) {
+        const filter = d?.circuit?.filters?.[index];
+        const modal = $("iemCadPropertyModal");
+        const body = $("iemCadPropertyBody");
+        if (!filter || !modal || !body) return;
+        const label = filter.type === "peq" ? "Peaking EQ" : filter.type === "high_pass" ? "High-Pass Filter" : "Low-Pass Filter";
+        body.innerHTML = `
+            <div class="iem-property-hero">
+                <div class="iem-property-symbol iem-property-filter-symbol"><strong>${filter.type === "peq" ? "PEQ" : filter.type === "high_pass" ? "HP" : "LP"}</strong></div>
+                <div><span class="eyebrow">FILTER PROPERTY</span><h2>${label}</h2><p>Edit the filter here. Changes are staged until Apply Changes is pressed.</p></div>
+            </div>
+            <div class="iem-property-grid">
+                <section class="iem-property-section"><span class="eyebrow">FILTER</span>
+                    <label>TYPE<select data-filter-property="type"><option value="peq" ${filter.type === "peq" ? "selected" : ""}>Peaking EQ</option><option value="high_pass" ${filter.type === "high_pass" ? "selected" : ""}>High Pass</option><option value="low_pass" ${filter.type === "low_pass" ? "selected" : ""}>Low Pass</option></select></label>
+                    <label>CUTOFF / CENTRE FREQUENCY Hz<input data-filter-property="frequency" type="number" min="1" step="1" value="${filter.frequency}"></label>
+                    <label class="filter-gain-property" ${filter.type === "peq" ? "" : "hidden"}>GAIN dB<input data-filter-property="gain" type="number" step="0.1" value="${filter.gain || 0}"></label>
+                    <label>Q<input data-filter-property="q" type="number" min="0.05" step="0.01" value="${filter.q || 0.707}"></label>
+                </section>
+                <section class="iem-property-section"><span class="eyebrow">POSITION</span>
+                    <p class="iem-property-note">Reorder the filter without deleting and rebuilding it.</p>
+                    <div class="iem-property-order-actions"><button class="outline-button" data-property-filter-move="-1" type="button">← MOVE EARLIER</button><button class="outline-button" data-property-filter-move="1" type="button">MOVE LATER →</button></div>
+                    <div class="iem-property-position">Position <strong>${index + 1}</strong> of <strong>${d.circuit.filters.length}</strong></div>
+                </section>
+                <section class="iem-property-section"><span class="eyebrow">BEHAVIOUR</span><div class="iem-property-calculated"><p>${filter.type === "low_pass" ? "Attenuates frequencies above the selected cutoff." : filter.type === "high_pass" ? "Attenuates frequencies below the selected cutoff." : "Boosts or cuts around the centre frequency."}</p><div><span>Current order</span><strong>${index + 1}</strong></div></div></section>
+            </div>`;
+        const typeSelect = body.querySelector('[data-filter-property="type"]');
+        const gainLabel = body.querySelector('.filter-gain-property');
+        typeSelect?.addEventListener('change', () => { if (gainLabel) gainLabel.hidden = typeSelect.value !== 'peq'; });
+        body.querySelectorAll('[data-property-filter-move]').forEach(button => button.onclick = () => {
+            const direction = Number(button.dataset.propertyFilterMove);
+            const next = clamp(index + direction, 0, d.circuit.filters.length - 1);
+            if (next === index) return;
+            mutateCircuit(d, () => move(d.circuit.filters, index, direction));
+            closeCircuitPropertyPage();
+            renderDrivers();
+            calculate();
+        });
+        modal.dataset.mode = "filter";
+        modal.dataset.driverId = d.id;
+        modal.dataset.filterIndex = String(index);
+        delete modal.dataset.componentId;
+        modal.hidden = false;
+        document.body.classList.add("iem-property-open");
     }
 
     function nodeById(d, id) {
@@ -834,7 +897,6 @@
 
         svg.innerHTML = lines.join("") + components.join("") + nodes.join("");
         bindCadSvg(d, svg);
-        bindCircuitProperties(d);
     }
 
     function bindCadSvg(d, svg) {
@@ -857,6 +919,13 @@
                 moved = false;
                 svg.setPointerCapture?.(event.pointerId);
                 renderCircuitSvg(d);
+            };
+            group.ondblclick = event => {
+                event.preventDefault();
+                event.stopPropagation();
+                const [, componentId] = group.dataset.cadComponent.split(":");
+                state.selectedCircuit = { driverId: d.id, componentId };
+                openCircuitPropertyPage(d, componentId);
             };
         });
 
@@ -1081,28 +1150,141 @@
         });
     }
 
-    function bindCircuitProperties(d) {
-        const selection = state.selectedCircuit?.driverId === d.id ? d.circuit.components.find(c => c.id === state.selectedCircuit.componentId) : null;
-        if (!selection) return;
-        const props = $(`cad-props-${d.id}`);
-        if (!props) return;
-        const nodeA = props.querySelector('[data-cad-prop="nodeA"]');
-        const nodeB = props.querySelector('[data-cad-prop="nodeB"]');
-        if (nodeA) nodeA.value = selection.nodeA;
-        if (nodeB) nodeB.value = selection.nodeB;
+    function mainSeriesPathComponents(d) {
+        const result = [];
+        let current = d.circuit.input;
+        const visited = new Set();
+        while (current !== d.circuit.output && !visited.has(current)) {
+            visited.add(current);
+            const candidate = d.circuit.components.find(c => !c.bypassed && c.kind !== "wire" && c.nodeA === current && c.nodeB !== d.circuit.ground);
+            if (!candidate) break;
+            result.push(candidate);
+            current = candidate.nodeB;
+        }
+        return result;
+    }
 
-        props.querySelectorAll("[data-cad-prop]").forEach(input => {
-            input.onchange = () => {
-                mutateCircuit(d, () => {
-                    const component = d.circuit.components.find(c => c.id === selection.id);
-                    if (!component) return;
-                    const key = input.dataset.cadProp;
-                    if (key === "bypassed") component.bypassed = input.checked;
-                    else if (key === "value") component.value = num(input.value, component.value);
-                    else component[key] = input.value;
-                });
-            };
+    function moveSeriesComponent(d, componentId, direction) {
+        const series = mainSeriesPathComponents(d);
+        const index = series.findIndex(c => c.id === componentId);
+        const otherIndex = index + direction;
+        if (index < 0 || otherIndex < 0 || otherIndex >= series.length) return;
+        const a = series[index];
+        const b = series[otherIndex];
+        mutateCircuit(d, () => {
+            // Swap component electrical identities while preserving the node chain.
+            const fields = ["kind", "value", "label", "bypassed"];
+            for (const field of fields) [a[field], b[field]] = [b[field], a[field]];
         });
+        closeCircuitPropertyPage();
+        renderDrivers();
+        calculate();
+    }
+
+    function openCircuitPropertyPage(d, componentId) {
+        const component = d?.circuit?.components?.find(c => c.id === componentId);
+        const modal = $("iemCadPropertyModal");
+        const body = $("iemCadPropertyBody");
+        if (!component || !modal || !body) return;
+
+        const draft = structuredClone(component);
+        const options = d.circuit.nodes.map(node => `<option value="${node.id}">${esc(node.label || node.id)}</option>`).join("");
+        const meta = component.kind === "resistor"
+            ? { title: "Resistor", unit: "Ω", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="1"></label><label>POWER RATING W<input data-property-extra="power" type="number" min="0" step="0.01" value="0.25"></label>' }
+            : component.kind === "capacitor"
+            ? { title: "Capacitor", unit: "µF", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="10"></label><label>VOLTAGE RATING V<input data-property-extra="voltage" type="number" min="0" step="1" value="50"></label>' }
+            : component.kind === "inductor"
+            ? { title: "Inductor", unit: "mH", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="10"></label><label>DCR Ω<input data-property-extra="dcr" type="number" min="0" step="0.01" value="0"></label>' }
+            : { title: "Wire", unit: "", extra: "" };
+
+        body.innerHTML = `
+            <div class="iem-property-hero">
+                <div class="iem-property-symbol">${componentSymbolSvg(component)}</div>
+                <div><span class="eyebrow">COMPONENT PROPERTY</span><h2>${meta.title} ${esc(component.label || component.id)}</h2><p>Changes are staged here. The circuit is only updated when you press Apply Changes.</p></div>
+            </div>
+            <div class="iem-property-grid">
+                <section class="iem-property-section"><span class="eyebrow">COMPONENT</span>
+                    <label>REFERENCE<input data-property-field="label" value="${esc(draft.label || "")}"></label>
+                    ${component.kind !== "wire" ? `<label>VALUE ${meta.unit}<input data-property-field="value" type="number" step="0.01" value="${draft.value}"></label>` : ""}
+                    ${meta.extra}
+                </section>
+                <section class="iem-property-section"><span class="eyebrow">CONNECTION</span>
+                    <label>NODE A<select data-property-field="nodeA">${options}</select></label>
+                    <label>NODE B<select data-property-field="nodeB">${options}</select></label>
+                    <label class="iem-cad-check"><input data-property-field="bypassed" type="checkbox" ${draft.bypassed ? "checked" : ""}> BYPASS / SHORT</label><div class="iem-property-order-actions"><button class="outline-button" data-component-move="-1" type="button">← MOVE EARLIER</button><button class="outline-button" data-component-move="1" type="button">MOVE LATER →</button></div>
+                </section>
+                <section class="iem-property-section"><span class="eyebrow">CALCULATED DATA</span><div id="iemPropertyCalculated" class="iem-property-calculated"></div></section>
+            </div>`;
+        body.querySelector('[data-property-field="nodeA"]').value = draft.nodeA;
+        body.querySelector('[data-property-field="nodeB"]').value = draft.nodeB;
+        body.querySelectorAll('[data-component-move]').forEach(button => button.onclick = () => moveSeriesComponent(d, component.id, Number(button.dataset.componentMove)));
+
+        const updateCalculated = () => {
+            const box = $("iemPropertyCalculated");
+            const value = num(body.querySelector('[data-property-field="value"]')?.value, draft.value || 0);
+            if (!box) return;
+            if (component.kind === "capacitor") {
+                const rows = [100,400,1000,3000,8000].map(f => `<div><span>${f >= 1000 ? (f/1000)+" kHz" : f+" Hz"}</span><strong>${value > 0 ? (1/(2*Math.PI*f*value*1e-6)).toFixed(2) : "∞"} Ω</strong></div>`).join("");
+                box.innerHTML = `<p>Capacitive reactance</p>${rows}`;
+            } else if (component.kind === "inductor") {
+                box.innerHTML = `<p>Inductive reactance</p>${[100,400,1000,3000,8000].map(f => `<div><span>${f >= 1000 ? (f/1000)+" kHz" : f+" Hz"}</span><strong>${(2*Math.PI*f*value*1e-3).toFixed(2)} Ω</strong></div>`).join("")}`;
+            } else if (component.kind === "resistor") box.innerHTML = `<p>Resistance</p><div><span>Nominal</span><strong>${value.toFixed(3)} Ω</strong></div>`;
+            else box.innerHTML = '<p>Ideal wire / short connection.</p>';
+        };
+        body.querySelectorAll("[data-property-field]").forEach(input => input.addEventListener("input", updateCalculated));
+        updateCalculated();
+
+        modal.dataset.mode = "component";
+        modal.dataset.driverId = d.id;
+        modal.dataset.componentId = component.id;
+        delete modal.dataset.filterIndex;
+        modal.hidden = false;
+        document.body.classList.add("iem-property-open");
+    }
+
+    function closeCircuitPropertyPage() {
+        const modal = $("iemCadPropertyModal");
+        if (modal) modal.hidden = true;
+        document.body.classList.remove("iem-property-open");
+    }
+
+    function applyCircuitPropertyPage() {
+        const modal = $("iemCadPropertyModal");
+        const body = $("iemCadPropertyBody");
+        if (!modal || !body) return;
+        const d = find(modal.dataset.driverId);
+        if (!d) return;
+        if (modal.dataset.mode === "filter") {
+            const index = Number(modal.dataset.filterIndex);
+            const filter = d.circuit.filters[index];
+            if (!filter) return;
+            mutateCircuit(d, () => {
+                body.querySelectorAll("[data-filter-property]").forEach(input => {
+                    const key = input.dataset.filterProperty;
+                    filter[key] = key === "type" ? input.value : num(input.value, filter[key] || 0);
+                });
+                if (filter.type !== "peq") delete filter.gain;
+                else if (!Number.isFinite(filter.gain)) filter.gain = 0;
+            });
+            closeCircuitPropertyPage();
+            renderDrivers();
+            calculate();
+            return;
+        }
+        const id = modal.dataset.componentId;
+        mutateCircuit(d, () => {
+            const component = d.circuit.components.find(c => c.id === id);
+            if (!component) return;
+            body.querySelectorAll("[data-property-field]").forEach(input => {
+                const key = input.dataset.propertyField;
+                if (key === "bypassed") component[key] = input.checked;
+                else if (key === "value") component[key] = num(input.value, component[key]);
+                else component[key] = input.value;
+            });
+        });
+        closeCircuitPropertyPage();
+        renderDrivers();
+        calculate();
     }
 
     function copyCircuitComponent(d, id) {
@@ -1217,6 +1399,11 @@
         document.querySelectorAll("[data-circuit-undo]").forEach(button => button.onclick = () => undoCircuit(find(button.dataset.circuitUndo)));
         document.querySelectorAll("[data-circuit-redo]").forEach(button => button.onclick = () => redoCircuit(find(button.dataset.circuitRedo)));
         document.querySelectorAll("[data-circuit-auto]").forEach(button => button.onclick = () => autoArrange(find(button.dataset.circuitAuto)));
+        document.querySelectorAll("[data-circuit-properties]").forEach(button => button.onclick = () => {
+            const d = find(button.dataset.circuitProperties);
+            const selected = state.selectedCircuit?.driverId === d?.id ? state.selectedCircuit.componentId : null;
+            if (selected) openCircuitPropertyPage(d, selected);
+        });
         document.querySelectorAll("[data-cad-symbol-standard]").forEach(select => select.onchange = () => {
             state.cadSymbolStandard = select.value === "ansi" ? "ansi" : "iec";
             state.drivers.forEach(driver => renderCircuitSvg(driver));
@@ -1244,6 +1431,34 @@
             const [id, index] = button.dataset.removeFilter.split(":");
             find(id).circuit.filters.splice(+index, 1);
             renderDrivers();
+        });
+        document.querySelectorAll("[data-filter-properties]").forEach(button => button.onclick = () => {
+            const [id, index] = button.dataset.filterProperties.split(":");
+            openFilterPropertyPage(find(id), +index);
+        });
+        document.querySelectorAll("[data-filter-earlier]").forEach(button => button.onclick = () => {
+            const [id, index] = button.dataset.filterEarlier.split(":"); move(find(id).circuit.filters, +index, -1); renderDrivers(); calculate();
+        });
+        document.querySelectorAll("[data-filter-later]").forEach(button => button.onclick = () => {
+            const [id, index] = button.dataset.filterLater.split(":"); move(find(id).circuit.filters, +index, 1); renderDrivers(); calculate();
+        });
+        let draggedFilter = null;
+        document.querySelectorAll("[data-filter-chip], [data-filter-drag]").forEach(item => {
+            item.ondragstart = event => { draggedFilter = item.dataset.filterChip || item.dataset.filterDrag; event.dataTransfer.effectAllowed = "move"; };
+            item.ondragover = event => event.preventDefault();
+            item.ondrop = event => {
+                event.preventDefault();
+                const target = item.dataset.filterChip || item.dataset.filterDrag;
+                if (!draggedFilter || !target) return;
+                const [sourceDriver, sourceIndex] = draggedFilter.split(":");
+                const [targetDriver, targetIndex] = target.split(":");
+                if (sourceDriver !== targetDriver) return;
+                const filters = find(sourceDriver).circuit.filters;
+                const [moved] = filters.splice(+sourceIndex, 1);
+                filters.splice(+targetIndex, 0, moved);
+                draggedFilter = null;
+                renderDrivers(); calculate();
+            };
         });
         document.querySelectorAll("[data-filter-node]").forEach(node => node.oninput = () => {
             const [id, index] = node.dataset.filterNode.split(":");
@@ -1623,4 +1838,29 @@
     }
 
     window.HCIemDesigner = { init, populateTargetProducts };
+
+    document.addEventListener("click", event => {
+        if (event.target.closest("#iemCadPropertyCancel") || event.target.closest("#iemCadPropertyClose")) closeCircuitPropertyPage();
+        if (event.target.closest("#iemCadPropertyApply")) applyCircuitPropertyPage();
+        const del = event.target.closest("#iemCadPropertyDelete");
+        if (del) {
+            const modal = $("iemCadPropertyModal");
+            const d = find(modal?.dataset.driverId);
+            if (!d || !modal) return;
+            if (modal.dataset.mode === "filter") {
+                const index = Number(modal.dataset.filterIndex);
+                if (Number.isInteger(index) && confirm("Delete this filter?")) {
+                    d.circuit.filters.splice(index, 1);
+                    closeCircuitPropertyPage();
+                    renderDrivers();
+                    calculate();
+                }
+            } else if (modal.dataset.componentId && confirm("Delete this component?")) {
+                deleteCircuitComponent(d, modal.dataset.componentId);
+                closeCircuitPropertyPage();
+                calculate();
+            }
+        }
+    });
+
 })();

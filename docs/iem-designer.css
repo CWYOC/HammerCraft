@@ -37,3 +37,36 @@
 .iem-cad-driver-symbol text{font-size:8px;font-weight:700;fill:var(--admin-text)}
 
 @media(max-width:760px){.iem-cad-standard{width:100%;justify-content:space-between}.iem-cad-history{width:100%}}
+
+/* v0.9 dedicated CAD property page */
+.iem-cad-workspace{grid-template-columns:120px minmax(0,1fr)}
+.iem-property-open{overflow:hidden}
+.iem-property-modal{position:fixed;inset:0;z-index:10000;background:rgba(12,12,12,.42);backdrop-filter:blur(5px);padding:28px;overflow:auto}
+.iem-property-modal[hidden]{display:none}
+.iem-property-page{max-width:1080px;min-height:calc(100vh - 56px);margin:0 auto;background:var(--admin-surface,#f7f5ef);border:1px solid var(--admin-border,#d8d4ca);box-shadow:0 24px 80px rgba(0,0,0,.2);display:flex;flex-direction:column}
+.iem-property-header,.iem-property-footer{padding:18px 24px;border-bottom:1px solid var(--admin-border);display:flex;align-items:center;justify-content:space-between;gap:16px}.iem-property-footer{border-top:1px solid var(--admin-border);border-bottom:0;margin-top:auto}.iem-property-header strong{font-size:9px;letter-spacing:.14em}
+.iem-property-body{padding:30px}.iem-property-hero{display:grid;grid-template-columns:150px 1fr;gap:28px;align-items:center;padding-bottom:28px;border-bottom:1px solid var(--admin-border)}.iem-property-hero h2{font-size:38px;font-weight:500;margin:7px 0}.iem-property-hero p{font-size:11px;color:var(--admin-muted);max-width:600px}.iem-property-symbol{height:100px;border:1px solid var(--admin-border);display:flex;align-items:center;justify-content:center;background:#fff}.iem-property-symbol svg{width:120px;height:70px}.iem-property-symbol path,.iem-property-symbol rect{fill:none;stroke:currentColor;stroke-width:2}
+.iem-property-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}.iem-property-section{border:1px solid var(--admin-border);padding:18px;background:rgba(255,255,255,.25)}.iem-property-section label{display:flex;flex-direction:column;gap:6px;margin-top:14px;font-size:7px;font-weight:700;letter-spacing:.08em;color:var(--admin-muted)}.iem-property-section input,.iem-property-section select{min-height:42px;padding:0 10px;border:1px solid var(--admin-border);background:#fff}.iem-property-calculated{margin-top:14px}.iem-property-calculated>p{font-size:10px;color:var(--admin-muted)}.iem-property-calculated>div{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--admin-border);font-size:10px}.iem-property-calculated strong{font-weight:600}
+.iem-cad-component.selected .iem-cad-symbol,.iem-cad-component.selected rect{stroke:var(--admin-accent)!important;stroke-width:3!important}
+@media(max-width:800px){.iem-property-modal{padding:0}.iem-property-page{min-height:100vh}.iem-property-grid{grid-template-columns:1fr}.iem-property-hero{grid-template-columns:1fr}.iem-property-footer{align-items:stretch;flex-direction:column}.iem-property-footer>div{display:flex;gap:8px}.iem-property-footer button{flex:1}}
+
+/* =========================================================
+   v0.10 FILTER ORDER + LOW PASS PROPERTY WORKFLOW
+========================================================= */
+.iem-filter-order-wrap{margin:0 0 14px;padding:12px;border:1px solid var(--admin-border);background:rgba(255,255,255,.2)}
+.iem-order-strip{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:8px 0 2px;min-height:54px}
+.iem-order-fixed{flex:0 0 auto;padding:9px 11px;border:1px solid var(--admin-border-strong);background:var(--admin-text);color:var(--admin-bg);font-size:7px;font-weight:700;letter-spacing:.1em}
+.iem-order-chip{flex:0 0 auto;min-width:92px;padding:8px 10px;border:1px solid var(--admin-border);background:#fff;text-align:left;cursor:grab}
+.iem-order-chip:hover{border-color:var(--admin-accent)}
+.iem-order-chip strong,.iem-order-chip span{display:block}.iem-order-chip strong{font-size:8px;letter-spacing:.08em}.iem-order-chip span{margin-top:4px;font-size:8px;color:var(--admin-muted)}
+.iem-order-arrow{flex:0 0 auto;color:var(--admin-dim);font-size:12px}
+.iem-filter-node{grid-template-columns:1fr auto!important;align-items:center!important;cursor:grab}
+.iem-filter-node>div:first-child strong,.iem-filter-node>div:first-child span{display:block}.iem-filter-node>div:first-child strong{font-size:9px;letter-spacing:.08em}.iem-filter-node>div:first-child span{margin-top:5px;font-size:9px;color:var(--admin-muted)}
+.iem-filter-node-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.iem-property-filter-symbol{font-size:30px;font-weight:700;letter-spacing:.08em;color:var(--admin-accent)}
+.iem-property-note{font-size:10px;line-height:1.55;color:var(--admin-muted)}
+.iem-property-order-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.iem-property-order-actions button{min-height:42px}
+.iem-property-position{margin-top:15px;padding:12px;border:1px solid var(--admin-border);font-size:10px;color:var(--admin-muted)}
+.filter-gain-property[hidden]{display:none!important}
+@media(max-width:760px){.iem-filter-node{grid-template-columns:1fr!important}.iem-filter-node-actions{justify-content:flex-start}.iem-property-order-actions{grid-template-columns:1fr}.iem-order-strip{padding-bottom:8px}}
