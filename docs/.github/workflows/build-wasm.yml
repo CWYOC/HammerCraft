@@ -1,47 +1,204 @@
 name: Build Acoustic WASM
 
+# ============================================================
+# HAMMER CRAFT
+# Rust Acoustic Engine -> WebAssembly
+#
+# This workflow:
+#   1. Checks out the HammerCraft repository
+#   2. Installs Rust
+#   3. Adds the WebAssembly compilation target
+#   4. Installs wasm-pack
+#   5. Compiles acoustic-engine into browser-compatible WASM
+#   6. Places the generated files inside /wasm
+#   7. Commits the generated WASM files back to main
+#
+# GitHub Pages will then deploy the generated files normally.
+# ============================================================
+
+
 on:
+
+  # ----------------------------------------------------------
+  # Automatically rebuild when the Rust engine changes
+  # ----------------------------------------------------------
+
   push:
     branches:
       - main
-      - master
 
     paths:
       - "acoustic-engine/**"
       - ".github/workflows/build-wasm.yml"
 
+
+  # ----------------------------------------------------------
+  # Also allow manual builds from:
+  #
+  # GitHub
+  #   -> Actions
+  #   -> Build Acoustic WASM
+  #   -> Run workflow
+  # ----------------------------------------------------------
+
   workflow_dispatch:
 
+
+# ============================================================
+# PERMISSIONS
+# ============================================================
+
+# Required because the workflow commits the generated
+# /wasm files back into the repository.
 
 permissions:
   contents: write
 
 
+# ============================================================
+# JOBS
+# ============================================================
+
 jobs:
+
   build-wasm:
+
+    name: Compile Rust Acoustic Engine
 
     runs-on: ubuntu-latest
 
+
     steps:
 
-      - name: Checkout repository
+      # ======================================================
+      # 1. CHECK OUT REPOSITORY
+      # ======================================================
+
+      - name: Checkout HammerCraft repository
+
         uses: actions/checkout@v4
 
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
         with:
+
+          # We need the branch history because the workflow
+          # may commit the generated WASM files.
+
+          fetch-depth: 0
+
+
+      # ======================================================
+      # 2. INSTALL RUST
+      # ======================================================
+
+      - name: Install Rust toolchain
+
+        uses: dtolnay/rust-toolchain@stable
+
+        with:
+
+          # Required for compiling Rust into WebAssembly.
+
           targets: wasm32-unknown-unknown
 
 
-      - name: Install wasm-pack
-        run: |
-          cargo install wasm-pack
+      # ======================================================
+      # 3. SHOW RUST VERSION
+      # ======================================================
 
+      - name: Show Rust version
+
+        run: |
+          rustc --version
+          cargo --version
+
+
+      # ======================================================
+      # 4. CACHE RUST BUILD FILES
+      # ======================================================
+
+      # This makes later builds substantially faster.
+
+      - name: Cache Rust build
+
+        uses: Swatinem/rust-cache@v2
+
+        with:
+
+          workspaces: |
+            acoustic-engine -> target
+
+
+      # ======================================================
+      # 5. INSTALL WASM-PACK
+      # ======================================================
+
+      - name: Install wasm-pack
+
+        run: |
+
+          if command -v wasm-pack >/dev/null 2>&1; then
+
+            echo "wasm-pack is already installed."
+
+          else
+
+            cargo install wasm-pack --locked
+
+          fi
+
+
+      # ======================================================
+      # 6. SHOW WASM-PACK VERSION
+      # ======================================================
+
+      - name: Show wasm-pack version
+
+        run: |
+          wasm-pack --version
+
+
+      # ======================================================
+      # 7. PREPARE OUTPUT DIRECTORY
+      # ======================================================
+
+      - name: Prepare WASM output directory
+
+        run: |
+
+          mkdir -p wasm
+
+          # Remove previous generated build files so stale
+          # files cannot remain after an engine update.
+
+          rm -f wasm/acoustic_engine.js
+          rm -f wasm/acoustic_engine_bg.wasm
+          rm -f wasm/acoustic_engine.d.ts
+          rm -f wasm/acoustic_engine_bg.wasm.d.ts
+          rm -f wasm/package.json
+
+
+      # ======================================================
+      # 8. CHECK RUST ENGINE
+      # ======================================================
+
+      - name: Check acoustic engine
+
+        working-directory: acoustic-engine
+
+        run: |
+          cargo check
+
+
+      # ======================================================
+      # 9. BUILD RUST -> WASM
+      # ======================================================
 
       - name: Build Hammer Craft acoustic engine
+
         working-directory: acoustic-engine
+
         run: |
+
           wasm-pack build \
             --target web \
             --release \
@@ -49,21 +206,153 @@ jobs:
             --out-name acoustic_engine
 
 
-      - name: Show generated files
+      # ======================================================
+      # 10. VERIFY GENERATED FILES
+      # ======================================================
+
+      - name: Verify WASM build
+
         run: |
+
+          echo ""
+          echo "=========================================="
+          echo "Generated WASM files"
+          echo "=========================================="
+          echo ""
+
           ls -lah wasm
 
+          echo ""
+          echo "Checking required files..."
+          echo ""
 
-      - name: Commit WASM build
+
+          if [ ! -f "wasm/acoustic_engine.js" ]; then
+
+            echo "ERROR:"
+            echo "wasm/acoustic_engine.js was not generated."
+
+            exit 1
+
+          fi
+
+
+          if [ ! -f "wasm/acoustic_engine_bg.wasm" ]; then
+
+            echo "ERROR:"
+            echo "wasm/acoustic_engine_bg.wasm was not generated."
+
+            exit 1
+
+          fi
+
+
+          echo ""
+          echo "WASM build verified successfully."
+          echo ""
+
+
+      # ======================================================
+      # 11. SHOW FILE SIZES
+      # ======================================================
+
+      - name: Show generated file sizes
+
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add wasm/
+          echo "acoustic_engine.js:"
+          du -h wasm/acoustic_engine.js
+
+          echo ""
+
+          echo "acoustic_engine_bg.wasm:"
+          du -h wasm/acoustic_engine_bg.wasm
+
+
+      # ======================================================
+      # 12. COMMIT GENERATED WASM
+      # ======================================================
+
+      - name: Commit generated WASM files
+
+        run: |
+
+          git config \
+            user.name \
+            "github-actions[bot]"
+
+          git config \
+            user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+
+
+          # Add generated browser files.
+
+          git add -f wasm/
+
+
+          # --------------------------------------------------
+          # Check whether the build actually changed anything.
+          # --------------------------------------------------
 
           if git diff --cached --quiet; then
-            echo "No WASM changes to commit."
+
+            echo ""
+            echo "No WASM changes detected."
+            echo "Nothing needs to be committed."
+
           else
-            git commit -m "Build acoustic engine WASM"
-            git push
+
+            echo ""
+            echo "WASM changes detected."
+
+            git commit \
+              -m "Build Hammer Craft acoustic engine WASM"
+
+
+            # ------------------------------------------------
+            # Another commit could theoretically have reached
+            # main while this workflow was compiling.
+            #
+            # Rebase before pushing to reduce push failures.
+            # ------------------------------------------------
+
+            git pull \
+              --rebase \
+              origin \
+              main
+
+
+            git push \
+              origin \
+              HEAD:main
+
+
+            echo ""
+            echo "Generated WASM committed successfully."
+
           fi
+
+
+      # ======================================================
+      # 13. FINAL STATUS
+      # ======================================================
+
+      - name: Build complete
+
+        run: |
+
+          echo ""
+          echo "=========================================="
+          echo "HAMMER CRAFT ACOUSTIC ENGINE"
+          echo "=========================================="
+          echo ""
+          echo "Rust -> WebAssembly build complete."
+          echo ""
+          echo "Required website files:"
+          echo ""
+          echo "  wasm/acoustic_engine.js"
+          echo "  wasm/acoustic_engine_bg.wasm"
+          echo ""
+          echo "GitHub Pages can now deploy these files."
+          echo ""
