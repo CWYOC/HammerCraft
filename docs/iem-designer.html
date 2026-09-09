@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hammer Craft standalone IEM acoustic and crossover design workstation.">
-    <title>IEM Designer 0.7 | Hammer Craft</title>
+    <title>IEM Designer 0.14 | Hammer Craft</title>
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
     <link rel="stylesheet" href="admin.css?v=64">
-    <link rel="stylesheet" href="iem-designer.css?v=7">
+    <link rel="stylesheet" href="iem-designer.css?v=14">
 </head>
 <body class="iem-standalone-page">
 <header class="admin-header">
@@ -98,13 +98,22 @@
                 <div class="iem-panel-title"><div><span class="eyebrow">REVERSE DESIGN</span><h3>Target response.</h3></div></div>
                 <div class="iem-reverse-import-row">
                     <label>TARGET TXT / CSV / FRD<input id="iemReverseFile" type="file" accept=".txt,.csv,.frd"></label>
+                    <label>MATCH MODE<select id="iemReverseMatchMode"><option value="absolute">Absolute SPL</option><option value="relative">Relative / normalised</option></select></label>
                     <label>NORMALISE TARGET AT Hz<input id="iemReverseNormalizeFrequency" type="number" min="20" max="20000" value="1000"></label>
                     <label>OPTIMISE DRIVER<select id="iemReverseDriver"></select></label>
                     <button id="iemReverseCopyCombined" class="outline-button" type="button">COPY CURRENT COMBINED</button>
                     <button id="iemReverseFlat" class="outline-button" type="button">RESET FLAT</button>
                 </div>
+                <div class="iem-reverse-viewbar">
+                    <label>VIEW MIN dB<input id="iemReverseYMin" type="number" value="60" step="1"></label>
+                    <label>VIEW MAX dB<input id="iemReverseYMax" type="number" value="100" step="1"></label>
+                    <button id="iemReverseDown10" class="outline-button" type="button">↓ -10 dB</button>
+                    <button id="iemReverseUp10" class="outline-button" type="button">↑ +10 dB</button>
+                    <button id="iemReverseAutoFit" class="outline-button" type="button">AUTO FIT</button>
+                    <button id="iemReverseResetView" class="outline-button" type="button">RESET VIEW</button>
+                </div>
                 <div class="fr-chart-container iem-chart-container"><canvas id="iemReverseChart"></canvas></div>
-                <p class="iem-field-note">You can import a text target or drag points on the graph. Right-click near a point to remove it.</p>
+                <p class="iem-field-note">Target data can be around your measured ~80 dB SPL. Mouse-wheel over the reverse graph pans the visible dB range without changing the target values. Shift + wheel moves faster. In Relative mode the optimiser normalises at the selected frequency; Absolute SPL mode matches the imported/drawn dB values directly.</p>
             </div>
 
             <div class="admin-panel">

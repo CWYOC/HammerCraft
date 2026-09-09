@@ -257,6 +257,8 @@ pub struct ReverseDesignRequest {
     pub result_count: usize,
     #[serde(default = "default_normalization_frequency")]
     pub normalization_frequency_hz: f64,
+    #[serde(default)]
+    pub absolute_match: bool,
 }
 fn default_gain_range() -> f64 { 8.0 }
 fn default_evaluations() -> usize { 3200 }

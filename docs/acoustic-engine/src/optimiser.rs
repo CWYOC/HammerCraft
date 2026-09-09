@@ -39,7 +39,12 @@ fn interpolate_combined(response: &[crate::models::CombinedResultPoint], frequen
     last.db
 }
 
-fn rmse(simulation: &crate::models::SimulationResult, target: &[FrequencyPoint], normalization_frequency_hz: f64) -> f64 {
+fn rmse(
+    simulation: &crate::models::SimulationResult,
+    target: &[FrequencyPoint],
+    normalization_frequency_hz: f64,
+    absolute_match: bool,
+) -> f64 {
     if simulation.combined.is_empty() || target.is_empty() { return f64::INFINITY; }
     let f_norm = normalization_frequency_hz.clamp(20.0, 20000.0);
     let sim_norm = interpolate_combined(&simulation.combined, f_norm);
@@ -48,8 +53,12 @@ fn rmse(simulation: &crate::models::SimulationResult, target: &[FrequencyPoint],
     let mut count = 0usize;
 
     for point in &simulation.combined {
-        let desired = interpolate_target(target, point.frequency_hz) - target_norm;
-        let actual = point.db - sim_norm;
+        let target_db = interpolate_target(target, point.frequency_hz);
+        let (desired, actual) = if absolute_match {
+            (target_db, point.db)
+        } else {
+            (target_db - target_norm, point.db - sim_norm)
+        };
         let err = actual - desired;
         sum += err * err;
         count += 1;
@@ -170,7 +179,7 @@ fn evaluate_candidate(
     let driver = &mut candidate_request.drivers[request.driver_index];
     set_candidate(driver, length, diameter, damper, cap, resistor, gain);
     let simulation = simulate(&candidate_request);
-    let score = rmse(&simulation, &request.target, request.normalization_frequency_hz);
+    let score = rmse(&simulation, &request.target, request.normalization_frequency_hz, request.absolute_match);
 
     ReverseCandidate {
         score_rmse_db: score,

@@ -104,3 +104,6 @@
 .iem-cad-component:active{cursor:grabbing}
 .iem-cad-node{cursor:grab}
 .iem-cad-node:active{cursor:grabbing}
+
+/* v0.14 reverse SPL viewport */
+.iem-reverse-viewbar{display:grid;grid-template-columns:150px 150px repeat(4,auto);gap:8px;align-items:end;margin:0 0 14px}.iem-reverse-viewbar label{display:flex;flex-direction:column;gap:7px;color:var(--admin-muted);font-size:8px;font-weight:700;letter-spacing:.09em}.iem-reverse-viewbar input{min-height:42px;padding:0 10px;border:1px solid var(--admin-border);background:rgba(255,255,255,.35);color:var(--admin-text)}@media(max-width:900px){.iem-reverse-viewbar{grid-template-columns:repeat(2,1fr)}.iem-reverse-viewbar button{width:100%}}

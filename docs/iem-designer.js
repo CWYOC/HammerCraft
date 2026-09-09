@@ -1806,8 +1806,60 @@
     }
 
     function reverseFlat() {
-        state.reverse = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].map(frequency => ({ frequency, db: 0 }));
+        const absolute = $("iemReverseMatchMode")?.value !== "relative";
+        const baseline = absolute ? 80 : 0;
+        state.reverse = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].map(frequency => ({ frequency, db: baseline }));
+        if (absolute) state.reverseView = { min: 60, max: 100 };
+        else state.reverseView = { min: -30, max: 20 };
+        syncReverseViewInputs();
         drawReverse();
+    }
+
+    function syncReverseViewInputs() {
+        if ($("iemReverseYMin")) $("iemReverseYMin").value = Math.round(state.reverseView.min * 10) / 10;
+        if ($("iemReverseYMax")) $("iemReverseYMax").value = Math.round(state.reverseView.max * 10) / 10;
+    }
+
+    function setReverseView(min, max, redraw = true) {
+        min = num(min, 60);
+        max = num(max, 100);
+        if (max - min < 5) max = min + 5;
+        state.reverseView = { min, max };
+        syncReverseViewInputs();
+        if (state.reverseChart) {
+            state.reverseChart.options.scales.y.min = min;
+            state.reverseChart.options.scales.y.max = max;
+            state.reverseChart.update("none");
+        } else if (redraw) {
+            drawReverse();
+        }
+    }
+
+    function panReverseView(deltaDb) {
+        setReverseView(state.reverseView.min + deltaDb, state.reverseView.max + deltaDb);
+    }
+
+    function autoFitReverseView() {
+        if (!state.reverse.length) return;
+        const values = state.reverse.map(p => num(p.db)).filter(Number.isFinite);
+        if (!values.length) return;
+        let min = Math.min(...values);
+        let max = Math.max(...values);
+        const span = Math.max(10, max - min);
+        const pad = Math.max(5, span * 0.18);
+        min = Math.floor((min - pad) / 5) * 5;
+        max = Math.ceil((max + pad) / 5) * 5;
+        if (max - min < 20) {
+            const center = (max + min) / 2;
+            min = center - 10;
+            max = center + 10;
+        }
+        setReverseView(min, max);
+    }
+
+    function resetReverseView() {
+        if ($("iemReverseMatchMode")?.value === "relative") setReverseView(-30, 20);
+        else setReverseView(60, 100);
     }
 
     function drawReverse() {
@@ -1822,9 +1874,10 @@
                 maintainAspectRatio: false,
                 animation: false,
                 parsing: false,
-                scales: { x: { type: "logarithmic", min: 20, max: 20000 }, y: { min: -30, max: 20 } },
+                scales: { x: { type: "logarithmic", min: 20, max: 20000 }, y: { min: state.reverseView.min, max: state.reverseView.max, title: { display: true, text: $("iemReverseMatchMode")?.value === "relative" ? "Relative level (dB)" : "SPL (dB)" } } },
             },
         });
+        syncReverseViewInputs();
         bindReverseDraw();
     }
 
@@ -1848,7 +1901,7 @@
                     bestIndex = i;
                 }
             });
-            const next = { frequency: clamp(frequency, 20, 20000), db: clamp(db, -30, 20) };
+            const next = { frequency: clamp(frequency, 20, 20000), db: clamp(db, state.reverseView.min, state.reverseView.max) };
             if (bestDistance < 0.05) state.reverse[bestIndex] = next;
             else state.reverse.push(next);
             state.reverse.sort((a, b) => a.frequency - b.frequency);
@@ -1861,6 +1914,13 @@
         };
         canvas.onpointermove = event => { if (drawing) point(event); };
         canvas.onpointerup = () => drawing = false;
+        canvas.onwheel = event => {
+            event.preventDefault();
+            const direction = Math.sign(event.deltaY || 0);
+            if (!direction) return;
+            const step = event.shiftKey ? 10 : 2;
+            panReverseView(direction * step);
+        };
         canvas.oncontextmenu = event => {
             event.preventDefault();
             if (state.reverse.length <= 2) return;
@@ -1910,6 +1970,7 @@
             max_evaluations: 3200,
             result_count: 10,
             normalization_frequency_hz: num($("iemReverseNormalizeFrequency").value, 1000),
+            absolute_match: $("iemReverseMatchMode")?.value !== "relative",
         };
         if (!window.HCAcousticEngine) {
             $("iemReverseMessage").textContent = "Build the Rust/WASM engine first for reverse optimisation.";
@@ -2007,15 +2068,31 @@
         $("iemTargetProduct").onchange = event => loadTargetProduct(event.target.value);
         ["iemSplMode", "iemNormalizeFrequency", "iemNormalizeMode", "iemShowTarget", "iemShowIndividual", "iemShowCombined"].forEach(id => $(id).onchange = draw);
         $("iemReverseFlat").onclick = reverseFlat;
+        $("iemReverseMatchMode").onchange = () => {
+            const relative = $("iemReverseMatchMode").value === "relative";
+            $("iemReverseNormalizeFrequency").disabled = !relative;
+            resetReverseView();
+            drawReverse();
+        };
+        $("iemReverseYMin").onchange = () => setReverseView($("iemReverseYMin").value, $("iemReverseYMax").value);
+        $("iemReverseYMax").onchange = () => setReverseView($("iemReverseYMin").value, $("iemReverseYMax").value);
+        $("iemReverseUp10").onclick = () => panReverseView(10);
+        $("iemReverseDown10").onclick = () => panReverseView(-10);
+        $("iemReverseAutoFit").onclick = autoFitReverseView;
+        $("iemReverseResetView").onclick = resetReverseView;
         $("iemReverseCopyCombined").onclick = () => {
             if (state.last?.combined) {
                 state.reverse = structuredClone(state.last.combined);
+                autoFitReverseView();
                 drawReverse();
             }
         };
         $("iemReverseFile").onchange = async event => {
             if (event.target.files[0]) {
                 state.reverse = await parseFile(event.target.files[0], "fr");
+                if ($("iemReverseMatchMode")) $("iemReverseMatchMode").value = "absolute";
+                if ($("iemReverseNormalizeFrequency")) $("iemReverseNormalizeFrequency").disabled = true;
+                autoFitReverseView();
                 drawReverse();
             }
         };
