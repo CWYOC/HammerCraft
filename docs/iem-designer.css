@@ -107,3 +107,90 @@
 
 /* v0.14 reverse SPL viewport */
 .iem-reverse-viewbar{display:grid;grid-template-columns:150px 150px repeat(4,auto);gap:8px;align-items:end;margin:0 0 14px}.iem-reverse-viewbar label{display:flex;flex-direction:column;gap:7px;color:var(--admin-muted);font-size:8px;font-weight:700;letter-spacing:.09em}.iem-reverse-viewbar input{min-height:42px;padding:0 10px;border:1px solid var(--admin-border);background:rgba(255,255,255,.35);color:var(--admin-text)}@media(max-width:900px){.iem-reverse-viewbar{grid-template-columns:repeat(2,1fr)}.iem-reverse-viewbar button{width:100%}}
+
+/* =========================================================
+   V15 REVERSE PEQ
+========================================================= */
+.iem-reverse-peq-panel {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--admin-border);
+}
+
+.iem-inline-toggle {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+}
+
+.iem-inline-toggle input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    min-height: 0;
+    accent-color: var(--admin-accent);
+}
+
+.iem-reverse-result-card {
+    border: 1px solid var(--admin-border);
+    background: rgba(255,255,255,.24);
+    padding: 18px;
+    display: grid;
+    gap: 14px;
+}
+
+.iem-reverse-result-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.iem-reverse-result-head strong {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.iem-reverse-score-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 8px;
+}
+
+.iem-reverse-score-grid div,
+.iem-reverse-peq-list li {
+    border: 1px solid var(--admin-border);
+    padding: 10px;
+    background: rgba(255,255,255,.2);
+}
+
+.iem-reverse-score-grid span,
+.iem-reverse-peq-list span {
+    display: block;
+    color: var(--admin-muted);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    margin-bottom: 5px;
+}
+
+.iem-reverse-peq-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.iem-reverse-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+    .iem-reverse-score-grid { grid-template-columns: 1fr; }
+    .iem-reverse-actions { flex-direction: column; }
+    .iem-reverse-actions button { width: 100%; }
+}

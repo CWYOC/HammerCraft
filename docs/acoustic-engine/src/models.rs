@@ -259,19 +259,63 @@ pub struct ReverseDesignRequest {
     pub normalization_frequency_hz: f64,
     #[serde(default)]
     pub absolute_match: bool,
+
+    // Optional reverse-PEQ stage. The optimiser first searches the physical
+    // design, then can add a small number of peaking filters to reduce the
+    // remaining target error.
+    #[serde(default)]
+    pub allow_peq: bool,
+    #[serde(default = "default_max_peq_filters")]
+    pub max_peq_filters: usize,
+    #[serde(default = "default_peq_min_frequency")]
+    pub peq_min_frequency_hz: f64,
+    #[serde(default = "default_peq_max_frequency")]
+    pub peq_max_frequency_hz: f64,
+    #[serde(default = "default_peq_max_boost")]
+    pub peq_max_boost_db: f64,
+    #[serde(default = "default_peq_max_cut")]
+    pub peq_max_cut_db: f64,
+    #[serde(default = "default_peq_min_q")]
+    pub peq_min_q: f64,
+    #[serde(default = "default_peq_max_q")]
+    pub peq_max_q: f64,
+    #[serde(default)]
+    pub prefer_fewer_peq_filters: bool,
+    #[serde(default = "default_peq_filter_penalty")]
+    pub peq_filter_penalty_db: f64,
 }
 fn default_gain_range() -> f64 { 8.0 }
 fn default_evaluations() -> usize { 3200 }
 fn default_result_count() -> usize { 10 }
 fn default_normalization_frequency() -> f64 { 1000.0 }
+fn default_max_peq_filters() -> usize { 5 }
+fn default_peq_min_frequency() -> f64 { 20.0 }
+fn default_peq_max_frequency() -> f64 { 20000.0 }
+fn default_peq_max_boost() -> f64 { 6.0 }
+fn default_peq_max_cut() -> f64 { 12.0 }
+fn default_peq_min_q() -> f64 { 0.30 }
+fn default_peq_max_q() -> f64 { 8.0 }
+fn default_peq_filter_penalty() -> f64 { 0.08 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReversePeqFilter {
+    pub frequency_hz: f64,
+    pub gain_db: f64,
+    pub q: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReverseCandidate {
+    // Final score after optional PEQ.
     pub score_rmse_db: f64,
+    // Physical-only target error before PEQ.
+    pub physical_rmse_db: f64,
     pub tube_length_mm: f64,
     pub tube_diameter_mm: f64,
     pub damper_ohm: f64,
     pub capacitor_uf: f64,
     pub resistor_ohm: f64,
     pub gain_db: f64,
+    #[serde(default)]
+    pub peq_filters: Vec<ReversePeqFilter>,
 }

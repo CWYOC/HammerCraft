@@ -1971,6 +1971,16 @@
             result_count: 10,
             normalization_frequency_hz: num($("iemReverseNormalizeFrequency").value, 1000),
             absolute_match: $("iemReverseMatchMode")?.value !== "relative",
+            allow_peq: Boolean($("iemReverseAllowPeq")?.checked),
+            max_peq_filters: Math.max(0, Math.min(10, Math.round(num($("iemReversePeqCount")?.value, 5)))),
+            peq_min_frequency_hz: num($("iemReversePeqMinFreq")?.value, 20),
+            peq_max_frequency_hz: num($("iemReversePeqMaxFreq")?.value, 20000),
+            peq_max_boost_db: Math.max(0, num($("iemReversePeqBoost")?.value, 6)),
+            peq_max_cut_db: Math.max(0, num($("iemReversePeqCut")?.value, 12)),
+            peq_min_q: Math.max(0.1, num($("iemReversePeqQMin")?.value, 0.30)),
+            peq_max_q: Math.max(0.1, num($("iemReversePeqQMax")?.value, 8)),
+            prefer_fewer_peq_filters: Boolean($("iemReversePreferFewerPeq")?.checked),
+            peq_filter_penalty_db: Math.max(0, num($("iemReversePeqPenalty")?.value, 0.08)),
         };
         if (!window.HCAcousticEngine) {
             $("iemReverseMessage").textContent = "Build the Rust/WASM engine first for reverse optimisation.";
@@ -1978,14 +1988,38 @@
         }
         try {
             const results = await window.HCAcousticEngine.reverseDesign(request);
-            $("iemReverseResults").innerHTML = results.map((candidate, index) => `<button class="iem-optimise-card" data-apply-rev="${index}"><span>#${index + 1}</span><strong>${candidate.score_rmse_db.toFixed(2)} dB RMSE</strong><small>${candidate.tube_diameter_mm.toFixed(2)} mm ID · ${candidate.tube_length_mm.toFixed(1)} mm · ${Math.round(candidate.damper_ohm)} Ω · ${candidate.capacitor_uf} µF · ${candidate.resistor_ohm} Ω · ${candidate.gain_db.toFixed(1)} dB</small></button>`).join("");
-            document.querySelectorAll("[data-apply-rev]").forEach(button => button.onclick = () => applyRev(results[+button.dataset.applyRev], driverIndex));
+            const peqHtml = candidate => (candidate.peq_filters || []).length
+                ? `<ul class="iem-reverse-peq-list">${candidate.peq_filters.map((peq, peqIndex) => `<li><span>PEQ ${peqIndex + 1}</span><strong>PK ${Math.round(peq.frequency_hz)} Hz · ${peq.gain_db >= 0 ? "+" : ""}${peq.gain_db.toFixed(2)} dB · Q ${peq.q.toFixed(2)}</strong></li>`).join("")}</ul>`
+                : `<p class="iem-field-note">No PEQ required for this candidate.</p>`;
+
+            $("iemReverseResults").innerHTML = results.map((candidate, index) => `
+                <article class="iem-reverse-result-card">
+                    <div class="iem-reverse-result-head">
+                        <div><span class="eyebrow">CANDIDATE ${index + 1}</span><strong>${candidate.tube_diameter_mm.toFixed(2)} mm ID · ${candidate.tube_length_mm.toFixed(1)} mm</strong></div>
+                        <strong>${candidate.score_rmse_db.toFixed(2)} dB RMSE</strong>
+                    </div>
+                    <div class="iem-reverse-score-grid">
+                        <div><span>PHYSICAL ONLY</span><strong>${(candidate.physical_rmse_db ?? candidate.score_rmse_db).toFixed(2)} dB RMSE</strong></div>
+                        <div><span>PHYSICAL + PEQ</span><strong>${candidate.score_rmse_db.toFixed(2)} dB RMSE</strong></div>
+                    </div>
+                    <p class="iem-field-note">${Math.round(candidate.damper_ohm)} Ω damper · ${candidate.capacitor_uf} µF series C · ${candidate.resistor_ohm} Ω series R · ${candidate.gain_db.toFixed(1)} dB gain</p>
+                    ${peqHtml(candidate)}
+                    <div class="iem-reverse-actions">
+                        <button class="outline-button" type="button" data-apply-rev-physical="${index}">APPLY PHYSICAL</button>
+                        <button class="outline-button" type="button" data-apply-rev-peq="${index}">APPLY PEQ</button>
+                        <button class="primary-button" type="button" data-apply-rev-all="${index}">APPLY ALL</button>
+                    </div>
+                </article>`).join("");
+
+            document.querySelectorAll("[data-apply-rev-physical]").forEach(button => button.onclick = () => applyRevPhysical(results[+button.dataset.applyRevPhysical], driverIndex));
+            document.querySelectorAll("[data-apply-rev-peq]").forEach(button => button.onclick = () => applyRevPeq(results[+button.dataset.applyRevPeq], driverIndex));
+            document.querySelectorAll("[data-apply-rev-all]").forEach(button => button.onclick = () => applyRevAll(results[+button.dataset.applyRevAll], driverIndex));
         } catch (error) {
             $("iemReverseMessage").textContent = error.message || "Reverse design failed";
         }
     }
 
-    function applyRev(candidate, index) {
+    function applyRevPhysical(candidate, index, recalc = true) {
         const d = ensureDriverShape(state.drivers[index]);
         d.gain = candidate.gain_db;
         let tube = d.path.find(element => element.type === "tube");
@@ -1996,10 +2030,46 @@
         if (candidate.damper_ohm > 0) {
             if (!damper) d.path.push(damper = { type: "damper", value: 1000 });
             damper.value = candidate.damper_ohm;
+        } else if (damper) {
+            d.path = d.path.filter(element => element !== damper);
         }
+        const existingFilters = structuredClone(d.circuit?.filters || []);
         d.circuit = createCircuit();
+        d.circuit.filters = existingFilters;
         if (candidate.resistor_ohm > 0) appendSeriesComponent(d, "resistor", candidate.resistor_ohm, false);
         if (candidate.capacitor_uf > 0) appendSeriesComponent(d, "capacitor", candidate.capacitor_uf, false);
+        if (recalc) {
+            renderDrivers();
+            document.querySelector('[data-iem-tab="design"]')?.click();
+            calculate();
+        }
+    }
+
+    function applyRevPeq(candidate, index, recalc = true) {
+        const d = ensureDriverShape(state.drivers[index]);
+        // Replace only PEQ filters previously generated by Reverse Design.
+        d.circuit.filters = d.circuit.filters.filter(filter => filter.generatedBy !== "reverse_peq");
+        for (const peq of candidate.peq_filters || []) {
+            d.circuit.filters.push({
+                type: "peq",
+                frequency: peq.frequency_hz,
+                gain: peq.gain_db,
+                q: peq.q,
+                generatedBy: "reverse_peq",
+            });
+        }
+        if (recalc) {
+            renderDrivers();
+            document.querySelector('[data-iem-tab="design"]')?.click();
+            calculate();
+        }
+    }
+
+    function applyRevAll(candidate, index) {
+        // Apply physical first because rebuilding the passive circuit must not
+        // wipe the PEQ that is added afterwards.
+        applyRevPhysical(candidate, index, false);
+        applyRevPeq(candidate, index, false);
         renderDrivers();
         document.querySelector('[data-iem-tab="design"]')?.click();
         calculate();

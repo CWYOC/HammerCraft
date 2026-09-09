@@ -128,6 +128,29 @@
                     <label>SERIES R Ω<input id="iemReverseResistors" type="text" value="0,1,2.2,3.3,4.7,10"></label>
                     <label>GAIN RANGE ±dB<input id="iemReverseGainRange" type="number" value="8" min="0"></label>
                 </div>
+
+                <div class="iem-reverse-peq-panel">
+                    <div class="iem-panel-title">
+                        <div>
+                            <span class="eyebrow">OPTIONAL PEQ</span>
+                            <h3>Finish the target with PEQ.</h3>
+                        </div>
+                        <label class="iem-inline-toggle"><input id="iemReverseAllowPeq" type="checkbox" checked> ALLOW PEQ</label>
+                    </div>
+                    <p class="iem-field-note">Rust searches the physical tube / damper / passive circuit first, then adds peaking EQ only if it improves the remaining target error. Physical-only and Physical + PEQ RMSE are shown separately.</p>
+                    <div class="iem-display-grid">
+                        <label>MAX PEQ FILTERS<input id="iemReversePeqCount" type="number" value="5" min="0" max="10" step="1"></label>
+                        <label>PEQ FREQ MIN Hz<input id="iemReversePeqMinFreq" type="number" value="20" min="20" max="20000"></label>
+                        <label>PEQ FREQ MAX Hz<input id="iemReversePeqMaxFreq" type="number" value="20000" min="20" max="20000"></label>
+                        <label>MAX BOOST +dB<input id="iemReversePeqBoost" type="number" value="6" min="0" step="0.5"></label>
+                        <label>MAX CUT -dB<input id="iemReversePeqCut" type="number" value="12" min="0" step="0.5"></label>
+                        <label>Q MIN<input id="iemReversePeqQMin" type="number" value="0.30" min="0.1" step="0.05"></label>
+                        <label>Q MAX<input id="iemReversePeqQMax" type="number" value="8" min="0.1" step="0.1"></label>
+                        <label>FILTER PENALTY dB<input id="iemReversePeqPenalty" type="number" value="0.08" min="0" step="0.01"></label>
+                        <label class="iem-inline-toggle"><input id="iemReversePreferFewerPeq" type="checkbox" checked> PREFER FEWER FILTERS</label>
+                    </div>
+                </div>
+
                 <div id="iemReverseResults" class="iem-optimise-results"></div>
                 <div id="iemReverseMessage" class="admin-message"></div>
             </div>
@@ -153,8 +176,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="supabase-client.js"></script>
 <script src="auth.js?v=40"></script>
-<script src="wasm-loader.js?v=9"></script>
-<script src="iem-designer.js?v=9"></script>
-<script src="iem-designer-page.js?v=9"></script>
+<script src="wasm-loader.js?v=15"></script>
+<script src="iem-designer.js?v=15"></script>
+<script src="iem-designer-page.js?v=15"></script>
 </body>
 </html>

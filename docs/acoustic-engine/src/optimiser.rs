@@ -1,6 +1,6 @@
 use crate::models::{
     AcousticElement, CircuitComponent, CircuitComponentKind, CircuitNetlist, CircuitNode,
-    ElectricalElement, FrequencyPoint, ReverseCandidate, ReverseDesignRequest,
+    ElectricalElement, FrequencyPoint, ReverseCandidate, ReverseDesignRequest, ReversePeqFilter,
 };
 use crate::simulation::simulate;
 
@@ -106,9 +106,7 @@ fn set_candidate(
         driver.acoustic_path.retain(|e| !matches!(e, AcousticElement::Damper { .. }));
     }
 
-    // Reverse optimisation searches a simple passive series R/C branch, but
-    // it now writes that branch into the same nodal netlist used by the CAD.
-    // Active PEQ/HP/LP blocks remain in driver.electrical.
+    // Preserve user response-domain filters. Reverse PEQ is added later to a clone.
     driver.electrical.retain(|e| matches!(e,
         ElectricalElement::PeakingEq { .. }
             | ElectricalElement::HighPass { .. }
@@ -166,6 +164,28 @@ fn choose(values: &[f64], index: usize, fallback: f64) -> f64 {
     if values.is_empty() { fallback } else { values[index % values.len()] }
 }
 
+fn candidate_request(request: &ReverseDesignRequest, candidate: &ReverseCandidate) -> crate::models::SimulationRequest {
+    let mut candidate_request = request.base_request.clone();
+    let driver = &mut candidate_request.drivers[request.driver_index];
+    set_candidate(
+        driver,
+        candidate.tube_length_mm,
+        candidate.tube_diameter_mm,
+        candidate.damper_ohm,
+        candidate.capacitor_uf,
+        candidate.resistor_ohm,
+        candidate.gain_db,
+    );
+    for peq in &candidate.peq_filters {
+        driver.electrical.push(ElectricalElement::PeakingEq {
+            frequency_hz: peq.frequency_hz,
+            gain_db: peq.gain_db,
+            q: peq.q,
+        });
+    }
+    candidate_request
+}
+
 fn evaluate_candidate(
     request: &ReverseDesignRequest,
     length: f64,
@@ -183,13 +203,127 @@ fn evaluate_candidate(
 
     ReverseCandidate {
         score_rmse_db: score,
+        physical_rmse_db: score,
         tube_length_mm: length,
         tube_diameter_mm: diameter,
         damper_ohm: damper,
         capacitor_uf: cap,
         resistor_ohm: resistor,
         gain_db: gain,
+        peq_filters: Vec::new(),
     }
+}
+
+fn residual_at(
+    simulation: &crate::models::SimulationResult,
+    target: &[FrequencyPoint],
+    frequency_hz: f64,
+    normalization_frequency_hz: f64,
+    absolute_match: bool,
+) -> f64 {
+    let actual = interpolate_combined(&simulation.combined, frequency_hz);
+    let desired = interpolate_target(target, frequency_hz);
+    if absolute_match {
+        desired - actual
+    } else {
+        let f_norm = normalization_frequency_hz.clamp(20.0, 20000.0);
+        let sim_norm = interpolate_combined(&simulation.combined, f_norm);
+        let target_norm = interpolate_target(target, f_norm);
+        (desired - target_norm) - (actual - sim_norm)
+    }
+}
+
+fn q_grid(min_q: f64, max_q: f64) -> Vec<f64> {
+    let lo = min_q.max(0.1);
+    let hi = max_q.max(lo);
+    let canonical = [0.30, 0.45, 0.60, 0.80, 1.0, 1.4, 2.0, 3.0, 4.5, 6.0, 8.0, 10.0];
+    let mut out: Vec<f64> = canonical.into_iter().filter(|q| *q >= lo && *q <= hi).collect();
+    if out.is_empty() { out.push((lo * hi).sqrt()); }
+    out
+}
+
+fn optimise_peq_for_candidate(request: &ReverseDesignRequest, mut candidate: ReverseCandidate) -> ReverseCandidate {
+    if !request.allow_peq || request.max_peq_filters == 0 { return candidate; }
+
+    let min_f = request.peq_min_frequency_hz.max(20.0);
+    let max_f = request.peq_max_frequency_hz.min(20000.0).max(min_f);
+    let max_boost = request.peq_max_boost_db.max(0.0);
+    let max_cut = request.peq_max_cut_db.max(0.0);
+    let q_values = q_grid(request.peq_min_q, request.peq_max_q);
+    let max_filters = request.max_peq_filters.clamp(1, 10);
+
+    let mut current_request = candidate_request(request, &candidate);
+    let mut current_sim = simulate(&current_request);
+    let mut current_rmse = rmse(&current_sim, &request.target, request.normalization_frequency_hz, request.absolute_match);
+
+    for _ in 0..max_filters {
+        // Find a handful of strongest residual regions from the target control points.
+        let mut residual_points: Vec<(f64, f64)> = request.target.iter()
+            .filter(|p| p.frequency_hz >= min_f && p.frequency_hz <= max_f)
+            .map(|p| (p.frequency_hz, residual_at(
+                &current_sim,
+                &request.target,
+                p.frequency_hz,
+                request.normalization_frequency_hz,
+                request.absolute_match,
+            )))
+            .collect();
+        residual_points.sort_by(|a, b| b.1.abs().partial_cmp(&a.1.abs()).unwrap_or(std::cmp::Ordering::Equal));
+        residual_points.truncate(5);
+        if residual_points.is_empty() { break; }
+
+        let mut best: Option<(ReversePeqFilter, f64, crate::models::SimulationResult)> = None;
+
+        for (frequency, residual) in residual_points {
+            let full_gain = residual.clamp(-max_cut, max_boost);
+            if full_gain.abs() < 0.10 { continue; }
+            let gains = [full_gain, full_gain * 0.70, full_gain * 0.45];
+
+            for q in &q_values {
+                for gain in gains {
+                    if gain.abs() < 0.05 { continue; }
+                    let filter = ReversePeqFilter { frequency_hz: frequency, gain_db: gain, q: *q };
+                    let mut trial = current_request.clone();
+                    trial.drivers[request.driver_index].electrical.push(ElectricalElement::PeakingEq {
+                        frequency_hz: filter.frequency_hz,
+                        gain_db: filter.gain_db,
+                        q: filter.q,
+                    });
+                    let sim = simulate(&trial);
+                    let score = rmse(&sim, &request.target, request.normalization_frequency_hz, request.absolute_match);
+
+                    if best.as_ref().map(|(_, best_score, _)| score < *best_score).unwrap_or(true) {
+                        best = Some((filter, score, sim));
+                    }
+                }
+            }
+        }
+
+        let Some((filter, next_rmse, next_sim)) = best else { break; };
+        let required_improvement = if request.prefer_fewer_peq_filters {
+            request.peq_filter_penalty_db.max(0.0)
+        } else { 0.0 };
+
+        if current_rmse - next_rmse <= required_improvement { break; }
+
+        candidate.peq_filters.push(filter.clone());
+        current_request.drivers[request.driver_index].electrical.push(ElectricalElement::PeakingEq {
+            frequency_hz: filter.frequency_hz,
+            gain_db: filter.gain_db,
+            q: filter.q,
+        });
+        current_sim = next_sim;
+        current_rmse = next_rmse;
+    }
+
+    candidate.score_rmse_db = current_rmse;
+    candidate
+}
+
+fn ranking_score(request: &ReverseDesignRequest, candidate: &ReverseCandidate) -> f64 {
+    candidate.score_rmse_db + if request.prefer_fewer_peq_filters {
+        candidate.peq_filters.len() as f64 * request.peq_filter_penalty_db.max(0.0)
+    } else { 0.0 }
 }
 
 pub fn reverse_design(request: &ReverseDesignRequest) -> Vec<ReverseCandidate> {
@@ -207,9 +341,6 @@ pub fn reverse_design(request: &ReverseDesignRequest) -> Vec<ReverseCandidate> {
     let gain_range = request.gain_range_db.max(0.0);
     let mut results = Vec::with_capacity(evals + 32);
 
-    // Stage 1: deterministic low-discrepancy global search.
-    // This covers continuous tube dimensions/gain while cycling the
-    // discrete damper/capacitor/resistor values supplied by the user.
     for i in 0..global_evals {
         let u = ((i as f64 * 0.618_033_988_75).fract()).abs();
         let v = ((i as f64 * 0.414_213_562_37).fract()).abs();
@@ -217,38 +348,18 @@ pub fn reverse_design(request: &ReverseDesignRequest) -> Vec<ReverseCandidate> {
         let diameter = min_d + (max_d - min_d) * u;
         let length = min_l + (max_l - min_l) * v;
         let damper = choose(&request.damper_values, i, 0.0);
-        let cap = choose(
-            &request.capacitor_values_uf,
-            i / request.damper_values.len().max(1),
-            0.0,
-        );
+        let cap = choose(&request.capacitor_values_uf, i / request.damper_values.len().max(1), 0.0);
         let resistor = choose(
             &request.resistor_values_ohm,
             i / (request.damper_values.len().max(1) * request.capacitor_values_uf.len().max(1)),
             0.0,
         );
         let gain = -gain_range + 2.0 * gain_range * w;
-
-        results.push(evaluate_candidate(
-            request,
-            length,
-            diameter,
-            damper,
-            cap,
-            resistor,
-            gain,
-        ));
+        results.push(evaluate_candidate(request, length, diameter, damper, cap, resistor, gain));
     }
 
-    results.sort_by(|a, b| {
-        a.score_rmse_db
-            .partial_cmp(&b.score_rmse_db)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+    results.sort_by(|a, b| a.score_rmse_db.partial_cmp(&b.score_rmse_db).unwrap_or(std::cmp::Ordering::Equal));
 
-    // Stage 2: refine around the strongest global candidates.
-    // This gives the reverse tool better numerical resolution without
-    // exploding into a huge brute-force Cartesian product.
     if refine_evals > 0 && !results.is_empty() {
         let seed_count = results.len().min(12);
         let seeds: Vec<ReverseCandidate> = results[..seed_count].to_vec();
@@ -258,43 +369,29 @@ pub fn reverse_design(request: &ReverseDesignRequest) -> Vec<ReverseCandidate> {
 
         for (seed_index, seed) in seeds.iter().enumerate() {
             for j in 0..per_seed {
-                if results.len() >= evals + seed_count {
-                    break;
-                }
-
+                if results.len() >= evals + seed_count { break; }
                 let n = (seed_index * per_seed + j) as f64 + 1.0;
                 let du = ((n * 0.754_877_666).fract() - 0.5) * 2.0;
                 let dv = ((n * 0.569_840_291).fract() - 0.5) * 2.0;
                 let dg = ((n * 0.438_447_187).fract() - 0.5) * 2.0;
-
                 let diameter = (seed.tube_diameter_mm + du * d_span * 0.08).clamp(min_d, max_d);
                 let length = (seed.tube_length_mm + dv * l_span * 0.08).clamp(min_l, max_l);
                 let gain = (seed.gain_db + dg * gain_range * 0.10).clamp(-gain_range, gain_range);
-
                 results.push(evaluate_candidate(
-                    request,
-                    length,
-                    diameter,
-                    seed.damper_ohm,
-                    seed.capacitor_uf,
-                    seed.resistor_ohm,
-                    gain,
+                    request, length, diameter, seed.damper_ohm, seed.capacitor_uf,
+                    seed.resistor_ohm, gain,
                 ));
             }
         }
     }
 
-    results.sort_by(|a, b| {
-        a.score_rmse_db
-            .partial_cmp(&b.score_rmse_db)
-            .unwrap_or(std::cmp::Ordering::Equal)
-    });
+    results.sort_by(|a, b| a.score_rmse_db.partial_cmp(&b.score_rmse_db).unwrap_or(std::cmp::Ordering::Equal));
 
-    // Suppress near-duplicate recommendations so the result list gives
-    // meaningfully different build options rather than tiny numeric variants.
-    let mut unique: Vec<ReverseCandidate> = Vec::new();
+    // Keep a small pool of physically strong and meaningfully different candidates.
+    let peq_pool_target = request.result_count.clamp(1, 50).max(8).min(16);
+    let mut physical_unique: Vec<ReverseCandidate> = Vec::new();
     for candidate in results {
-        let duplicate = unique.iter().any(|existing| {
+        let duplicate = physical_unique.iter().any(|existing| {
             (existing.tube_length_mm - candidate.tube_length_mm).abs() < 0.15
                 && (existing.tube_diameter_mm - candidate.tube_diameter_mm).abs() < 0.03
                 && (existing.damper_ohm - candidate.damper_ohm).abs() < 0.5
@@ -302,14 +399,19 @@ pub fn reverse_design(request: &ReverseDesignRequest) -> Vec<ReverseCandidate> {
                 && (existing.resistor_ohm - candidate.resistor_ohm).abs() < 0.01
                 && (existing.gain_db - candidate.gain_db).abs() < 0.15
         });
-        if !duplicate {
-            unique.push(candidate);
-        }
-        if unique.len() >= request.result_count.clamp(1, 50) {
-            break;
-        }
+        if !duplicate { physical_unique.push(candidate); }
+        if physical_unique.len() >= peq_pool_target { break; }
     }
 
-    unique
-}
+    let mut final_candidates: Vec<ReverseCandidate> = physical_unique.into_iter()
+        .map(|candidate| optimise_peq_for_candidate(request, candidate))
+        .collect();
 
+    final_candidates.sort_by(|a, b| {
+        ranking_score(request, a)
+            .partial_cmp(&ranking_score(request, b))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    final_candidates.truncate(request.result_count.clamp(1, 50));
+    final_candidates
+}
