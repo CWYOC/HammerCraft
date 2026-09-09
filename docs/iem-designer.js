@@ -86,6 +86,13 @@
         }
         if (!d.circuit || !Array.isArray(d.circuit.nodes)) d.circuit = createCircuit();
         if (!Array.isArray(d.circuit.components)) d.circuit.components = [];
+        d.circuit.components.forEach(component => {
+            if (component.rotationDeg === undefined || component.rotationDeg === null || !Number.isFinite(Number(component.rotationDeg))) {
+                component.rotationDeg = null;
+            } else {
+                component.rotationDeg = ((Math.round(Number(component.rotationDeg) / 45) * 45) % 360 + 360) % 360;
+            }
+        });
         if (!Array.isArray(d.circuit.filters)) d.circuit.filters = [];
         if (!d.circuit.input) d.circuit.input = "in";
         if (!d.circuit.ground) d.circuit.ground = "gnd";
@@ -827,6 +834,48 @@
         return `${component.label || component.id}  ${Number(component.value).toLocaleString()} ${unit}`;
     }
 
+    function normalizeRotation45(value) {
+        return ((Math.round(num(value, 0) / 45) * 45) % 360 + 360) % 360;
+    }
+
+    function componentAutoAngle(d, component) {
+        const a = nodeById(d, component.nodeA);
+        const b = nodeById(d, component.nodeB);
+        if (!a || !b) return 0;
+        return Math.abs(b.y - a.y) > Math.abs(b.x - a.x) ? 90 : 0;
+    }
+
+    function componentDisplayAngle(d, component) {
+        return component.rotationDeg === null || component.rotationDeg === undefined
+            ? componentAutoAngle(d, component)
+            : normalizeRotation45(component.rotationDeg);
+    }
+
+    function rotationHandleSvg(d, component, angle) {
+        const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
+        if (!selected || component.kind === "wire") return "";
+        return `
+            <g class="iem-cad-rotation-handle" data-cad-rotate="${d.id}:${component.id}" aria-label="Rotate component in 45 degree steps">
+                <path class="iem-cad-rotation-stem" d="M0 -34 V-58"/>
+                <circle class="iem-cad-rotation-circle" cx="0" cy="-67" r="10"/>
+                <path class="iem-cad-rotation-arrow" d="M-4 -71 A7 7 0 1 1 4 -63 M4 -63 L0 -63 M4 -63 L4 -67"/>
+                <text class="iem-cad-rotation-text" text-anchor="middle" y="-84">${angle}°</text>
+            </g>`;
+    }
+
+    function rotateComponentBy(d, componentId, delta) {
+        const component = d?.circuit?.components?.find(item => item.id === componentId);
+        if (!component || component.kind === "wire") return;
+        mutateCircuit(d, () => {
+            const base = component.rotationDeg === null || component.rotationDeg === undefined
+                ? componentAutoAngle(d, component)
+                : component.rotationDeg;
+            component.rotationDeg = normalizeRotation45(base + delta);
+        });
+        state.selectedCircuit = { driverId: d.id, componentId };
+        renderDrivers();
+    }
+
     function renderCircuitSvg(d) {
         const svg = $(`cad-${d.id}`);
         if (!svg) return;
@@ -849,10 +898,7 @@
             component.y = y;
             const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
 
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const vertical = Math.abs(dy) > Math.abs(dx);
-            const angle = vertical ? 90 : 0;
+            const angle = componentDisplayAngle(d, component);
             const rad = angle * Math.PI / 180;
             const tx1 = x - 48 * Math.cos(rad);
             const ty1 = y - 48 * Math.sin(rad);
@@ -862,7 +908,8 @@
             lines.push(`<path class="iem-cad-wire" d="M ${a.x} ${a.y} L ${tx1} ${ty1} M ${tx2} ${ty2} L ${b.x} ${b.y}"/>`);
             components.push(`
                 <g class="iem-cad-component ${selected ? "selected" : ""} ${component.bypassed ? "bypassed" : ""}" data-cad-component="${d.id}:${component.id}" transform="translate(${x},${y})">
-                    <g transform="rotate(${angle})">${componentSymbolSvg(component)}</g>
+                    <g class="iem-cad-symbol-rotator" transform="rotate(${angle})">${componentSymbolSvg(component)}</g>
+                    ${rotationHandleSvg(d, component, angle)}
                     <text class="ref" text-anchor="middle" y="-25">${esc(component.label || component.id)}</text>
                     <text class="value" text-anchor="middle" y="31">${esc(component.kind === "wire" ? "WIRE" : componentLabel(component).replace(component.label || component.id, "").trim())}</text>
                 </g>`);
@@ -926,6 +973,58 @@
                 const [, componentId] = group.dataset.cadComponent.split(":");
                 state.selectedCircuit = { driverId: d.id, componentId };
                 openCircuitPropertyPage(d, componentId);
+            };
+        });
+
+        svg.querySelectorAll("[data-cad-rotate]").forEach(handle => {
+            handle.onpointerdown = event => {
+                event.preventDefault();
+                event.stopPropagation();
+                const [, componentId] = handle.dataset.cadRotate.split(":");
+                const component = d.circuit.components.find(c => c.id === componentId);
+                if (!component) return;
+                state.selectedCircuit = { driverId: d.id, componentId };
+                const before = JSON.stringify(d.circuit);
+                const rect = svg.getBoundingClientRect();
+                const viewBox = svg.viewBox.baseVal;
+                const toSvgPoint = ev => ({
+                    x: (ev.clientX - rect.left) * viewBox.width / rect.width + viewBox.x,
+                    y: (ev.clientY - rect.top) * viewBox.height / rect.height + viewBox.y,
+                });
+                const rotateFromEvent = ev => {
+                    const p = toSvgPoint(ev);
+                    // Symbol's 0° axis points to the right. atan2 gives the desired visual axis.
+                    let degrees = Math.atan2(p.y - component.y, p.x - component.x) * 180 / Math.PI + 90;
+                    component.rotationDeg = normalizeRotation45(degrees);
+                    renderCircuitSvg(d);
+                };
+                const move = ev => {
+                    ev.preventDefault();
+                    rotateFromEvent(ev);
+                };
+                const up = ev => {
+                    window.removeEventListener("pointermove", move);
+                    window.removeEventListener("pointerup", up);
+                    window.removeEventListener("pointercancel", up);
+                    const history = historyFor(d);
+                    if (JSON.stringify(d.circuit) !== before) {
+                        history.undo.push(before);
+                        if (history.undo.length > 50) history.undo.shift();
+                        history.redo = [];
+                    }
+                    renderDrivers();
+                    calculate();
+                };
+                window.addEventListener("pointermove", move, { passive: false });
+                window.addEventListener("pointerup", up, { once: true });
+                window.addEventListener("pointercancel", up, { once: true });
+            };
+            handle.onclick = event => {
+                event.preventDefault();
+                event.stopPropagation();
+                const [, componentId] = handle.dataset.cadRotate.split(":");
+                rotateComponentBy(d, componentId, 45);
+                calculate();
             };
         });
 
@@ -1052,6 +1151,7 @@
             nodeA: circuit.output,
             nodeB: newNodeId,
             bypassed: false,
+            rotationDeg: null,
             x: snap(((oldOutput?.x || 80) + newX) / 2),
             y: oldOutput?.y || 120,
         });
@@ -1071,6 +1171,7 @@
             nodeA: d.circuit.output,
             nodeB: d.circuit.ground,
             bypassed: false,
+            rotationDeg: null,
             x: output?.x || 450,
             y: snap(((output?.y || 120) + (ground?.y || 320)) / 2),
         });
@@ -1211,13 +1312,33 @@
                 <section class="iem-property-section"><span class="eyebrow">CONNECTION</span>
                     <label>NODE A<select data-property-field="nodeA">${options}</select></label>
                     <label>NODE B<select data-property-field="nodeB">${options}</select></label>
-                    <label class="iem-cad-check"><input data-property-field="bypassed" type="checkbox" ${draft.bypassed ? "checked" : ""}> BYPASS / SHORT</label><div class="iem-property-order-actions"><button class="outline-button" data-component-move="-1" type="button">← MOVE EARLIER</button><button class="outline-button" data-component-move="1" type="button">MOVE LATER →</button></div>
+                    <label class="iem-cad-check"><input data-property-field="bypassed" type="checkbox" ${draft.bypassed ? "checked" : ""}> BYPASS / SHORT</label>
+                    ${component.kind !== "wire" ? `<div class="iem-property-rotation"><span class="eyebrow">ORIENTATION</span><label>ANGLE<select data-property-field="rotationDeg"><option value="auto" ${draft.rotationDeg === null || draft.rotationDeg === undefined ? "selected" : ""}>Auto from connection</option>${[0,45,90,135,180,225,270,315].map(angle => `<option value="${angle}" ${draft.rotationDeg !== null && draft.rotationDeg !== undefined && normalizeRotation45(draft.rotationDeg) === angle ? "selected" : ""}>${angle}°</option>`).join("")}</select></label><div class="iem-property-rotate-actions"><button class="outline-button" data-property-rotate="-45" type="button">↶ ROTATE -45°</button><button class="outline-button" data-property-rotate="45" type="button">ROTATE +45° ↷</button></div></div>` : ""}
+                    <div class="iem-property-order-actions"><button class="outline-button" data-component-move="-1" type="button">← MOVE EARLIER</button><button class="outline-button" data-component-move="1" type="button">MOVE LATER →</button></div>
                 </section>
                 <section class="iem-property-section"><span class="eyebrow">CALCULATED DATA</span><div id="iemPropertyCalculated" class="iem-property-calculated"></div></section>
             </div>`;
+        const propertySymbol = body.querySelector('.iem-property-symbol svg');
+        if (propertySymbol) propertySymbol.style.transform = `rotate(${componentDisplayAngle(d, component)}deg)`;
         body.querySelector('[data-property-field="nodeA"]').value = draft.nodeA;
         body.querySelector('[data-property-field="nodeB"]').value = draft.nodeB;
         body.querySelectorAll('[data-component-move]').forEach(button => button.onclick = () => moveSeriesComponent(d, component.id, Number(button.dataset.componentMove)));
+        body.querySelectorAll('[data-property-rotate]').forEach(button => button.onclick = () => {
+            const select = body.querySelector('[data-property-field="rotationDeg"]');
+            const current = select?.value === "auto"
+                ? componentDisplayAngle(d, component)
+                : num(select?.value, componentDisplayAngle(d, component));
+            if (select) select.value = String(normalizeRotation45(current + Number(button.dataset.propertyRotate)));
+            const symbol = body.querySelector('.iem-property-symbol svg');
+            if (symbol) symbol.style.transform = `rotate(${normalizeRotation45(current + Number(button.dataset.propertyRotate))}deg)`;
+        });
+        const rotationSelect = body.querySelector('[data-property-field="rotationDeg"]');
+        if (rotationSelect) rotationSelect.addEventListener('change', () => {
+            const symbol = body.querySelector('.iem-property-symbol svg');
+            if (!symbol) return;
+            const angle = rotationSelect.value === "auto" ? componentAutoAngle(d, component) : normalizeRotation45(rotationSelect.value);
+            symbol.style.transform = `rotate(${angle}deg)`;
+        });
 
         const updateCalculated = () => {
             const box = $("iemPropertyCalculated");
@@ -1279,6 +1400,7 @@
                 const key = input.dataset.propertyField;
                 if (key === "bypassed") component[key] = input.checked;
                 else if (key === "value") component[key] = num(input.value, component[key]);
+                else if (key === "rotationDeg") component[key] = input.value === "auto" ? null : normalizeRotation45(input.value);
                 else component[key] = input.value;
             });
         });

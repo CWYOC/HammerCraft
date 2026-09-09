@@ -70,3 +70,20 @@
 .iem-property-position{margin-top:15px;padding:12px;border:1px solid var(--admin-border);font-size:10px;color:var(--admin-muted)}
 .filter-gain-property[hidden]{display:none!important}
 @media(max-width:760px){.iem-filter-node{grid-template-columns:1fr!important}.iem-filter-node-actions{justify-content:flex-start}.iem-property-order-actions{grid-template-columns:1fr}.iem-order-strip{padding-bottom:8px}}
+
+
+/* =========================================================
+   v0.11 45-DEGREE COMPONENT ROTATION
+========================================================= */
+.iem-cad-rotation-handle{cursor:grab;touch-action:none}
+.iem-cad-rotation-handle:active{cursor:grabbing}
+.iem-cad-rotation-stem,.iem-cad-rotation-arrow{fill:none;stroke:var(--admin-accent);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.iem-cad-rotation-circle{fill:#fff;stroke:var(--admin-accent);stroke-width:2;vector-effect:non-scaling-stroke}
+.iem-cad-rotation-text{font-size:7px;font-weight:700;fill:var(--admin-accent);pointer-events:none}
+.iem-cad-rotation-handle:hover .iem-cad-rotation-circle{fill:var(--admin-accent)}
+.iem-cad-rotation-handle:hover .iem-cad-rotation-arrow{stroke:#fff}
+.iem-property-rotation{margin-top:16px;padding-top:14px;border-top:1px solid var(--admin-border)}
+.iem-property-rotation>.eyebrow{display:block;margin-bottom:6px}
+.iem-property-rotate-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.iem-property-symbol svg{transition:transform 120ms ease;transform-origin:center}
+@media(max-width:760px){.iem-property-rotate-actions{grid-template-columns:1fr}}
