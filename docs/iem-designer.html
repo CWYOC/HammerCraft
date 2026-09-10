@@ -104,18 +104,21 @@
                     <button id="iemReverseCopyCombined" class="outline-button" type="button">COPY CURRENT COMBINED</button>
                     <button id="iemReverseFlat" class="outline-button" type="button">RESET FLAT</button>
                 </div>
-                <div class="iem-target-peq-panel">
+                <div class="iem-target-peq-panel iem-target-eq-compact">
                     <div class="iem-target-peq-head">
-                        <div><span class="eyebrow">TARGET SHAPING</span><strong>Manual Target Filters</strong></div>
-                        <div class="iem-target-peq-actions">
-                            <button id="iemTargetPeqAdd" class="outline-button" type="button">+ PEQ</button>
-                            <button id="iemTargetHighPassAdd" class="outline-button" type="button">+ HIGH PASS</button>
-                            <button id="iemTargetLowPassAdd" class="outline-button" type="button">+ LOW PASS</button>
-                            <button id="iemTargetPeqReset" class="outline-button" type="button">CLEAR FILTERS</button>
-                        </div>
+                        <div><span class="eyebrow">TARGET RESPONSE</span><strong>Parametric Equalizer</strong></div>
                     </div>
-                    <p class="iem-field-note">PEQ, High Pass and Low Pass here edit the <strong>target curve only</strong>. They are manual target-authoring tools: they are not sent to the IEM circuit, are not part of IEM tuning, and are never added automatically by Reverse Design.</p>
+                    <p class="iem-field-note">These filters shape the target curve only. They are not part of the IEM circuit or IEM tuning.</p>
+                    <div class="iem-target-eq-header" aria-hidden="true">
+                        <span></span><span>TYPE</span><span>FREQUENCY</span><span>GAIN</span><span>Q</span>
+                    </div>
                     <div id="iemTargetPeqList" class="iem-target-peq-list"></div>
+                    <div class="iem-target-eq-actions">
+                        <button id="iemTargetPeqAdd" class="outline-button" type="button" title="Add filter">+</button>
+                        <button id="iemTargetPeqRemoveLast" class="outline-button" type="button" title="Remove last filter">−</button>
+                        <button id="iemTargetPeqSort" class="outline-button" type="button">SORT</button>
+                        <button id="iemTargetPeqReset" class="outline-button iem-target-eq-clear" type="button">CLEAR</button>
+                    </div>
                 </div>
                 <div class="iem-reverse-viewbar">
                     <label>VIEW MIN dB<input id="iemReverseYMin" type="number" value="60" step="1"></label>

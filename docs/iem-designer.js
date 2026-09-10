@@ -2107,21 +2107,23 @@
         const holder = $("iemTargetPeqList");
         if (!holder) return;
         if (!state.targetPeq.length) {
-            holder.innerHTML = '<div class="iem-target-peq-empty">No target filters. The target curve is unchanged.</div>';
+            holder.innerHTML = '<div class="iem-target-peq-empty">No target filters. Press + to add one.</div>';
             return;
         }
         holder.innerHTML = state.targetPeq.map((filter, index) => {
             const type = ["peq", "high_pass", "low_pass"].includes(filter.type) ? filter.type : "peq";
-            const label = type === "peq" ? `PK ${index + 1}` : type === "high_pass" ? `HP ${index + 1}` : `LP ${index + 1}`;
-            const gain = type === "peq" ? `<label>GAIN dB<input data-target-peq-field="gain" data-target-peq-index="${index}" type="number" min="-30" max="30" step="0.1" value="${Number(filter.gain || 0).toFixed(1)}"></label>` : '<div class="iem-target-filter-no-gain">2nd-order filter</div>';
+            const gainDisabled = type !== "peq";
             return `<div class="iem-target-peq-row" data-target-peq-row="${index}">
-                <span class="iem-target-peq-number">${label}</span>
-                <label>TYPE<select data-target-peq-field="type" data-target-peq-index="${index}"><option value="peq" ${type === "peq" ? "selected" : ""}>PEQ</option><option value="high_pass" ${type === "high_pass" ? "selected" : ""}>HIGH PASS</option><option value="low_pass" ${type === "low_pass" ? "selected" : ""}>LOW PASS</option></select></label>
-                <label>FREQUENCY Hz<input data-target-peq-field="frequency" data-target-peq-index="${index}" type="number" min="20" max="20000" step="1" value="${Math.round(filter.frequency)}"></label>
-                ${gain}
-                <label>Q<input data-target-peq-field="q" data-target-peq-index="${index}" type="number" min="0.05" max="30" step="0.05" value="${Number(filter.q || 0.707).toFixed(2)}"></label>
-                <label class="iem-target-peq-enable"><input data-target-peq-field="enabled" data-target-peq-index="${index}" type="checkbox" ${filter.enabled === false ? "" : "checked"}> ON</label>
-                <button class="iem-mini" data-target-peq-remove="${index}" type="button">REMOVE</button>
+                <label class="iem-target-peq-enable" title="Enable filter"><input data-target-peq-field="enabled" data-target-peq-index="${index}" type="checkbox" ${filter.enabled === false ? "" : "checked"}></label>
+                <select class="iem-target-eq-type" data-target-peq-field="type" data-target-peq-index="${index}" aria-label="Filter type">
+                    <option value="peq" ${type === "peq" ? "selected" : ""}>PK</option>
+                    <option value="high_pass" ${type === "high_pass" ? "selected" : ""}>HP</option>
+                    <option value="low_pass" ${type === "low_pass" ? "selected" : ""}>LP</option>
+                </select>
+                <div class="iem-target-eq-input"><input data-target-peq-field="frequency" data-target-peq-index="${index}" type="number" min="20" max="20000" step="1" value="${Math.round(filter.frequency)}"><span>Hz</span></div>
+                <div class="iem-target-eq-input"><input data-target-peq-field="gain" data-target-peq-index="${index}" type="number" min="-30" max="30" step="0.1" value="${Number(filter.gain || 0).toFixed(1)}" ${gainDisabled ? "disabled" : ""}><span>dB</span></div>
+                <div class="iem-target-eq-input"><input data-target-peq-field="q" data-target-peq-index="${index}" type="number" min="0.05" max="30" step="0.05" value="${Number(filter.q || 0.707).toFixed(2)}"></div>
+                <button class="iem-target-eq-row-remove" data-target-peq-remove="${index}" type="button" title="Remove filter" aria-label="Remove filter">×</button>
             </div>`;
         }).join("");
         holder.querySelectorAll("[data-target-peq-field]").forEach(input => {
@@ -2467,8 +2469,17 @@
             rebuildReverseFromBase(true);
         };
         $("iemTargetPeqAdd").onclick = () => addTargetFilter("peq");
-        $("iemTargetHighPassAdd").onclick = () => addTargetFilter("high_pass");
-        $("iemTargetLowPassAdd").onclick = () => addTargetFilter("low_pass");
+        $("iemTargetPeqRemoveLast").onclick = () => {
+            if (!state.targetPeq.length) return;
+            state.targetPeq.pop();
+            renderTargetPeq();
+            rebuildReverseFromBase(true);
+        };
+        $("iemTargetPeqSort").onclick = () => {
+            state.targetPeq.sort((a, b) => Number(a.frequency || 0) - Number(b.frequency || 0));
+            renderTargetPeq();
+            rebuildReverseFromBase(true);
+        };
         $("iemTargetPeqReset").onclick = () => {
             state.targetPeq = [];
             renderTargetPeq();
