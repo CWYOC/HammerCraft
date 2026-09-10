@@ -2084,9 +2084,10 @@
     }
 
     function targetPeqOffsetDb(frequency) {
-        return state.targetPeq.reduce((sum, peq) => {
-            if (peq.enabled === false) return sum;
-            const h = filterH({ type: "peq", frequency: peq.frequency, gain: peq.gain, q: peq.q }, frequency);
+        return state.targetPeq.reduce((sum, filter) => {
+            if (filter.enabled === false) return sum;
+            const type = ["peq", "high_pass", "low_pass"].includes(filter.type) ? filter.type : "peq";
+            const h = filterH({ type, frequency: filter.frequency, gain: filter.gain || 0, q: filter.q }, frequency);
             return sum + 20 * Math.log10(Math.max(1e-12, cabs(h)));
         }, 0);
     }
@@ -2106,31 +2107,37 @@
         const holder = $("iemTargetPeqList");
         if (!holder) return;
         if (!state.targetPeq.length) {
-            holder.innerHTML = '<div class="iem-target-peq-empty">No PEQ bands. The target curve is unchanged.</div>';
+            holder.innerHTML = '<div class="iem-target-peq-empty">No target filters. The target curve is unchanged.</div>';
             return;
         }
-        holder.innerHTML = state.targetPeq.map((peq, index) => `
-            <div class="iem-target-peq-row" data-target-peq-row="${index}">
-                <span class="iem-target-peq-number">PK ${index + 1}</span>
-                <label>FREQUENCY Hz<input data-target-peq-field="frequency" data-target-peq-index="${index}" type="number" min="20" max="20000" step="1" value="${Math.round(peq.frequency)}"></label>
-                <label>GAIN dB<input data-target-peq-field="gain" data-target-peq-index="${index}" type="number" min="-30" max="30" step="0.1" value="${Number(peq.gain).toFixed(1)}"></label>
-                <label>Q<input data-target-peq-field="q" data-target-peq-index="${index}" type="number" min="0.05" max="30" step="0.05" value="${Number(peq.q).toFixed(2)}"></label>
-                <label class="iem-target-peq-enable"><input data-target-peq-field="enabled" data-target-peq-index="${index}" type="checkbox" ${peq.enabled === false ? "" : "checked"}> ON</label>
+        holder.innerHTML = state.targetPeq.map((filter, index) => {
+            const type = ["peq", "high_pass", "low_pass"].includes(filter.type) ? filter.type : "peq";
+            const label = type === "peq" ? `PK ${index + 1}` : type === "high_pass" ? `HP ${index + 1}` : `LP ${index + 1}`;
+            const gain = type === "peq" ? `<label>GAIN dB<input data-target-peq-field="gain" data-target-peq-index="${index}" type="number" min="-30" max="30" step="0.1" value="${Number(filter.gain || 0).toFixed(1)}"></label>` : '<div class="iem-target-filter-no-gain">2nd-order filter</div>';
+            return `<div class="iem-target-peq-row" data-target-peq-row="${index}">
+                <span class="iem-target-peq-number">${label}</span>
+                <label>TYPE<select data-target-peq-field="type" data-target-peq-index="${index}"><option value="peq" ${type === "peq" ? "selected" : ""}>PEQ</option><option value="high_pass" ${type === "high_pass" ? "selected" : ""}>HIGH PASS</option><option value="low_pass" ${type === "low_pass" ? "selected" : ""}>LOW PASS</option></select></label>
+                <label>FREQUENCY Hz<input data-target-peq-field="frequency" data-target-peq-index="${index}" type="number" min="20" max="20000" step="1" value="${Math.round(filter.frequency)}"></label>
+                ${gain}
+                <label>Q<input data-target-peq-field="q" data-target-peq-index="${index}" type="number" min="0.05" max="30" step="0.05" value="${Number(filter.q || 0.707).toFixed(2)}"></label>
+                <label class="iem-target-peq-enable"><input data-target-peq-field="enabled" data-target-peq-index="${index}" type="checkbox" ${filter.enabled === false ? "" : "checked"}> ON</label>
                 <button class="iem-mini" data-target-peq-remove="${index}" type="button">REMOVE</button>
-            </div>`).join("");
+            </div>`;
+        }).join("");
         holder.querySelectorAll("[data-target-peq-field]").forEach(input => {
             const update = () => {
                 const index = +input.dataset.targetPeqIndex;
-                const peq = state.targetPeq[index];
-                if (!peq) return;
+                const filter = state.targetPeq[index];
+                if (!filter) return;
                 const field = input.dataset.targetPeqField;
-                if (field === "enabled") peq.enabled = input.checked;
-                else if (field === "frequency") peq.frequency = clamp(num(input.value, peq.frequency), 20, 20000);
-                else if (field === "gain") peq.gain = clamp(num(input.value, peq.gain), -30, 30);
-                else if (field === "q") peq.q = clamp(num(input.value, peq.q), 0.05, 30);
+                if (field === "enabled") filter.enabled = input.checked;
+                else if (field === "type") { filter.type = input.value; renderTargetPeq(); }
+                else if (field === "frequency") filter.frequency = clamp(num(input.value, filter.frequency), 20, 20000);
+                else if (field === "gain") filter.gain = clamp(num(input.value, filter.gain), -30, 30);
+                else if (field === "q") filter.q = clamp(num(input.value, filter.q), 0.05, 30);
                 rebuildReverseFromBase(true);
             };
-            input.addEventListener(input.type === "checkbox" ? "change" : "input", update);
+            input.addEventListener(input.type === "checkbox" || input.tagName === "SELECT" ? "change" : "input", update);
         });
         holder.querySelectorAll("[data-target-peq-remove]").forEach(button => button.onclick = () => {
             state.targetPeq.splice(+button.dataset.targetPeqRemove, 1);
@@ -2448,12 +2455,20 @@
         $("iemTargetProduct").onchange = event => loadTargetProduct(event.target.value);
         ["iemSplMode", "iemNormalizeFrequency", "iemNormalizeMode", "iemShowTarget", "iemShowIndividual", "iemShowCombined"].forEach(id => $(id).onchange = draw);
         $("iemReverseFlat").onclick = reverseFlat;
-        $("iemTargetPeqAdd").onclick = () => {
+        const addTargetFilter = (type) => {
             if (!state.reverseBase.length) reverseFlat();
-            state.targetPeq.push({ frequency: 3000, gain: 3, q: 1, enabled: true });
+            const defaults = type === "high_pass"
+                ? { type, frequency: 80, gain: 0, q: 0.707, enabled: true }
+                : type === "low_pass"
+                    ? { type, frequency: 12000, gain: 0, q: 0.707, enabled: true }
+                    : { type: "peq", frequency: 3000, gain: 3, q: 1, enabled: true };
+            state.targetPeq.push(defaults);
             renderTargetPeq();
             rebuildReverseFromBase(true);
         };
+        $("iemTargetPeqAdd").onclick = () => addTargetFilter("peq");
+        $("iemTargetHighPassAdd").onclick = () => addTargetFilter("high_pass");
+        $("iemTargetLowPassAdd").onclick = () => addTargetFilter("low_pass");
         $("iemTargetPeqReset").onclick = () => {
             state.targetPeq = [];
             renderTargetPeq();

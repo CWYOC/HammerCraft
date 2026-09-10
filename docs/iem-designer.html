@@ -106,13 +106,15 @@
                 </div>
                 <div class="iem-target-peq-panel">
                     <div class="iem-target-peq-head">
-                        <div><span class="eyebrow">TARGET SHAPING</span><strong>Manual PEQ</strong></div>
+                        <div><span class="eyebrow">TARGET SHAPING</span><strong>Manual Target Filters</strong></div>
                         <div class="iem-target-peq-actions">
-                            <button id="iemTargetPeqAdd" class="outline-button" type="button">+ PEQ BAND</button>
-                            <button id="iemTargetPeqReset" class="outline-button" type="button">CLEAR PEQ</button>
+                            <button id="iemTargetPeqAdd" class="outline-button" type="button">+ PEQ</button>
+                            <button id="iemTargetHighPassAdd" class="outline-button" type="button">+ HIGH PASS</button>
+                            <button id="iemTargetLowPassAdd" class="outline-button" type="button">+ LOW PASS</button>
+                            <button id="iemTargetPeqReset" class="outline-button" type="button">CLEAR FILTERS</button>
                         </div>
                     </div>
-                    <p class="iem-field-note">These PEQ bands edit the <strong>target curve only</strong>. They are not sent to the IEM circuit, are not part of the acoustic tuning, and are never added automatically by Reverse Design.</p>
+                    <p class="iem-field-note">PEQ, High Pass and Low Pass here edit the <strong>target curve only</strong>. They are manual target-authoring tools: they are not sent to the IEM circuit, are not part of IEM tuning, and are never added automatically by Reverse Design.</p>
                     <div id="iemTargetPeqList" class="iem-target-peq-list"></div>
                 </div>
                 <div class="iem-reverse-viewbar">
@@ -124,7 +126,7 @@
                     <button id="iemReverseResetView" class="outline-button" type="button">RESET VIEW</button>
                 </div>
                 <div class="fr-chart-container iem-chart-container"><canvas id="iemReverseChart"></canvas></div>
-                <p class="iem-field-note">Draw directly on the graph or use Manual PEQ above to shape the target. Mouse-wheel pans the visible dB range without changing the target values. Shift + wheel moves faster. Reverse Design only tries to match this finished target using the physical/electrical IEM design.</p>
+                <p class="iem-field-note">Draw directly on the graph or use the manual PEQ / High Pass / Low Pass filters above to shape the target. Mouse-wheel pans the visible dB range without changing the target values. Shift + wheel moves faster. Reverse Design only tries to match this finished target using the physical/electrical IEM design.</p>
             </div>
 
             <div class="admin-panel">

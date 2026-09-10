@@ -294,3 +294,7 @@
 .iem-target-peq-enable { display:flex !important; align-items:center; gap:5px !important; padding-bottom:8px; }
 .iem-target-peq-empty { padding:12px; border:1px dashed var(--admin-border, #ddd); border-radius:10px; opacity:.7; }
 @media (max-width: 900px) { .iem-target-peq-row { grid-template-columns:1fr 1fr; } .iem-target-peq-number { grid-column:1 / -1; } }
+
+.iem-target-filter-no-gain { align-self:end; min-height:38px; display:flex; align-items:center; padding:0 10px; border:1px dashed var(--admin-border,#ddd); border-radius:8px; font-size:11px; opacity:.65; }
+.iem-target-peq-row { grid-template-columns:auto minmax(120px,.7fr) minmax(130px,1fr) minmax(110px,.7fr) minmax(90px,.55fr) auto auto; }
+@media (max-width:900px){.iem-target-peq-row{grid-template-columns:1fr 1fr}.iem-target-peq-number{grid-column:1/-1}}
