@@ -384,3 +384,16 @@
     .iem-target-eq-actions { grid-template-columns:1fr 1fr 1fr; }
     .iem-target-eq-clear { grid-column:1 / -1; }
 }
+
+/* v0.25 – grid-first CAD + user-created cable connection points */
+.iem-connect-point-tool.active {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+}
+.iem-cad-canvas:has(+ .unused) { cursor: crosshair; }
+.iem-cad-node:not(.input):not(.ground) circle {
+    stroke-width: 2.5;
+}
+.iem-cad-node:not(.input):not(.ground):hover circle {
+    r: 7px;
+}

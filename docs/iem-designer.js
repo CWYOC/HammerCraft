@@ -25,7 +25,8 @@
         wireDraft: null,
         wireRouting: "orthogonal",
         cadSymbolStandard: "iec",
-        cadSnapToGrid: false,
+        cadSnapToGrid: true,
+        cadConnectPointMode: null,
         cadHoldToDragMs: 220,
     };
 
@@ -672,12 +673,13 @@
                         ${paletteButton(d.id, "capacitor", "CAPACITOR")}
                         ${paletteButton(d.id, "inductor", "INDUCTOR")}
                         ${paletteButton(d.id, "low_pass", "LOW PASS")}
+                        <button class="iem-cad-tool iem-connect-point-tool ${state.cadConnectPointMode === d.id ? "active" : ""}" data-add-connect-point="${d.id}" type="button"><strong>●</strong><span>CONNECT POINT</span></button>
                         <button class="iem-cad-tool iem-wire-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE (OPTIONAL)</span></button>
                         <label class="iem-cad-route-mode"><span>ROUTING</span><select data-wire-routing><option value="orthogonal" ${state.wireRouting === "orthogonal" ? "selected" : ""}>90°</option><option value="45" ${state.wireRouting === "45" ? "selected" : ""}>45°</option><option value="free" ${state.wireRouting === "free" ? "selected" : ""}>FREE</option></select></label>
                     </aside>
                     <div class="iem-cad-canvas-wrap">
                         <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" aria-label="Circuit schematic"></svg>
-                        <div class="iem-cad-help">TIP · Drag from any terminal to start a cable · click empty space for bends · click/drag onto another terminal to connect · Hold components to move · Double-click for Properties · Delete removes selection · Esc cancels.</div>
+                        <div class="iem-cad-help">TIP · Click CONNECT POINT, then click the grid to place a cable junction · Click two connection points to cable them · CAD parts snap to the grid by default · Hold components to move · Shift temporarily disables snapping · Double-click for Properties.</div>
                     </div>
                 </div>
                 <div class="iem-filter-editor">
@@ -1363,6 +1365,10 @@
                 const move = ev => {
                     ev.preventDefault();
                     component.route[index] = point(ev);
+                    if (state.cadSnapToGrid && !ev.shiftKey) {
+                        component.route[index].x = snap(component.route[index].x);
+                        component.route[index].y = snap(component.route[index].y);
+                    }
                     updateGeometry();
                 };
                 const up = () => {
@@ -1389,6 +1395,12 @@
 
         svg.onpointermove = event => updateWirePreview(event);
         svg.onclick = event => {
+            if (state.cadConnectPointMode === d.id) {
+                if (event.target.closest?.("[data-cad-node], [data-cad-component], [data-cad-wire], [data-cad-terminal], [data-cad-driver-terminal]")) return;
+                const p = point(event);
+                addJunction(d, p.x, p.y);
+                return;
+            }
             if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
             if (event.target.closest?.("[data-cad-node], [data-cad-component], [data-cad-wire]")) return;
             addWireBend(d, point(event));
@@ -1510,16 +1522,26 @@
             const label = nextComponentLabel(d, kind);
             d.circuit.components.push({
                 id: uid(), label, kind, value: defaultValue(kind), nodeA, nodeB,
-                bypassed: false, rotationDeg: 0, x: 410, y: 180,
+                bypassed: false, rotationDeg: 0, x: snap(410), y: snap(180),
                 ...(kind === "low_pass" ? { frequency: 400, q: 0.707 } : {})
             });
         });
     }
 
-    function addJunction(d) {
+    function addJunction(d, x = 450, y = 220) {
         mutateCircuit(d, () => {
-            d.circuit.nodes.push({ id: uid(), label: `J${d.circuit.nodes.length - 1}`, x: 450, y: 220 });
-        });
+            const manualCount = d.circuit.nodes.filter(n => !n.hidden && ![d.circuit.input, d.circuit.ground, d.circuit.output].includes(n.id)).length + 1;
+            d.circuit.nodes.push({ id: uid(), label: `CP${manualCount}`, x: snap(x), y: snap(y), connectPoint: true });
+        }, false);
+        state.cadConnectPointMode = null;
+        renderDrivers();
+    }
+
+    function toggleConnectPointMode(d) {
+        state.cadConnectPointMode = state.cadConnectPointMode === d.id ? null : d.id;
+        state.wireStart = null;
+        state.wireDraft = null;
+        renderDrivers();
     }
 
     function startWireMode(d) {
@@ -1896,6 +1918,7 @@
             button.onclick = () => addCadComponent(find(id), type);
             button.ondragstart = event => event.dataTransfer.setData("text/plain", `${id}:${type}`);
         });
+        document.querySelectorAll("[data-add-connect-point]").forEach(button => button.onclick = () => toggleConnectPointMode(find(button.dataset.addConnectPoint)));
         document.querySelectorAll("[data-wire-mode]").forEach(button => button.onclick = () => startWireMode(find(button.dataset.wireMode)));
         document.querySelectorAll("[data-wire-routing]").forEach(select => select.onchange = () => { state.wireRouting = select.value; renderDrivers(); });
         document.querySelectorAll("[data-circuit-undo]").forEach(button => button.onclick = () => undoCircuit(find(button.dataset.circuitUndo)));
@@ -1913,6 +1936,16 @@
         });
         document.querySelectorAll("[data-cad-snap-toggle]").forEach(toggle => toggle.onchange = () => {
             state.cadSnapToGrid = Boolean(toggle.checked);
+            if (state.cadSnapToGrid) {
+                state.drivers.forEach(d => {
+                    ensureDriverShape(d);
+                    d.circuit.components.forEach(c => {
+                        if (c.kind !== "wire") { c.x = snap(num(c.x, 400)); c.y = snap(num(c.y, 180)); }
+                        else if (Array.isArray(c.route)) c.route = c.route.map(p => ({ x: snap(p.x), y: snap(p.y) }));
+                    });
+                    d.circuit.nodes.forEach(n => { if (!n.hidden) { n.x = snap(n.x); n.y = snap(n.y); } });
+                });
+            }
             document.querySelectorAll("[data-cad-snap-toggle]").forEach(other => {
                 other.checked = state.cadSnapToGrid;
             });
@@ -2155,10 +2188,23 @@
         renderTargetPeq();
     }
 
-    function reverseFlat() {
+    function makeDefaultTargetPoints(count = 50) {
         const absolute = $("iemReverseMatchMode")?.value !== "relative";
         const baseline = absolute ? 80 : 0;
-        setReverseBase([20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].map(frequency => ({ frequency, db: baseline })), true);
+        const minFrequency = 20;
+        const maxFrequency = 20000;
+        const logMin = Math.log10(minFrequency);
+        const logMax = Math.log10(maxFrequency);
+        return Array.from({ length: Math.max(2, count) }, (_, index) => {
+            const t = index / (Math.max(2, count) - 1);
+            const frequency = 10 ** (logMin + (logMax - logMin) * t);
+            return { frequency, db: baseline };
+        });
+    }
+
+    function reverseFlat() {
+        const absolute = $("iemReverseMatchMode")?.value !== "relative";
+        setReverseBase(makeDefaultTargetPoints(50), true);
         if (absolute) state.reverseView = { min: 60, max: 100 };
         else state.reverseView = { min: -30, max: 20 };
         syncReverseViewInputs();
@@ -2433,14 +2479,15 @@
     function newProject() {
         state.drivers = [driver()];
         state.target = [];
-        state.reverseBase = [];
-        state.reverse = [];
         state.targetPeq = [];
+        state.reverseBase = makeDefaultTargetPoints(50);
+        state.reverse = structuredClone(state.reverseBase);
         renderTargetPeq();
         $("iemProjectName").value = "Untitled IEM";
         renderDrivers();
         refreshReverseDrivers();
         calculate();
+        drawReverse();
     }
 
     function bind() {
@@ -2549,6 +2596,10 @@
         renderDrivers();
         refreshReverseDrivers();
         bind();
+        state.reverseBase = makeDefaultTargetPoints(50);
+        state.reverse = structuredClone(state.reverseBase);
+        renderTargetPeq();
+        drawReverse();
         try {
             if (window.HCAcousticEngine) {
                 await window.HCAcousticEngine.load();
