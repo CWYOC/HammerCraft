@@ -2121,8 +2121,19 @@
         return state.targetPeq.reduce((sum, filter) => {
             if (filter.enabled === false) return sum;
             const type = ["peq", "high_pass", "low_pass"].includes(filter.type) ? filter.type : "peq";
-            const h = filterH({ type, frequency: filter.frequency, gain: filter.gain || 0, q: filter.q }, frequency);
-            return sum + 20 * Math.log10(Math.max(1e-12, cabs(h)));
+            const gainDb = num(filter.gain, 0);
+            const h = filterH(
+                {
+                    type,
+                    frequency: filter.frequency,
+                    // PEQ uses gain internally. HP/LP use gain as a post-filter level offset.
+                    gain: type === "peq" ? gainDb : 0,
+                    q: filter.q,
+                },
+                frequency
+            );
+            const shapeDb = 20 * Math.log10(Math.max(1e-12, cabs(h)));
+            return sum + shapeDb + (type === "peq" ? 0 : gainDb);
         }, 0);
     }
 
@@ -2146,7 +2157,7 @@
         }
         holder.innerHTML = state.targetPeq.map((filter, index) => {
             const type = ["peq", "high_pass", "low_pass"].includes(filter.type) ? filter.type : "peq";
-            const gainDisabled = type !== "peq";
+            const gainDisabled = false;
             return `<div class="iem-target-peq-row" data-target-peq-row="${index}">
                 <label class="iem-target-peq-enable" title="Enable filter"><input data-target-peq-field="enabled" data-target-peq-index="${index}" type="checkbox" ${filter.enabled === false ? "" : "checked"}></label>
                 <select class="iem-target-eq-type" data-target-peq-field="type" data-target-peq-index="${index}" aria-label="Filter type">
