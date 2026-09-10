@@ -999,7 +999,6 @@
                 nodes.push(`
                     <g class="iem-cad-node input ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}" transform="translate(${node.x},${node.y})">
                         <circle r="7" class="terminal"/>
-                        <path class="iem-cad-terminal-lead" d="M7 0 H24"/>
                         <text text-anchor="middle" y="-14">${esc(node.label || node.id)}</text>
                     </g>`);
             } else {
@@ -1249,47 +1248,41 @@
             return null;
         };
 
-        const beginTerminalCable = (event, info) => {
+        // v0.22: click-to-click cabling. Click one connection point, then click the
+        // destination point. The route is generated automatically; dragging is no
+        // longer required to make a connection.
+        const handleEndpointClick = (event, info) => {
             if (event.button !== 0 || !info) return;
-            event.preventDefault(); event.stopPropagation();
-            // Starting from a terminal is now the primary wiring gesture; WIRE button is optional.
-            state.wireStart = { driverId: d.id, nodeId: info.endpoint.nodeId, endpoint: info.endpoint };
-            state.wireDraft = { driverId: d.id, startNode: info.endpoint.nodeId, points: [info.point], cursor: info.point };
-            svg.classList.add("wire-mode");
-            renderCircuitSvg(d);
-            const activeSvg = $(`cad-${d.id}`);
-            if (!activeSvg) return;
-            const move = ev => {
-                const rect = activeSvg.getBoundingClientRect();
-                const raw = { x: clamp((ev.clientX-rect.left)*900/rect.width,20,880), y: clamp((ev.clientY-rect.top)*360/rect.height,20,340) };
-                const last = state.wireDraft?.points?.[state.wireDraft.points.length-1];
-                if (last && state.wireDraft) state.wireDraft.cursor = routedPoint(last, raw);
-                const pts = state.wireDraft ? [...state.wireDraft.points, state.wireDraft.cursor] : [];
-                activeSvg.querySelector(`[data-wire-preview="${d.id}"]`)?.setAttribute("d", pts.filter(Boolean).map((p,i)=>`${i?"L":"M"} ${p.x} ${p.y}`).join(" "));
-                activeSvg.querySelectorAll(".iem-terminal-drop-target").forEach(x=>x.classList.remove("iem-terminal-drop-target"));
-                document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.("[data-cad-terminal],[data-cad-driver-terminal],[data-cad-node]")?.classList.add("iem-terminal-drop-target");
-            };
-            const up = ev => {
-                window.removeEventListener("pointermove", move);
-                window.removeEventListener("pointerup", up);
-                const target = endpointFromElement(document.elementFromPoint(ev.clientX, ev.clientY));
-                if (target && !(target.endpoint.componentId === info.endpoint.componentId && target.endpoint.side === info.endpoint.side && target.endpoint.driverTerminal === info.endpoint.driverTerminal)) {
-                    finishWireEndpoint(d, target.endpoint, target.point);
-                } else {
-                    // Keep routing active after releasing on empty canvas, so clicks can add bends.
-                    renderCircuitSvg(d);
-                }
-            };
-            window.addEventListener("pointermove", move, { passive:false });
-            window.addEventListener("pointerup", up, { once:true });
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (!state.wireStart || state.wireStart.driverId !== d.id) {
+                state.wireStart = { driverId: d.id, nodeId: info.endpoint.nodeId, endpoint: info.endpoint };
+                state.wireDraft = { driverId: d.id, startNode: info.endpoint.nodeId, points: [info.point], cursor: info.point };
+                renderCircuitSvg(d);
+                return;
+            }
+
+            const first = state.wireStart.endpoint || {};
+            const sameTerminal =
+                first.componentId === info.endpoint.componentId &&
+                first.side === info.endpoint.side &&
+                first.driverTerminal === info.endpoint.driverTerminal &&
+                first.nodeId === info.endpoint.nodeId;
+            if (sameTerminal) {
+                cancelWireMode(d);
+                return;
+            }
+
+            finishWireEndpoint(d, info.endpoint, info.point);
         };
 
         svg.querySelectorAll("[data-cad-terminal]").forEach(terminal => {
-            terminal.onpointerdown = event => beginTerminalCable(event, endpointFromElement(terminal));
+            terminal.onpointerdown = event => handleEndpointClick(event, endpointFromElement(terminal));
         });
 
         svg.querySelectorAll("[data-cad-driver-terminal]").forEach(terminal => {
-            terminal.onpointerdown = event => beginTerminalCable(event, endpointFromElement(terminal));
+            terminal.onpointerdown = event => handleEndpointClick(event, endpointFromElement(terminal));
         });
 
         svg.querySelectorAll("[data-cad-node]").forEach(group => {
@@ -1298,12 +1291,12 @@
                 event.preventDefault();
                 event.stopPropagation();
                 const [, nodeId] = group.dataset.cadNode.split(":");
+                const node = nodeById(d, nodeId);
+                if (!node) return;
                 if (state.wireStart?.driverId === d.id) {
                     finishWireEndpoint(d, { nodeId }, { x: node.x, y: node.y });
                     return;
                 }
-                const node = nodeById(d, nodeId);
-                if (!node) return;
                 const start = point(event);
                 const before = JSON.stringify(d.circuit);
                 const offsetX = node.x - start.x;
@@ -1579,11 +1572,19 @@
         const startEndpoint = state.wireStart.endpoint || { nodeId: startNode };
         if (startNode === nodeId && !endpoint?.componentId && !startEndpoint?.componentId) return;
         const draft = state.wireDraft;
-        const last = draft?.points?.[draft.points.length - 1];
-        const route = (draft?.points || []).slice(1);
-        if (last) {
-            const routedEnd = routedPoint(last, visualPoint);
-            if (Math.hypot(routedEnd.x - visualPoint.x, routedEnd.y - visualPoint.y) > 1) route.push(routedEnd);
+        const startPoint = draft?.points?.[0] || cadTerminalPoint(d, startEndpoint, startNode);
+        const route = [];
+        // Automatically line the two clicked connection points up. A straight wire
+        // is used when possible; otherwise use a clean orthogonal dog-leg with a
+        // centred trunk so moving parts remains visually predictable.
+        if (startPoint) {
+            const dx = Math.abs(visualPoint.x - startPoint.x);
+            const dy = Math.abs(visualPoint.y - startPoint.y);
+            if (dx > 1 && dy > 1) {
+                const midX = snap((startPoint.x + visualPoint.x) / 2);
+                route.push({ x: midX, y: startPoint.y });
+                route.push({ x: midX, y: visualPoint.y });
+            }
         }
         state.wireStart = null;
         state.wireDraft = null;
