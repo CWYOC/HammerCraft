@@ -17,6 +17,7 @@
         targetPeq: [],
         chart: null,
         reverseChart: null,
+        reverseView: { min: 60, max: 100 },
         last: null,
         selectedCircuit: null,
         circuitClipboard: null,
@@ -2598,7 +2599,11 @@
         bind();
         state.reverseBase = makeDefaultTargetPoints(50);
         state.reverse = structuredClone(state.reverseBase);
+        state.reverseView = $("iemReverseMatchMode")?.value === "relative"
+            ? { min: -30, max: 20 }
+            : { min: 60, max: 100 };
         renderTargetPeq();
+        syncReverseViewInputs();
         drawReverse();
         try {
             if (window.HCAcousticEngine) {
