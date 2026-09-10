@@ -275,6 +275,45 @@
         return outputIndex === undefined ? complex(0) : solution[outputIndex];
     }
 
+    function shelfBiquadH(type, frequency, centerFrequency, gainDb, qValue) {
+        // RBJ-style shelving biquad. The UI exposes Q for consistency with
+        // common headphone target-EQ editors; Q controls the shelf transition.
+        const fs = 192000;
+        const f0 = clamp(Number(centerFrequency) || 1000, 1, fs * 0.49);
+        const f = clamp(Number(frequency) || 1, 0, fs * 0.49);
+        const A = 10 ** ((Number(gainDb) || 0) / 40);
+        const q = Math.max(0.05, Number(qValue) || 0.707);
+        const w0 = 2 * Math.PI * f0 / fs;
+        const w = 2 * Math.PI * f / fs;
+        const cos0 = Math.cos(w0);
+        const sin0 = Math.sin(w0);
+        const alpha = sin0 / (2 * q);
+        const twoSqrtAAlpha = 2 * Math.sqrt(A) * alpha;
+
+        let b0, b1, b2, a0, a1, a2;
+        if (type === "low_shelf") {
+            b0 = A * ((A + 1) - (A - 1) * cos0 + twoSqrtAAlpha);
+            b1 = 2 * A * ((A - 1) - (A + 1) * cos0);
+            b2 = A * ((A + 1) - (A - 1) * cos0 - twoSqrtAAlpha);
+            a0 = (A + 1) + (A - 1) * cos0 + twoSqrtAAlpha;
+            a1 = -2 * ((A - 1) + (A + 1) * cos0);
+            a2 = (A + 1) + (A - 1) * cos0 - twoSqrtAAlpha;
+        } else {
+            b0 = A * ((A + 1) + (A - 1) * cos0 + twoSqrtAAlpha);
+            b1 = -2 * A * ((A - 1) + (A + 1) * cos0);
+            b2 = A * ((A + 1) + (A - 1) * cos0 - twoSqrtAAlpha);
+            a0 = (A + 1) - (A - 1) * cos0 + twoSqrtAAlpha;
+            a1 = 2 * ((A - 1) - (A + 1) * cos0);
+            a2 = (A + 1) - (A - 1) * cos0 - twoSqrtAAlpha;
+        }
+
+        const z1 = complex(Math.cos(-w), Math.sin(-w));
+        const z2 = cmul(z1, z1);
+        const numerator = cadd(cadd(complex(b0, 0), cmul(complex(b1, 0), z1)), cmul(complex(b2, 0), z2));
+        const denominator = cadd(cadd(complex(a0, 0), cmul(complex(a1, 0), z1)), cmul(complex(a2, 0), z2));
+        return cdiv(numerator, denominator);
+    }
+
     function filterH(filter, frequency) {
         const omega = 2 * Math.PI * frequency;
         const s = complex(0, omega);
@@ -285,6 +324,9 @@
         const constant = complex(w0 * w0, 0);
         if (filter.type === "high_pass") return cdiv(s2, cadd(cadd(s2, constant), damping));
         if (filter.type === "low_pass") return cdiv(constant, cadd(cadd(s2, constant), damping));
+        if (filter.type === "low_shelf" || filter.type === "high_shelf") {
+            return shelfBiquadH(filter.type, frequency, filter.frequency, filter.gain || 0, filter.q);
+        }
         if (filter.type === "peq") {
             // Used only by the manual target-curve PEQ editor, never by the IEM circuit chain.
             const A = 10 ** ((filter.gain || 0) / 40);
@@ -2120,20 +2162,21 @@
     function targetPeqOffsetDb(frequency) {
         return state.targetPeq.reduce((sum, filter) => {
             if (filter.enabled === false) return sum;
-            const type = ["peq", "high_pass", "low_pass"].includes(filter.type) ? filter.type : "peq";
+            const type = ["peq", "high_pass", "low_pass", "low_shelf", "high_shelf"].includes(filter.type) ? filter.type : "peq";
             const gainDb = num(filter.gain, 0);
+            const isShapeWithInternalGain = type === "peq" || type === "low_shelf" || type === "high_shelf";
             const h = filterH(
                 {
                     type,
                     frequency: filter.frequency,
-                    // PEQ uses gain internally. HP/LP use gain as a post-filter level offset.
-                    gain: type === "peq" ? gainDb : 0,
+                    // PK/LSQ/HSQ use gain internally. HP/LP use gain as a post-filter level offset.
+                    gain: isShapeWithInternalGain ? gainDb : 0,
                     q: filter.q,
                 },
                 frequency
             );
             const shapeDb = 20 * Math.log10(Math.max(1e-12, cabs(h)));
-            return sum + shapeDb + (type === "peq" ? 0 : gainDb);
+            return sum + shapeDb + (isShapeWithInternalGain ? 0 : gainDb);
         }, 0);
     }
 
@@ -2156,12 +2199,14 @@
             return;
         }
         holder.innerHTML = state.targetPeq.map((filter, index) => {
-            const type = ["peq", "high_pass", "low_pass"].includes(filter.type) ? filter.type : "peq";
+            const type = ["peq", "high_pass", "low_pass", "low_shelf", "high_shelf"].includes(filter.type) ? filter.type : "peq";
             const gainDisabled = false;
             return `<div class="iem-target-peq-row" data-target-peq-row="${index}">
                 <label class="iem-target-peq-enable" title="Enable filter"><input data-target-peq-field="enabled" data-target-peq-index="${index}" type="checkbox" ${filter.enabled === false ? "" : "checked"}></label>
                 <select class="iem-target-eq-type" data-target-peq-field="type" data-target-peq-index="${index}" aria-label="Filter type">
                     <option value="peq" ${type === "peq" ? "selected" : ""}>PK</option>
+                    <option value="low_shelf" ${type === "low_shelf" ? "selected" : ""}>LSQ</option>
+                    <option value="high_shelf" ${type === "high_shelf" ? "selected" : ""}>HSQ</option>
                     <option value="high_pass" ${type === "high_pass" ? "selected" : ""}>HP</option>
                     <option value="low_pass" ${type === "low_pass" ? "selected" : ""}>LP</option>
                 </select>
