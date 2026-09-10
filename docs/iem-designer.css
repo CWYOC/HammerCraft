@@ -269,3 +269,14 @@
 .iem-cad-component-terminal{fill:#fff;stroke:var(--admin-accent);stroke-width:2;vector-effect:non-scaling-stroke;cursor:crosshair;pointer-events:all}
 .iem-cad-component-terminal:hover{fill:var(--admin-accent);r:9}
 .iem-cad-canvas.wire-mode .iem-cad-component-terminal{stroke-width:3}
+
+/* v0.20 CAD usability pass */
+.iem-cad-component-terminal{transition:r .12s ease,fill .12s ease,stroke-width .12s ease;}
+.iem-cad-component-terminal.connected{fill:var(--admin-accent);stroke:var(--admin-accent);}
+.iem-cad-component-terminal:hover,.iem-cad-component-terminal.iem-terminal-drop-target,
+.iem-cad-node.iem-terminal-drop-target circle{fill:var(--admin-accent);stroke:var(--admin-accent);stroke-width:4;}
+.iem-cad-component-terminal:hover{r:10;}
+.iem-cad-canvas.wire-mode .iem-cad-component-terminal{cursor:crosshair;}
+.iem-wire-tool{opacity:.78;}
+.iem-cad-help{max-width:calc(100% - 24px);padding:6px 9px;background:rgba(255,255,255,.88);border:1px solid var(--admin-border);border-radius:4px;line-height:1.4;}
+.iem-cad-component.selected{filter:drop-shadow(0 2px 4px rgba(0,0,0,.12));}

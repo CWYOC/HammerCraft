@@ -666,12 +666,12 @@
                         ${paletteButton(d.id, "capacitor", "CAPACITOR")}
                         ${paletteButton(d.id, "inductor", "INDUCTOR")}
                         ${paletteButton(d.id, "low_pass", "LOW PASS")}
-                        <button class="iem-cad-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE</span></button>
+                        <button class="iem-cad-tool iem-wire-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE (OPTIONAL)</span></button>
                         <label class="iem-cad-route-mode"><span>ROUTING</span><select data-wire-routing><option value="orthogonal" ${state.wireRouting === "orthogonal" ? "selected" : ""}>90°</option><option value="45" ${state.wireRouting === "45" ? "selected" : ""}>45°</option><option value="free" ${state.wireRouting === "free" ? "selected" : ""}>FREE</option></select></label>
                     </aside>
                     <div class="iem-cad-canvas-wrap">
                         <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" aria-label="Circuit schematic"></svg>
-                        <div class="iem-cad-help">MANUAL CABLING ONLY · Hold a component to move it · click WIRE, then connect terminals yourself · no automatic component leads or junction nodes are created · Esc cancels wiring.</div>
+                        <div class="iem-cad-help">TIP · Drag from any terminal to start a cable · click empty space for bends · click/drag onto another terminal to connect · Hold components to move · Double-click for Properties · Delete removes selection · Esc cancels.</div>
                     </div>
                 </div>
                 <div class="iem-filter-editor">
@@ -913,6 +913,19 @@
         return node ? { x: node.x, y: node.y } : null;
     }
 
+    function terminalConnectionCount(d, componentId, side) {
+        return d.circuit.components.filter(c => c.kind === "wire" && (
+            (c.endpointA?.componentId === componentId && c.endpointA?.side === side) ||
+            (c.endpointB?.componentId === componentId && c.endpointB?.side === side)
+        )).length;
+    }
+
+    function driverTerminalConnectionCount(d, side) {
+        return d.circuit.components.filter(c => c.kind === "wire" && (
+            c.endpointA?.driverTerminal === side || c.endpointB?.driverTerminal === side
+        )).length;
+    }
+
     function renderCircuitSvg(d) {
         const svg = $(`cad-${d.id}`);
         if (!svg) return;
@@ -959,7 +972,7 @@
 
             components.push(`
                 <g class="iem-cad-component ${selected ? "selected" : ""} ${component.bypassed ? "bypassed" : ""}" data-cad-component="${d.id}:${component.id}" transform="translate(${x},${y})">
-                    <g class="iem-cad-symbol-rotator" transform="rotate(${angle})">${componentSymbolSvg(component)}<circle class="iem-cad-component-terminal" data-cad-terminal="${d.id}:${component.id}:a" cx="-48" cy="0" r="7"/><circle class="iem-cad-component-terminal" data-cad-terminal="${d.id}:${component.id}:b" cx="48" cy="0" r="7"/></g>
+                    <g class="iem-cad-symbol-rotator" transform="rotate(${angle})">${componentSymbolSvg(component)}<circle class="iem-cad-component-terminal ${terminalConnectionCount(d, component.id, "a") ? "connected" : ""}" data-cad-terminal="${d.id}:${component.id}:a" cx="-48" cy="0" r="7"/><circle class="iem-cad-component-terminal ${terminalConnectionCount(d, component.id, "b") ? "connected" : ""}" data-cad-terminal="${d.id}:${component.id}:b" cx="48" cy="0" r="7"/></g>
                     ${rotationHandleSvg(d, component, angle)}
                     <text class="ref" text-anchor="middle" y="-25">${esc(component.label || component.id)}</text>
                     <text class="value" text-anchor="middle" y="31">${esc(componentLabel(component).replace(component.label || component.id, "").trim())}</text>
@@ -997,7 +1010,7 @@
             const driverX = 800;
             const driverY = 120;
             driverNode.x = driverX - 38; driverNode.y = driverY; driverNode.hidden = true;
-            components.push(`<g data-cad-driver-symbol="${d.id}">${driverSymbolSvg(d, driverX, driverY)}<circle class="iem-cad-component-terminal" data-cad-driver-terminal="${d.id}:plus" cx="${driverX - 38}" cy="${driverY}" r="7"/><circle class="iem-cad-component-terminal" data-cad-driver-terminal="${d.id}:minus" cx="${driverX}" cy="${driverY + 38}" r="7"/></g>`);
+            components.push(`<g data-cad-driver-symbol="${d.id}">${driverSymbolSvg(d, driverX, driverY)}<circle class="iem-cad-component-terminal ${driverTerminalConnectionCount(d, "plus") ? "connected" : ""}" data-cad-driver-terminal="${d.id}:plus" cx="${driverX - 38}" cy="${driverY}" r="7"/><circle class="iem-cad-component-terminal ${driverTerminalConnectionCount(d, "minus") ? "connected" : ""}" data-cad-driver-terminal="${d.id}:minus" cx="${driverX}" cy="${driverY + 38}" r="7"/></g>`);
         }
 
         if (state.wireDraft?.driverId === d.id && state.wireDraft.points?.length) {
@@ -1207,33 +1220,71 @@
             };
         });
 
-        svg.querySelectorAll("[data-cad-terminal]").forEach(terminal => {
-            terminal.onpointerdown = event => {
-                if (event.button !== 0) return;
-                event.preventDefault();
-                event.stopPropagation();
-                const [, componentId, side] = terminal.dataset.cadTerminal.split(":");
+        const endpointFromElement = el => {
+            const componentTerminal = el?.closest?.("[data-cad-terminal]");
+            if (componentTerminal) {
+                const [, componentId, side] = componentTerminal.dataset.cadTerminal.split(":");
                 const component = d.circuit.components.find(c => c.id === componentId);
-                if (!component) return;
+                if (!component) return null;
                 const nodeId = side === "a" ? component.nodeA : component.nodeB;
-                const p = cadTerminalPoint(d, { componentId, side, nodeId }, nodeId);
-                if (!state.wireStart || state.wireStart.driverId !== d.id) startWireMode(d);
-                finishWireEndpoint(d, { componentId, side, nodeId }, p);
+                return { endpoint: { componentId, side, nodeId }, point: cadTerminalPoint(d, { componentId, side, nodeId }, nodeId) };
+            }
+            const driverTerminal = el?.closest?.("[data-cad-driver-terminal]");
+            if (driverTerminal) {
+                const [, side] = driverTerminal.dataset.cadDriverTerminal.split(":");
+                const nodeId = side === "plus" ? d.circuit.output : d.circuit.ground;
+                return { endpoint: { nodeId, driverTerminal: side }, point: side === "plus" ? { x: 762, y: 120 } : { x: 800, y: 158 } };
+            }
+            const nodeEl = el?.closest?.("[data-cad-node]");
+            if (nodeEl) {
+                const [, nodeId] = nodeEl.dataset.cadNode.split(":");
+                const node = nodeById(d, nodeId);
+                if (node) return { endpoint: { nodeId }, point: { x: node.x, y: node.y } };
+            }
+            return null;
+        };
+
+        const beginTerminalCable = (event, info) => {
+            if (event.button !== 0 || !info) return;
+            event.preventDefault(); event.stopPropagation();
+            // Starting from a terminal is now the primary wiring gesture; WIRE button is optional.
+            state.wireStart = { driverId: d.id, nodeId: info.endpoint.nodeId, endpoint: info.endpoint };
+            state.wireDraft = { driverId: d.id, startNode: info.endpoint.nodeId, points: [info.point], cursor: info.point };
+            svg.classList.add("wire-mode");
+            renderCircuitSvg(d);
+            const activeSvg = $(`cad-${d.id}`);
+            if (!activeSvg) return;
+            const move = ev => {
+                const rect = activeSvg.getBoundingClientRect();
+                const raw = { x: clamp((ev.clientX-rect.left)*900/rect.width,20,880), y: clamp((ev.clientY-rect.top)*360/rect.height,20,340) };
+                const last = state.wireDraft?.points?.[state.wireDraft.points.length-1];
+                if (last && state.wireDraft) state.wireDraft.cursor = routedPoint(last, raw);
+                const pts = state.wireDraft ? [...state.wireDraft.points, state.wireDraft.cursor] : [];
+                activeSvg.querySelector(`[data-wire-preview="${d.id}"]`)?.setAttribute("d", pts.filter(Boolean).map((p,i)=>`${i?"L":"M"} ${p.x} ${p.y}`).join(" "));
+                activeSvg.querySelectorAll(".iem-terminal-drop-target").forEach(x=>x.classList.remove("iem-terminal-drop-target"));
+                document.elementFromPoint(ev.clientX, ev.clientY)?.closest?.("[data-cad-terminal],[data-cad-driver-terminal],[data-cad-node]")?.classList.add("iem-terminal-drop-target");
             };
+            const up = ev => {
+                window.removeEventListener("pointermove", move);
+                window.removeEventListener("pointerup", up);
+                const target = endpointFromElement(document.elementFromPoint(ev.clientX, ev.clientY));
+                if (target && !(target.endpoint.componentId === info.endpoint.componentId && target.endpoint.side === info.endpoint.side && target.endpoint.driverTerminal === info.endpoint.driverTerminal)) {
+                    finishWireEndpoint(d, target.endpoint, target.point);
+                } else {
+                    // Keep routing active after releasing on empty canvas, so clicks can add bends.
+                    renderCircuitSvg(d);
+                }
+            };
+            window.addEventListener("pointermove", move, { passive:false });
+            window.addEventListener("pointerup", up, { once:true });
+        };
+
+        svg.querySelectorAll("[data-cad-terminal]").forEach(terminal => {
+            terminal.onpointerdown = event => beginTerminalCable(event, endpointFromElement(terminal));
         });
 
         svg.querySelectorAll("[data-cad-driver-terminal]").forEach(terminal => {
-            terminal.onpointerdown = event => {
-                if (event.button !== 0) return;
-                event.preventDefault(); event.stopPropagation();
-                const [, side] = terminal.dataset.cadDriverTerminal.split(":");
-                const nodeId = side === "plus" ? d.circuit.output : d.circuit.ground;
-                const node = nodeById(d, nodeId);
-                if (!node) return;
-                const p = side === "plus" ? { x: 762, y: 120 } : { x: 800, y: 158 };
-                if (!state.wireStart || state.wireStart.driverId !== d.id) startWireMode(d);
-                finishWireEndpoint(d, { nodeId, driverTerminal: side }, p);
-            };
+            terminal.onpointerdown = event => beginTerminalCable(event, endpointFromElement(terminal));
         });
 
         svg.querySelectorAll("[data-cad-node]").forEach(group => {
@@ -1288,11 +1339,17 @@
                 renderCircuitSvg(d);
             };
             path.ondblclick = event => {
-                event.preventDefault();
-                event.stopPropagation();
+                event.preventDefault(); event.stopPropagation();
                 const [, componentId] = path.dataset.cadWire.split(":");
+                const wire = d.circuit.components.find(c => c.id === componentId && c.kind === "wire");
+                if (!wire) return;
+                const before = JSON.stringify(d.circuit);
+                const p = point(event);
+                if (!Array.isArray(wire.route)) wire.route = [];
+                wire.route.push(p);
+                commitDrag(before);
                 setSelection(componentId);
-                openCircuitPropertyPage(d, componentId);
+                renderCircuitSvg(d);
             };
         });
 
@@ -2457,6 +2514,13 @@
     });
 
     window.addEventListener("keydown", event => {
+        const editing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
+        if (!editing && (event.key === "Delete" || event.key === "Backspace") && state.selectedCircuit) {
+            event.preventDefault();
+            const d = find(state.selectedCircuit.driverId);
+            if (d) { deleteCircuitComponent(d, state.selectedCircuit.componentId); state.selectedCircuit = null; calculate(); }
+            return;
+        }
         if (event.key === "Escape" && state.wireStart) {
             const d = find(state.wireStart.driverId);
             if (d) cancelWireMode(d);
