@@ -104,6 +104,17 @@
                     <button id="iemReverseCopyCombined" class="outline-button" type="button">COPY CURRENT COMBINED</button>
                     <button id="iemReverseFlat" class="outline-button" type="button">RESET FLAT</button>
                 </div>
+                <div class="iem-target-peq-panel">
+                    <div class="iem-target-peq-head">
+                        <div><span class="eyebrow">TARGET SHAPING</span><strong>Manual PEQ</strong></div>
+                        <div class="iem-target-peq-actions">
+                            <button id="iemTargetPeqAdd" class="outline-button" type="button">+ PEQ BAND</button>
+                            <button id="iemTargetPeqReset" class="outline-button" type="button">CLEAR PEQ</button>
+                        </div>
+                    </div>
+                    <p class="iem-field-note">These PEQ bands edit the <strong>target curve only</strong>. They are not sent to the IEM circuit, are not part of the acoustic tuning, and are never added automatically by Reverse Design.</p>
+                    <div id="iemTargetPeqList" class="iem-target-peq-list"></div>
+                </div>
                 <div class="iem-reverse-viewbar">
                     <label>VIEW MIN dB<input id="iemReverseYMin" type="number" value="60" step="1"></label>
                     <label>VIEW MAX dB<input id="iemReverseYMax" type="number" value="100" step="1"></label>
@@ -113,7 +124,7 @@
                     <button id="iemReverseResetView" class="outline-button" type="button">RESET VIEW</button>
                 </div>
                 <div class="fr-chart-container iem-chart-container"><canvas id="iemReverseChart"></canvas></div>
-                <p class="iem-field-note">Target data can be around your measured ~80 dB SPL. Mouse-wheel over the reverse graph pans the visible dB range without changing the target values. Shift + wheel moves faster. In Relative mode the optimiser normalises at the selected frequency; Absolute SPL mode matches the imported/drawn dB values directly.</p>
+                <p class="iem-field-note">Draw directly on the graph or use Manual PEQ above to shape the target. Mouse-wheel pans the visible dB range without changing the target values. Shift + wheel moves faster. Reverse Design only tries to match this finished target using the physical/electrical IEM design.</p>
             </div>
 
             <div class="admin-panel">
@@ -127,28 +138,6 @@
                     <label>CAPACITORS µF<input id="iemReverseCaps" type="text" value="0,4.7,10,15,22,33,47"></label>
                     <label>SERIES R Ω<input id="iemReverseResistors" type="text" value="0,1,2.2,3.3,4.7,10"></label>
                     <label>GAIN RANGE ±dB<input id="iemReverseGainRange" type="number" value="8" min="0"></label>
-                </div>
-
-                <div class="iem-reverse-peq-panel">
-                    <div class="iem-panel-title">
-                        <div>
-                            <span class="eyebrow">OPTIONAL PEQ</span>
-                            <h3>Finish the target with PEQ.</h3>
-                        </div>
-                        <label class="iem-inline-toggle"><input id="iemReverseAllowPeq" type="checkbox" checked> ALLOW PEQ</label>
-                    </div>
-                    <p class="iem-field-note">Rust searches the physical tube / damper / passive circuit first, then adds peaking EQ only if it improves the remaining target error. Physical-only and Physical + PEQ RMSE are shown separately.</p>
-                    <div class="iem-display-grid">
-                        <label>MAX PEQ FILTERS<input id="iemReversePeqCount" type="number" value="5" min="0" max="10" step="1"></label>
-                        <label>PEQ FREQ MIN Hz<input id="iemReversePeqMinFreq" type="number" value="20" min="20" max="20000"></label>
-                        <label>PEQ FREQ MAX Hz<input id="iemReversePeqMaxFreq" type="number" value="20000" min="20" max="20000"></label>
-                        <label>MAX BOOST +dB<input id="iemReversePeqBoost" type="number" value="6" min="0" step="0.5"></label>
-                        <label>MAX CUT -dB<input id="iemReversePeqCut" type="number" value="12" min="0" step="0.5"></label>
-                        <label>Q MIN<input id="iemReversePeqQMin" type="number" value="0.30" min="0.1" step="0.05"></label>
-                        <label>Q MAX<input id="iemReversePeqQMax" type="number" value="8" min="0.1" step="0.1"></label>
-                        <label>FILTER PENALTY dB<input id="iemReversePeqPenalty" type="number" value="0.08" min="0" step="0.01"></label>
-                        <label class="iem-inline-toggle"><input id="iemReversePreferFewerPeq" type="checkbox" checked> PREFER FEWER FILTERS</label>
-                    </div>
                 </div>
 
                 <div id="iemReverseResults" class="iem-optimise-results"></div>

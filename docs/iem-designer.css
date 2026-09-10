@@ -280,3 +280,17 @@
 .iem-wire-tool{opacity:.78;}
 .iem-cad-help{max-width:calc(100% - 24px);padding:6px 9px;background:rgba(255,255,255,.88);border:1px solid var(--admin-border);border-radius:4px;line-height:1.4;}
 .iem-cad-component.selected{filter:drop-shadow(0 2px 4px rgba(0,0,0,.12));}
+
+
+/* v0.21 — manual PEQ is target-authoring only */
+.iem-target-peq-panel { margin: 16px 0; padding: 14px; border: 1px solid var(--admin-border, #d8d8d8); border-radius: 12px; background: color-mix(in srgb, var(--admin-panel, #fff) 92%, transparent); }
+.iem-target-peq-head { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.iem-target-peq-head > div:first-child { display:flex; flex-direction:column; gap:3px; }
+.iem-target-peq-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.iem-target-peq-list { display:grid; gap:8px; margin-top:10px; }
+.iem-target-peq-row { display:grid; grid-template-columns:auto minmax(130px,1fr) minmax(110px,.7fr) minmax(90px,.55fr) auto auto; gap:8px; align-items:end; padding:10px; border:1px solid var(--admin-border, #ddd); border-radius:10px; }
+.iem-target-peq-row label { display:grid; gap:4px; font-size:11px; }
+.iem-target-peq-number { align-self:center; font-weight:700; white-space:nowrap; }
+.iem-target-peq-enable { display:flex !important; align-items:center; gap:5px !important; padding-bottom:8px; }
+.iem-target-peq-empty { padding:12px; border:1px dashed var(--admin-border, #ddd); border-radius:10px; opacity:.7; }
+@media (max-width: 900px) { .iem-target-peq-row { grid-template-columns:1fr 1fr; } .iem-target-peq-number { grid-column:1 / -1; } }

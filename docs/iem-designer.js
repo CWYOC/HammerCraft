@@ -13,6 +13,8 @@
         library: [],
         target: [],
         reverse: [],
+        reverseBase: [],
+        targetPeq: [],
         chart: null,
         reverseChart: null,
         last: null,
@@ -99,6 +101,8 @@
             }
         });
         if (!Array.isArray(d.circuit.filters)) d.circuit.filters = [];
+        // PEQ is a target-curve authoring tool only. Never keep PEQ in the IEM tuning chain.
+        d.circuit.filters = d.circuit.filters.filter(filter => filter.type !== "peq");
         if (!d.circuit.input) d.circuit.input = "in";
         if (!d.circuit.ground) d.circuit.ground = "gnd";
         if (!d.circuit.output) d.circuit.output = d.circuit.input;
@@ -280,6 +284,7 @@
         if (filter.type === "high_pass") return cdiv(s2, cadd(cadd(s2, constant), damping));
         if (filter.type === "low_pass") return cdiv(constant, cadd(cadd(s2, constant), damping));
         if (filter.type === "peq") {
+            // Used only by the manual target-curve PEQ editor, never by the IEM circuit chain.
             const A = 10 ** ((filter.gain || 0) / 40);
             const numerator = cadd(cadd(s2, constant), complex(0, omega * w0 * A / q));
             const denominator = cadd(cadd(s2, constant), complex(0, omega * w0 / (A * q)));
@@ -290,7 +295,9 @@
 
     function circuitH(d, frequency) {
         let result = passiveCircuitH(d, frequency);
-        for (const filter of ensureDriverShape(d).circuit.filters) result = cmul(result, filterH(filter, frequency));
+        for (const filter of ensureDriverShape(d).circuit.filters) {
+            if (filter.type !== "peq") result = cmul(result, filterH(filter, frequency));
+        }
         for (const component of d.circuit.components) {
             if (component.kind === "low_pass" && !component.bypassed) {
                 result = cmul(result, filterH({ type: "low_pass", frequency: component.frequency || 400, q: component.q || 0.707 }, frequency));
@@ -384,7 +391,6 @@
     }
 
     function toRustFilter(filter) {
-        if (filter.type === "peq") return { type: "peaking_eq", frequency_hz: filter.frequency, gain_db: filter.gain, q: filter.q };
         if (filter.type === "high_pass") return { type: "high_pass", frequency_hz: filter.frequency, q: filter.q };
         if (filter.type === "low_pass") return { type: "low_pass", frequency_hz: filter.frequency, q: filter.q };
         return null;
@@ -676,13 +682,12 @@
                 </div>
                 <div class="iem-filter-editor">
                     <div class="iem-filter-head">
-                        <div><span class="eyebrow">RESPONSE FILTERS</span><strong>PEQ / HP / LP</strong></div>
+                        <div><span class="eyebrow">RESPONSE FILTERS</span><strong>High Pass</strong></div>
                         <div class="iem-filter-actions">
-                            <button class="iem-mini" data-add-filter="${d.id}:peq">+ PEQ</button>
                             <button class="iem-mini" data-add-filter="${d.id}:high_pass">+ HIGH PASS</button>
                         </div>
                     </div>
-                    <div class="iem-filter-order-wrap"><span class="eyebrow">SIGNAL ORDER</span>${filterOrderHtml(d)}</div><div class="iem-filter-list">${d.circuit.filters.map((filter, i) => filterNode(d, filter, i)).join("") || '<div class="iem-field-note">No PEQ/HP/LP blocks.</div>'}</div>
+                    <div class="iem-filter-order-wrap"><span class="eyebrow">SIGNAL ORDER</span>${filterOrderHtml(d)}</div><div class="iem-filter-list">${d.circuit.filters.map((filter, i) => filterNode(d, filter, i)).join("") || '<div class="iem-field-note">No response filters. High Pass can be added here; Low Pass is a component in Circuit CAD.</div>'}</div>
                 </div>
             </section>`;
     }
@@ -789,7 +794,7 @@
     }
 
     function filterOrderHtml(d) {
-        if (!d.circuit.filters.length) return '<div class="iem-field-note">No response filters. Add PEQ or High Pass here; Low Pass is available directly in Circuit CAD.</div>';
+        if (!d.circuit.filters.length) return '<div class="iem-field-note">No response filters. Add High Pass here; Low Pass is available directly in Circuit CAD.</div>';
         return `<div class="iem-order-strip" data-filter-order="${d.id}">
             <span class="iem-order-fixed">INPUT</span>
             ${d.circuit.filters.map((filter, index) => {
@@ -813,7 +818,7 @@
             </div>
             <div class="iem-property-grid">
                 <section class="iem-property-section"><span class="eyebrow">FILTER</span>
-                    <label>TYPE<select data-filter-property="type"><option value="peq" ${filter.type === "peq" ? "selected" : ""}>Peaking EQ</option><option value="high_pass" ${filter.type === "high_pass" ? "selected" : ""}>High Pass</option><option value="low_pass" ${filter.type === "low_pass" ? "selected" : ""}>Low Pass</option></select></label>
+                    <label>TYPE<select data-filter-property="type"><option value="high_pass" ${filter.type === "high_pass" ? "selected" : ""}>High Pass</option><option value="low_pass" ${filter.type === "low_pass" ? "selected" : ""}>Low Pass</option></select></label>
                     <label>CUTOFF / CENTRE FREQUENCY Hz<input data-filter-property="frequency" type="number" min="1" step="1" value="${filter.frequency}"></label>
                     <label class="filter-gain-property" ${filter.type === "peq" ? "" : "hidden"}>GAIN dB<input data-filter-property="gain" type="number" step="0.1" value="${filter.gain || 0}"></label>
                     <label>Q<input data-filter-property="q" type="number" min="0.05" step="0.01" value="${filter.q || 0.707}"></label>
@@ -1835,7 +1840,6 @@
     }
 
     function newFilter(type) {
-        if (type === "peq") return { type, frequency: 3000, gain: -3, q: 2 };
         return { type, frequency: type === "high_pass" ? 500 : 5000, q: 0.707 };
     }
 
@@ -2078,10 +2082,73 @@
         $("iemReverseDriver").innerHTML = state.drivers.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join("");
     }
 
+    function targetPeqOffsetDb(frequency) {
+        return state.targetPeq.reduce((sum, peq) => {
+            if (peq.enabled === false) return sum;
+            const h = filterH({ type: "peq", frequency: peq.frequency, gain: peq.gain, q: peq.q }, frequency);
+            return sum + 20 * Math.log10(Math.max(1e-12, cabs(h)));
+        }, 0);
+    }
+
+    function rebuildReverseFromBase(redraw = true) {
+        state.reverse = (state.reverseBase || []).map(point => ({
+            frequency: point.frequency,
+            db: point.db + targetPeqOffsetDb(point.frequency),
+        }));
+        if (redraw) {
+            if (state.reverseChart) drawReverseDataset();
+            else drawReverse();
+        }
+    }
+
+    function renderTargetPeq() {
+        const holder = $("iemTargetPeqList");
+        if (!holder) return;
+        if (!state.targetPeq.length) {
+            holder.innerHTML = '<div class="iem-target-peq-empty">No PEQ bands. The target curve is unchanged.</div>';
+            return;
+        }
+        holder.innerHTML = state.targetPeq.map((peq, index) => `
+            <div class="iem-target-peq-row" data-target-peq-row="${index}">
+                <span class="iem-target-peq-number">PK ${index + 1}</span>
+                <label>FREQUENCY Hz<input data-target-peq-field="frequency" data-target-peq-index="${index}" type="number" min="20" max="20000" step="1" value="${Math.round(peq.frequency)}"></label>
+                <label>GAIN dB<input data-target-peq-field="gain" data-target-peq-index="${index}" type="number" min="-30" max="30" step="0.1" value="${Number(peq.gain).toFixed(1)}"></label>
+                <label>Q<input data-target-peq-field="q" data-target-peq-index="${index}" type="number" min="0.05" max="30" step="0.05" value="${Number(peq.q).toFixed(2)}"></label>
+                <label class="iem-target-peq-enable"><input data-target-peq-field="enabled" data-target-peq-index="${index}" type="checkbox" ${peq.enabled === false ? "" : "checked"}> ON</label>
+                <button class="iem-mini" data-target-peq-remove="${index}" type="button">REMOVE</button>
+            </div>`).join("");
+        holder.querySelectorAll("[data-target-peq-field]").forEach(input => {
+            const update = () => {
+                const index = +input.dataset.targetPeqIndex;
+                const peq = state.targetPeq[index];
+                if (!peq) return;
+                const field = input.dataset.targetPeqField;
+                if (field === "enabled") peq.enabled = input.checked;
+                else if (field === "frequency") peq.frequency = clamp(num(input.value, peq.frequency), 20, 20000);
+                else if (field === "gain") peq.gain = clamp(num(input.value, peq.gain), -30, 30);
+                else if (field === "q") peq.q = clamp(num(input.value, peq.q), 0.05, 30);
+                rebuildReverseFromBase(true);
+            };
+            input.addEventListener(input.type === "checkbox" ? "change" : "input", update);
+        });
+        holder.querySelectorAll("[data-target-peq-remove]").forEach(button => button.onclick = () => {
+            state.targetPeq.splice(+button.dataset.targetPeqRemove, 1);
+            renderTargetPeq();
+            rebuildReverseFromBase(true);
+        });
+    }
+
+    function setReverseBase(points, clearPeq = true) {
+        state.reverseBase = structuredClone(points || []);
+        if (clearPeq) state.targetPeq = [];
+        rebuildReverseFromBase(false);
+        renderTargetPeq();
+    }
+
     function reverseFlat() {
         const absolute = $("iemReverseMatchMode")?.value !== "relative";
         const baseline = absolute ? 80 : 0;
-        state.reverse = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].map(frequency => ({ frequency, db: baseline }));
+        setReverseBase([20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].map(frequency => ({ frequency, db: baseline })), true);
         if (absolute) state.reverseView = { min: 60, max: 100 };
         else state.reverseView = { min: -30, max: 20 };
         syncReverseViewInputs();
@@ -2137,7 +2204,10 @@
 
     function drawReverse() {
         if (!window.Chart) return;
-        if (state.reverse.length < 2) reverseFlat();
+        if (!state.reverseBase.length && state.reverse.length) state.reverseBase = structuredClone(state.reverse);
+        if (state.reverseBase.length < 2) return reverseFlat();
+        rebuildReverseFromBase(false);
+        renderTargetPeq();
         state.reverseChart?.destroy();
         state.reverseChart = new Chart($("iemReverseChart"), {
             type: "line",
@@ -2167,18 +2237,20 @@
             const log = Math.log10(frequency);
             let bestIndex = -1;
             let bestDistance = Infinity;
-            state.reverse.forEach((p, i) => {
+            state.reverseBase.forEach((p, i) => {
                 const distance = Math.abs(Math.log10(p.frequency) - log);
                 if (distance < bestDistance) {
                     bestDistance = distance;
                     bestIndex = i;
                 }
             });
-            const next = { frequency: clamp(frequency, 20, 20000), db: clamp(db, state.reverseView.min, state.reverseView.max) };
-            if (bestDistance < 0.05) state.reverse[bestIndex] = next;
-            else state.reverse.push(next);
-            state.reverse.sort((a, b) => a.frequency - b.frequency);
-            drawReverseDataset();
+            const f = clamp(frequency, 20, 20000);
+            const desiredDb = clamp(db, state.reverseView.min, state.reverseView.max);
+            const next = { frequency: f, db: desiredDb - targetPeqOffsetDb(f) };
+            if (bestDistance < 0.05) state.reverseBase[bestIndex] = next;
+            else state.reverseBase.push(next);
+            state.reverseBase.sort((a, b) => a.frequency - b.frequency);
+            rebuildReverseFromBase(true);
         }
         canvas.onpointerdown = event => {
             drawing = true;
@@ -2196,21 +2268,21 @@
         };
         canvas.oncontextmenu = event => {
             event.preventDefault();
-            if (state.reverse.length <= 2) return;
+            if (state.reverseBase.length <= 2) return;
             const rect = canvas.getBoundingClientRect();
             const frequency = state.reverseChart.scales.x.getValueForPixel(event.clientX - rect.left);
             const log = Math.log10(frequency);
             let bestIndex = 0;
             let bestDistance = Infinity;
-            state.reverse.forEach((p, i) => {
+            state.reverseBase.forEach((p, i) => {
                 const distance = Math.abs(Math.log10(p.frequency) - log);
                 if (distance < bestDistance) {
                     bestDistance = distance;
                     bestIndex = i;
                 }
             });
-            state.reverse.splice(bestIndex, 1);
-            drawReverseDataset();
+            state.reverseBase.splice(bestIndex, 1);
+            rebuildReverseFromBase(true);
         };
     }
 
@@ -2244,16 +2316,9 @@
             result_count: 10,
             normalization_frequency_hz: num($("iemReverseNormalizeFrequency").value, 1000),
             absolute_match: $("iemReverseMatchMode")?.value !== "relative",
-            allow_peq: Boolean($("iemReverseAllowPeq")?.checked),
-            max_peq_filters: Math.max(0, Math.min(10, Math.round(num($("iemReversePeqCount")?.value, 5)))),
-            peq_min_frequency_hz: num($("iemReversePeqMinFreq")?.value, 20),
-            peq_max_frequency_hz: num($("iemReversePeqMaxFreq")?.value, 20000),
-            peq_max_boost_db: Math.max(0, num($("iemReversePeqBoost")?.value, 6)),
-            peq_max_cut_db: Math.max(0, num($("iemReversePeqCut")?.value, 12)),
-            peq_min_q: Math.max(0.1, num($("iemReversePeqQMin")?.value, 0.30)),
-            peq_max_q: Math.max(0.1, num($("iemReversePeqQMax")?.value, 8)),
-            prefer_fewer_peq_filters: Boolean($("iemReversePreferFewerPeq")?.checked),
-            peq_filter_penalty_db: Math.max(0, num($("iemReversePeqPenalty")?.value, 0.08)),
+            // Reverse Design is physical/electrical only. PEQ belongs exclusively to target authoring.
+            allow_peq: false,
+            max_peq_filters: 0,
         };
         if (!window.HCAcousticEngine) {
             $("iemReverseMessage").textContent = "Build the Rust/WASM engine first for reverse optimisation.";
@@ -2261,32 +2326,19 @@
         }
         try {
             const results = await window.HCAcousticEngine.reverseDesign(request);
-            const peqHtml = candidate => (candidate.peq_filters || []).length
-                ? `<ul class="iem-reverse-peq-list">${candidate.peq_filters.map((peq, peqIndex) => `<li><span>PEQ ${peqIndex + 1}</span><strong>PK ${Math.round(peq.frequency_hz)} Hz · ${peq.gain_db >= 0 ? "+" : ""}${peq.gain_db.toFixed(2)} dB · Q ${peq.q.toFixed(2)}</strong></li>`).join("")}</ul>`
-                : `<p class="iem-field-note">No PEQ required for this candidate.</p>`;
-
             $("iemReverseResults").innerHTML = results.map((candidate, index) => `
                 <article class="iem-reverse-result-card">
                     <div class="iem-reverse-result-head">
                         <div><span class="eyebrow">CANDIDATE ${index + 1}</span><strong>${candidate.tube_diameter_mm.toFixed(2)} mm ID · ${candidate.tube_length_mm.toFixed(1)} mm</strong></div>
-                        <strong>${candidate.score_rmse_db.toFixed(2)} dB RMSE</strong>
-                    </div>
-                    <div class="iem-reverse-score-grid">
-                        <div><span>PHYSICAL ONLY</span><strong>${(candidate.physical_rmse_db ?? candidate.score_rmse_db).toFixed(2)} dB RMSE</strong></div>
-                        <div><span>PHYSICAL + PEQ</span><strong>${candidate.score_rmse_db.toFixed(2)} dB RMSE</strong></div>
+                        <strong>${(candidate.physical_rmse_db ?? candidate.score_rmse_db).toFixed(2)} dB RMSE</strong>
                     </div>
                     <p class="iem-field-note">${Math.round(candidate.damper_ohm)} Ω damper · ${candidate.capacitor_uf} µF series C · ${candidate.resistor_ohm} Ω series R · ${candidate.gain_db.toFixed(1)} dB gain</p>
-                    ${peqHtml(candidate)}
                     <div class="iem-reverse-actions">
-                        <button class="outline-button" type="button" data-apply-rev-physical="${index}">APPLY PHYSICAL</button>
-                        <button class="outline-button" type="button" data-apply-rev-peq="${index}">APPLY PEQ</button>
-                        <button class="primary-button" type="button" data-apply-rev-all="${index}">APPLY ALL</button>
+                        <button class="primary-button" type="button" data-apply-rev-physical="${index}">APPLY PHYSICAL DESIGN</button>
                     </div>
                 </article>`).join("");
 
             document.querySelectorAll("[data-apply-rev-physical]").forEach(button => button.onclick = () => applyRevPhysical(results[+button.dataset.applyRevPhysical], driverIndex));
-            document.querySelectorAll("[data-apply-rev-peq]").forEach(button => button.onclick = () => applyRevPeq(results[+button.dataset.applyRevPeq], driverIndex));
-            document.querySelectorAll("[data-apply-rev-all]").forEach(button => button.onclick = () => applyRevAll(results[+button.dataset.applyRevAll], driverIndex));
         } catch (error) {
             $("iemReverseMessage").textContent = error.message || "Reverse design failed";
         }
@@ -2318,36 +2370,6 @@
         }
     }
 
-    function applyRevPeq(candidate, index, recalc = true) {
-        const d = ensureDriverShape(state.drivers[index]);
-        // Replace only PEQ filters previously generated by Reverse Design.
-        d.circuit.filters = d.circuit.filters.filter(filter => filter.generatedBy !== "reverse_peq");
-        for (const peq of candidate.peq_filters || []) {
-            d.circuit.filters.push({
-                type: "peq",
-                frequency: peq.frequency_hz,
-                gain: peq.gain_db,
-                q: peq.q,
-                generatedBy: "reverse_peq",
-            });
-        }
-        if (recalc) {
-            renderDrivers();
-            document.querySelector('[data-iem-tab="design"]')?.click();
-            calculate();
-        }
-    }
-
-    function applyRevAll(candidate, index) {
-        // Apply physical first because rebuilding the passive circuit must not
-        // wipe the PEQ that is added afterwards.
-        applyRevPhysical(candidate, index, false);
-        applyRevPeq(candidate, index, false);
-        renderDrivers();
-        document.querySelector('[data-iem-tab="design"]')?.click();
-        calculate();
-    }
-
     // ---------------------------------------------------------------------
     // Target product and project persistence.
     // ---------------------------------------------------------------------
@@ -2370,7 +2392,13 @@
 
     function saveProject() {
         syncAll();
-        localStorage.setItem("hc_iem_project", JSON.stringify({ name: $("iemProjectName").value, drivers: state.drivers, target: state.target }));
+        localStorage.setItem("hc_iem_project", JSON.stringify({
+            name: $("iemProjectName").value,
+            drivers: state.drivers,
+            target: state.target,
+            reverseBase: state.reverseBase,
+            targetPeq: state.targetPeq,
+        }));
     }
 
     function loadProject() {
@@ -2380,6 +2408,10 @@
             $("iemProjectName").value = project.name || "Untitled IEM";
             state.drivers = (project.drivers || []).map(ensureDriverShape);
             state.target = project.target || [];
+            state.reverseBase = project.reverseBase || [];
+            state.targetPeq = project.targetPeq || [];
+            rebuildReverseFromBase(false);
+            renderTargetPeq();
             renderDrivers();
             refreshReverseDrivers();
             calculate();
@@ -2391,6 +2423,10 @@
     function newProject() {
         state.drivers = [driver()];
         state.target = [];
+        state.reverseBase = [];
+        state.reverse = [];
+        state.targetPeq = [];
+        renderTargetPeq();
         $("iemProjectName").value = "Untitled IEM";
         renderDrivers();
         refreshReverseDrivers();
@@ -2411,6 +2447,17 @@
         $("iemTargetProduct").onchange = event => loadTargetProduct(event.target.value);
         ["iemSplMode", "iemNormalizeFrequency", "iemNormalizeMode", "iemShowTarget", "iemShowIndividual", "iemShowCombined"].forEach(id => $(id).onchange = draw);
         $("iemReverseFlat").onclick = reverseFlat;
+        $("iemTargetPeqAdd").onclick = () => {
+            if (!state.reverseBase.length) reverseFlat();
+            state.targetPeq.push({ frequency: 3000, gain: 3, q: 1, enabled: true });
+            renderTargetPeq();
+            rebuildReverseFromBase(true);
+        };
+        $("iemTargetPeqReset").onclick = () => {
+            state.targetPeq = [];
+            renderTargetPeq();
+            rebuildReverseFromBase(true);
+        };
         $("iemReverseMatchMode").onchange = () => {
             const relative = $("iemReverseMatchMode").value === "relative";
             $("iemReverseNormalizeFrequency").disabled = !relative;
@@ -2425,14 +2472,14 @@
         $("iemReverseResetView").onclick = resetReverseView;
         $("iemReverseCopyCombined").onclick = () => {
             if (state.last?.combined) {
-                state.reverse = structuredClone(state.last.combined);
+                setReverseBase(state.last.combined, true);
                 autoFitReverseView();
                 drawReverse();
             }
         };
         $("iemReverseFile").onchange = async event => {
             if (event.target.files[0]) {
-                state.reverse = await parseFile(event.target.files[0], "fr");
+                setReverseBase(await parseFile(event.target.files[0], "fr"), true);
                 if ($("iemReverseMatchMode")) $("iemReverseMatchMode").value = "absolute";
                 if ($("iemReverseNormalizeFrequency")) $("iemReverseNormalizeFrequency").disabled = true;
                 autoFitReverseView();
