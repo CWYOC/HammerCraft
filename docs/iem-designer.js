@@ -654,6 +654,11 @@
                     ? ` · UNITY ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB`
                     : "";
                 $("iemEngineStatus").textContent = `${await window.HCAcousticEngine.version()} · BASELINE + MODEL DELTA${validationText}`;
+                if ($("iemSimulationMessage")) {
+                    $("iemSimulationMessage").textContent = activeValidation.length
+                        ? `Reference validation: ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB · RMS ${Math.max(...activeValidation.map(v => v.rmsDb)).toFixed(3)} dB`
+                        : "Simulation complete.";
+                }
             } else {
                 throw new Error("WASM unavailable");
             }
@@ -661,8 +666,16 @@
             console.warn("Rust engine unavailable, using JS fallback", error);
             result = fallback();
             $("iemEngineStatus").textContent = "JS FALLBACK";
+            if ($("iemSimulationMessage")) {
+                $("iemSimulationMessage").textContent = `WASM calculation error: ${error?.message || error}. Using JS fallback.`;
+            }
         }
         state.last = result;
+
+        // Validation text lives inside the driver/reference card. Re-render
+        // only after state.last has been updated, otherwise the card keeps
+        // showing the stale "Press CALCULATE" message.
+        renderDrivers();
         draw();
         metrics();
     }
@@ -2224,14 +2237,14 @@
             node.querySelectorAll("[data-filter-field]").forEach(input => filter[input.dataset.filterField] = num(input.value));
         });
 
-        document.querySelectorAll("[data-use-reference-path]").forEach(button => button.onclick = () => {
+        document.querySelectorAll("[data-use-reference-path]").forEach(button => button.onclick = async () => {
             const d = find(button.dataset.useReferencePath);
             const referencePath = (d?.measurementReferencePath || []).map(measurementReferenceToDesign).filter(Boolean);
             if (!d || !referencePath.length) return;
             d.path = structuredClone(referencePath);
             d.referenceValidationMode = applyMeasurementReferenceLoadToUi(d);
             renderDrivers();
-            calculate();
+            await calculate();
         });
 
         document.querySelectorAll("[data-add-path]").forEach(button => button.onclick = () => {
