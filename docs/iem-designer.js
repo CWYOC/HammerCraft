@@ -12,6 +12,7 @@
         drivers: [],
         library: [],
         databaseLibrary: [],
+        databaseLibraryError: "",
         target: [],
         reverse: [],
         reverseBase: [],
@@ -2144,8 +2145,10 @@
     async function loadDatabaseLibrary() {
         if (!window.hcSupabase) {
             state.databaseLibrary = [];
+            state.databaseLibraryError = "Supabase client is unavailable.";
             return;
         }
+        state.databaseLibraryError = "";
         const { data: drivers, error } = await window.hcSupabase
             .from("iem_drivers")
             .select("id,manufacturer,model,driver_type,nominal_impedance_ohm,sensitivity_db,sensitivity_reference,rated_power_mw,notes")
@@ -2154,6 +2157,7 @@
         if (error) {
             console.warn("Unable to load database driver library:", error);
             state.databaseLibrary = [];
+            state.databaseLibraryError = error.message || "Database driver query failed.";
             return;
         }
 
@@ -2219,7 +2223,10 @@
             <div class="iem-library-actions"><button class="outline-button" data-lib-use="${i}">ADD TO DESIGN</button><button class="danger-button" data-lib-delete="${i}">DELETE</button></div>
         </article>`).join("");
 
-        $("iemDriverLibrary").innerHTML = databaseCards + localCards || '<div class="loading-card">No drivers available.</div>';
+        const dbError = state.databaseLibraryError
+            ? `<div class="loading-card"><strong>DATABASE LIBRARY ERROR</strong><br>${esc(state.databaseLibraryError)}<br><small>Check the Supabase RLS policies for the IEM driver tables.</small></div>`
+            : "";
+        $("iemDriverLibrary").innerHTML = dbError + databaseCards + localCards || '<div class="loading-card">No drivers available.</div>';
 
         document.querySelectorAll("[data-db-lib-use]").forEach(button => button.onclick = () => {
             const d = databaseDriverToDesign(state.databaseLibrary[+button.dataset.dbLibUse]);
