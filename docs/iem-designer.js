@@ -467,6 +467,27 @@
         return null;
     }
 
+    function applyMeasurementReferenceLoadToUi(d) {
+        const load = d?.measurementReferenceLoad;
+        const select = $("iemAcousticLoadType");
+        if (!load || !select) return false;
+
+        if (load.type === "generic_711_approx") {
+            select.value = "generic_711_approx";
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            return true;
+        }
+        if (load.type === "closed_cavity") {
+            select.value = "closed_cavity";
+            if ($("iemCouplerVolume") && Number.isFinite(Number(load.volume_mm3))) {
+                $("iemCouplerVolume").value = Number(load.volume_mm3);
+            }
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            return true;
+        }
+        return false;
+    }
+
     function measurementReferenceToDesign(element) {
         const rust = measurementReferenceToRust(element);
         if (!rust) return null;
@@ -492,7 +513,7 @@
         const info = referenceInfo(d);
         const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
         const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
-        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span><strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">USE DATASHEET REFERENCE PATH</button>` : ""}</div><div class="iem-field-note">FR phase: manufacturer phase unavailable where not supplied; electrical/acoustic model phase is used.</div></div>`;
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR phase: manufacturer phase unavailable where not supplied; electrical/acoustic model phase is used.${d.referenceValidationMode ? " · VALIDATION MODE: design path and output load are matched to the datasheet reference, so acoustic correction should be unity." : ""}</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -1993,7 +2014,9 @@
 
     function syncNode(node, property) {
         const [id, index] = node.dataset[property + "Node"].split(":");
-        const element = find(id)[property][+index];
+        const owner = find(id);
+        if (property === "path" && owner) owner.referenceValidationMode = false;
+        const element = owner[property][+index];
         node.querySelectorAll(`[data-${property}-field]`).forEach(input => element[input.dataset[property + "Field"]] = num(input.value));
     }
 
@@ -2121,6 +2144,7 @@
             const referencePath = (d?.measurementReferencePath || []).map(measurementReferenceToDesign).filter(Boolean);
             if (!d || !referencePath.length) return;
             d.path = structuredClone(referencePath);
+            d.referenceValidationMode = applyMeasurementReferenceLoadToUi(d);
             renderDrivers();
             calculate();
         });
@@ -2128,16 +2152,19 @@
         document.querySelectorAll("[data-add-path]").forEach(button => button.onclick = () => {
             const [id, type] = button.dataset.addPath.split(":");
             find(id).path.push(newPath(type));
+            find(id).referenceValidationMode = false;
             renderDrivers();
         });
         document.querySelectorAll("[data-remove-path]").forEach(button => button.onclick = () => {
             const [id, index] = button.dataset.removePath.split(":");
             find(id).path.splice(+index, 1);
+            find(id).referenceValidationMode = false;
             renderDrivers();
         });
         document.querySelectorAll("[data-move-path]").forEach(button => button.onclick = () => {
             const [id, index, direction] = button.dataset.movePath.split(":");
             move(find(id).path, +index, +direction);
+            find(id).referenceValidationMode = false;
             renderDrivers();
         });
         document.querySelectorAll("[data-path-node]").forEach(node => node.oninput = () => syncNode(node, "path"));
