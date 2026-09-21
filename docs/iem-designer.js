@@ -2143,13 +2143,25 @@
     }
 
     async function loadDatabaseLibrary() {
-        if (!window.hcSupabase) {
+        let db = null;
+        try {
+            db = window.HCAuth?.getSupabase?.() || window.hcSupabase || null;
+        } catch (error) {
+            state.databaseLibrary = [];
+            state.databaseLibraryError = error.message || "Supabase client is unavailable.";
+            return;
+        }
+        if (!db) {
             state.databaseLibrary = [];
             state.databaseLibraryError = "Supabase client is unavailable.";
             return;
         }
+
         state.databaseLibraryError = "";
-        const { data: drivers, error } = await window.hcSupabase
+        const { data: sessionData } = await db.auth.getSession();
+        console.info("IEM Driver Library Supabase session:", sessionData?.session?.user?.email || "anonymous");
+
+        const { data: drivers, error } = await db
             .from("iem_drivers")
             .select("id,manufacturer,model,driver_type,nominal_impedance_ohm,sensitivity_db,sensitivity_reference,rated_power_mw,notes")
             .order("manufacturer")
@@ -2163,7 +2175,7 @@
 
         const rows = [];
         for (const drv of drivers || []) {
-            const { data: sets, error: setError } = await window.hcSupabase
+            const { data: sets, error: setError } = await db
                 .from("iem_driver_measurements")
                 .select("id,measurement_name,source_type,source_name,is_default,fixture,coupler,drive_voltage_v,notes")
                 .eq("driver_id", drv.id)
@@ -2175,10 +2187,10 @@
             let fr = [], impedance_curve = [];
             if (set) {
                 const [frResult, zResult] = await Promise.all([
-                    window.hcSupabase.from("iem_driver_fr")
+                    db.from("iem_driver_fr")
                         .select("frequency_hz,magnitude_db,phase_deg")
                         .eq("measurement_id", set.id).order("frequency_hz"),
-                    window.hcSupabase.from("iem_driver_impedance")
+                    db.from("iem_driver_impedance")
                         .select("frequency_hz,impedance_ohm,phase_deg")
                         .eq("measurement_id", set.id).order("frequency_hz")
                 ]);
@@ -2223,10 +2235,11 @@
             <div class="iem-library-actions"><button class="outline-button" data-lib-use="${i}">ADD TO DESIGN</button><button class="danger-button" data-lib-delete="${i}">DELETE</button></div>
         </article>`).join("");
 
-        const dbError = state.databaseLibraryError
-            ? `<div class="loading-card"><strong>DATABASE LIBRARY ERROR</strong><br>${esc(state.databaseLibraryError)}<br><small>Check the Supabase RLS policies for the IEM driver tables.</small></div>`
-            : "";
-        $("iemDriverLibrary").innerHTML = dbError + databaseCards + localCards || '<div class="loading-card">No drivers available.</div>';
+        const dbStatus = state.databaseLibraryError
+            ? `<div class="loading-card"><strong>DATABASE LIBRARY ERROR</strong><br>${esc(state.databaseLibraryError)}<br><button class="outline-button" id="iemReloadDatabaseLibrary" type="button">RELOAD DATABASE</button></div>`
+            : `<div class="iem-field-note" style="margin-bottom:12px">DATABASE: ${state.databaseLibrary.length} DRIVER${state.databaseLibrary.length === 1 ? "" : "S"} LOADED · <button class="outline-button" id="iemReloadDatabaseLibrary" type="button">RELOAD</button></div>`;
+        $("iemDriverLibrary").innerHTML = dbStatus + databaseCards + localCards;
+        $("iemReloadDatabaseLibrary")?.addEventListener("click", () => renderLibrary());
 
         document.querySelectorAll("[data-db-lib-use]").forEach(button => button.onclick = () => {
             const d = databaseDriverToDesign(state.databaseLibrary[+button.dataset.dbLibUse]);
