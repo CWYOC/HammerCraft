@@ -178,6 +178,8 @@ pub struct Driver {
     #[serde(default)]
     pub acoustic_path: Vec<AcousticElement>,
     #[serde(default)]
+    pub measurement_reference_path: Vec<AcousticElement>,
+    #[serde(default)]
     pub acoustic_source: AcousticSource,
 }
 

@@ -352,12 +352,12 @@
         return result;
     }
 
-    function acousticDbPhase(d, frequency) {
+    function acousticDbPhaseForPath(path, frequency) {
         let db = 0;
         let phase = 0;
         const c = speed();
         let length = 0;
-        for (const element of d.path) {
+        for (const element of path || []) {
             if (element.type === "tube" || element.type === "nozzle") {
                 const L = Math.max(0.1, element.length) / 1000;
                 const D = Math.max(0.2, element.diameter);
@@ -376,6 +376,20 @@
         }
         phase -= 2 * Math.PI * frequency * length / c;
         return { db, phase };
+    }
+
+    function acousticDbPhase(d, frequency) {
+        const design = acousticDbPhaseForPath(d.path, frequency);
+        if (!d.measurementReferenceCompensation || !d.measurementReferencePath?.length) return design;
+        const refPath = d.measurementReferencePath
+            .filter(e => ["tube", "damper", "chamber"].includes(e.element_type))
+            .map(e => e.element_type === "tube"
+                ? { type: "tube", length: num(e.length_mm), diameter: num(e.inner_diameter_mm, 2), loss: 0 }
+                : e.element_type === "damper"
+                    ? { type: "damper", value: num(e.damper_ohm) }
+                    : { type: "chamber", length: Math.max(.1, num(e.length_mm, 1)), diameter: Math.max(.2, num(e.inner_diameter_mm, 2)) });
+        const reference = acousticDbPhaseForPath(refPath, frequency);
+        return { db: design.db - reference.db, phase: design.phase - reference.phase };
     }
 
     function fallback() {
@@ -434,6 +448,25 @@
         if (element.type === "damper") return { type: "damper", resistance_acoustic_ohm: element.value };
         if (element.type === "chamber") return { type: "expansion_chamber", length_mm: element.length, diameter_mm: element.diameter };
         return { type: "nozzle", length_mm: element.length, diameter_mm: element.diameter };
+    }
+
+    function measurementReferenceToRust(element) {
+        if (element.element_type === "tube") return {
+            type: "tube",
+            length_mm: num(element.length_mm),
+            diameter_mm: num(element.inner_diameter_mm, 2),
+            loss_factor: 0,
+        };
+        if (element.element_type === "damper") return {
+            type: "damper",
+            resistance_acoustic_ohm: num(element.damper_ohm),
+        };
+        if (element.element_type === "chamber") return {
+            type: "expansion_chamber",
+            length_mm: Math.max(0.1, num(element.length_mm, 1)),
+            diameter_mm: Math.max(0.2, num(element.inner_diameter_mm, 2)),
+        };
+        return null;
     }
 
     function toRustFilter(filter) {
@@ -496,6 +529,9 @@
                     ],
                     circuit_netlist: toRustNetlist(d),
                     acoustic_path: d.path.map(toRustPath),
+                    measurement_reference_path: d.measurementReferenceCompensation
+                        ? (d.measurementReferencePath || []).map(measurementReferenceToRust).filter(Boolean)
+                        : [],
                     acoustic_source: { type: "ideal_pressure" },
                 };
             }),
@@ -2139,6 +2175,9 @@
         d.databaseMeasurementId = row.measurement_id || null;
         d.databaseSource = row.source_name || row.measurement_name || "Database";
         d.databaseSparseResponse = d.measurement.length < 20;
+        d.measurementReferencePath = structuredClone(row.reference_path || []);
+        d.measurementReferenceCoupler = row.coupler || null;
+        d.measurementReferenceCompensation = d.measurementReferencePath.length > 0;
         return ensureDriverShape(d);
     }
 
@@ -2184,28 +2223,35 @@
             if (setError) console.warn("Unable to load measurement set:", setError);
 
             const set = sets?.[0] || null;
-            let fr = [], impedance_curve = [];
+            let fr = [], impedance_curve = [], reference_path = [];
             if (set) {
-                const [frResult, zResult] = await Promise.all([
+                const [frResult, zResult, pathResult] = await Promise.all([
                     db.from("iem_driver_fr")
                         .select("frequency_hz,magnitude_db,phase_deg")
                         .eq("measurement_id", set.id).order("frequency_hz"),
                     db.from("iem_driver_impedance")
                         .select("frequency_hz,impedance_ohm,phase_deg")
-                        .eq("measurement_id", set.id).order("frequency_hz")
+                        .eq("measurement_id", set.id).order("frequency_hz"),
+                    db.from("iem_driver_measurement_paths")
+                        .select("element_order,element_type,length_mm,inner_diameter_mm,damper_ohm,volume_mm3,description")
+                        .eq("measurement_id", set.id).order("element_order")
                 ]);
                 if (frResult.error) console.warn("Unable to load driver FR:", frResult.error);
                 if (zResult.error) console.warn("Unable to load driver impedance:", zResult.error);
+                if (pathResult.error) console.warn("Unable to load measurement reference path:", pathResult.error);
                 fr = frResult.data || [];
                 impedance_curve = zResult.data || [];
+                reference_path = pathResult.data || [];
             }
             rows.push({
                 ...drv,
                 measurement_id: set?.id || null,
                 measurement_name: set?.measurement_name || null,
                 source_name: set?.source_name || null,
+                coupler: set?.coupler || null,
                 fr,
-                impedance_curve
+                impedance_curve,
+                reference_path
             });
         }
         state.databaseLibrary = rows;
@@ -2223,7 +2269,7 @@
                 <span class="eyebrow">DATABASE · ${esc(String(row.driver_type || "DRIVER").toUpperCase())}</span>
                 <h4>${esc(row.manufacturer)} ${esc(row.model)}</h4>
                 <p>${row.nominal_impedance_ohm ?? "—"} Ω · ${row.sensitivity_db ?? "—"} dB SPL</p>
-                <p class="iem-field-note">${esc(row.measurement_name || "No measurement set")} · FR ${frCount} pts · Z ${zCount} pts${sparse ? " · sparse datasheet landmarks" : ""}</p>
+                <p class="iem-field-note">${esc(row.measurement_name || "No measurement set")} · FR ${frCount} pts · Z ${zCount} pts${sparse ? " · sparse datasheet landmarks" : ""}${row.reference_path?.length ? " · reference path compensated" : ""}</p>
                 <div class="iem-library-actions"><button class="outline-button" data-db-lib-use="${i}">ADD TO DESIGN</button></div>
             </article>`;
         }).join("");

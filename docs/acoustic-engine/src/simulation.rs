@@ -88,12 +88,30 @@ pub fn simulate_driver_at_frequency(
 
     pressure *= electrical;
 
-    pressure *= acoustic_transfer(
-        driver,
-        frequency_hz,
-        environment,
-        load,
-    );
+    let design_transfer = acoustic_transfer(driver, frequency_hz, environment, load);
+
+    // Imported FR already includes its measurement/reference acoustic path.
+    // Divide that reference transfer out before applying the design path.
+    let acoustic = if driver.measurement_reference_path.is_empty() {
+        design_transfer
+    } else {
+        let mut reference_driver = driver.clone();
+        reference_driver.acoustic_path = driver.measurement_reference_path.clone();
+        reference_driver.measurement_reference_path.clear();
+        let reference_transfer = acoustic_transfer(
+            &reference_driver,
+            frequency_hz,
+            environment,
+            load,
+        );
+        if reference_transfer.norm() > 1e-18 {
+            design_transfer / reference_transfer
+        } else {
+            design_transfer
+        }
+    };
+
+    pressure *= acoustic;
 
     pressure *= db_to_amplitude(driver.gain_db);
 
