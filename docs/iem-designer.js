@@ -513,7 +513,7 @@
         const info = referenceInfo(d);
         const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
         const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
-        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR phase: manufacturer phase unavailable where not supplied; electrical/acoustic model phase is used.${d.referenceValidationMode ? " · VALIDATION MODE: design path and output load are matched to the datasheet reference, so acoustic correction should be unity. · REFERENCE CORRECTION @ 1 kHz: 0.00 dB / 0.00°" : ""}</div></div>`;
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? " · VALIDATION MODE: design path and output load are matched to the datasheet reference, so acoustic correction should be unity. · REFERENCE CORRECTION @ 1 kHz: 0.00 dB / 0.00°" : ""}</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -568,7 +568,9 @@
                     response_absolute_spl: d.responseAbsolute,
                     gain_db: d.gain,
                     polarity_inverted: d.polarity < 0,
-                    response: d.measurement.map(p => ({ frequency_hz: p.frequency, db: p.db, phase_deg: p.phase || 0 })),
+                    response: d.databaseDriverId
+                        ? []
+                        : d.measurement.map(p => ({ frequency_hz: p.frequency, db: p.db, phase_deg: p.phase || 0 })),
                     impedance: d.impedanceCurve.map(p => ({ frequency_hz: p.frequency, magnitude_ohm: p.ohm, phase_deg: p.phase || 0 })),
                     electrical: [
                         ...d.circuit.filters.map(toRustFilter).filter(Boolean),
@@ -592,11 +594,50 @@
         try {
             if (window.HCAcousticEngine) {
                 const rust = await window.HCAcousticEngine.simulate(rustRequest());
-                result = {
-                    drivers: rust.drivers.map(item => item.points.map(p => ({ frequency: p.frequency_hz, db: p.db, phase: p.phase_deg }))),
-                    combined: rust.combined.map(p => ({ frequency: p.frequency_hz, db: p.db, phase: p.phase_deg })),
-                };
-                $("iemEngineStatus").textContent = await window.HCAcousticEngine.version();
+                const rustDrivers = rust.drivers.map(item => item.points.map(p => ({
+                    frequency: p.frequency_hz,
+                    db: p.db,
+                    phase: p.phase_deg,
+                })));
+
+                // Database FR is the measured manufacturer baseline. Rust
+                // returns the electrical/acoustic DESIGN DELTA for database
+                // drivers; compose it explicitly here so the measured curve
+                // can never be replaced by a flat transfer-function trace.
+                const composedDrivers = rustDrivers.map((response, index) => {
+                    const d = state.drivers[index];
+                    if (!d?.databaseDriverId || !d.measurement?.length) return response;
+                    return response.map(point => ({
+                        frequency: point.frequency,
+                        db: rawDb(d, point.frequency) + point.db,
+                        // Manufacturer phase is currently unavailable for the
+                        // digitised datasets, so model phase is retained.
+                        phase: point.phase,
+                    }));
+                });
+
+                // Re-sum the composed driver pressures. The combined curve
+                // must use the same baseline-aware responses shown as the
+                // individual traces.
+                const combined = (composedDrivers[0] || []).map((_, pointIndex) => {
+                    let pressure = complex(0);
+                    for (const response of composedDrivers) {
+                        const point = response[pointIndex];
+                        if (!point) continue;
+                        pressure = cadd(pressure, cpolar(
+                            10 ** (point.db / 20),
+                            num(point.phase) * Math.PI / 180
+                        ));
+                    }
+                    return {
+                        frequency: composedDrivers[0][pointIndex].frequency,
+                        db: 20 * Math.log10(Math.max(1e-12, cabs(pressure))),
+                        phase: cphase(pressure) * 180 / Math.PI,
+                    };
+                });
+
+                result = { drivers: composedDrivers, combined };
+                $("iemEngineStatus").textContent = `${await window.HCAcousticEngine.version()} · BASELINE + MODEL DELTA`;
             } else {
                 throw new Error("WASM unavailable");
             }
