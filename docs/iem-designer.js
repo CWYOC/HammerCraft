@@ -513,7 +513,7 @@
         const info = referenceInfo(d);
         const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
         const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
-        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? (() => { const vi = state.drivers.indexOf(d); const v = state.last?.validation?.[vi]; return ` · VALIDATION MODE: design path and output load are matched to the datasheet reference.${v ? ` · FULL-BAND UNITY ${v.pass ? "PASS" : "FAIL"} · max error ${v.maxAbsDb.toFixed(3)} dB · RMS ${v.rmsDb.toFixed(3)} dB` : " · Press CALCULATE to run full-band unity check."}`; })() : ""}</div></div>`;
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note" data-reference-validation-readout="${d.id}">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? (() => { const vi = state.drivers.indexOf(d); const v = state.last?.validation?.[vi]; return ` · VALIDATION MODE: design path and output load are matched to the datasheet reference.${v ? ` · FULL-BAND UNITY ${v.pass ? "PASS" : "FAIL"} · max error ${v.maxAbsDb.toFixed(3)} dB · RMS ${v.rmsDb.toFixed(3)} dB` : " · Press CALCULATE to run full-band unity check."}`; })() : ""}</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -654,11 +654,11 @@
                     ? ` · UNITY ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB`
                     : "";
                 $("iemEngineStatus").textContent = `${await window.HCAcousticEngine.version()} · BASELINE + MODEL DELTA${validationText}`;
-                if ($("iemSimulationMessage")) {
-                    $("iemSimulationMessage").textContent = activeValidation.length
-                        ? `Reference validation: ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB · RMS ${Math.max(...activeValidation.map(v => v.rmsDb)).toFixed(3)} dB`
-                        : "Simulation complete.";
-                }
+                const statusText = activeValidation.length
+                    ? `Reference validation: ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB · RMS ${Math.max(...activeValidation.map(v => v.rmsDb)).toFixed(3)} dB`
+                    : "Simulation complete.";
+                if ($("iemSimulationMessage")) $("iemSimulationMessage").textContent = statusText;
+                $("iemEngineStatus").title = statusText;
             } else {
                 throw new Error("WASM unavailable");
             }
@@ -672,10 +672,10 @@
         }
         state.last = result;
 
-        // Validation text lives inside the driver/reference card. Re-render
-        // only after state.last has been updated, otherwise the card keeps
-        // showing the stale "Press CALCULATE" message.
-        renderDrivers();
+        // Do not call renderDrivers() here: it replaces the Calculate button
+        // and other DOM nodes after their handlers were attached. Update the
+        // validation readout in place instead.
+        updateReferenceValidationReadouts();
         draw();
         metrics();
     }
@@ -824,6 +824,22 @@
     // ---------------------------------------------------------------------
     // Driver cards.
     // ---------------------------------------------------------------------
+
+    function updateReferenceValidationReadouts() {
+        state.drivers.forEach((d, index) => {
+            const node = document.querySelector(`[data-reference-validation-readout="${d.id}"]`);
+            if (!node) return;
+            const base = "FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.";
+            if (!d.referenceValidationMode) {
+                node.textContent = base;
+                return;
+            }
+            const v = state.last?.validation?.[index];
+            node.textContent = v
+                ? `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · FULL-BAND UNITY ${v.pass ? "PASS" : "FAIL"} · max error ${v.maxAbsDb.toFixed(3)} dB · RMS ${v.rmsDb.toFixed(3)} dB`
+                : `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · Press CALCULATE to run full-band unity check.`;
+        });
+    }
 
     function renderDrivers() {
         const root = $("iemDriverPaths");
