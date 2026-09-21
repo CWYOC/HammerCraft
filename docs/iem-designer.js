@@ -726,28 +726,48 @@
         return series.map(point => ({ ...point, db: point.db - offset }));
     }
 
-    function updateValidationPanel(){
-        const panel=$("iemValidationPanel"); if(!panel)return;
-        const vals=(state.last?.validation||[]).filter(Boolean);
-        if(!vals.length){panel.hidden=true;return;}
-        const worst=vals.reduce((a,b)=>a.maxAbsDb>=b.maxAbsDb?a:b), pass=vals.every(v=>v.pass);
-        panel.hidden=false; panel.dataset.result=pass?"pass":"fail";
-        $("iemValidationResult").textContent=pass?"✓ PASS":"✕ FAIL";
-        $("iemValidationMax").textContent=`${worst.maxAbsDb.toFixed(3)} dB`;
-        $("iemValidationRms").textContent=`${worst.rmsDb.toFixed(3)} dB`;
-        $("iemValidationFrequency").textContent=`${Math.round(worst.maxErrorFrequencyHz)} Hz`;
-        $("iemValidationRange").textContent=`${Math.round(worst.minFrequencyHz)}–${Math.round(worst.maxFrequencyHz)} Hz`;
+    function graphValidation(predicted, baseline){
+        if(!predicted?.length||!baseline?.length)return null;
+        const base=baseline.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))
+            .map(p=>({frequency:p.x,db:p.y})).sort((a,b)=>a.frequency-b.frequency);
+        if(base.length<2)return null;
+        const lo=base[0].frequency,hi=base[base.length-1].frequency;
+        const errorCurve=predicted.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=lo&&p.x<=hi)
+            .map(p=>({frequency:p.x,errorDb:p.y-interp(base,p.x)})).filter(p=>Number.isFinite(p.errorDb));
+        if(!errorCurve.length)return null;
+        let worst=errorCurve[0]; for(const p of errorCurve)if(Math.abs(p.errorDb)>Math.abs(worst.errorDb))worst=p;
+        const maxAbsDb=Math.abs(worst.errorDb);
+        const rmsDb=Math.sqrt(errorCurve.reduce((a,p)=>a+p.errorDb*p.errorDb,0)/errorCurve.length);
+        return{errorCurve,maxAbsDb,rmsDb,maxErrorFrequencyHz:worst.frequency,minFrequencyHz:lo,maxFrequencyHz:hi,pass:maxAbsDb<=.05};
+    }
+    function updateValidationPanel(v){
+        const panel=$("iemValidationPanel"),wrap=$("iemValidationErrorWrap"); if(!panel)return;
+        if(!v){panel.hidden=true;if(wrap)wrap.hidden=true;return}
+        panel.hidden=false;panel.dataset.result=v.pass?"pass":"fail";
+        $("iemValidationResult").textContent=v.pass?"✓ PASS":"✕ FAIL";
+        $("iemValidationMax").textContent=`${v.maxAbsDb.toFixed(3)} dB`;
+        $("iemValidationRms").textContent=`${v.rmsDb.toFixed(3)} dB`;
+        $("iemValidationFrequency").textContent=`${Math.round(v.maxErrorFrequencyHz)} Hz`;
+        $("iemValidationRange").textContent=`${Math.round(v.minFrequencyHz)}–${Math.round(v.maxFrequencyHz)} Hz`;
+        if(wrap)wrap.hidden=!$("iemShowValidationError")?.checked;
+    }
+    function drawValidationError(v){
+        const c=$("iemValidationErrorChart");if(!c||!window.Chart)return;
+        if(state.validationChart){state.validationChart.destroy();state.validationChart=null}
+        if(!v||!$("iemShowValidationError")?.checked)return;
+        const peak=Math.max(.05,...v.errorCurve.map(p=>Math.abs(p.errorDb)));
+        const lim=Math.min(10,Math.max(.1,Math.ceil(peak*10)/10));
+        state.validationChart=new Chart(c,{type:"line",data:{datasets:[
+            {label:"Validation error",data:v.errorCurve.map(p=>({x:p.frequency,y:p.errorDb})),pointRadius:0,borderWidth:2},
+            {label:"0 dB ideal",data:[{x:v.minFrequencyHz,y:0},{x:v.maxFrequencyHz,y:0}],pointRadius:0,borderWidth:1,borderDash:[5,5]}
+        ]},options:{animation:false,responsive:true,maintainAspectRatio:false,parsing:false,
+            scales:{x:{type:"logarithmic",min:v.minFrequencyHz,max:v.maxFrequencyHz,title:{display:true,text:"Frequency (Hz)"}},
+            y:{min:-lim,max:lim,title:{display:true,text:"Error (dB)"}}}}});
     }
 
     function draw() {
         if (!state.last || !window.Chart) return;
         const datasets = [];
-        const validationForGraph=(state.last?.validation||[]).filter(Boolean);
-        if($("iemShowValidationError")?.checked&&validationForGraph.length){
-            datasets.push({label:"Validation error",data:(validationForGraph[0].errorCurve||[]).map(p=>({x:p.frequency,y:p.errorDb})),
-                pointRadius:0,borderWidth:2,borderDash:[4,4]});
-        }
-
         if ($("iemShowIndividual")?.checked) {
             state.last.drivers.forEach((response, index) => {
                 const d = state.drivers[index];
@@ -792,6 +812,16 @@
             });
         }
         state.chart?.destroy();
+        let visibleValidation=null;
+        if(state.drivers.length===1&&state.drivers[0]?.referenceValidationMode){
+            const driverName=state.drivers[0].name;
+            const predicted=datasets.find(ds=>String(ds.label||"")===driverName);
+            const baseline=datasets.find(ds=>String(ds.label||"").includes("Datasheet baseline"));
+            visibleValidation=graphValidation(predicted?.data,baseline?.data);
+        }
+        updateValidationPanel(visibleValidation);
+        drawValidationError(visibleValidation);
+
         state.chart = new Chart($("iemResponseChart"), {
             type: "line",
             data: { datasets },

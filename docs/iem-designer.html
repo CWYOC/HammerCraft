@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hammer Craft standalone IEM acoustic and crossover design workstation.">
-    <title>IEM Designer 0.24 | Hammer Craft</title>
+    <title>IEM Designer 0.25 | Hammer Craft</title>
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
     <link rel="stylesheet" href="admin.css?v=64">
     <link rel="stylesheet" href="iem-designer.css?v=47">
@@ -14,6 +14,16 @@
 .iem-validation-result{display:block;font-size:30px;line-height:1.1;margin-top:5px}.iem-validation-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .iem-validation-metrics article{border:1px solid rgba(0,0,0,.14);padding:10px 12px}.iem-validation-metrics span{display:block;font-size:9px;letter-spacing:.08em;opacity:.65;margin-bottom:4px}
 .iem-validation-metrics strong{font-size:16px}@media(max-width:760px){.iem-validation-metrics{grid-template-columns:repeat(2,1fr)}.iem-validation-head{flex-direction:column}}
+</style>
+<style id="iem-v48-validation-style">
+.iem-validation-panel{margin:16px 0!important;border:3px solid currentColor!important;padding:18px 20px!important;background:#fff!important}
+.iem-validation-panel[hidden],.iem-validation-error-wrap[hidden]{display:none!important}
+.iem-validation-result{display:block!important;font-size:36px!important;line-height:1.05!important;font-weight:800!important;margin-top:5px!important}
+.iem-validation-metrics{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:8px!important}
+.iem-validation-metrics article{border:1px solid rgba(0,0,0,.18)!important;padding:12px!important}
+.iem-validation-error-wrap{margin:14px 0 20px}.iem-validation-error-title{font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:7px}
+.iem-validation-chart-container{height:220px!important}
+@media(max-width:760px){.iem-validation-metrics{grid-template-columns:repeat(2,1fr)!important}}
 </style>
 </head>
 <body class="iem-standalone-page">
@@ -89,6 +99,10 @@
 <article><span>TESTED RANGE</span><strong id="iemValidationRange">—</strong></article>
 </div><p class="iem-field-note">Ideal validation error is a flat 0 dB line.</p></div>
 <div class="fr-chart-container iem-chart-container"><canvas id="iemResponseChart"></canvas></div>
+<div id="iemValidationErrorWrap" class="iem-validation-error-wrap" hidden>
+<div class="iem-validation-error-title">VALIDATION ERROR · PREDICTED − DATASHEET</div>
+<div class="fr-chart-container iem-validation-chart-container"><canvas id="iemValidationErrorChart"></canvas></div>
+</div>
                 <div id="iemSimulationMessage" class="admin-message"></div>
                 <div class="iem-result-grid">
                     <article><span>PRIMARY RESONANCE</span><strong id="iemPrimaryResonance">—</strong></article>
@@ -187,7 +201,7 @@
 <script src="supabase-client.js"></script>
 <script src="auth.js?v=40"></script>
 <script src="wasm-loader.js?v=15"></script>
-<script src="iem-designer.js?v=47"></script>
-<script src="iem-designer-page.js?v=47"></script>
+<script src="iem-designer.js?v=48"></script>
+<script src="iem-designer-page.js?v=48"></script>
 </body>
 </html>
