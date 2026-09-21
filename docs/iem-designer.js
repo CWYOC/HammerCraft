@@ -434,7 +434,14 @@
                 leak_resistance_acoustic_ohm: num($("iemLeakResistance")?.value, 5e8),
             };
         }
+        if (type === "generic_711_approx") return { type: "generic711_approx" };
         return { type };
+    }
+
+    function referenceLoadToRust(load) {
+        if (!load) return null;
+        if (load.type === "generic_711_approx") return { type: "generic711_approx" };
+        return { ...load };
     }
 
     function toRustPath(element) {
@@ -581,7 +588,9 @@
                     measurement_reference_path: d.measurementReferenceCompensation
                         ? (d.measurementReferencePath || []).map(measurementReferenceToRust).filter(Boolean)
                         : [],
-                    measurement_reference_load: d.measurementReferenceCompensation ? d.measurementReferenceLoad : null,
+                    measurement_reference_load: d.measurementReferenceCompensation
+                        ? referenceLoadToRust(d.measurementReferenceLoad)
+                        : null,
                     acoustic_source: { type: "ideal_pressure" },
                 };
             }),
