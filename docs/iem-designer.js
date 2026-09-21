@@ -520,7 +520,7 @@
         const info = referenceInfo(d);
         const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
         const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
-        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note" data-reference-validation-readout="${d.id}">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? (() => { const vi = state.drivers.indexOf(d); const v = state.last?.validation?.[vi]; return ` · VALIDATION MODE: design path and output load are matched to the datasheet reference.${v ? ` · FULL-BAND UNITY ${v.pass ? "PASS" : "FAIL"} · max error ${v.maxAbsDb.toFixed(3)} dB · RMS ${v.rmsDb.toFixed(3)} dB` : " · Press CALCULATE to run full-band unity check."}`; })() : ""}</div></div>`;
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note" data-reference-validation-readout="${d.id}">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? (() => { const vi = state.drivers.indexOf(d); const v = state.last?.validation?.[vi]; return ` · VALIDATION MODE: design path and output load are matched to the datasheet reference.${v ? ` · UNITY ${v.pass ? "PASS" : "FAIL"} over measured FR span ${Math.round(v.minFrequencyHz)}–${Math.round(v.maxFrequencyHz)} Hz · max error ${v.maxAbsDb.toFixed(3)} dB @ ${Math.round(v.maxErrorFrequencyHz)} Hz · RMS ${v.rmsDb.toFixed(3)} dB · ${v.sampleCount} samples` : " · Press CALCULATE to run measured-span unity check."}`; })() : ""}</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -648,23 +648,68 @@
                 const validation = composedDrivers.map((response, index) => {
                     const d = state.drivers[index];
                     if (!d?.databaseDriverId || !d.referenceValidationMode || !d.measurement?.length) return null;
-                    const errors = response.map(point =>
-                        point.db - (rawDb(d, point.frequency) + num(d.gain))
-                    ).filter(Number.isFinite);
-                    if (!errors.length) return null;
-                    const maxAbsDb = Math.max(...errors.map(Math.abs));
-                    const rmsDb = Math.sqrt(errors.reduce((sum, value) => sum + value * value, 0) / errors.length);
-                    return { maxAbsDb, rmsDb, pass: maxAbsDb <= 0.05 };
+
+                    const measured = d.measurement
+                        .filter(point => Number.isFinite(point.frequency) && Number.isFinite(point.db))
+                        .sort((a, b) => a.frequency - b.frequency);
+                    if (measured.length < 2) return null;
+
+                    // Validate only inside the digitised manufacturer's actual
+                    // frequency span. Never extrapolate/floor the baseline for
+                    // a unity test.
+                    const minFrequency = measured[0].frequency;
+                    const maxFrequency = measured[measured.length - 1].frequency;
+                    const samples = response
+                        .filter(point =>
+                            Number.isFinite(point.frequency) &&
+                            Number.isFinite(point.db) &&
+                            point.frequency >= minFrequency &&
+                            point.frequency <= maxFrequency
+                        )
+                        .map(point => {
+                            const baselineDb = interp(measured, point.frequency) + num(d.gain);
+                            const errorDb = point.db - baselineDb;
+                            return { frequency: point.frequency, errorDb };
+                        })
+                        .filter(sample => Number.isFinite(sample.errorDb));
+
+                    if (!samples.length) return null;
+
+                    let worst = samples[0];
+                    for (const sample of samples) {
+                        if (Math.abs(sample.errorDb) > Math.abs(worst.errorDb)) worst = sample;
+                    }
+                    const maxAbsDb = Math.abs(worst.errorDb);
+                    const rmsDb = Math.sqrt(
+                        samples.reduce((sum, sample) => sum + sample.errorDb * sample.errorDb, 0) /
+                        samples.length
+                    );
+
+                    return {
+                        maxAbsDb,
+                        rmsDb,
+                        maxErrorFrequencyHz: worst.frequency,
+                        sampleCount: samples.length,
+                        minFrequencyHz: minFrequency,
+                        maxFrequencyHz: maxFrequency,
+                        pass: maxAbsDb <= 0.05,
+                    };
                 });
 
                 result = { drivers: composedDrivers, combined, validation };
                 const activeValidation = validation.filter(Boolean);
                 const validationText = activeValidation.length
-                    ? ` · UNITY ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB`
+                    ? (() => {
+                        const worst = activeValidation.reduce((a, b) => a.maxAbsDb >= b.maxAbsDb ? a : b);
+                        return ` · UNITY ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${worst.maxAbsDb.toFixed(3)} dB @ ${Math.round(worst.maxErrorFrequencyHz)} Hz`;
+                    })()
                     : "";
                 $("iemEngineStatus").textContent = `${await window.HCAcousticEngine.version()} · BASELINE + MODEL DELTA${validationText}`;
                 const statusText = activeValidation.length
-                    ? `Reference validation: ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB · RMS ${Math.max(...activeValidation.map(v => v.rmsDb)).toFixed(3)} dB`
+                    ? (() => {
+                        const worst = activeValidation.reduce((a, b) => a.maxAbsDb >= b.maxAbsDb ? a : b);
+                        return `Reference validation: ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${worst.maxAbsDb.toFixed(3)} dB @ ${Math.round(worst.maxErrorFrequencyHz)} Hz · RMS ${worst.rmsDb.toFixed(3)} dB · ${worst.sampleCount} samples · ${Math.round(worst.minFrequencyHz)}–${Math.round(worst.maxFrequencyHz)} Hz`;
+                    })()
                     : "Simulation complete.";
                 if ($("iemSimulationMessage")) $("iemSimulationMessage").textContent = statusText;
                 $("iemEngineStatus").title = statusText;
@@ -845,8 +890,8 @@
             }
             const v = state.last?.validation?.[index];
             node.textContent = v
-                ? `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · FULL-BAND UNITY ${v.pass ? "PASS" : "FAIL"} · max error ${v.maxAbsDb.toFixed(3)} dB · RMS ${v.rmsDb.toFixed(3)} dB`
-                : `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · Press CALCULATE to run full-band unity check.`;
+                ? `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · UNITY ${v.pass ? "PASS" : "FAIL"} over measured FR span ${Math.round(v.minFrequencyHz)}–${Math.round(v.maxFrequencyHz)} Hz · max error ${v.maxAbsDb.toFixed(3)} dB @ ${Math.round(v.maxErrorFrequencyHz)} Hz · RMS ${v.rmsDb.toFixed(3)} dB · ${v.sampleCount} samples`
+                : `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · Press CALCULATE to run measured-span unity check.`;
         });
     }
 
