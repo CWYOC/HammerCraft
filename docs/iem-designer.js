@@ -646,54 +646,22 @@
                 });
 
                 const validation = composedDrivers.map((response, index) => {
-                    const d = state.drivers[index];
-                    if (!d?.databaseDriverId || !d.referenceValidationMode || !d.measurement?.length) return null;
-
-                    const measured = d.measurement
-                        .filter(point => Number.isFinite(point.frequency) && Number.isFinite(point.db))
-                        .sort((a, b) => a.frequency - b.frequency);
-                    if (measured.length < 2) return null;
-
-                    // Validate only inside the digitised manufacturer's actual
-                    // frequency span. Never extrapolate/floor the baseline for
-                    // a unity test.
-                    const minFrequency = measured[0].frequency;
-                    const maxFrequency = measured[measured.length - 1].frequency;
-                    const samples = response
-                        .filter(point =>
-                            Number.isFinite(point.frequency) &&
-                            Number.isFinite(point.db) &&
-                            point.frequency >= minFrequency &&
-                            point.frequency <= maxFrequency
-                        )
-                        .map(point => {
-                            const baselineDb = interp(measured, point.frequency) + num(d.gain);
-                            const errorDb = point.db - baselineDb;
-                            return { frequency: point.frequency, errorDb };
-                        })
-                        .filter(sample => Number.isFinite(sample.errorDb));
-
-                    if (!samples.length) return null;
-
-                    let worst = samples[0];
-                    for (const sample of samples) {
-                        if (Math.abs(sample.errorDb) > Math.abs(worst.errorDb)) worst = sample;
-                    }
-                    const maxAbsDb = Math.abs(worst.errorDb);
-                    const rmsDb = Math.sqrt(
-                        samples.reduce((sum, sample) => sum + sample.errorDb * sample.errorDb, 0) /
-                        samples.length
-                    );
-
-                    return {
-                        maxAbsDb,
-                        rmsDb,
-                        maxErrorFrequencyHz: worst.frequency,
-                        sampleCount: samples.length,
-                        minFrequencyHz: minFrequency,
-                        maxFrequencyHz: maxFrequency,
-                        pass: maxAbsDb <= 0.05,
-                    };
+                    const d=state.drivers[index];
+                    if(!d?.databaseDriverId||!d.referenceValidationMode||!d.measurement?.length)return null;
+                    const measured=d.measurement.filter(p=>Number.isFinite(p.frequency)&&Number.isFinite(p.db)).sort((a,b)=>a.frequency-b.frequency);
+                    if(measured.length<2)return null;
+                    const lo=measured[0].frequency, hi=measured[measured.length-1].frequency;
+                    const errorCurve=response.filter(p=>Number.isFinite(p.frequency)&&Number.isFinite(p.db)&&p.frequency>=lo&&p.frequency<=hi).map(p=>{
+                        const baselineDb=interp(measured,p.frequency)+num(d.gain);
+                        return{frequency:p.frequency,errorDb:p.db-baselineDb,predictedDb:p.db,baselineDb};
+                    }).filter(p=>Number.isFinite(p.errorDb));
+                    if(!errorCurve.length)return null;
+                    let worst=errorCurve[0];
+                    for(const p of errorCurve)if(Math.abs(p.errorDb)>Math.abs(worst.errorDb))worst=p;
+                    const maxAbsDb=Math.abs(worst.errorDb);
+                    const rmsDb=Math.sqrt(errorCurve.reduce((sum,p)=>sum+p.errorDb*p.errorDb,0)/errorCurve.length);
+                    return{maxAbsDb,rmsDb,maxErrorFrequencyHz:worst.frequency,sampleCount:errorCurve.length,
+                        minFrequencyHz:lo,maxFrequencyHz:hi,errorCurve,pass:maxAbsDb<=0.05};
                 });
 
                 result = { drivers: composedDrivers, combined, validation };
@@ -758,9 +726,28 @@
         return series.map(point => ({ ...point, db: point.db - offset }));
     }
 
+    function updateValidationPanel(){
+        const panel=$("iemValidationPanel"); if(!panel)return;
+        const vals=(state.last?.validation||[]).filter(Boolean);
+        if(!vals.length){panel.hidden=true;return;}
+        const worst=vals.reduce((a,b)=>a.maxAbsDb>=b.maxAbsDb?a:b), pass=vals.every(v=>v.pass);
+        panel.hidden=false; panel.dataset.result=pass?"pass":"fail";
+        $("iemValidationResult").textContent=pass?"✓ PASS":"✕ FAIL";
+        $("iemValidationMax").textContent=`${worst.maxAbsDb.toFixed(3)} dB`;
+        $("iemValidationRms").textContent=`${worst.rmsDb.toFixed(3)} dB`;
+        $("iemValidationFrequency").textContent=`${Math.round(worst.maxErrorFrequencyHz)} Hz`;
+        $("iemValidationRange").textContent=`${Math.round(worst.minFrequencyHz)}–${Math.round(worst.maxFrequencyHz)} Hz`;
+    }
+
     function draw() {
         if (!state.last || !window.Chart) return;
         const datasets = [];
+        const validationForGraph=(state.last?.validation||[]).filter(Boolean);
+        if($("iemShowValidationError")?.checked&&validationForGraph.length){
+            datasets.push({label:"Validation error",data:(validationForGraph[0].errorCurve||[]).map(p=>({x:p.frequency,y:p.errorDb})),
+                pointRadius:0,borderWidth:2,borderDash:[4,4]});
+        }
+
         if ($("iemShowIndividual")?.checked) {
             state.last.drivers.forEach((response, index) => {
                 const d = state.drivers[index];
@@ -2992,6 +2979,7 @@
             refreshReverseDrivers();
         };
         $("iemCalculateButton").onclick = calculate;
+        $("iemShowValidationError").onchange = draw;
         $("iemSaveProjectButton").onclick = saveProject;
         $("iemLoadProjectButton").onclick = loadProject;
         $("iemNewProjectButton").onclick = newProject;

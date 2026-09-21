@@ -4,10 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Hammer Craft standalone IEM acoustic and crossover design workstation.">
-    <title>IEM Designer 0.23 | Hammer Craft</title>
+    <title>IEM Designer 0.24 | Hammer Craft</title>
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
     <link rel="stylesheet" href="admin.css?v=64">
-    <link rel="stylesheet" href="iem-designer.css?v=46">
+    <link rel="stylesheet" href="iem-designer.css?v=47">
+<style>
+.iem-validation-panel{margin:12px 0 18px;border:2px solid currentColor;padding:16px 18px;background:rgba(255,255,255,.55)}
+.iem-validation-panel[hidden]{display:none!important}.iem-validation-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:12px}
+.iem-validation-result{display:block;font-size:30px;line-height:1.1;margin-top:5px}.iem-validation-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.iem-validation-metrics article{border:1px solid rgba(0,0,0,.14);padding:10px 12px}.iem-validation-metrics span{display:block;font-size:9px;letter-spacing:.08em;opacity:.65;margin-bottom:4px}
+.iem-validation-metrics strong{font-size:16px}@media(max-width:760px){.iem-validation-metrics{grid-template-columns:repeat(2,1fr)}.iem-validation-head{flex-direction:column}}
+</style>
 </head>
 <body class="iem-standalone-page">
 <header class="admin-header">
@@ -72,7 +79,16 @@
                     <label><input id="iemShowIndividual" type="checkbox" checked> INDIVIDUAL</label>
                     <label><input id="iemShowCombined" type="checkbox" checked> COMBINED</label>
                 </div>
-                <div class="fr-chart-container iem-chart-container"><canvas id="iemResponseChart"></canvas></div>
+                <div id="iemValidationPanel" class="iem-validation-panel" hidden>
+<div class="iem-validation-head"><div><span class="eyebrow">REFERENCE VALIDATION</span><strong id="iemValidationResult" class="iem-validation-result">WAITING</strong></div>
+<label><input id="iemShowValidationError" type="checkbox" checked> SHOW ERROR TRACE</label></div>
+<div class="iem-validation-metrics">
+<article><span>MAX ERROR</span><strong id="iemValidationMax">—</strong></article>
+<article><span>RMS ERROR</span><strong id="iemValidationRms">—</strong></article>
+<article><span>WORST FREQUENCY</span><strong id="iemValidationFrequency">—</strong></article>
+<article><span>TESTED RANGE</span><strong id="iemValidationRange">—</strong></article>
+</div><p class="iem-field-note">Ideal validation error is a flat 0 dB line.</p></div>
+<div class="fr-chart-container iem-chart-container"><canvas id="iemResponseChart"></canvas></div>
                 <div id="iemSimulationMessage" class="admin-message"></div>
                 <div class="iem-result-grid">
                     <article><span>PRIMARY RESONANCE</span><strong id="iemPrimaryResonance">—</strong></article>
@@ -171,7 +187,7 @@
 <script src="supabase-client.js"></script>
 <script src="auth.js?v=40"></script>
 <script src="wasm-loader.js?v=15"></script>
-<script src="iem-designer.js?v=46"></script>
-<script src="iem-designer-page.js?v=46"></script>
+<script src="iem-designer.js?v=47"></script>
+<script src="iem-designer-page.js?v=47"></script>
 </body>
 </html>
