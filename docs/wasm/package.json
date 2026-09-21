@@ -1,0 +1,15 @@
+{
+  "name": "acoustic-engine",
+  "type": "module",
+  "version": "0.3.0",
+  "files": [
+    "acoustic_engine_bg.wasm",
+    "acoustic_engine.js",
+    "acoustic_engine.d.ts"
+  ],
+  "main": "acoustic_engine.js",
+  "types": "acoustic_engine.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
