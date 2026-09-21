@@ -381,13 +381,7 @@
     function acousticDbPhase(d, frequency) {
         const design = acousticDbPhaseForPath(d.path, frequency);
         if (!d.measurementReferenceCompensation || !d.measurementReferencePath?.length) return design;
-        const refPath = d.measurementReferencePath
-            .filter(e => ["tube", "damper", "chamber"].includes(e.element_type))
-            .map(e => e.element_type === "tube"
-                ? { type: "tube", length: num(e.length_mm), diameter: num(e.inner_diameter_mm, 2), loss: 0 }
-                : e.element_type === "damper"
-                    ? { type: "damper", value: num(e.damper_ohm) }
-                    : { type: "chamber", length: Math.max(.1, num(e.length_mm, 1)), diameter: Math.max(.2, num(e.inner_diameter_mm, 2)) });
+        const refPath = d.measurementReferencePath.map(measurementReferenceToDesign).filter(Boolean);
         const reference = acousticDbPhaseForPath(refPath, frequency);
         return { db: design.db - reference.db, phase: design.phase - reference.phase };
     }
@@ -450,23 +444,55 @@
         return { type: "nozzle", length_mm: element.length, diameter_mm: element.diameter };
     }
 
+    function finitePositive(value) {
+        const n = Number(value);
+        return Number.isFinite(n) && n > 0 ? n : null;
+    }
+
     function measurementReferenceToRust(element) {
-        if (element.element_type === "tube") return {
-            type: "tube",
-            length_mm: num(element.length_mm),
-            diameter_mm: num(element.inner_diameter_mm, 2),
-            loss_factor: 0,
-        };
-        if (element.element_type === "damper") return {
-            type: "damper",
-            resistance_acoustic_ohm: num(element.damper_ohm),
-        };
-        if (element.element_type === "chamber") return {
-            type: "expansion_chamber",
-            length_mm: Math.max(0.1, num(element.length_mm, 1)),
-            diameter_mm: Math.max(0.2, num(element.inner_diameter_mm, 2)),
-        };
+        if (element.element_type === "tube") {
+            const length = finitePositive(element.length_mm);
+            const diameter = finitePositive(element.inner_diameter_mm);
+            return length && diameter ? { type: "tube", length_mm: length, diameter_mm: diameter, loss_factor: 0 } : null;
+        }
+        if (element.element_type === "damper") {
+            const resistance = finitePositive(element.damper_ohm);
+            return resistance ? { type: "damper", resistance_acoustic_ohm: resistance } : null;
+        }
+        if (element.element_type === "chamber") {
+            const length = finitePositive(element.length_mm);
+            const diameter = finitePositive(element.inner_diameter_mm);
+            return length && diameter ? { type: "expansion_chamber", length_mm: length, diameter_mm: diameter } : null;
+        }
         return null;
+    }
+
+    function measurementReferenceToDesign(element) {
+        const rust = measurementReferenceToRust(element);
+        if (!rust) return null;
+        if (rust.type === "tube") return { type: "tube", length: rust.length_mm, diameter: rust.diameter_mm, loss: 0 };
+        if (rust.type === "damper") return { type: "damper", value: rust.resistance_acoustic_ohm };
+        if (rust.type === "expansion_chamber") return { type: "chamber", length: rust.length_mm, diameter: rust.diameter_mm };
+        return null;
+    }
+
+    function referenceInfo(d) {
+        const raw = d.measurementReferencePath || [];
+        const modelled = raw.map(measurementReferenceToDesign).filter(Boolean);
+        const couplerModelled = Boolean(d.measurementReferenceLoad);
+        const unsupported = raw.filter(e => e.element_type !== "coupler" && !measurementReferenceToDesign(e));
+        const hasCouplerElement = raw.some(e => e.element_type === "coupler");
+        const full = couplerModelled && unsupported.length === 0 && (!hasCouplerElement || couplerModelled);
+        const partial = (couplerModelled || modelled.length) && !full;
+        return { raw, modelled, unsupported, couplerModelled, status: full ? "MODELLED" : partial ? "PARTIAL" : "UNAVAILABLE" };
+    }
+
+    function referenceSummaryHtml(d) {
+        if (!d.databaseDriverId) return "";
+        const info = referenceInfo(d);
+        const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
+        const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span><strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">USE DATASHEET REFERENCE PATH</button>` : ""}</div><div class="iem-field-note">FR phase: manufacturer phase unavailable where not supplied; electrical/acoustic model phase is used.</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -616,7 +642,7 @@
                 parsing: false,
                 scales: {
                     x: { type: "logarithmic", min: 20, max: 20000, title: { display: true, text: "Frequency (Hz)" } },
-                    y: { title: { display: true, text: $("iemSplMode")?.value === "absolute" ? "SPL (dB)" : "Relative SPL (dB)" } },
+                    y: { suggestedMin: $("iemSplMode")?.value === "absolute" ? undefined : -30, suggestedMax: $("iemSplMode")?.value === "absolute" ? undefined : 15, title: { display: true, text: $("iemSplMode")?.value === "absolute" ? "SPL (dB)" : "Relative SPL (dB)" } },
                 },
                 plugins: { legend: { position: "bottom" } },
             },
@@ -1927,6 +1953,7 @@
         return `
             <section class="iem-driver-section">
                 <div class="iem-panel-title"><div><span class="eyebrow">ACOUSTIC PATH</span><h3>Driver to nozzle.</h3></div></div>
+                ${referenceSummaryHtml(d)}
                 <div class="iem-path-toolbar">
                     ${[["tube", "+ TUBE"], ["damper", "+ DAMPER"], ["chamber", "+ CHAMBER"], ["nozzle", "+ NOZZLE"]].map(item => `<button class="iem-mini" data-add-path="${d.id}:${item[0]}">${item[1]}</button>`).join("")}
                 </div>
@@ -2087,6 +2114,15 @@
             const [id, index] = node.dataset.filterNode.split(":");
             const filter = find(id).circuit.filters[+index];
             node.querySelectorAll("[data-filter-field]").forEach(input => filter[input.dataset.filterField] = num(input.value));
+        });
+
+        document.querySelectorAll("[data-use-reference-path]").forEach(button => button.onclick = () => {
+            const d = find(button.dataset.useReferencePath);
+            const referencePath = (d?.measurementReferencePath || []).map(measurementReferenceToDesign).filter(Boolean);
+            if (!d || !referencePath.length) return;
+            d.path = structuredClone(referencePath);
+            renderDrivers();
+            calculate();
         });
 
         document.querySelectorAll("[data-add-path]").forEach(button => button.onclick = () => {
