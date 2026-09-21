@@ -1,10 +1,11 @@
 name: Build Acoustic WASM
 
+
 # ============================================================
 # HAMMER CRAFT
 # Rust Acoustic Engine -> WebAssembly
 #
-# Repository layout used by this workflow:
+# Repository:
 #
 # HammerCraft/
 # ├── .github/
@@ -22,38 +23,50 @@ name: Build Acoustic WASM
 #     ├── iem-designer.js
 #     └── ...
 #
-# This workflow:
-#   1. Checks out the repository
-#   2. Installs Rust
-#   3. Installs the wasm32 target
-#   4. Installs wasm-pack
-#   5. Checks the Rust acoustic engine
-#   6. Builds Rust -> WebAssembly
-#   7. Writes generated files to docs/wasm/
-#   8. Verifies the required output exists
-#   9. Commits generated WASM files back to main
-#  10. GitHub Pages then redeploys docs/
+#
+# BEHAVIOUR
+#
+# Any normal push to main:
+#
+#   push to main
+#       ↓
+#   build Rust engine
+#       ↓
+#   generate docs/wasm/
+#       ↓
+#   commit generated WASM
+#       ↓
+#   generated-WASM commit is ignored
+#
+#
+# This avoids having to manually press "Run workflow".
 # ============================================================
 
 
 on:
 
   # ----------------------------------------------------------
-  # Automatically rebuild when Rust source or this workflow
-  # changes.
+  # AUTOMATIC BUILD
+  #
+  # Run whenever main changes.
+  #
+  # Ignore commits which ONLY modify docs/wasm/**.
+  # This prevents the workflow's own generated WASM commit
+  # from starting another WASM build.
   # ----------------------------------------------------------
 
   push:
     branches:
       - main
 
-    paths:
-      - "docs/acoustic-engine/**"
-      - ".github/workflows/build-wasm.yml"
+    paths-ignore:
+      - "docs/wasm/**"
 
 
   # ----------------------------------------------------------
-  # Allow manual runs from GitHub Actions.
+  # MANUAL BUILD
+  #
+  # Keep this available as a backup.
   # ----------------------------------------------------------
 
   workflow_dispatch:
@@ -68,7 +81,21 @@ permissions:
 
 
 # ============================================================
-# JOB
+# CONCURRENCY
+#
+# Prevent multiple WASM builds from trying to push generated
+# files at the same time.
+# ============================================================
+
+concurrency:
+
+  group: hammer-craft-wasm-main
+
+  cancel-in-progress: true
+
+
+# ============================================================
+# JOBS
 # ============================================================
 
 jobs:
@@ -91,7 +118,10 @@ jobs:
         uses: actions/checkout@v4
 
         with:
+
           fetch-depth: 0
+
+          ref: main
 
 
       # ======================================================
@@ -103,6 +133,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
         with:
+
           targets: wasm32-unknown-unknown
 
 
@@ -113,7 +144,9 @@ jobs:
       - name: Show Rust versions
 
         run: |
+
           rustc --version
+
           cargo --version
 
 
@@ -126,6 +159,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
         with:
+
           workspaces: |
             docs/acoustic-engine -> target
 
@@ -137,10 +171,17 @@ jobs:
       - name: Install wasm-pack
 
         run: |
+
           if command -v wasm-pack >/dev/null 2>&1; then
+
             echo "wasm-pack is already installed."
+
           else
+
+            echo "Installing wasm-pack..."
+
             cargo install wasm-pack --locked
+
           fi
 
 
@@ -151,29 +192,65 @@ jobs:
       - name: Show wasm-pack version
 
         run: |
+
           wasm-pack --version
 
 
       # ======================================================
-      # 7. VERIFY SOURCE FOLDER
+      # 7. VERIFY SOURCE DIRECTORY
       # ======================================================
 
       - name: Verify acoustic engine source exists
 
         run: |
-          echo "Checking docs/acoustic-engine..."
+
+          echo ""
+          echo "=========================================="
+          echo "Checking acoustic engine source"
+          echo "=========================================="
+          echo ""
 
           if [ ! -d "docs/acoustic-engine" ]; then
-            echo "ERROR: docs/acoustic-engine directory does not exist."
+
+            echo "ERROR:"
+            echo "docs/acoustic-engine directory does not exist."
+
             exit 1
+
           fi
+
 
           if [ ! -f "docs/acoustic-engine/Cargo.toml" ]; then
-            echo "ERROR: docs/acoustic-engine/Cargo.toml does not exist."
+
+            echo "ERROR:"
+            echo "docs/acoustic-engine/Cargo.toml does not exist."
+
             exit 1
+
           fi
 
+
+          if [ ! -d "docs/acoustic-engine/src" ]; then
+
+            echo "ERROR:"
+            echo "docs/acoustic-engine/src does not exist."
+
+            exit 1
+
+          fi
+
+
           echo "Acoustic engine source found."
+
+          echo ""
+
+          echo "Cargo.toml:"
+          ls -lah docs/acoustic-engine/Cargo.toml
+
+          echo ""
+
+          echo "Source files:"
+          ls -lah docs/acoustic-engine/src
 
 
       # ======================================================
@@ -183,19 +260,36 @@ jobs:
       - name: Prepare WASM output directory
 
         run: |
+
+          echo ""
+          echo "=========================================="
+          echo "Preparing WASM output directory"
+          echo "=========================================="
+          echo ""
+
           mkdir -p docs/wasm
+
 
           echo "Removing previous generated WASM files..."
 
           rm -f docs/wasm/acoustic_engine.js
+
           rm -f docs/wasm/acoustic_engine_bg.wasm
+
           rm -f docs/wasm/acoustic_engine.d.ts
+
           rm -f docs/wasm/acoustic_engine_bg.wasm.d.ts
+
           rm -f docs/wasm/package.json
 
 
+          echo ""
+
+          echo "WASM output directory ready."
+
+
       # ======================================================
-      # 9. CHECK RUST ENGINE
+      # 9. CARGO CHECK
       # ======================================================
 
       - name: Check Rust acoustic engine
@@ -203,6 +297,13 @@ jobs:
         working-directory: docs/acoustic-engine
 
         run: |
+
+          echo ""
+          echo "=========================================="
+          echo "Running cargo check"
+          echo "=========================================="
+          echo ""
+
           cargo check
 
 
@@ -215,6 +316,13 @@ jobs:
         working-directory: docs/acoustic-engine
 
         run: |
+
+          echo ""
+          echo "=========================================="
+          echo "Building Hammer Craft WASM"
+          echo "=========================================="
+          echo ""
+
           wasm-pack build \
             --target web \
             --release \
@@ -276,6 +384,12 @@ jobs:
 
         run: |
 
+          echo ""
+          echo "=========================================="
+          echo "WASM output size"
+          echo "=========================================="
+          echo ""
+
           echo "acoustic_engine.js:"
           du -h docs/wasm/acoustic_engine.js
 
@@ -283,6 +397,8 @@ jobs:
 
           echo "acoustic_engine_bg.wasm:"
           du -h docs/wasm/acoustic_engine_bg.wasm
+
+          echo ""
 
 
       # ======================================================
@@ -300,35 +416,98 @@ jobs:
 
 
       # ======================================================
-      # 14. COMMIT GENERATED WASM
+      # 14. STAGE GENERATED WASM
+      # ======================================================
+
+      - name: Stage generated WASM files
+
+        run: |
+
+          echo ""
+          echo "=========================================="
+          echo "Staging generated WASM"
+          echo "=========================================="
+          echo ""
+
+
+          # Force-add because WASM files may be ignored by a
+          # repository or global .gitignore rule.
+
+          git add -f docs/wasm/
+
+
+          echo "Git status:"
+          git status --short
+
+
+      # ======================================================
+      # 15. COMMIT GENERATED WASM
       # ======================================================
 
       - name: Commit generated WASM files
 
         run: |
 
-          # Force-add in case an old .gitignore rule ignores wasm.
-          git add -f docs/wasm/
+          echo ""
+          echo "=========================================="
+          echo "Checking generated WASM changes"
+          echo "=========================================="
+          echo ""
 
 
           if git diff --cached --quiet; then
 
-            echo ""
             echo "No generated WASM changes detected."
+
             echo "Nothing needs to be committed."
 
           else
 
-            echo ""
             echo "Generated WASM changed."
-            echo "Creating commit..."
+
+            echo ""
+
+            echo "Creating generated WASM commit..."
+
 
             git commit \
               -m "Build Hammer Craft acoustic engine WASM"
 
 
             echo ""
-            echo "Updating local branch before push..."
+
+            echo "WASM commit created."
+
+          fi
+
+
+      # ======================================================
+      # 16. UPDATE MAIN AND PUSH
+      # ======================================================
+
+      - name: Push generated WASM to main
+
+        run: |
+
+          echo ""
+          echo "=========================================="
+          echo "Updating main"
+          echo "=========================================="
+          echo ""
+
+
+          # If no commit was created in the previous step,
+          # there is nothing to push.
+
+          if git log -1 --pretty=%B | grep -q \
+            "^Build Hammer Craft acoustic engine WASM$"; then
+
+            echo "Generated WASM commit detected."
+
+            echo ""
+
+            echo "Rebasing onto latest main..."
+
 
             git pull \
               --rebase \
@@ -337,7 +516,9 @@ jobs:
 
 
             echo ""
-            echo "Pushing generated WASM to main..."
+
+            echo "Pushing generated WASM..."
+
 
             git push \
               origin \
@@ -345,13 +526,20 @@ jobs:
 
 
             echo ""
-            echo "Generated WASM committed successfully."
+
+            echo "Generated WASM pushed successfully."
+
+          else
+
+            echo "No new generated WASM commit."
+
+            echo "Skipping push."
 
           fi
 
 
       # ======================================================
-      # 15. FINAL CHECK
+      # 17. FINAL STATUS
       # ======================================================
 
       - name: Final build status
@@ -371,15 +559,16 @@ jobs:
           echo "Generated website files:"
 
           echo "  docs/wasm/acoustic_engine.js"
+
           echo "  docs/wasm/acoustic_engine_bg.wasm"
 
           echo ""
 
-          echo "GitHub Pages should now redeploy docs/."
+          echo "GitHub Pages can now deploy the updated docs/ directory."
 
           echo ""
 
-          echo "Expected deployed module URL:"
+          echo "Expected website module:"
 
           echo "https://www.hammer-craft.co.uk/wasm/acoustic_engine.js"
 
