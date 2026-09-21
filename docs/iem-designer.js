@@ -11,6 +11,7 @@
         products: [],
         drivers: [],
         library: [],
+        databaseLibrary: [],
         target: [],
         reverse: [],
         reverseBase: [],
@@ -2115,11 +2116,120 @@
         renderLibrary();
     }
 
-    function renderLibrary() {
+    function databaseDriverToDesign(row) {
+        const d = driver();
+        d.name = [row.manufacturer, row.model].filter(Boolean).join(" ");
+        d.type = String(row.driver_type || "ba").toLowerCase();
+        d.impedance = num(row.nominal_impedance_ohm, 16);
+        d.sensitivity = num(row.sensitivity_db, 0);
+        d.sensitivityRef = 1000;
+        d.responseAbsolute = true;
+        d.measurement = (row.fr || []).map(p => ({
+            frequency: num(p.frequency_hz),
+            db: num(p.magnitude_db),
+            phase: num(p.phase_deg, 0),
+        })).filter(p => p.frequency > 0).sort((a, b) => a.frequency - b.frequency);
+        d.impedanceCurve = (row.impedance_curve || []).map(p => ({
+            frequency: num(p.frequency_hz),
+            ohm: num(p.impedance_ohm),
+            phase: num(p.phase_deg, 0),
+        })).filter(p => p.frequency > 0 && p.ohm > 0).sort((a, b) => a.frequency - b.frequency);
+        d.databaseDriverId = row.id;
+        d.databaseMeasurementId = row.measurement_id || null;
+        d.databaseSource = row.source_name || row.measurement_name || "Database";
+        d.databaseSparseResponse = d.measurement.length < 20;
+        return ensureDriverShape(d);
+    }
+
+    async function loadDatabaseLibrary() {
+        if (!window.hcSupabase) {
+            state.databaseLibrary = [];
+            return;
+        }
+        const { data: drivers, error } = await window.hcSupabase
+            .from("iem_drivers")
+            .select("id,manufacturer,model,driver_type,nominal_impedance_ohm,sensitivity_db,sensitivity_reference,rated_power_mw,notes")
+            .order("manufacturer")
+            .order("model");
+        if (error) {
+            console.warn("Unable to load database driver library:", error);
+            state.databaseLibrary = [];
+            return;
+        }
+
+        const rows = [];
+        for (const drv of drivers || []) {
+            const { data: sets, error: setError } = await window.hcSupabase
+                .from("iem_driver_measurements")
+                .select("id,measurement_name,source_type,source_name,is_default,fixture,coupler,drive_voltage_v,notes")
+                .eq("driver_id", drv.id)
+                .order("is_default", { ascending: false })
+                .limit(1);
+            if (setError) console.warn("Unable to load measurement set:", setError);
+
+            const set = sets?.[0] || null;
+            let fr = [], impedance_curve = [];
+            if (set) {
+                const [frResult, zResult] = await Promise.all([
+                    window.hcSupabase.from("iem_driver_fr")
+                        .select("frequency_hz,magnitude_db,phase_deg")
+                        .eq("measurement_id", set.id).order("frequency_hz"),
+                    window.hcSupabase.from("iem_driver_impedance")
+                        .select("frequency_hz,impedance_ohm,phase_deg")
+                        .eq("measurement_id", set.id).order("frequency_hz")
+                ]);
+                if (frResult.error) console.warn("Unable to load driver FR:", frResult.error);
+                if (zResult.error) console.warn("Unable to load driver impedance:", zResult.error);
+                fr = frResult.data || [];
+                impedance_curve = zResult.data || [];
+            }
+            rows.push({
+                ...drv,
+                measurement_id: set?.id || null,
+                measurement_name: set?.measurement_name || null,
+                source_name: set?.source_name || null,
+                fr,
+                impedance_curve
+            });
+        }
+        state.databaseLibrary = rows;
+    }
+
+    async function renderLibrary() {
         state.library = JSON.parse(localStorage.getItem("hc_iem_driver_library") || "[]").map(ensureDriverShape);
-        $("iemDriverLibrary").innerHTML = state.library.length
-            ? state.library.map((d, i) => `<article class="iem-library-card"><span class="eyebrow">${esc(d.type.toUpperCase())}</span><h4>${esc(d.name)}</h4><p>${d.impedance} Ω · ${d.sensitivity || "—"} dB SPL</p><div class="iem-library-actions"><button class="outline-button" data-lib-use="${i}">ADD TO DESIGN</button><button class="danger-button" data-lib-delete="${i}">DELETE</button></div></article>`).join("")
-            : '<div class="loading-card">No reusable drivers saved.</div>';
+        await loadDatabaseLibrary();
+
+        const databaseCards = state.databaseLibrary.map((row, i) => {
+            const frCount = row.fr?.length || 0;
+            const zCount = row.impedance_curve?.length || 0;
+            const sparse = frCount > 0 && frCount < 20;
+            return `<article class="iem-library-card">
+                <span class="eyebrow">DATABASE · ${esc(String(row.driver_type || "DRIVER").toUpperCase())}</span>
+                <h4>${esc(row.manufacturer)} ${esc(row.model)}</h4>
+                <p>${row.nominal_impedance_ohm ?? "—"} Ω · ${row.sensitivity_db ?? "—"} dB SPL</p>
+                <p class="iem-field-note">${esc(row.measurement_name || "No measurement set")} · FR ${frCount} pts · Z ${zCount} pts${sparse ? " · sparse datasheet landmarks" : ""}</p>
+                <div class="iem-library-actions"><button class="outline-button" data-db-lib-use="${i}">ADD TO DESIGN</button></div>
+            </article>`;
+        }).join("");
+
+        const localCards = state.library.map((d, i) => `<article class="iem-library-card">
+            <span class="eyebrow">LOCAL · ${esc(d.type.toUpperCase())}</span>
+            <h4>${esc(d.name)}</h4>
+            <p>${d.impedance} Ω · ${d.sensitivity || "—"} dB SPL</p>
+            <div class="iem-library-actions"><button class="outline-button" data-lib-use="${i}">ADD TO DESIGN</button><button class="danger-button" data-lib-delete="${i}">DELETE</button></div>
+        </article>`).join("");
+
+        $("iemDriverLibrary").innerHTML = databaseCards + localCards || '<div class="loading-card">No drivers available.</div>';
+
+        document.querySelectorAll("[data-db-lib-use]").forEach(button => button.onclick = () => {
+            const d = databaseDriverToDesign(state.databaseLibrary[+button.dataset.dbLibUse]);
+            d.id = uid();
+            state.drivers.push(d);
+            renderDrivers();
+            refreshReverseDrivers();
+            document.querySelector('[data-iem-tab="design"]')?.click();
+            calculate();
+        });
         document.querySelectorAll("[data-lib-use]").forEach(button => button.onclick = () => {
             const d = structuredClone(state.library[+button.dataset.libUse]);
             d.id = uid();
