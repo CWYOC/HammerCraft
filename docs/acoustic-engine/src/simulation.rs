@@ -98,11 +98,12 @@ pub fn simulate_driver_at_frequency(
         let mut reference_driver = driver.clone();
         reference_driver.acoustic_path = driver.measurement_reference_path.clone();
         reference_driver.measurement_reference_path.clear();
+        let reference_load = driver.measurement_reference_load.as_ref().unwrap_or(load);
         let reference_transfer = acoustic_transfer(
             &reference_driver,
             frequency_hz,
             environment,
-            load,
+            reference_load,
         );
         if reference_transfer.norm() > 1e-18 {
             design_transfer / reference_transfer

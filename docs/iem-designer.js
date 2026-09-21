@@ -532,6 +532,7 @@
                     measurement_reference_path: d.measurementReferenceCompensation
                         ? (d.measurementReferencePath || []).map(measurementReferenceToRust).filter(Boolean)
                         : [],
+                    measurement_reference_load: d.measurementReferenceCompensation ? d.measurementReferenceLoad : null,
                     acoustic_source: { type: "ideal_pressure" },
                 };
             }),
@@ -2177,8 +2178,19 @@
         d.databaseSparseResponse = d.measurement.length < 20;
         d.measurementReferencePath = structuredClone(row.reference_path || []);
         d.measurementReferenceCoupler = row.coupler || null;
-        d.measurementReferenceCompensation = d.measurementReferencePath.length > 0;
+        d.measurementReferenceLoad = referenceCouplerLoad(row.coupler);
+        d.measurementReferenceCompensation = d.measurementReferencePath.length > 0 && Boolean(d.measurementReferenceLoad);
+        d.databaseImpedanceSource = row.impedance_source || row.measurement_name || null;
         return ensureDriverShape(d);
+    }
+
+    function referenceCouplerLoad(coupler) {
+        const text = String(coupler || "").trim().toLowerCase();
+        if (!text) return null;
+        if (text.includes("iec 711") || text.includes("iec711") || text.includes("60318-4") || text.includes("60318 4") || text.includes("711 coupler")) {
+            return { type: "generic_711_approx" };
+        }
+        return null;
     }
 
     async function loadDatabaseLibrary() {
@@ -2218,8 +2230,7 @@
                 .from("iem_driver_measurements")
                 .select("id,measurement_name,source_type,source_name,is_default,fixture,coupler,drive_voltage_v,notes")
                 .eq("driver_id", drv.id)
-                .order("is_default", { ascending: false })
-                .limit(1);
+                .order("is_default", { ascending: false });
             if (setError) console.warn("Unable to load measurement set:", setError);
 
             const set = sets?.[0] || null;
@@ -2242,6 +2253,24 @@
                 fr = frResult.data || [];
                 impedance_curve = zResult.data || [];
                 reference_path = pathResult.data || [];
+
+                if (!impedance_curve.length) {
+                    for (const impedanceSet of (sets || []).filter(item => item.id !== set.id)) {
+                        const zFallback = await db.from("iem_driver_impedance")
+                            .select("frequency_hz,impedance_ohm,phase_deg")
+                            .eq("measurement_id", impedanceSet.id)
+                            .order("frequency_hz");
+                        if (zFallback.error) {
+                            console.warn("Unable to load fallback driver impedance:", zFallback.error);
+                            continue;
+                        }
+                        if (zFallback.data?.length) {
+                            impedance_curve = zFallback.data;
+                            set.impedance_source = impedanceSet.measurement_name;
+                            break;
+                        }
+                    }
+                }
             }
             rows.push({
                 ...drv,
@@ -2251,7 +2280,8 @@
                 coupler: set?.coupler || null,
                 fr,
                 impedance_curve,
-                reference_path
+                reference_path,
+                impedance_source: set?.impedance_source || set?.measurement_name || null
             });
         }
         state.databaseLibrary = rows;
@@ -2269,7 +2299,7 @@
                 <span class="eyebrow">DATABASE · ${esc(String(row.driver_type || "DRIVER").toUpperCase())}</span>
                 <h4>${esc(row.manufacturer)} ${esc(row.model)}</h4>
                 <p>${row.nominal_impedance_ohm ?? "—"} Ω · ${row.sensitivity_db ?? "—"} dB SPL</p>
-                <p class="iem-field-note">${esc(row.measurement_name || "No measurement set")} · FR ${frCount} pts · Z ${zCount} pts${sparse ? " · sparse datasheet landmarks" : ""}${row.reference_path?.length ? " · reference path compensated" : ""}</p>
+                <p class="iem-field-note">${esc(row.measurement_name || "No measurement set")} · FR ${frCount} pts · Z ${zCount} pts${sparse ? " · sparse datasheet landmarks" : ""}${row.reference_path?.length && referenceCouplerLoad(row.coupler) ? " · reference path + coupler compensated" : row.reference_path?.length ? " · reference path stored; coupler unknown, compensation disabled" : ""}${row.impedance_source && row.impedance_source !== row.measurement_name ? " · Z from " + esc(row.impedance_source) : ""}</p>
                 <div class="iem-library-actions"><button class="outline-button" data-db-lib-use="${i}">ADD TO DESIGN</button></div>
             </article>`;
         }).join("");

@@ -179,6 +179,11 @@ pub struct Driver {
     pub acoustic_path: Vec<AcousticElement>,
     #[serde(default)]
     pub measurement_reference_path: Vec<AcousticElement>,
+    // Reference termination used by the published/digitised measurement.
+    // Kept separate from the user's design load so changing the design load
+    // cannot silently change the manufacturer de-embedding calculation.
+    #[serde(default)]
+    pub measurement_reference_load: Option<AcousticLoad>,
     #[serde(default)]
     pub acoustic_source: AcousticSource,
 }
