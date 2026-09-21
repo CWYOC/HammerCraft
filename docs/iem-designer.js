@@ -513,7 +513,7 @@
         const info = referenceInfo(d);
         const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
         const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
-        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR phase: manufacturer phase unavailable where not supplied; electrical/acoustic model phase is used.${d.referenceValidationMode ? " · VALIDATION MODE: design path and output load are matched to the datasheet reference, so acoustic correction should be unity." : ""}</div></div>`;
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR phase: manufacturer phase unavailable where not supplied; electrical/acoustic model phase is used.${d.referenceValidationMode ? " · VALIDATION MODE: design path and output load are matched to the datasheet reference, so acoustic correction should be unity. · REFERENCE CORRECTION @ 1 kHz: 0.00 dB / 0.00°" : ""}</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -619,8 +619,18 @@
         const frequency = clamp(num($("iemNormalizeFrequency")?.value, 1000), 20, 20000);
         const mode = $("iemNormalizeMode")?.value || "system";
         let offset;
-        if (mode === "each" || kind === "target") offset = interp(series, frequency);
-        else offset = state.last?.combined?.length ? interp(state.last.combined, frequency) : interp(series, frequency);
+
+        // Individual-driver traces must be stable when another driver is
+        // added/removed. In relative view they are therefore normalized to
+        // their own response. "System" normalization belongs to the combined
+        // trace only.
+        if (kind === "driver" || mode === "each" || kind === "target") {
+            offset = interp(series, frequency);
+        } else {
+            offset = state.last?.combined?.length
+                ? interp(state.last.combined, frequency)
+                : interp(series, frequency);
+        }
         return series.map(point => ({ ...point, db: point.db - offset }));
     }
 
@@ -628,12 +638,30 @@
         if (!state.last || !window.Chart) return;
         const datasets = [];
         if ($("iemShowIndividual")?.checked) {
-            state.last.drivers.forEach((response, index) => datasets.push({
-                label: state.drivers[index]?.name || `Driver ${index + 1}`,
-                data: displaySeries(response).map(point => ({ x: point.frequency, y: point.db })),
-                pointRadius: 0,
-                borderWidth: 1.5,
-            }));
+            state.last.drivers.forEach((response, index) => {
+                const d = state.drivers[index];
+                datasets.push({
+                    label: d?.name || `Driver ${index + 1}`,
+                    data: displaySeries(response, "driver").map(point => ({ x: point.frequency, y: point.db })),
+                    pointRadius: 0,
+                    borderWidth: 1.5,
+                });
+
+                if (d?.databaseDriverId && d.measurement?.length > 1) {
+                    const baseline = d.measurement.map(point => ({
+                        frequency: point.frequency,
+                        db: point.db,
+                        phase: point.phase || 0,
+                    }));
+                    datasets.push({
+                        label: `${d.name} · Datasheet baseline`,
+                        data: displaySeries(baseline, "driver").map(point => ({ x: point.frequency, y: point.db })),
+                        pointRadius: 0,
+                        borderWidth: 1.25,
+                        borderDash: [6, 5],
+                    });
+                }
+            });
         }
         if ($("iemShowCombined")?.checked) {
             datasets.push({
