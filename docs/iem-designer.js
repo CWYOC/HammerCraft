@@ -513,7 +513,7 @@
         const info = referenceInfo(d);
         const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
         const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
-        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? " · VALIDATION MODE: design path and output load are matched to the datasheet reference, so acoustic correction should be unity. · REFERENCE CORRECTION @ 1 kHz: 0.00 dB / 0.00°" : ""}</div></div>`;
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? (() => { const vi = state.drivers.indexOf(d); const v = state.last?.validation?.[vi]; return ` · VALIDATION MODE: design path and output load are matched to the datasheet reference.${v ? ` · FULL-BAND UNITY ${v.pass ? "PASS" : "FAIL"} · max error ${v.maxAbsDb.toFixed(3)} dB · RMS ${v.rmsDb.toFixed(3)} dB` : " · Press CALCULATE to run full-band unity check."}`; })() : ""}</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -563,10 +563,10 @@
                     name: d.name,
                     driver_type: ({ dd: "dynamic", ba: "balanced_armature", planar: "planar", magnetostatic: "magnetostatic", bc: "bone_conduction" }[d.type] || "other"),
                     nominal_impedance_ohm: d.impedance,
-                    sensitivity_db: d.sensitivity,
+                    sensitivity_db: d.databaseDriverId ? 0 : d.sensitivity,
                     sensitivity_reference_hz: d.sensitivityRef,
-                    response_absolute_spl: d.responseAbsolute,
-                    gain_db: d.gain,
+                    response_absolute_spl: d.databaseDriverId ? false : d.responseAbsolute,
+                    gain_db: d.databaseDriverId ? 0 : d.gain,
                     polarity_inverted: d.polarity < 0,
                     response: d.databaseDriverId
                         ? []
@@ -609,7 +609,7 @@
                     if (!d?.databaseDriverId || !d.measurement?.length) return response;
                     return response.map(point => ({
                         frequency: point.frequency,
-                        db: rawDb(d, point.frequency) + point.db,
+                        db: rawDb(d, point.frequency) + point.db + num(d.gain),
                         // Manufacturer phase is currently unavailable for the
                         // digitised datasets, so model phase is retained.
                         phase: point.phase,
@@ -636,8 +636,24 @@
                     };
                 });
 
-                result = { drivers: composedDrivers, combined };
-                $("iemEngineStatus").textContent = `${await window.HCAcousticEngine.version()} · BASELINE + MODEL DELTA`;
+                const validation = composedDrivers.map((response, index) => {
+                    const d = state.drivers[index];
+                    if (!d?.databaseDriverId || !d.referenceValidationMode || !d.measurement?.length) return null;
+                    const errors = response.map(point =>
+                        point.db - (rawDb(d, point.frequency) + num(d.gain))
+                    ).filter(Number.isFinite);
+                    if (!errors.length) return null;
+                    const maxAbsDb = Math.max(...errors.map(Math.abs));
+                    const rmsDb = Math.sqrt(errors.reduce((sum, value) => sum + value * value, 0) / errors.length);
+                    return { maxAbsDb, rmsDb, pass: maxAbsDb <= 0.05 };
+                });
+
+                result = { drivers: composedDrivers, combined, validation };
+                const activeValidation = validation.filter(Boolean);
+                const validationText = activeValidation.length
+                    ? ` · UNITY ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${Math.max(...activeValidation.map(v => v.maxAbsDb)).toFixed(3)} dB`
+                    : "";
+                $("iemEngineStatus").textContent = `${await window.HCAcousticEngine.version()} · BASELINE + MODEL DELTA${validationText}`;
             } else {
                 throw new Error("WASM unavailable");
             }
