@@ -1,0 +1,209 @@
+{
+  "source": "Sonion 2356 Data Sheet 3230-3018235 Version 2",
+  "notes": "Approximate digitisation of manufacturer Typical response curve. Magnitude only; phase not supplied. Reference acoustic path copied from source datasheet measurement.",
+  "nominalImpedance": 41.5,
+  "referencePath": [
+    {
+      "element_type": "tube",
+      "length_mm": 4.5,
+      "inner_diameter_mm": 1.4
+    },
+    {
+      "element_type": "tube",
+      "length_mm": 11,
+      "inner_diameter_mm": 1.9
+    }
+  ],
+  "response": [
+    {
+      "frequency": 20,
+      "db": 109.8,
+      "phase": 0
+    },
+    {
+      "frequency": 25,
+      "db": 110,
+      "phase": 0
+    },
+    {
+      "frequency": 31.5,
+      "db": 110.2,
+      "phase": 0
+    },
+    {
+      "frequency": 40,
+      "db": 110.3,
+      "phase": 0
+    },
+    {
+      "frequency": 50,
+      "db": 110.3,
+      "phase": 0
+    },
+    {
+      "frequency": 63,
+      "db": 110.2,
+      "phase": 0
+    },
+    {
+      "frequency": 80,
+      "db": 110.1,
+      "phase": 0
+    },
+    {
+      "frequency": 100,
+      "db": 110,
+      "phase": 0
+    },
+    {
+      "frequency": 125,
+      "db": 109.8,
+      "phase": 0
+    },
+    {
+      "frequency": 160,
+      "db": 109.5,
+      "phase": 0
+    },
+    {
+      "frequency": 200,
+      "db": 109,
+      "phase": 0
+    },
+    {
+      "frequency": 250,
+      "db": 108.4,
+      "phase": 0
+    },
+    {
+      "frequency": 315,
+      "db": 107.8,
+      "phase": 0
+    },
+    {
+      "frequency": 400,
+      "db": 107.1,
+      "phase": 0
+    },
+    {
+      "frequency": 500,
+      "db": 106.5,
+      "phase": 0
+    },
+    {
+      "frequency": 630,
+      "db": 106.1,
+      "phase": 0
+    },
+    {
+      "frequency": 800,
+      "db": 106.1,
+      "phase": 0
+    },
+    {
+      "frequency": 1000,
+      "db": 106.5,
+      "phase": 0
+    },
+    {
+      "frequency": 1250,
+      "db": 108.2,
+      "phase": 0
+    },
+    {
+      "frequency": 1600,
+      "db": 111.5,
+      "phase": 0
+    },
+    {
+      "frequency": 2000,
+      "db": 115,
+      "phase": 0
+    },
+    {
+      "frequency": 2250,
+      "db": 117,
+      "phase": 0
+    },
+    {
+      "frequency": 2670,
+      "db": 118.5,
+      "phase": 0
+    },
+    {
+      "frequency": 3150,
+      "db": 116,
+      "phase": 0
+    },
+    {
+      "frequency": 3850,
+      "db": 112.5,
+      "phase": 0
+    },
+    {
+      "frequency": 4500,
+      "db": 116,
+      "phase": 0
+    },
+    {
+      "frequency": 4880,
+      "db": 120,
+      "phase": 0
+    },
+    {
+      "frequency": 5500,
+      "db": 114,
+      "phase": 0
+    },
+    {
+      "frequency": 6300,
+      "db": 105,
+      "phase": 0
+    },
+    {
+      "frequency": 7060,
+      "db": 100.5,
+      "phase": 0
+    },
+    {
+      "frequency": 8075,
+      "db": 106.5,
+      "phase": 0
+    },
+    {
+      "frequency": 9000,
+      "db": 104,
+      "phase": 0
+    },
+    {
+      "frequency": 10000,
+      "db": 101,
+      "phase": 0
+    },
+    {
+      "frequency": 12000,
+      "db": 96,
+      "phase": 0
+    },
+    {
+      "frequency": 14000,
+      "db": 92,
+      "phase": 0
+    },
+    {
+      "frequency": 15500,
+      "db": 90,
+      "phase": 0
+    },
+    {
+      "frequency": 18000,
+      "db": 88,
+      "phase": 0
+    },
+    {
+      "frequency": 20000,
+      "db": 87,
+      "phase": 0
+    }
+  ]
+}

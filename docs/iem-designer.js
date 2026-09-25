@@ -6,6 +6,8 @@
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
     const uid = () => crypto.randomUUID ? crypto.randomUUID() : `id-${Date.now()}-${Math.random()}`;
     const snap = value => Math.round(value / 20) * 20;
+    // Catalog dampers use CGS acoustic ohms. The WASM API uses Pa·s/m³ (SI).
+    const ACOUSTIC_CGS_TO_SI = 1e5;
 
     const state = {
         products: [],
@@ -142,6 +144,28 @@
         if (!d.circuit.ground) d.circuit.ground = "gnd";
         if (!d.circuit.output) d.circuit.output = d.circuit.input;
         if (!Array.isArray(d.path)) d.path = [];
+        if (d.databaseDriverId && d.measurement.length) {
+            // Recover newly supported couplers in existing saved projects too.
+            const recoveredLoad = !d.measurementReferenceLoad && referenceCouplerLoad(d.measurementReferenceCoupler);
+            if (recoveredLoad) d.measurementReferenceLoad = recoveredLoad;
+            const reference = referenceInfo(d);
+            if (!reference.complete) d.measurementReferenceCompensation = false;
+            else if (recoveredLoad || d.measurementReferenceCompensation == null) d.measurementReferenceCompensation = true;
+        }
+        // A measured response alone does not identify the receiver's source
+        // impedance. Use an explicit finite estimate for de-embedding, anchored
+        // to the reference bore once, never to an edited design/candidate bore.
+        if (!d.sourceModel) d.sourceModel = d.measurementReferenceCompensation ? "estimated_resistance" : "ideal_pressure";
+        if (d.sourceReferenceDiameterMm == null) {
+            d.sourceReferenceDiameterMm = finitePositive(d.measurementReferencePath?.find(e => e.element_type === "tube")?.inner_diameter_mm)
+                || finitePositive(d.path.find(e => e.type === "tube" || e.type === "nozzle")?.diameter) || 2;
+        }
+        if (d.sourceResistanceCgs == null || d.sourceModel === "estimated_resistance") {
+            const area = Math.PI * (d.sourceReferenceDiameterMm * 0.001 / 2) ** 2;
+            const rho = 1.2929 * 273.15 / 293.15;
+            const c = 331.3 + 0.606 * 20 + 0.0124 * 50;
+            d.sourceResistanceCgs = rho * c / area / ACOUSTIC_CGS_TO_SI;
+        }
         return d;
     }
 
@@ -478,7 +502,7 @@
 
     function toRustPath(element) {
         if (element.type === "tube") return { type: "tube", length_mm: element.length, diameter_mm: element.diameter, loss_factor: element.loss || 0 };
-        if (element.type === "damper") return { type: "damper", resistance_acoustic_ohm: element.value };
+        if (element.type === "damper") return { type: "damper", resistance_acoustic_ohm: element.value * ACOUSTIC_CGS_TO_SI };
         if (element.type === "chamber") return { type: "expansion_chamber", length_mm: element.length, diameter_mm: element.diameter };
         return { type: "nozzle", length_mm: element.length, diameter_mm: element.diameter };
     }
@@ -496,7 +520,7 @@
         }
         if (element.element_type === "damper") {
             const resistance = finitePositive(element.damper_ohm);
-            return resistance ? { type: "damper", resistance_acoustic_ohm: resistance } : null;
+            return resistance ? { type: "damper", resistance_acoustic_ohm: resistance * ACOUSTIC_CGS_TO_SI } : null;
         }
         if (element.element_type === "chamber") {
             const length = finitePositive(element.length_mm);
@@ -521,6 +545,7 @@
             if ($("iemCouplerVolume") && Number.isFinite(Number(load.volume_mm3))) {
                 $("iemCouplerVolume").value = Number(load.volume_mm3);
             }
+            if ($("iemLoadLossResistance")) $("iemLoadLossResistance").value = num(load.loss_resistance_acoustic_ohm);
             select.dispatchEvent(new Event("change", { bubbles: true }));
             return true;
         }
@@ -531,7 +556,7 @@
         const rust = measurementReferenceToRust(element);
         if (!rust) return null;
         if (rust.type === "tube") return { type: "tube", length: rust.length_mm, diameter: rust.diameter_mm, loss: 0 };
-        if (rust.type === "damper") return { type: "damper", value: rust.resistance_acoustic_ohm };
+        if (rust.type === "damper") return { type: "damper", value: rust.resistance_acoustic_ohm / ACOUSTIC_CGS_TO_SI };
         if (rust.type === "expansion_chamber") return { type: "chamber", length: rust.length_mm, diameter: rust.diameter_mm };
         return null;
     }
@@ -541,18 +566,29 @@
         const modelled = raw.map(measurementReferenceToDesign).filter(Boolean);
         const couplerModelled = Boolean(d.measurementReferenceLoad);
         const unsupported = raw.filter(e => e.element_type !== "coupler" && !measurementReferenceToDesign(e));
-        const hasCouplerElement = raw.some(e => e.element_type === "coupler");
-        const full = couplerModelled && unsupported.length === 0 && (!hasCouplerElement || couplerModelled);
-        const partial = (couplerModelled || modelled.length) && !full;
-        return { raw, modelled, unsupported, couplerModelled, status: full ? "MODELLED" : partial ? "PARTIAL" : "UNAVAILABLE" };
+        // A coupler record is not evidence of a zero-length reference adapter.
+        const hasGeometry = modelled.some(e => ["tube", "chamber", "nozzle"].includes(e.type));
+        const complete = couplerModelled && hasGeometry && unsupported.length === 0;
+        const partial = (couplerModelled || modelled.length) && !complete;
+        return { raw, modelled, unsupported, couplerModelled, hasGeometry, complete, status: complete ? "APPROXIMATE" : partial ? "INCOMPLETE" : "UNAVAILABLE" };
+    }
+
+    function databaseReferenceError(d) {
+        if (!d.databaseDriverId || !d.measurement?.length) return "";
+        const info = referenceInfo(d);
+        if (info.unsupported.length) return `Reference adapter geometry is missing or unsupported (${info.unsupported.map(e => e.description || e.element_type).join(", ")}).`;
+        if (!info.hasGeometry) return "Reference tube/adapter dimensions are missing; a coupler name alone is insufficient.";
+        if (!info.couplerModelled) return "The measurement coupler has no supported load approximation.";
+        if (!d.measurementReferenceCompensation) return "Measurement-reference compensation is disabled.";
+        return "";
     }
 
     function referenceSummaryHtml(d) {
         if (!d.databaseDriverId) return "";
         const info = referenceInfo(d);
-        const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
+        const parts = info.modelled.map(e => e.type === "tube" ? `Tube ${e.length} mm × ${e.diameter} mm ID` : e.type === "damper" ? `Damper ${e.value} CGS acoustic Ω` : `Chamber ${e.length} mm × ${e.diameter} mm`);
         const unknown = info.unsupported.map(e => e.description || e.element_type).filter(Boolean);
-        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.modelled.length ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">VALIDATE DATASHEET REFERENCE</button>` : ""}</div><div class="iem-field-note" data-reference-validation-readout="${d.id}">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.${d.referenceValidationMode ? (() => { const vi = state.drivers.indexOf(d); const v = state.last?.validation?.[vi]; return ` · VALIDATION MODE: design path and output load are matched to the datasheet reference.${v ? ` · UNITY ${v.pass ? "PASS" : "FAIL"} over measured FR span ${Math.round(v.minFrequencyHz)}–${Math.round(v.maxFrequencyHz)} Hz · max error ${v.maxAbsDb.toFixed(3)} dB @ ${Math.round(v.maxErrorFrequencyHz)} Hz · RMS ${v.rmsDb.toFixed(3)} dB · ${v.sampleCount} samples` : " · Press CALCULATE to run measured-span unity check."}`; })() : ""}</div></div>`;
+        return `<div class="iem-reference-panel"><div><span class="eyebrow">MEASUREMENT REFERENCE</span> <strong>${esc(d.measurementReferenceCoupler || "Coupler not specified")}</strong></div><div class="iem-field-note">${parts.length ? esc(parts.join(" · ")) : "No modelled tube/damper geometry"}${unknown.length ? ` · Unmodelled: ${esc(unknown.join(", "))}` : ""}</div><div class="iem-reference-actions"><span class="iem-engine-badge">CORRECTION ${info.status}</span>${info.complete ? `<button class="outline-button" type="button" data-use-reference-path="${d.id}">CHECK REFERENCE UNITY</button>` : ""}</div><div class="iem-field-note" data-reference-validation-readout="${d.id}">FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used. A unity pass checks arithmetic consistency only.${d.referenceValidationMode ? (() => { const vi = state.drivers.indexOf(d); const v = state.last?.validation?.[vi]; return ` · REFERENCE UNITY CHECK: matched geometry tests cancellation, not prediction accuracy.${v ? ` · UNITY ${v.pass ? "PASS" : "FAIL"} over measured FR span ${Math.round(v.minFrequencyHz)}–${Math.round(v.maxFrequencyHz)} Hz · max error ${v.maxAbsDb.toFixed(3)} dB @ ${Math.round(v.maxErrorFrequencyHz)} Hz · RMS ${v.rmsDb.toFixed(3)} dB · ${v.sampleCount} samples` : " · Press CALCULATE to run measured-span unity check."}`; })() : ""}</div></div>`;
     }
 
     function toRustFilter(filter) {
@@ -631,7 +667,13 @@
                     measurement_reference_load: d.measurementReferenceCompensation
                         ? referenceLoadToRust(d.measurementReferenceLoad)
                         : null,
-                    acoustic_source: { type: "ideal_pressure" },
+                    acoustic_source: d.sourceModel === "ideal_pressure" ? { type: "ideal_pressure" } : {
+                        // Fixed physical R in both paths, using the existing R+M
+                        // source with M=0. Characteristic would change R whenever
+                        // the design bore differs from the reference bore.
+                        type: "outlet_inertance", outlet_diameter_mm: d.sourceReferenceDiameterMm,
+                        effective_length_mm: 0, resistance_acoustic_ohm: d.sourceResistanceCgs * ACOUSTIC_CGS_TO_SI,
+                    },
                 };
             }),
         };
@@ -650,6 +692,12 @@
         if (loadType === "closed_cavity" && !nonnegative($("iemLoadLossResistance").value)) errors.push("Load resistance must be non-negative.");
         if (loadType === "cavity_with_leak" && !positive($("iemLeakResistance").value)) errors.push("Leak resistance must be greater than zero.");
         for (const d of state.drivers) {
+            ensureDriverShape(d);
+            const referenceError = databaseReferenceError(d);
+            if (referenceError) errors.push(`${d.name}: acoustic prediction unavailable. ${referenceError} Add verified measurement-fixture data to the driver reference before simulating.`);
+            if (!["ideal_pressure", "estimated_resistance", "custom_resistance"].includes(d.sourceModel)) errors.push(`${d.name}: select a valid source model.`);
+            if (d.sourceModel !== "ideal_pressure" && !positive(d.sourceResistanceCgs)) errors.push(`${d.name}: source resistance must be greater than zero.`);
+            if (!positive(d.sourceReferenceDiameterMm)) errors.push(`${d.name}: source reference bore must be greater than zero.`);
             if (!positive(d.impedance)) errors.push(`${d.name}: impedance must be greater than zero.`);
             if (!positive(d.sensitivityRef)) errors.push(`${d.name}: sensitivity reference frequency must be greater than zero.`);
             if (!numeric(d.sensitivity) || !numeric(d.gain)) errors.push(`${d.name}: sensitivity and gain must be finite numbers.`);
@@ -771,7 +819,7 @@
                 const statusText = activeValidation.length
                     ? (() => {
                         const worst = activeValidation.reduce((a, b) => a.maxAbsDb >= b.maxAbsDb ? a : b);
-                        return `Reference validation: ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${worst.maxAbsDb.toFixed(3)} dB @ ${Math.round(worst.maxErrorFrequencyHz)} Hz · RMS ${worst.rmsDb.toFixed(3)} dB · ${worst.sampleCount} samples · ${Math.round(worst.minFrequencyHz)}–${Math.round(worst.maxFrequencyHz)} Hz`;
+                        return `Reference unity check: ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${worst.maxAbsDb.toFixed(3)} dB @ ${Math.round(worst.maxErrorFrequencyHz)} Hz · RMS ${worst.rmsDb.toFixed(3)} dB · ${worst.sampleCount} samples · ${Math.round(worst.minFrequencyHz)}–${Math.round(worst.maxFrequencyHz)} Hz`;
                     })()
                     : "Simulation complete.";
                 if ($("iemSimulationMessage")) $("iemSimulationMessage").textContent = statusText;
@@ -849,6 +897,7 @@
     }
 
     function draw() {
+        updateModelNotes();
         if (!state.last || !window.Chart) return;
         const datasets = [];
         if ($("iemShowIndividual")?.checked) {
@@ -928,15 +977,19 @@
         let delay = 0;
         let volume = 0;
         for (const d of state.drivers) {
+            let pathLength = 0;
             for (const element of d.path) {
-                if (element.type === "tube" || element.type === "nozzle") {
-                    const L = element.length / 1000;
-                    const f = c / (4 * Math.max(0.0001, L));
-                    if (!resonance || f < resonance) resonance = f;
-                    delay = Math.max(delay, L / c * 1000);
+                if (["tube", "nozzle", "chamber"].includes(element.type)) {
+                    pathLength += element.length / 1000;
                     volume += Math.PI * (element.diameter / 2) ** 2 * element.length;
                 }
-                if (element.type === "chamber") volume += Math.PI * (element.diameter / 2) ** 2 * element.length;
+            }
+            // Geometric estimates only: serial sections add to the travel
+            // distance. Their individual lengths are not separate full paths.
+            if (pathLength > 0) {
+                const f = c / (4 * pathLength);
+                if (!resonance || f < resonance) resonance = f;
+                delay = Math.max(delay, pathLength / c * 1000);
             }
         }
         $("iemPrimaryResonance").textContent = resonance ? `${(resonance / 1000).toFixed(2)} kHz` : "—";
@@ -979,19 +1032,31 @@
     // Driver cards.
     // ---------------------------------------------------------------------
 
+    function updateModelNotes() {
+        const notes = [];
+        if (state.drivers.some(d => d.sourceModel === "estimated_resistance")) notes.push("Acoustic prediction uses an estimated source resistance, not a measured receiver model. Tube changes remain approximate.");
+        if (state.drivers.some(d => d.sourceModel === "ideal_pressure")) notes.push("Ideal-pressure source selected: zero source impedance can exaggerate tube/coupler resonances.");
+        if (state.drivers.some(d => d.sourceModel === "custom_resistance")) notes.push("Custom source resistance is frequency-independent; it does not describe the receiver's full acoustic impedance.");
+        if (loadObj().type === "generic711_approx" || state.drivers.some(d => d.measurementReferenceCompensation && referenceLoadToRust(d.measurementReferenceLoad)?.type === "generic711_approx")) notes.push("Simplified 711: main tube and microphone only; damping side cavities are missing. This is not a validated IEC 711 coupler, especially for treble predictions.");
+        if (state.drivers.some(d => d.measurementReferenceCompensation && d.measurementReferenceLoad?.type === "closed_cavity")) notes.push("The reference cavity uses a volume-only approximation; microphone and adapter resonances are not calibrated.");
+        if (state.drivers.some(d => d.measurementReferenceCompensation && JSON.stringify(referenceLoadToRust(d.measurementReferenceLoad)) !== JSON.stringify(loadObj()))) notes.push("Output load differs from the measurement reference: the curve includes a change of test fixture as well as your acoustic path.");
+        const node = $("iemModelNotes");
+        if (node) { node.textContent = notes.join(" "); node.hidden = !notes.length; }
+    }
+
     function updateReferenceValidationReadouts() {
         state.drivers.forEach((d, index) => {
             const node = document.querySelector(`[data-reference-validation-readout="${d.id}"]`);
             if (!node) return;
-            const base = "FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used.";
+            const base = "FR pipeline: manufacturer magnitude baseline + modelled electrical/acoustic delta. Manufacturer phase unavailable where not supplied; model phase is used. A unity pass checks arithmetic consistency only.";
             if (!d.referenceValidationMode) {
                 node.textContent = base;
                 return;
             }
             const v = state.last?.validation?.[index];
             node.textContent = v
-                ? `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · UNITY ${v.pass ? "PASS" : "FAIL"} over measured FR span ${Math.round(v.minFrequencyHz)}–${Math.round(v.maxFrequencyHz)} Hz · max error ${v.maxAbsDb.toFixed(3)} dB @ ${Math.round(v.maxErrorFrequencyHz)} Hz · RMS ${v.rmsDb.toFixed(3)} dB · ${v.sampleCount} samples`
-                : `${base} · VALIDATION MODE: design path and output load are matched to the datasheet reference. · Press CALCULATE to run measured-span unity check.`;
+                ? `${base} · REFERENCE UNITY CHECK: matched geometry tests cancellation, not prediction accuracy. · UNITY ${v.pass ? "PASS" : "FAIL"} over measured FR span ${Math.round(v.minFrequencyHz)}–${Math.round(v.maxFrequencyHz)} Hz · max error ${v.maxAbsDb.toFixed(3)} dB @ ${Math.round(v.maxErrorFrequencyHz)} Hz · RMS ${v.rmsDb.toFixed(3)} dB · ${v.sampleCount} samples`
+                : `${base} · REFERENCE UNITY CHECK: matched geometry tests cancellation, not prediction accuracy. · Press CALCULATE to run measured-span unity check.`;
         });
     }
 
@@ -2197,11 +2262,22 @@
     // Acoustic path editor.
     // ---------------------------------------------------------------------
 
+    function sourceNote(d) {
+        if (d.sourceModel === "estimated_resistance") return `Source R estimated from a fixed ${d.sourceReferenceDiameterMm} mm reference bore at 20°C; no measured receiver source impedance is available. The same source is used for the reference and design.`;
+        if (d.sourceModel === "custom_resistance") return "Enter a frequency-independent acoustic source resistance. 1 CGS acoustic Ω = 100,000 Pa·s/m³.";
+        return "Ideal pressure holds the driver outlet pressure constant for every load. Use it to inspect the limiting case; it can produce very sharp resonances.";
+    }
+
     function pathHtml(d) {
         return `
             <section class="iem-driver-section">
                 <div class="iem-panel-title"><div><span class="eyebrow">ACOUSTIC PATH</span><h3>Driver to nozzle.</h3></div></div>
                 ${referenceSummaryHtml(d)}
+                <div class="iem-driver-grid">
+                    <label>ACOUSTIC SOURCE<select data-f="sourceModel">${[["estimated_resistance", "Finite resistance estimate"], ["custom_resistance", "Custom resistance"], ["ideal_pressure", "Ideal pressure (diagnostic)"]].map(([value, label]) => `<option value="${value}" ${d.sourceModel === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+                    <label>SOURCE R · CGS ACOUSTIC Ω<input data-f="sourceResistanceCgs" type="number" min="0.001" step="any" value="${Math.round(d.sourceResistanceCgs * 1000) / 1000}" ${d.sourceModel !== "custom_resistance" ? "disabled" : ""}></label>
+                </div>
+                <p class="iem-field-note" data-source-note>${esc(sourceNote(d))}</p>
                 <div class="iem-path-toolbar">
                     ${[["tube", "+ TUBE"], ["damper", "+ DAMPER"], ["chamber", "+ CHAMBER"], ["nozzle", "+ NOZZLE"]].map(item => `<button class="iem-mini" data-add-path="${d.id}:${item[0]}">${item[1]}</button>`).join("")}
                 </div>
@@ -2212,7 +2288,7 @@
     function pathNode(d, element, index) {
         let fields = "";
         if (element.type === "damper") {
-            fields = `<label>RESISTANCE Ω<input data-path-field="value" value="${element.value}" type="number"></label>`;
+            fields = `<label>RESISTANCE · CGS ACOUSTIC Ω<input data-path-field="value" value="${element.value}" type="number"></label>`;
         } else {
             fields = `<label>LENGTH mm<input data-path-field="length" value="${element.length}" type="number" step="0.1"></label><label>DIAMETER mm<input data-path-field="diameter" value="${element.diameter}" type="number" step="0.05"></label>${element.type === "tube" ? `<label>LOSS<input data-path-field="loss" value="${element.loss || 0}" type="number" step="0.0001"></label>` : ""}`;
         }
@@ -2249,7 +2325,7 @@
 
     function syncDriverField(d, input) {
         const key = input.dataset.f;
-        if (key === "name" || key === "type") d[key] = input.value;
+        if (key === "name" || key === "type" || key === "sourceModel") d[key] = input.value;
         else if (key === "polarity") d.polarity = num(input.value, 1);
         else if (key === "responseAbsolute") d.responseAbsolute = input.value === "absolute";
         else d[key] = num(input.value, d[key]);
@@ -2264,6 +2340,7 @@
         $("iemEngineStatus").textContent = "RECALCULATE";
         $("iemSimulationMessage").textContent = "Design changed. Calculate to update the response.";
         updateReferenceValidationReadouts();
+        updateModelNotes();
         metrics();
     }
 
@@ -2284,6 +2361,13 @@
                     syncDriverField(d, input);
                     markDesignDirty();
                     if (input.dataset.f === "name") refreshReverseDrivers();
+                    if (input.dataset.f === "sourceModel") {
+                        ensureDriverShape(d);
+                        const resistance = card.querySelector('[data-f="sourceResistanceCgs"]');
+                        resistance.disabled = d.sourceModel !== "custom_resistance";
+                        resistance.value = Math.round(d.sourceResistanceCgs * 1000) / 1000;
+                        card.querySelector("[data-source-note]").textContent = sourceNote(d);
+                    }
                 };
             });
         });
@@ -2539,8 +2623,12 @@
     function referenceCouplerLoad(coupler) {
         const text = String(coupler || "").trim().toLowerCase();
         if (!text) return null;
-        if (text.includes("iec 711") || text.includes("iec711") || text.includes("60318-4") || text.includes("60318 4") || text.includes("711 coupler")) {
+        if (/\b711\b/.test(text) || text.includes("iec711") || text.includes("60318-4") || text.includes("60318 4")) {
             return { type: "generic_711_approx" };
+        }
+        // Lumped-volume approximation, not a complete calibrated 2 cc fixture.
+        if (/\b2\s*(?:cc|cm(?:\^?3|³))\b/.test(text) || text.includes("60318-5")) {
+            return { type: "closed_cavity", volume_mm3: 2000, loss_resistance_acoustic_ohm: 0 };
         }
         return null;
     }
@@ -2657,11 +2745,12 @@
             const frCount = row.fr?.length || 0;
             const zCount = row.impedance_curve?.length || 0;
             const sparse = frCount > 0 && frCount < 20;
+            const referenceError = databaseReferenceError(databaseDriverToDesign(row));
             return `<article class="iem-library-card">
                 <span class="eyebrow">DATABASE · ${esc(String(row.driver_type || "DRIVER").toUpperCase())}</span>
                 <h4>${esc(row.manufacturer)} ${esc(row.model)}</h4>
                 <p>${row.nominal_impedance_ohm ?? "—"} Ω · ${row.sensitivity_db ?? "—"} dB SPL</p>
-                <p class="iem-field-note">${esc(row.measurement_name || "No measurement set")} · FR ${frCount} pts · Z ${zCount} pts${sparse ? " · sparse datasheet landmarks" : ""}${row.reference_path?.length && referenceCouplerLoad(row.coupler) ? " · reference path + coupler compensated" : row.reference_path?.length ? " · reference path stored; coupler unknown, compensation disabled" : ""}${row.impedance_source && row.impedance_source !== row.measurement_name ? " · Z from " + esc(row.impedance_source) : ""}</p>
+                <p class="iem-field-note">${esc(row.measurement_name || "No measurement set")} · FR ${frCount} pts · Z ${zCount} pts${sparse ? " · sparse datasheet landmarks" : ""}${referenceError ? " · ACOUSTIC PREDICTION UNAVAILABLE: " + esc(referenceError) : frCount ? " · approximate reference compensation available" : ""}${row.impedance_source && row.impedance_source !== row.measurement_name ? " · Z from " + esc(row.impedance_source) : ""}</p>
                 <div class="iem-library-actions"><button class="outline-button" data-db-lib-use="${i}">ADD TO DESIGN</button></div>
             </article>`;
         }).join("");
@@ -3020,7 +3109,7 @@
             max_tube_length_mm: num($("iemReverseLengthMax").value, 20),
             min_tube_diameter_mm: num($("iemReverseDiameterMin").value, 0.8),
             max_tube_diameter_mm: num($("iemReverseDiameterMax").value, 3),
-            damper_values: listNums($("iemReverseDampers").value),
+            damper_values: listNums($("iemReverseDampers").value).map(value => value * ACOUSTIC_CGS_TO_SI),
             capacitor_values_uf: listNums($("iemReverseCaps").value),
             resistor_values_ohm: listNums($("iemReverseResistors").value),
             gain_range_db: num($("iemReverseGainRange").value, 8),
@@ -3042,7 +3131,8 @@
         runButton.disabled = true;
         $("iemReverseMessage").textContent = "Searching for designs…";
         try {
-            const results = await window.HCAcousticEngine.reverseDesign(request);
+            const engineResults = await window.HCAcousticEngine.reverseDesign(request);
+            const results = engineResults.map(candidate => ({ ...candidate, damper_ohm: candidate.damper_ohm / ACOUSTIC_CGS_TO_SI }));
             if (revision !== state.reverseRevision) return;
             if (contextKey !== reverseContextKey(driverId)) {
                 $("iemReverseMessage").textContent = "Design changed during the search. Run Find Design again.";
@@ -3054,7 +3144,7 @@
                         <div><span class="eyebrow">CANDIDATE ${index + 1}</span><strong>${candidate.tube_diameter_mm.toFixed(2)} mm ID · ${candidate.tube_length_mm.toFixed(1)} mm</strong></div>
                         <strong>${(candidate.physical_rmse_db ?? candidate.score_rmse_db).toFixed(2)} dB RMSE</strong>
                     </div>
-                    <p class="iem-field-note">${Math.round(candidate.damper_ohm)} Ω damper · ${candidate.capacitor_uf} µF series C · ${candidate.resistor_ohm} Ω series R · ${candidate.gain_db.toFixed(1)} dB gain</p>
+                    <p class="iem-field-note">${Math.round(candidate.damper_ohm)} CGS acoustic Ω damper · ${candidate.capacitor_uf} µF series C · ${candidate.resistor_ohm} Ω series R · ${candidate.gain_db.toFixed(1)} dB gain</p>
                     <div class="iem-reverse-actions">
                         <button class="primary-button" type="button" data-apply-rev-physical="${index}">APPLY PHYSICAL DESIGN</button>
                     </div>
@@ -3250,7 +3340,11 @@
         $("iemTargetProduct").onchange = event => loadTargetProduct(event.target.value);
         ["iemSplMode", "iemNormalizeFrequency", "iemNormalizeMode", "iemShowTarget", "iemShowIndividual", "iemShowCombined"].forEach(id => $(id).onchange = draw);
         ["iemTemperature", "iemHumidity", "iemAcousticLoadType", "iemCouplerVolume", "iemLoadLossResistance", "iemLeakResistance"].forEach(id => {
-            $(id).onchange = markDesignDirty;
+            $(id).onchange = () => {
+                // A previous unity check no longer describes this load/environment.
+                state.drivers.forEach(d => d.referenceValidationMode = false);
+                markDesignDirty();
+            };
         });
         $("iemReverseFlat").onclick = reverseFlat;
         const addTargetFilter = (type) => {

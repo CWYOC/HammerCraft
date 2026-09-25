@@ -73,7 +73,7 @@
                     <label>NORMALISATION<select id="iemNormalizeMode"><option value="system">Whole system reference</option><option value="each">Each trace independently</option></select></label>
                     <label>TEMPERATURE °C<input id="iemTemperature" type="number" value="20" step="0.1"></label>
                     <label>HUMIDITY %<input id="iemHumidity" type="number" value="50" min="0" max="100"></label>
-                    <label>OUTPUT LOAD<select id="iemAcousticLoadType"><option value="anechoic">Anechoic / matched</option><option value="closed_cavity">Closed cavity</option><option value="cavity_with_leak">Cavity with leak</option><option value="radiation">Free radiation</option><option value="generic_711_approx">Generic 711 approx</option></select></label>
+                    <label>OUTPUT LOAD<select id="iemAcousticLoadType"><option value="anechoic">Anechoic / matched</option><option value="closed_cavity">Closed cavity</option><option value="cavity_with_leak">Cavity with leak</option><option value="radiation">Free radiation</option><option value="generic_711_approx">Simplified 711 (experimental)</option></select></label>
                     <label>COUPLER VOLUME mm³<input id="iemCouplerVolume" type="number" value="2000" min="50"></label>
                     <label>LOAD LOSS R<input id="iemLoadLossResistance" type="number" value="0" min="0"></label>
                     <label>LEAK R<input id="iemLeakResistance" type="number" value="500000000" min="1"></label>
@@ -92,26 +92,27 @@
                     <label><input id="iemShowCombined" type="checkbox" checked> COMBINED</label>
                 </div>
                 <div id="iemValidationPanel" class="iem-validation-panel" hidden>
-<div class="iem-validation-head"><div><span class="eyebrow">REFERENCE VALIDATION</span><strong id="iemValidationResult" class="iem-validation-result">WAITING</strong></div>
+<div class="iem-validation-head"><div><span class="eyebrow">REFERENCE UNITY CHECK</span><strong id="iemValidationResult" class="iem-validation-result">WAITING</strong></div>
 <label><input id="iemShowValidationError" type="checkbox" checked> SHOW ERROR TRACE</label></div>
 <div class="iem-validation-metrics">
 <article><span>MAX ERROR</span><strong id="iemValidationMax">—</strong></article>
 <article><span>RMS ERROR</span><strong id="iemValidationRms">—</strong></article>
 <article><span>WORST FREQUENCY</span><strong id="iemValidationFrequency">—</strong></article>
 <article><span>TESTED RANGE</span><strong id="iemValidationRange">—</strong></article>
-</div><p class="iem-field-note">Ideal validation error is a flat 0 dB line.</p></div>
+</div><p class="iem-field-note">Matched reference geometry should give 0 dB error. This checks arithmetic cancellation; it does not validate predictions for a changed design.</p></div>
 <div class="fr-chart-container iem-chart-container"><canvas id="iemResponseChart"></canvas></div>
 <div id="iemValidationErrorWrap" class="iem-validation-error-wrap" hidden>
 <div class="iem-validation-error-title">VALIDATION ERROR · PREDICTED − DATASHEET</div>
 <div class="fr-chart-container iem-validation-chart-container"><canvas id="iemValidationErrorChart"></canvas></div>
 </div>
                 <div id="iemSimulationMessage" class="admin-message"></div>
+                <p id="iemModelNotes" class="iem-field-note" role="note" hidden></p>
                 <div class="iem-result-grid">
-                    <article><span>PRIMARY RESONANCE</span><strong id="iemPrimaryResonance">—</strong></article>
+                    <article title="c / (4 × total path length). A geometric estimate; actual resonances depend on the source, bore transitions and load."><span>PATH QUARTER-WAVE EST.</span><strong id="iemPrimaryResonance">—</strong></article>
                     <article><span>EST. CROSSOVER</span><strong id="iemEstimatedCrossover">—</strong></article>
-                    <article><span>MAX TUBE DELAY</span><strong id="iemTubeDelay">—</strong></article>
+                    <article title="Longest total path length / speed of sound. Geometric transit time, not measured group delay."><span>MAX PATH TRANSIT TIME</span><strong id="iemTubeDelay">—</strong></article>
                     <article><span>TARGET RMSE</span><strong id="iemTargetRmse">—</strong></article>
-                    <article><span>TOTAL TUBE VOLUME</span><strong id="iemTubeVolume">—</strong></article>
+                    <article><span>TOTAL PATH VOLUME</span><strong id="iemTubeVolume">—</strong></article>
                 </div>
             </div>
         </div>
@@ -171,7 +172,7 @@
                     <label>TUBE LENGTH MAX mm<input id="iemReverseLengthMax" type="number" value="20" step="0.5"></label>
                     <label>TUBE ID MIN mm<input id="iemReverseDiameterMin" type="number" value="0.8" step="0.05"></label>
                     <label>TUBE ID MAX mm<input id="iemReverseDiameterMax" type="number" value="3" step="0.05"></label>
-                    <label>DAMPERS Ω<input id="iemReverseDampers" type="text" value="330,680,1000,1500,2200"></label>
+                    <label>DAMPERS · CGS ACOUSTIC Ω<input id="iemReverseDampers" type="text" value="330,680,1000,1500,2200"></label>
                     <label>CAPACITORS µF<input id="iemReverseCaps" type="text" value="0,4.7,10,15,22,33,47"></label>
                     <label>SERIES R Ω<input id="iemReverseResistors" type="text" value="0,1,2.2,3.3,4.7,10"></label>
                     <label>GAIN RANGE ±dB<input id="iemReverseGainRange" type="number" value="8" min="0"></label>
@@ -204,7 +205,7 @@
 <script src="auth.js?v=40"></script>
 <script src="wasm-loader.js?v=16"></script>
 <script src="cad-circuit.js?v=1"></script>
-<script src="iem-designer.js?v=51"></script>
+<script src="iem-designer.js?v=53"></script>
 <script src="iem-designer-page.js?v=48"></script>
 </body>
 </html>

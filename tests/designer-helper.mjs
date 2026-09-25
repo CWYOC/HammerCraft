@@ -15,7 +15,7 @@ export function designer() {
     vm.runInContext(read('docs/cad-circuit.js'), context);
     // Expose closure functions only in the test VM; production exports stay unchanged.
     vm.runInContext(read('docs/iem-designer.js').replace('window.HCIemDesigner = { init, populateTargetProducts };',
-        'window.test = { state, driver, draw, rustRequest, applyRevPhysical, calculate, ensureDriverShape, passiveCircuitH, renderCircuitSvg, addCadComponent, finishWireEndpoint, undoCircuit, redoCircuit, mutateCircuit, bindDriverEvents, saveProject, loadProject, newProject, fallback, parseFile, reverseRun, restoreProjectSettings, importDriverFile, renderLibrary };'), context);
+        'window.test = { databaseDriverToDesign, referenceInfo, databaseReferenceError, state, driver, draw, rustRequest, applyRevPhysical, calculate, ensureDriverShape, passiveCircuitH, renderCircuitSvg, addCadComponent, finishWireEndpoint, undoCircuit, redoCircuit, mutateCircuit, bindDriverEvents, saveProject, loadProject, newProject, fallback, parseFile, reverseRun, restoreProjectSettings, importDriverFile, renderLibrary };'), context);
     context.window.test.restoreProjectSettings();
     return { ...context.window.test, document, context, storage };
 }
