@@ -281,9 +281,7 @@ async function initialiseEarScan() {
         !currentOrderID
     ) {
 
-        showScanError(
-            "No Hammer Craft order was selected."
-        );
+        await chooseScanOrder();
 
         return;
     }
@@ -327,6 +325,41 @@ async function initialiseEarScan() {
 
     await checkExistingScan();
 
+}
+
+async function chooseScanOrder() {
+    const panel = document.getElementById("scanOrderSelection");
+    const message = document.getElementById("scanOrderSelectionMessage");
+    const list = document.getElementById("scanOrderList");
+    const back = document.getElementById("returnToOrder");
+    back.href = "account.html";
+    back.textContent = "← MY ACCOUNT";
+    panel.hidden = false;
+    list.replaceChildren();
+    message.textContent = "Loading your custom-fit orders…";
+    try {
+        const { data, error } = await earScanDB.from("orders")
+            .select("id, order_number, status, created_at, order_items(custom_fit)")
+            .eq("user_id", currentUser.id)
+            .order("created_at", { ascending: false });
+        if (error) throw error;
+        const orders = (data || []).filter(order =>
+            !["cancelled", "canceled", "refunded"].includes(order.status) &&
+            order.order_items?.some(item => item.custom_fit === true));
+        message.textContent = orders.length
+            ? "Choose the custom-fit order for this ear scan."
+            : "You need a custom-fit order before starting an ear scan. View your account or browse our products to get started.";
+        for (const order of orders) {
+            const link = document.createElement("a");
+            link.className = "primary-button";
+            link.href = `ear-scan.html?order=${encodeURIComponent(order.id)}`;
+            link.textContent = `SELECT ORDER ${order.order_number || order.id} →`;
+            list.appendChild(link);
+        }
+    } catch (error) {
+        console.error("Unable to load scan orders", error);
+        message.textContent = "Unable to load your orders. Please refresh this page or open the order from your account.";
+    }
 }
 
 

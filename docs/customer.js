@@ -228,7 +228,7 @@ async function loadCustomerOrders() {
                     </p>
 
                     <a
-                        href="order.html?id=${
+                        href="order.html?hc_order=${
                             encodeURIComponent(order.id)
                         }"
                         class="outline-button"

@@ -1,766 +1,137 @@
-import {
-    createClient
-} from "npm:@supabase/supabase-js@2";
-
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
-
-    "Access-Control-Allow-Origin":
-        "*",
-
-    "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
-
-    "Access-Control-Allow-Methods":
-        "POST, OPTIONS"
-
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function json(body: unknown, status = 200) {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+}
 
+Deno.serve(async (req: Request) => {
+    if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+    if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
 
-Deno.serve(
-    async (
-        req: Request
-    ) => {
-
-        if (
-            req.method ===
-            "OPTIONS"
-        ) {
-
-            return new Response(
-                "ok",
-                {
-                    headers:
-                        corsHeaders
-                }
-            );
-
+    try {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL");
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
+        const clientSecret = Deno.env.get("PAYPAL_CLIENT_SECRET");
+        const paypalBaseUrl = Deno.env.get("PAYPAL_BASE_URL") || "https://api-m.sandbox.paypal.com";
+        if (!supabaseUrl || !serviceRoleKey || !clientId || !clientSecret) {
+            throw new Error("Server configuration is incomplete.");
         }
 
-
-        try {
-
-            /* =============================================
-               ENVIRONMENT
-            ============================================= */
-
-            const SUPABASE_URL =
-                Deno.env.get(
-                    "SUPABASE_URL"
-                );
-
-
-            const SERVICE_ROLE_KEY =
-                Deno.env.get(
-                    "SUPABASE_SERVICE_ROLE_KEY"
-                );
-
-
-            const PAYPAL_CLIENT_ID =
-                Deno.env.get(
-                    "PAYPAL_CLIENT_ID"
-                );
-
-
-            const PAYPAL_CLIENT_SECRET =
-                Deno.env.get(
-                    "PAYPAL_CLIENT_SECRET"
-                );
-
-
-            const PAYPAL_BASE_URL =
-                Deno.env.get(
-                    "PAYPAL_BASE_URL"
-                )
-                ||
-                "https://api-m.sandbox.paypal.com";
-
-
-            if (
-                !SUPABASE_URL ||
-                !SERVICE_ROLE_KEY ||
-                !PAYPAL_CLIENT_ID ||
-                !PAYPAL_CLIENT_SECRET
-            ) {
-
-                throw new Error(
-                    "Server configuration is incomplete."
-                );
-
-            }
-
-
-            const admin =
-                createClient(
-                    SUPABASE_URL,
-                    SERVICE_ROLE_KEY
-                );
-
-
-
-            /* =============================================
-               CUSTOMER AUTH
-            ============================================= */
-
-            const authHeader =
-                req.headers.get(
-                    "Authorization"
-                );
-
-
-            if (
-                !authHeader
-            ) {
-
-                throw new Error(
-                    "Authentication required."
-                );
-
-            }
-
-
-            const jwt =
-                authHeader.replace(
-                    /^Bearer\s+/i,
-                    ""
-                );
-
-
-            const {
-                data: userData,
-                error: userError
-            } =
-                await admin
-                    .auth
-                    .getUser(
-                        jwt
-                    );
-
-
-            if (
-                userError ||
-                !userData.user
-            ) {
-
-                throw new Error(
-                    "Invalid login session."
-                );
-
-            }
-
-
-            const user =
-                userData.user;
-
-
-
-            /* =============================================
-               REQUEST
-            ============================================= */
-
-            const body =
-                await req.json();
-
-
-            const orderID =
-                body.order_id;
-
-
-            if (
-                !orderID
-            ) {
-
-                throw new Error(
-                    "Order ID is required."
-                );
-
-            }
-
-
-
-            /* =============================================
-               LOAD HAMMER CRAFT ORDER
-            ============================================= */
-
-            const {
-                data: order,
-                error: orderError
-            } =
-                await admin
-                    .from(
-                        "orders"
-                    )
-                    .select("*")
-                    .eq(
-                        "id",
-                        orderID
-                    )
-                    .eq(
-                        "user_id",
-                        user.id
-                    )
-                    .single();
-
-
-            if (
-                orderError ||
-                !order
-            ) {
-
-                throw new Error(
-                    "Order not found."
-                );
-
-            }
-
-
-
-            /*
-                IDEMPOTENCY:
-                if we already marked it paid,
-                don't capture it again.
-            */
-
-            if (
-                order.payment_status ===
-                "paid"
-            ) {
-
-                return new Response(
-
-                    JSON.stringify({
-
-                        success:
-                            true,
-
-                        already_paid:
-                            true,
-
-                        order_number:
-                            order.order_number
-
-                    }),
-
-                    {
-
-                        headers: {
-
-                            ...corsHeaders,
-
-                            "Content-Type":
-                                "application/json"
-
-                        }
-
-                    }
-
-                );
-
-            }
-
-
-            if (
-                !order.paypal_order_id
-            ) {
-
-                throw new Error(
-                    "PayPal order ID is missing."
-                );
-
-            }
-
-
-
-            /* =============================================
-               PAYPAL TOKEN
-            ============================================= */
-
-            const basicCredentials =
-                btoa(
-                    `${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`
-                );
-
-
-            const tokenResponse =
-                await fetch(
-
-                    `${PAYPAL_BASE_URL}/v1/oauth2/token`,
-
-                    {
-
-                        method:
-                            "POST",
-
-                        headers: {
-
-                            "Authorization":
-                                `Basic ${basicCredentials}`,
-
-                            "Content-Type":
-                                "application/x-www-form-urlencoded"
-
-                        },
-
-                        body:
-                            "grant_type=client_credentials"
-
-                    }
-
-                );
-
-
-            const tokenPayload =
-                await tokenResponse
-                    .json();
-
-
-            if (
-                !tokenResponse.ok
-            ) {
-
-                throw new Error(
-                    "PayPal authentication failed."
-                );
-
-            }
-
-
-
-            /* =============================================
-               CAPTURE PAYPAL ORDER
-            ============================================= */
-
-            const captureResponse =
-                await fetch(
-
-                    `${PAYPAL_BASE_URL}/v2/checkout/orders/${order.paypal_order_id}/capture`,
-
-                    {
-
-                        method:
-                            "POST",
-
-                        headers: {
-
-                            "Authorization":
-                                `Bearer ${tokenPayload.access_token}`,
-
-                            "Content-Type":
-                                "application/json",
-
-                            "PayPal-Request-Id":
-                                `capture-${order.id}`
-
-                        },
-
-                        body:
-                            "{}"
-
-                    }
-
-                );
-
-
-            const capture =
-                await captureResponse
-                    .json();
-
-
-            if (
-                !captureResponse.ok
-            ) {
-
-                console.error(
-                    capture
-                );
-
-
-                throw new Error(
-                    capture?.message ||
-                    "PayPal capture failed."
-                );
-
-            }
-
-
-            if (
-                capture.status !==
-                "COMPLETED"
-            ) {
-
-                throw new Error(
-                    `Unexpected PayPal status: ${capture.status}`
-                );
-
-            }
-
-
-
-            /* =============================================
-               CAPTURE DETAILS
-            ============================================= */
-
-            const captureObject =
-                capture
-                    .purchase_units?.[0]
-                    ?.payments
-                    ?.captures?.[0];
-
-
-            if (
-                !captureObject
-            ) {
-
-                throw new Error(
-                    "PayPal capture data is missing."
-                );
-
-            }
-
-
-            const paidAmount =
-                Number(
-                    captureObject
-                        .amount
-                        .value
-                );
-
-
-            const paidCurrency =
-                captureObject
-                    .amount
-                    .currency_code;
-
-
-            if (
-                paidAmount !==
-                Number(
-                    order.total
-                )
-            ) {
-
-                throw new Error(
-                    "PayPal amount does not match this order."
-                );
-
-            }
-
-
-            if (
-                paidCurrency !==
-                order.currency
-            ) {
-
-                throw new Error(
-                    "PayPal currency does not match this order."
-                );
-
-            }
-
-
-
-            /* =============================================
-               LOAD ORDER ITEMS
-            ============================================= */
-
-            const {
-                data: items,
-                error: itemsError
-            } =
-                await admin
-                    .from(
-                        "order_items"
-                    )
-                    .select("*")
-                    .eq(
-                        "order_id",
-                        order.id
-                    );
-
-
-            if (
-                itemsError
-            ) {
-
-                throw itemsError;
-
-            }
-
-
-
-            /* =============================================
-               STOCK DEDUCTION
-               STANDARD ORDERS ONLY
-            ============================================= */
-
-            for (
-                const item
-                of items ||
-                []
-            ) {
-
-                if (
-                    item.order_type !==
-                    "standard"
-                ) {
-
-                    continue;
-                }
-
-
-                const {
-                    data: product,
-                    error: productError
-                } =
-                    await admin
-                        .from(
-                            "products"
-                        )
-                        .select(
-                            "stock_quantity"
-                        )
-                        .eq(
-                            "id",
-                            item.product_id
-                        )
-                        .single();
-
-
-                if (
-                    productError ||
-                    !product
-                ) {
-
-                    throw new Error(
-                        `${item.product_name}: product unavailable during stock update.`
-                    );
-
-                }
-
-
-                const stock =
-                    Number(
-                        product.stock_quantity ||
-                        0
-                    );
-
-
-                const quantity =
-                    Number(
-                        item.quantity
-                    );
-
-
-                if (
-                    stock <
-                    quantity
-                ) {
-
-                    throw new Error(
-                        `${item.product_name}: insufficient stock after payment. Manual review required.`
-                    );
-
-                }
-
-
-                const {
-                    error:
-                        stockUpdateError
-                } =
-                    await admin
-                        .from(
-                            "products"
-                        )
-                        .update({
-
-                            stock_quantity:
-                                stock -
-                                quantity,
-
-                            updated_at:
-                                new Date()
-                                    .toISOString()
-
-                        })
-                        .eq(
-                            "id",
-                            item.product_id
-                        );
-
-
-                if (
-                    stockUpdateError
-                ) {
-
-                    throw stockUpdateError;
-
-                }
-
-            }
-
-
-
-            /* =============================================
-               MARK ORDER PAID
-            ============================================= */
-
-            const now =
-                new Date()
-                    .toISOString();
-
-
-            const {
-                error:
-                    paidUpdateError
-            } =
-                await admin
-                    .from(
-                        "orders"
-                    )
-                    .update({
-
-                        status:
-                            "paid",
-
-                        payment_status:
-                            "paid",
-
-                        paypal_capture_id:
-                            captureObject.id,
-
-                        paid_at:
-                            now,
-
-                        updated_at:
-                            now
-
-                    })
-                    .eq(
-                        "id",
-                        order.id
-                    );
-
-
-            if (
-                paidUpdateError
-            ) {
-
-                throw paidUpdateError;
-
-            }
-
-
-
-            /* =============================================
-               EMPTY CUSTOMER BASKET
-            ============================================= */
-
-            const {
-                error:
-                    basketDeleteError
-            } =
-                await admin
-                    .from(
-                        "basket_items"
-                    )
-                    .delete()
-                    .eq(
-                        "user_id",
-                        user.id
-                    );
-
-
-            if (
-                basketDeleteError
-            ) {
-
-                console.warn(
-                    "Order paid but basket clear failed:",
-                    basketDeleteError
-                );
-
-            }
-
-
-
-            return new Response(
-
-                JSON.stringify({
-
-                    success:
-                        true,
-
-                    order_id:
-                        order.id,
-
-                    order_number:
-                        order.order_number,
-
-                    payment_status:
-                        "paid"
-
-                }),
-
-                {
-
-                    status:
-                        200,
-
+        const admin = createClient(supabaseUrl, serviceRoleKey);
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) return json({ error: "Authentication required." }, 401);
+        const { data: userData, error: userError } = await admin.auth.getUser(
+            authHeader.replace(/^Bearer\s+/i, ""),
+        );
+        if (userError || !userData.user) return json({ error: "Invalid login session." }, 401);
+        const user = userData.user;
+        const body = await req.json();
+        if (typeof body.order_id !== "string" || !body.order_id) {
+            return json({ error: "Order ID is required." }, 400);
+        }
+
+        // Explicit migration fields fail before charging if the database has
+        // not yet been upgraded for atomic payment finalization.
+        const { data: order, error: orderError } = await admin.from("orders")
+            .select("id, order_number, user_id, total, currency, payment_status, paypal_order_id, stock_review_required, stock_deducted_at")
+            .eq("id", body.order_id).eq("user_id", user.id).single();
+        if (orderError || !order) throw new Error("Unable to load this order for payment.");
+        if (order.payment_status === "paid") {
+            return json({
+                success: true, already_paid: true, order_id: order.id,
+                order_number: order.order_number, payment_status: "paid",
+                stock_review_required: order.stock_review_required,
+            });
+        }
+        if (!order.paypal_order_id) throw new Error("PayPal order ID is missing.");
+
+        const tokenResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
+            method: "POST",
+            headers: {
+                Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: "grant_type=client_credentials",
+        });
+        const token = await tokenResponse.json();
+        if (!tokenResponse.ok || !token.access_token) throw new Error("PayPal authentication failed.");
+
+        const paypalOrderUrl = `${paypalBaseUrl}/v2/checkout/orders/${encodeURIComponent(order.paypal_order_id)}`;
+        const headers = {
+            Authorization: `Bearer ${token.access_token}`,
+            "Content-Type": "application/json",
+        };
+        async function readPaypalOrder() {
+            const response = await fetch(paypalOrderUrl, { headers });
+            if (!response.ok) throw new Error("Unable to verify the PayPal payment. Please retry.");
+            return await response.json();
+        }
+
+        // Recover captures that succeeded before a network/database failure,
+        // even after PayPal's request-id retention window has expired.
+        let capture = await readPaypalOrder();
+        if (capture.status !== "COMPLETED") {
+            try {
+                const response = await fetch(`${paypalOrderUrl}/capture`, {
+                    method: "POST",
                     headers: {
-
-                        ...corsHeaders,
-
-                        "Content-Type":
-                            "application/json"
-
-                    }
-
-                }
-
-            );
-
+                        ...headers,
+                        Prefer: "return=representation",
+                        "PayPal-Request-Id": `capture-${order.id}`,
+                    },
+                    body: "{}",
+                });
+                if (!response.ok) throw new Error("PayPal capture failed.");
+                capture = await response.json();
+            } catch (error) {
+                // Another return request may already have completed the capture.
+                capture = await readPaypalOrder();
+                if (capture.status !== "COMPLETED") throw error;
+            }
         }
 
-        catch (
-            error
-        ) {
-
-            console.error(
-                error
-            );
-
-
-            return new Response(
-
-                JSON.stringify({
-
-                    error:
-                        error instanceof Error
-                        ? error.message
-                        : "Unknown payment error."
-
-                }),
-
-                {
-
-                    status:
-                        400,
-
-                    headers: {
-
-                        ...corsHeaders,
-
-                        "Content-Type":
-                            "application/json"
-
-                    }
-
-                }
-
-            );
-
+        const captureObject = capture.purchase_units?.[0]?.payments?.captures?.[0];
+        if (capture.status !== "COMPLETED" || captureObject?.status !== "COMPLETED") {
+            return json({ error: "PayPal has not completed this payment yet. Please retry shortly." }, 409);
+        }
+        const paidAmount = Number(captureObject.amount?.value);
+        const paidCurrency = captureObject.amount?.currency_code;
+        if (!captureObject.id || !Number.isFinite(paidAmount) || paidAmount !== Number(order.total)
+            || paidCurrency !== order.currency) {
+            throw new Error("PayPal payment does not match this order. Please contact Hammer Craft.");
         }
 
+        const { data: result, error: finalizeError } = await admin.rpc("finalize_paypal_order", {
+            p_order_id: order.id,
+            p_user_id: user.id,
+            p_paypal_order_id: order.paypal_order_id,
+            p_capture_id: captureObject.id,
+            p_amount: paidAmount,
+            p_currency: paidCurrency,
+        });
+        if (finalizeError || !result?.success) {
+            console.error("Unable to record completed PayPal payment", order.id, finalizeError);
+            return json({
+                error: "PayPal received your payment, but we could not update your order. Retry payment confirmation; do not place a new order.",
+                retryable: true,
+            }, 503);
+        }
+        if (result.stock_review_required) {
+            console.warn("Paid order needs stock review", order.id);
+        }
+        return json(result);
+    } catch (error) {
+        console.error(error);
+        return json({ error: error instanceof Error ? error.message : "Unable to confirm payment. Please retry." }, 400);
     }
-);
+});

@@ -65,7 +65,7 @@
 
         rel="stylesheet"
 
-        href="ear-scan.css"
+        href="ear-scan.css?v=2"
 
     >
 
@@ -155,6 +155,13 @@
     ></div>
 
 
+
+    <section id="scanOrderSelection" class="scan-panel" hidden>
+        <h2>Select your order.</h2>
+        <p id="scanOrderSelectionMessage" role="status" aria-live="polite"></p>
+        <div id="scanOrderList" class="scan-order-list"></div>
+        <p><a href="account.html">MY ACCOUNT</a> · <a href="product.html">BROWSE PRODUCTS</a></p>
+    </section>
 
     <!-- =================================================
          START PANEL
@@ -566,7 +573,7 @@
 
 <script src="supabase-client.js?v=20"></script>
 
-<script src="ear-scan.js?v=40"></script>
+<script src="ear-scan.js?v=41"></script>
 
 
 </body>

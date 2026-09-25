@@ -65,7 +65,7 @@
 
         rel="stylesheet"
 
-        href="order.css"
+        href="order.css?v=2"
 
     >
 
@@ -125,6 +125,11 @@
 ===================================================== -->
 
 <main class="order-page">
+
+    <section id="paymentNotice" class="order-panel payment-notice" role="status" aria-live="polite" hidden>
+        <p id="paymentMessage"></p>
+        <button id="retryPaymentButton" class="outline-button" type="button" hidden>RETRY PAYMENT CONFIRMATION</button>
+    </section>
 
 
     <div
@@ -374,7 +379,7 @@
 
 <script src="supabase-client.js?v=20"></script>
 
-<script src="order.js?v=30"></script>
+<script src="order.js?v=31"></script>
 
 
 </body>

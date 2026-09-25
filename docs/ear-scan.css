@@ -658,3 +658,6 @@ button {
     }
 
 }
+[hidden] { display: none !important; }
+.scan-order-list { display: grid; gap: 12px; margin: 24px 0; }
+.scan-order-list a { text-decoration: none; text-align: center; }

@@ -84,7 +84,7 @@ async function initialiseOrder() {
     const orderID =
         params.get(
             "hc_order"
-        );
+        ) || params.get("id");
 
 
     if (
@@ -99,10 +99,55 @@ async function initialiseOrder() {
     }
 
 
+    if (params.get("payment") === "return") {
+        await confirmReturnedPayment(orderID);
+    }
+
     await loadOrder(
         orderID
     );
 
+}
+
+function setPaymentNotice(message, canRetry = false) {
+    const panel = document.getElementById("paymentNotice");
+    panel.hidden = !message;
+    document.getElementById("paymentMessage").textContent = message;
+    document.getElementById("retryPaymentButton").hidden = !canRetry;
+}
+
+async function confirmReturnedPayment(orderID) {
+    const retry = document.getElementById("retryPaymentButton");
+    retry.disabled = true;
+    setPaymentNotice("Confirming your PayPal payment…");
+    try {
+        const { data, error } = await orderDB.functions.invoke("paypal-capture-basket-order", {
+            body: { order_id: orderID },
+        });
+        if (error || !data?.success) {
+            let message = data?.error;
+            if (!message && error?.context?.json) {
+                try { message = (await error.context.json()).error; } catch (_) { /* Use fallback below. */ }
+            }
+            throw new Error(message || "We could not confirm your payment. Retry confirmation or contact Hammer Craft before placing another order.");
+        }
+        setPaymentNotice(data.stock_review_required
+            ? "Payment received. Your order needs a stock review before production. Please contact Hammer Craft about availability."
+            : "Payment confirmed. Thank you for your order.");
+        const url = new URL(window.location.href);
+        ["payment", "token", "PayerID"].forEach(key => url.searchParams.delete(key));
+        window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+        return true;
+    } catch (error) {
+        setPaymentNotice(error.message || "Unable to confirm payment. Please retry.", true);
+        retry.onclick = async () => {
+            await confirmReturnedPayment(orderID);
+            await loadOrder(orderID);
+        };
+        return false;
+    } finally {
+        retry.disabled = false;
+    }
 }
 
 
@@ -172,6 +217,9 @@ async function loadOrder(
     currentOrder =
         order;
 
+    if (order.stock_review_required) {
+        setPaymentNotice("Payment received. Your order needs a stock review before production. Please contact Hammer Craft about availability.");
+    }
 
     renderOrder();
 

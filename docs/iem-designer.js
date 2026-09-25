@@ -30,7 +30,21 @@
         cadSymbolStandard: "iec",
         cadSnapToGrid: true,
         cadConnectPointMode: null,
-        cadHoldToDragMs: 220,
+        activeCircuit: null,
+        calculationRevision: 0,
+        reverseRevision: 0,
+        importRevisions: new Map(),
+    };
+
+    const projectDefaults = {
+        iemSplMode: "relative", iemNormalizeFrequency: "1000", iemNormalizeMode: "system",
+        iemTemperature: "20", iemHumidity: "50", iemAcousticLoadType: "anechoic",
+        iemCouplerVolume: "2000", iemLoadLossResistance: "0", iemLeakResistance: "500000000",
+        iemTargetProduct: "", iemShowTarget: true, iemShowIndividual: true, iemShowCombined: true,
+        iemShowValidationError: false, iemReverseMatchMode: "absolute", iemReverseNormalizeFrequency: "1000",
+        iemReverseLengthMin: "3", iemReverseLengthMax: "20", iemReverseDiameterMin: "0.8", iemReverseDiameterMax: "3",
+        iemReverseDampers: "330,680,1000,1500,2200", iemReverseCaps: "0,4.7,10,15,22,33,47",
+        iemReverseResistors: "0,1,2.2,3.3,4.7,10", iemReverseGainRange: "8",
     };
 
     function esc(value) {
@@ -79,10 +93,21 @@
     }
 
     function ensureDriverShape(d) {
+        if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("Invalid saved driver.");
+        if (!d.id) d.id = uid();
+        if (!d.name) d.name = "New Driver";
+        if (!d.type) d.type = "ba";
+        for (const [key, value] of Object.entries({ impedance: 16, sensitivity: 0, sensitivityRef: 1000, gain: 0, polarity: 1, responseAbsolute: false })) {
+            if (d[key] === undefined || d[key] === null) d[key] = value;
+        }
+        if (!Array.isArray(d.measurement)) d.measurement = [];
+        if (!Array.isArray(d.impedanceCurve)) d.impedanceCurve = [];
         // Migration for projects saved by the v0.6 ordered circuit editor.
         if (Array.isArray(d.circuit)) {
             const old = d.circuit;
             d.circuit = createCircuit();
+            d.circuit.nodes = d.circuit.nodes.filter(node => node.id !== d.circuit.output);
+            d.circuit.output = d.circuit.input;
             for (const item of old) {
                 if (["peq", "high_pass", "low_pass"].includes(item.type)) {
                     d.circuit.filters.push(structuredClone(item));
@@ -98,6 +123,12 @@
         if (!d.circuit || !Array.isArray(d.circuit.nodes)) d.circuit = createCircuit();
         if (!Array.isArray(d.circuit.components)) d.circuit.components = [];
         d.circuit.components.forEach(component => {
+            if (component.kind !== "wire") {
+                const a = d.circuit.nodes.find(n => n.id === component.nodeA);
+                const b = d.circuit.nodes.find(n => n.id === component.nodeB);
+                if (!Number.isFinite(component.x)) component.x = snap(((a?.x ?? 350) + (b?.x ?? 450)) / 2);
+                if (!Number.isFinite(component.y)) component.y = snap(((a?.y ?? 180) + (b?.y ?? 180)) / 2);
+            }
             if (component.rotationDeg === undefined || component.rotationDeg === null || !Number.isFinite(Number(component.rotationDeg))) {
                 component.rotationDeg = null;
             } else {
@@ -229,7 +260,7 @@
     }
 
     function passiveCircuitH(d, frequency) {
-        const circuit = ensureDriverShape(d).circuit;
+        const circuit = window.HCCircuit.compile(ensureDriverShape(d).circuit).circuit;
         if (circuit.output === circuit.input) return complex(1, 0);
 
         const allNodes = new Set(circuit.nodes.map(n => n.id));
@@ -344,7 +375,7 @@
         for (const filter of ensureDriverShape(d).circuit.filters) {
             if (filter.type !== "peq") result = cmul(result, filterH(filter, frequency));
         }
-        for (const component of d.circuit.components) {
+        for (const component of window.HCCircuit.compile(d.circuit).activeComponents) {
             if (component.kind === "low_pass" && !component.bypassed) {
                 result = cmul(result, filterH({ type: "low_pass", frequency: component.frequency || 400, q: component.q || 0.707 }, frequency));
             }
@@ -392,7 +423,8 @@
             const h = circuitH(d, frequency);
             const acoustic = acousticDbPhase(d, frequency);
             const amplitude = 10 ** ((rawDb(d, frequency) + d.gain + acoustic.db) / 20) * cabs(h);
-            const phase = cphase(h) + acoustic.phase + (d.polarity < 0 ? Math.PI : 0);
+            const measuredPhase = d.databaseDriverId ? 0 : interp(d.measurement, frequency, "phase") * Math.PI / 180;
+            const phase = measuredPhase + cphase(h) + acoustic.phase + (d.polarity < 0 ? Math.PI : 0);
             return {
                 frequency,
                 db: 20 * Math.log10(Math.max(1e-12, amplitude)),
@@ -529,8 +561,8 @@
         return null;
     }
 
-    function toRustNetlist(d) {
-        const circuit = ensureDriverShape(d).circuit;
+    function toRustNetlist(d, compiled = window.HCCircuit.compile(ensureDriverShape(d).circuit)) {
+        const circuit = compiled.circuit;
         return {
             input_node: circuit.input,
             output_node: circuit.output,
@@ -555,7 +587,7 @@
         };
     }
 
-    function rustRequest(frequencies = logFreq()) {
+    function rustRequest(frequencies = logFreq(), includeMeasuredBaseline = false) {
         return {
             frequencies_hz: frequencies,
             environment: {
@@ -565,25 +597,33 @@
             acoustic_load: loadObj(),
             drivers: state.drivers.map(raw => {
                 const d = ensureDriverShape(raw);
+                const compiled = window.HCCircuit.compile(d.circuit);
+                const hasDatabaseBaseline = Boolean(d.databaseDriverId && d.measurement.length);
+                const measurement = d.measurement.length ? d.measurement : [{ frequency: d.sensitivityRef, db: d.sensitivity, phase: 0 }];
                 return {
                     id: d.id,
                     name: d.name,
                     driver_type: ({ dd: "dynamic", ba: "balanced_armature", planar: "planar", magnetostatic: "magnetostatic", bc: "bone_conduction" }[d.type] || "other"),
                     nominal_impedance_ohm: d.impedance,
-                    sensitivity_db: d.databaseDriverId ? 0 : d.sensitivity,
+                    sensitivity_db: hasDatabaseBaseline ? 0 : d.sensitivity,
                     sensitivity_reference_hz: d.sensitivityRef,
-                    response_absolute_spl: d.databaseDriverId ? false : d.responseAbsolute,
-                    gain_db: d.databaseDriverId ? 0 : d.gain,
+                    response_absolute_spl: hasDatabaseBaseline ? includeMeasuredBaseline : d.responseAbsolute,
+                    gain_db: hasDatabaseBaseline && !includeMeasuredBaseline ? 0 : d.gain,
                     polarity_inverted: d.polarity < 0,
-                    response: d.databaseDriverId
+                    response: hasDatabaseBaseline && !includeMeasuredBaseline
                         ? []
-                        : d.measurement.map(p => ({ frequency_hz: p.frequency, db: p.db, phase_deg: p.phase || 0 })),
+                        : measurement.map(p => ({
+                            frequency_hz: p.frequency,
+                            db: hasDatabaseBaseline ? rawDb(d, p.frequency) : p.db,
+                            // Match the forward pipeline: database measurements supply magnitude only.
+                            phase_deg: hasDatabaseBaseline ? 0 : p.phase || 0,
+                        })),
                     impedance: d.impedanceCurve.map(p => ({ frequency_hz: p.frequency, magnitude_ohm: p.ohm, phase_deg: p.phase || 0 })),
                     electrical: [
                         ...d.circuit.filters.map(toRustFilter).filter(Boolean),
-                        ...d.circuit.components.filter(component => component.kind === "low_pass" && !component.bypassed).map(component => ({ type: "low_pass", frequency_hz: component.frequency || 400, q: component.q || 0.707 }))
+                        ...compiled.activeComponents.filter(component => component.kind === "low_pass" && !component.bypassed).map(component => ({ type: "low_pass", frequency_hz: component.frequency || 400, q: component.q || 0.707 }))
                     ],
-                    circuit_netlist: toRustNetlist(d),
+                    circuit_netlist: toRustNetlist(d, compiled),
                     acoustic_path: d.path.map(toRustPath),
                     measurement_reference_path: d.measurementReferenceCompensation
                         ? (d.measurementReferencePath || []).map(measurementReferenceToRust).filter(Boolean)
@@ -597,12 +637,65 @@
         };
     }
 
+    function physicalInputErrors() {
+        const errors = [];
+        const numeric = value => value !== "" && value !== null && value !== undefined && Number.isFinite(Number(value));
+        const positive = value => numeric(value) && Number(value) > 0;
+        const nonnegative = value => numeric(value) && Number(value) >= 0;
+        if (!state.drivers.length) errors.push("Add a driver path before calculating.");
+        if (!numeric($("iemTemperature").value) || Number($("iemTemperature").value) <= -273.15) errors.push("Enter a valid temperature above absolute zero.");
+        if (!nonnegative($("iemHumidity").value) || Number($("iemHumidity").value) > 100) errors.push("Humidity must be between 0 and 100%.");
+        const loadType = $("iemAcousticLoadType").value;
+        if (["closed_cavity", "cavity_with_leak"].includes(loadType) && !positive($("iemCouplerVolume").value)) errors.push("Coupler volume must be greater than zero.");
+        if (loadType === "closed_cavity" && !nonnegative($("iemLoadLossResistance").value)) errors.push("Load resistance must be non-negative.");
+        if (loadType === "cavity_with_leak" && !positive($("iemLeakResistance").value)) errors.push("Leak resistance must be greater than zero.");
+        for (const d of state.drivers) {
+            if (!positive(d.impedance)) errors.push(`${d.name}: impedance must be greater than zero.`);
+            if (!positive(d.sensitivityRef)) errors.push(`${d.name}: sensitivity reference frequency must be greater than zero.`);
+            if (!numeric(d.sensitivity) || !numeric(d.gain)) errors.push(`${d.name}: sensitivity and gain must be finite numbers.`);
+            for (const [i, element] of d.path.entries()) {
+                const label = `${d.name}: ${element.type} ${i + 1}`;
+                if (element.type === "damper") {
+                    if (!nonnegative(element.value)) errors.push(`${label} resistance must be non-negative.`);
+                } else {
+                    if (!positive(element.length)) errors.push(`${label} length must be greater than zero.`);
+                    if (!positive(element.diameter)) errors.push(`${label} diameter must be greater than zero.`);
+                    if (!nonnegative(element.loss ?? 0)) errors.push(`${label} loss must be non-negative.`);
+                }
+            }
+            const filters = [...d.circuit.filters, ...d.circuit.components.filter(c => c.kind === "low_pass" && !c.bypassed)];
+            for (const filter of filters) {
+                const frequency = filter.frequency ?? (filter.kind === "low_pass" ? 400 : undefined);
+                if (!positive(frequency) || Number(frequency) >= 96000 || !positive(filter.q ?? 0.707)) {
+                    errors.push(`${d.name}: filters need a positive Q and a cutoff between 0 and 96,000 Hz.`);
+                }
+            }
+        }
+        return errors;
+    }
+
     async function calculate() {
         syncAll();
+        const revision = ++state.calculationRevision;
+        const circuitErrors = state.drivers.flatMap(d =>
+            window.HCCircuit.compile(ensureDriverShape(d).circuit).errors.map(message => `${d.name}: ${message}`));
+        const inputErrors = physicalInputErrors();
+        if (circuitErrors.length || inputErrors.length) {
+            state.last = null;
+            state.chart?.destroy(); state.chart = null;
+            state.validationChart?.destroy(); state.validationChart = null;
+            updateValidationPanel(null);
+            $("iemEngineStatus").textContent = inputErrors.length ? "CHECK INPUTS" : "CHECK CIRCUIT";
+            $("iemSimulationMessage").textContent = [...inputErrors, ...circuitErrors].join(" ");
+            updateReferenceValidationReadouts();
+            metrics();
+            return;
+        }
         let result;
         try {
             if (window.HCAcousticEngine) {
                 const rust = await window.HCAcousticEngine.simulate(rustRequest());
+                if (revision !== state.calculationRevision) return;
                 const rustDrivers = rust.drivers.map(item => item.points.map(p => ({
                     frequency: p.frequency_hz,
                     db: p.db,
@@ -672,7 +765,9 @@
                         return ` · UNITY ${activeValidation.every(v => v.pass) ? "PASS" : "FAIL"} · max ${worst.maxAbsDb.toFixed(3)} dB @ ${Math.round(worst.maxErrorFrequencyHz)} Hz`;
                     })()
                     : "";
-                $("iemEngineStatus").textContent = `${await window.HCAcousticEngine.version()} · BASELINE + MODEL DELTA${validationText}`;
+                const version = await window.HCAcousticEngine.version();
+                if (revision !== state.calculationRevision) return;
+                $("iemEngineStatus").textContent = `${version} · BASELINE + MODEL DELTA${validationText}`;
                 const statusText = activeValidation.length
                     ? (() => {
                         const worst = activeValidation.reduce((a, b) => a.maxAbsDb >= b.maxAbsDb ? a : b);
@@ -685,13 +780,15 @@
                 throw new Error("WASM unavailable");
             }
         } catch (error) {
+            if (revision !== state.calculationRevision) return;
             console.warn("Rust engine unavailable, using JS fallback", error);
             result = fallback();
             $("iemEngineStatus").textContent = "JS FALLBACK";
             if ($("iemSimulationMessage")) {
-                $("iemSimulationMessage").textContent = `WASM calculation error: ${error?.message || error}. Using JS fallback.`;
+                $("iemSimulationMessage").textContent = `WASM calculation error: ${error?.message || error}. Using approximate JS fallback; output-load effects and reference validation are unavailable.`;
             }
         }
+        if (revision !== state.calculationRevision) return;
         state.last = result;
 
         // Do not call renderDrivers() here: it replaces the Calculate button
@@ -726,20 +823,6 @@
         return series.map(point => ({ ...point, db: point.db - offset }));
     }
 
-    function graphValidation(predicted, baseline){
-        if(!predicted?.length||!baseline?.length)return null;
-        const base=baseline.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y))
-            .map(p=>({frequency:p.x,db:p.y})).sort((a,b)=>a.frequency-b.frequency);
-        if(base.length<2)return null;
-        const lo=base[0].frequency,hi=base[base.length-1].frequency;
-        const errorCurve=predicted.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=lo&&p.x<=hi)
-            .map(p=>({frequency:p.x,errorDb:p.y-interp(base,p.x)})).filter(p=>Number.isFinite(p.errorDb));
-        if(!errorCurve.length)return null;
-        let worst=errorCurve[0]; for(const p of errorCurve)if(Math.abs(p.errorDb)>Math.abs(worst.errorDb))worst=p;
-        const maxAbsDb=Math.abs(worst.errorDb);
-        const rmsDb=Math.sqrt(errorCurve.reduce((a,p)=>a+p.errorDb*p.errorDb,0)/errorCurve.length);
-        return{errorCurve,maxAbsDb,rmsDb,maxErrorFrequencyHz:worst.frequency,minFrequencyHz:lo,maxFrequencyHz:hi,pass:maxAbsDb<=.05};
-    }
     function updateValidationPanel(v){
         const panel=$("iemValidationPanel"),wrap=$("iemValidationErrorWrap"); if(!panel)return;
         if(!v){panel.hidden=true;if(wrap)wrap.hidden=true;return}
@@ -756,7 +839,7 @@
         if(state.validationChart){state.validationChart.destroy();state.validationChart=null}
         if(!v||!$("iemShowValidationError")?.checked)return;
         const peak=Math.max(.05,...v.errorCurve.map(p=>Math.abs(p.errorDb)));
-        const lim=Math.min(10,Math.max(.1,Math.ceil(peak*10)/10));
+        const lim=Math.max(.1,Math.ceil(peak*10)/10);
         state.validationChart=new Chart(c,{type:"line",data:{datasets:[
             {label:"Validation error",data:v.errorCurve.map(p=>({x:p.frequency,y:p.errorDb})),pointRadius:0,borderWidth:2},
             {label:"0 dB ideal",data:[{x:v.minFrequencyHz,y:0},{x:v.maxFrequencyHz,y:0}],pointRadius:0,borderWidth:1,borderDash:[5,5]}
@@ -812,13 +895,13 @@
             });
         }
         state.chart?.destroy();
-        let visibleValidation=null;
-        if(state.drivers.length===1&&state.drivers[0]?.referenceValidationMode){
-            const driverName=state.drivers[0].name;
-            const predicted=datasets.find(ds=>String(ds.label||"")===driverName);
-            const baseline=datasets.find(ds=>String(ds.label||"").includes("Datasheet baseline"));
-            visibleValidation=graphValidation(predicted?.data,baseline?.data);
-        }
+        // Validation measures the physical response, independently of graph
+        // normalization, trace visibility, and driver names.
+        const validations = (state.last.validation || []).filter((v, index) =>
+            v && state.drivers[index]?.referenceValidationMode);
+        const visibleValidation = validations.length
+            ? validations.reduce((worst, v) => v.maxAbsDb > worst.maxAbsDb ? v : worst)
+            : null;
         updateValidationPanel(visibleValidation);
         drawValidationError(visibleValidation);
 
@@ -916,6 +999,7 @@
         const root = $("iemDriverPaths");
         root.innerHTML = state.drivers.map((raw, index) => {
             const d = ensureDriverShape(raw);
+            window.HCCircuit.makeEditable(d.circuit);
             return `
                 <article class="iem-driver-card" data-driver-id="${d.id}">
                     <div class="iem-driver-card-head">
@@ -958,6 +1042,8 @@
     // ---------------------------------------------------------------------
 
     function circuitHtml(d) {
+        const check = window.HCCircuit.compile(d.circuit);
+        const selected = state.selectedCircuit?.driverId === d.id && d.circuit.components.find(c => c.id === state.selectedCircuit.componentId);
         return `
             <section class="iem-driver-section iem-cad-section">
                 <div class="iem-panel-title">
@@ -977,7 +1063,9 @@
                             <input type="checkbox" data-cad-snap-toggle ${state.cadSnapToGrid ? "checked" : ""}>
                             <span>SNAP GRID</span>
                         </label>
-                        <button class="iem-mini" data-circuit-properties="${d.id}" type="button">PROPERTIES</button>
+                        <button class="iem-mini" data-circuit-properties="${d.id}" type="button" ${selected ? "" : "disabled"}>PROPERTIES</button>
+                        <button class="iem-mini" data-circuit-duplicate="${d.id}" type="button" ${selected && selected.kind !== "wire" ? "" : "disabled"}>DUPLICATE</button>
+                        <button class="iem-mini" data-circuit-delete="${d.id}" type="button" ${selected ? "" : "disabled"}>DELETE</button>
                     </div>
                 </div>
                 <div class="iem-cad-workspace">
@@ -986,24 +1074,25 @@
                         ${paletteButton(d.id, "resistor", "RESISTOR")}
                         ${paletteButton(d.id, "capacitor", "CAPACITOR")}
                         ${paletteButton(d.id, "inductor", "INDUCTOR")}
-                        ${paletteButton(d.id, "low_pass", "LOW PASS")}
                         <button class="iem-cad-tool iem-connect-point-tool ${state.cadConnectPointMode === d.id ? "active" : ""}" data-add-connect-point="${d.id}" type="button"><strong>●</strong><span>CONNECT POINT</span></button>
-                        <button class="iem-cad-tool iem-wire-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE (OPTIONAL)</span></button>
+                        <button class="iem-cad-tool iem-wire-tool" data-wire-mode="${d.id}" type="button"><strong>⌁</strong><span>WIRE</span></button>
                         <label class="iem-cad-route-mode"><span>ROUTING</span><select data-wire-routing><option value="orthogonal" ${state.wireRouting === "orthogonal" ? "selected" : ""}>90°</option><option value="45" ${state.wireRouting === "45" ? "selected" : ""}>45°</option><option value="free" ${state.wireRouting === "free" ? "selected" : ""}>FREE</option></select></label>
                     </aside>
                     <div class="iem-cad-canvas-wrap">
-                        <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" aria-label="Circuit schematic"></svg>
-                        <div class="iem-cad-help">TIP · Click CONNECT POINT, then click the grid to place a cable junction · Click two connection points to cable them · CAD parts snap to the grid by default · Hold components to move · Shift temporarily disables snapping · Double-click for Properties.</div>
+                        <div class="iem-cad-status ${check.errors.length ? 'needs-attention' : ''}" role="status">${esc([...check.errors, ...check.warnings].join(" ") || "Circuit connected. Ready to calculate.")}</div>
+                        <svg class="iem-cad-canvas" id="cad-${d.id}" data-cad-driver="${d.id}" viewBox="0 0 900 360" tabindex="0" aria-label="Circuit schematic"></svg>
+                        <div class="iem-cad-help">Drag parts to move · Click terminals to wire; click the grid for bends · Crossed wires connect only at a junction · CONNECT POINT on a wire creates a branch · Esc cancels · Shift disables snapping · Double-click a part for properties · Driver − shares GND.</div>
                     </div>
                 </div>
                 <div class="iem-filter-editor">
                     <div class="iem-filter-head">
-                        <div><span class="eyebrow">RESPONSE FILTERS</span><strong>High Pass</strong></div>
+                        <div><span class="eyebrow">RESPONSE FILTERS</span><strong>High / Low Pass</strong></div>
                         <div class="iem-filter-actions">
                             <button class="iem-mini" data-add-filter="${d.id}:high_pass">+ HIGH PASS</button>
+                            <button class="iem-mini" data-add-filter="${d.id}:low_pass">+ LOW PASS</button>
                         </div>
                     </div>
-                    <div class="iem-filter-order-wrap"><span class="eyebrow">SIGNAL ORDER</span>${filterOrderHtml(d)}</div><div class="iem-filter-list">${d.circuit.filters.map((filter, i) => filterNode(d, filter, i)).join("") || '<div class="iem-field-note">No response filters. High Pass can be added here; Low Pass is a component in Circuit CAD.</div>'}</div>
+                    <div class="iem-filter-order-wrap"><span class="eyebrow">SIGNAL ORDER</span>${filterOrderHtml(d)}</div><div class="iem-filter-list">${d.circuit.filters.map((filter, i) => filterNode(d, filter, i)).join("") || '<div class="iem-field-note">No response filters. These ideal filters affect the response; use R, L and C parts for a physical crossover.</div>'}</div>
                 </div>
             </section>`;
     }
@@ -1070,28 +1159,6 @@
         </g>`;
     }
 
-    function circuitPropertiesHtml(d) {
-        const selection = state.selectedCircuit?.driverId === d.id ? d.circuit.components.find(c => c.id === state.selectedCircuit.componentId) : null;
-        if (!selection) {
-            return `<span class="eyebrow">PROPERTIES</span><h4>Nothing selected.</h4><p>Select a component in the schematic to edit value, nodes, bypass state, copy or delete it.</p>`;
-        }
-        const options = d.circuit.nodes.map(node => `<option value="${node.id}">${esc(node.label || node.id)}</option>`).join("");
-        const unit = selection.kind === "resistor" ? "Ω" : selection.kind === "capacitor" ? "µF" : selection.kind === "inductor" ? "mH" : "";
-        return `
-            <span class="eyebrow">PROPERTIES</span>
-            <h4>${esc(selection.label || selection.id)}</h4>
-            <label>LABEL<input data-cad-prop="label" data-cad-id="${d.id}:${selection.id}" value="${esc(selection.label || "")}"></label>
-            ${selection.kind !== "wire" ? `<label>VALUE ${unit}<input data-cad-prop="value" data-cad-id="${d.id}:${selection.id}" type="number" step="0.01" value="${selection.value}"></label>` : ""}
-            <label>NODE A<select data-cad-prop="nodeA" data-cad-id="${d.id}:${selection.id}">${options}</select></label>
-            <label>NODE B<select data-cad-prop="nodeB" data-cad-id="${d.id}:${selection.id}">${options}</select></label>
-            <label class="iem-cad-check"><input data-cad-prop="bypassed" data-cad-id="${d.id}:${selection.id}" type="checkbox" ${selection.bypassed ? "checked" : ""}> BYPASS / SHORT</label>
-            <div class="iem-cad-prop-actions">
-                <button class="iem-mini" data-cad-copy="${d.id}:${selection.id}">COPY</button>
-                <button class="iem-mini" data-cad-duplicate="${d.id}:${selection.id}">DUPLICATE</button>
-                <button class="iem-mini" data-cad-delete="${d.id}:${selection.id}">DELETE</button>
-            </div>`;
-    }
-
     function filterNode(d, filter, index) {
         const label = filter.type === "peq" ? "PEQ" : filter.type === "high_pass" ? "HIGH PASS" : "LOW PASS";
         const details = filter.type === "peq"
@@ -1110,7 +1177,7 @@
     }
 
     function filterOrderHtml(d) {
-        if (!d.circuit.filters.length) return '<div class="iem-field-note">No response filters. Add High Pass here; Low Pass is available directly in Circuit CAD.</div>';
+        if (!d.circuit.filters.length) return '<div class="iem-field-note">No response filters. Add a high-pass or low-pass filter here.</div>';
         return `<div class="iem-order-strip" data-filter-order="${d.id}">
             <span class="iem-order-fixed">INPUT</span>
             ${d.circuit.filters.map((filter, index) => {
@@ -1141,7 +1208,6 @@
                 </section>
                 <section class="iem-property-section"><span class="eyebrow">POSITION</span>
                     <p class="iem-property-note">Reorder the filter without deleting and rebuilding it.</p>
-                    <div class="iem-property-order-actions"><button class="outline-button" data-property-filter-move="-1" type="button">← MOVE EARLIER</button><button class="outline-button" data-property-filter-move="1" type="button">MOVE LATER →</button></div>
                     <div class="iem-property-position">Position <strong>${index + 1}</strong> of <strong>${d.circuit.filters.length}</strong></div>
                 </section>
                 <section class="iem-property-section"><span class="eyebrow">BEHAVIOUR</span><div class="iem-property-calculated"><p>${filter.type === "low_pass" ? "Attenuates frequencies above the selected cutoff." : filter.type === "high_pass" ? "Attenuates frequencies below the selected cutoff." : "Boosts or cuts around the centre frequency."}</p><div><span>Current order</span><strong>${index + 1}</strong></div></div></section>
@@ -1230,21 +1296,70 @@
                 };
             }
         }
+        if (endpoint?.driverTerminal) {
+            return endpoint.driverTerminal === "plus" ? { x: 762, y: 120 } : { x: 800, y: 158 };
+        }
         const node = nodeById(d, endpoint?.nodeId || fallbackNodeId);
         return node ? { x: node.x, y: node.y } : null;
     }
 
     function terminalConnectionCount(d, componentId, side) {
-        return d.circuit.components.filter(c => c.kind === "wire" && (
-            (c.endpointA?.componentId === componentId && c.endpointA?.side === side) ||
-            (c.endpointB?.componentId === componentId && c.endpointB?.side === side)
-        )).length;
+        const component = d.circuit.components.find(c => c.id === componentId);
+        const node = component?.[side === "a" ? "nodeA" : "nodeB"];
+        if (!node) return 0;
+        return Number([d.circuit.input, d.circuit.output, d.circuit.ground].includes(node)) +
+            d.circuit.components.filter(c => c.id !== componentId && (c.nodeA === node || c.nodeB === node)).length;
     }
 
     function driverTerminalConnectionCount(d, side) {
-        return d.circuit.components.filter(c => c.kind === "wire" && (
-            c.endpointA?.driverTerminal === side || c.endpointB?.driverTerminal === side
-        )).length;
+        const node = side === "plus" ? d.circuit.output : d.circuit.ground;
+        return Number(node === d.circuit.input || side === "minus") +
+            d.circuit.components.filter(c => c.nodeA === node || c.nodeB === node).length;
+    }
+
+    function wireGeometry(d, wire) {
+        const start = cadTerminalPoint(d, wire.endpointA, wire.nodeA);
+        const end = cadTerminalPoint(d, wire.endpointB, wire.nodeB);
+        return start && end ? window.HCCircuit.wirePoints(start, end, wire) : [];
+    }
+
+    function closestWireSegment(points, p) {
+        let best = { index: 1, point: p, distance: Infinity };
+        for (let i = 1; i < points.length; i++) {
+            const a = points[i - 1], b = points[i];
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const t = clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+            const projected = { x: a.x + t * dx, y: a.y + t * dy };
+            const distance = Math.hypot(p.x - projected.x, p.y - projected.y);
+            if (distance < best.distance) best = { index: i, point: projected, distance };
+        }
+        return best;
+    }
+
+    function legacyConnectionSvg(d) {
+        // Old projects and generated crossovers connect pins by shared node ID.
+        // Show those connections explicitly without changing their saved graph.
+        const circuit = d.circuit;
+        const lines = [];
+        for (const component of circuit.components.filter(c => c.kind !== "wire")) {
+            for (const side of ["a", "b"]) {
+                const nodeId = component[side === "a" ? "nodeA" : "nodeB"];
+                const node = nodeById(d, nodeId);
+                if (!node) continue;
+                const shared = circuit.components.some(c => c.id !== component.id && (
+                    (c.nodeA === nodeId && (c.kind !== "wire" || !c.endpointA?.componentId)) ||
+                    (c.nodeB === nodeId && (c.kind !== "wire" || !c.endpointB?.componentId))));
+                if (!shared && ![circuit.input, circuit.output, circuit.ground].includes(nodeId)) continue;
+                const pin = cadTerminalPoint(d, { componentId: component.id, side });
+                const anchor = nodeId === circuit.output && nodeId !== circuit.input ? { x: 762, y: 120 } : node;
+                const points = window.HCCircuit.wirePoints(pin, anchor, { routing: "orthogonal" });
+                lines.push(`<path class="iem-cad-wire legacy-lead" d="${points.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ")}"/>`);
+                if (shared && ![circuit.input, circuit.output, circuit.ground].includes(nodeId)) {
+                    lines.push(`<circle class="iem-cad-junction-dot" cx="${anchor.x}" cy="${anchor.y}" r="4"/>`);
+                }
+            }
+        }
+        return lines.join("");
     }
 
     function renderCircuitSvg(d) {
@@ -1258,6 +1373,7 @@
 
         lines.push(`<defs><pattern id="grid-${d.id}" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(23,23,23,.07)" stroke-width="1"/></pattern></defs>`);
         lines.push(`<rect class="iem-cad-background" width="900" height="360" fill="url(#grid-${d.id})"/>`);
+        lines.push(`<g data-legacy-connections="${d.id}">${legacyConnectionSvg(d)}</g>`);
 
         for (const component of circuit.components) {
             const a = nodeById(d, component.nodeA);
@@ -1267,22 +1383,18 @@
             if (component.kind === "wire") {
                 const startPoint = cadTerminalPoint(d, component.endpointA, component.nodeA) || a;
                 const endPoint = cadTerminalPoint(d, component.endpointB, component.nodeB) || b;
-                const pts = [startPoint, ...(Array.isArray(component.route) ? component.route : []), endPoint];
+                const pts = window.HCCircuit.wirePoints(startPoint, endPoint, component);
                 const dPath = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
                 const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
                 // Wide transparent hit path fixes the old hard-to-click line behaviour.
                 lines.push(`<path class="iem-cad-wire-hit" data-cad-wire="${d.id}:${component.id}" d="${dPath}"/>`);
                 lines.push(`<path class="iem-cad-wire user-wire ${selected ? "selected" : ""}" data-cad-wire-visual="${d.id}:${component.id}" d="${dPath}"/>`);
-                if (selected) {
-                    (component.route || []).forEach((p, i) => nodes.push(`<circle class="iem-wire-bend" data-wire-bend="${d.id}:${component.id}:${i}" cx="${p.x}" cy="${p.y}" r="6"/>`));
-                }
+                (component.route || []).forEach((p, i) => nodes.push(`<circle class="iem-wire-bend ${selected ? "selected" : ""}" data-wire-bend="${d.id}:${component.id}:${i}" cx="${p.x}" cy="${p.y}" r="6"/>`));
                 continue;
             }
 
             const x = Number.isFinite(component.x) ? component.x : snap((a.x + b.x) / 2);
             const y = Number.isFinite(component.y) ? component.y : snap((a.y + b.y) / 2);
-            component.x = x;
-            component.y = y;
             const selected = state.selectedCircuit?.driverId === d.id && state.selectedCircuit.componentId === component.id;
             const angle = componentDisplayAngle(d, component);
             const rad = angle * Math.PI / 180;
@@ -1293,6 +1405,7 @@
 
             components.push(`
                 <g class="iem-cad-component ${selected ? "selected" : ""} ${component.bypassed ? "bypassed" : ""}" data-cad-component="${d.id}:${component.id}" transform="translate(${x},${y})">
+                    <rect class="iem-cad-component-hit" x="-38" y="-38" width="76" height="78"/>
                     <g class="iem-cad-symbol-rotator" transform="rotate(${angle})">${componentSymbolSvg(component)}<circle class="iem-cad-component-terminal ${terminalConnectionCount(d, component.id, "a") ? "connected" : ""}" data-cad-terminal="${d.id}:${component.id}:a" cx="-48" cy="0" r="7"/><circle class="iem-cad-component-terminal ${terminalConnectionCount(d, component.id, "b") ? "connected" : ""}" data-cad-terminal="${d.id}:${component.id}:b" cx="48" cy="0" r="7"/></g>
                     ${rotationHandleSvg(d, component, angle)}
                     <text class="ref" text-anchor="middle" y="-25">${esc(component.label || component.id)}</text>
@@ -1301,14 +1414,15 @@
         }
 
         for (const node of circuit.nodes) {
-            if (node.hidden || (node.id !== circuit.input && node.id !== circuit.ground)) continue;
+            if (node.hidden && node.id !== circuit.input && node.id !== circuit.ground) continue;
+            if (node.id === circuit.output && node.id !== circuit.input && !node.connectPoint) continue;
             const special = node.id === circuit.input ? "input" : node.id === circuit.ground ? "ground" : node.id === circuit.output ? "output" : "";
             const wireActive = state.wireStart?.driverId === d.id && state.wireStart.nodeId === node.id;
             if (node.id === circuit.ground) {
                 nodes.push(`
                     <g class="iem-cad-node ground ${wireActive ? "wire-active" : ""}" data-cad-node="${d.id}:${node.id}" transform="translate(${node.x},${node.y})">
-                        ${groundSymbolSvg(0, 0)}
-                        <circle cx="0" cy="-12" r="5"/>
+                        ${groundSymbolSvg(0, 12)}
+                        <circle cx="0" cy="0" r="5"/>
                         <text x="0" y="-25" text-anchor="middle">${esc(node.label || node.id)}</text>
                     </g>`);
             } else if (node.id === circuit.input) {
@@ -1329,8 +1443,10 @@
         if (driverNode) {
             const driverX = 800;
             const driverY = 120;
-            driverNode.x = driverX - 38; driverNode.y = driverY; driverNode.hidden = true;
-            components.push(`<g data-cad-driver-symbol="${d.id}">${driverSymbolSvg(d, driverX, driverY)}<circle class="iem-cad-component-terminal ${driverTerminalConnectionCount(d, "plus") ? "connected" : ""}" data-cad-driver-terminal="${d.id}:plus" cx="${driverX - 38}" cy="${driverY}" r="7"/><circle class="iem-cad-component-terminal ${driverTerminalConnectionCount(d, "minus") ? "connected" : ""}" data-cad-driver-terminal="${d.id}:minus" cx="${driverX}" cy="${driverY + 38}" r="7"/></g>`);
+            const ground = nodeById(d, circuit.ground);
+            if (ground) lines.push(`<path class="iem-cad-wire fixed-return" d="M800 158 V${ground.y} H${ground.x}"/>`);
+            if (circuit.output === circuit.input) lines.push(`<path class="iem-cad-wire" d="M${driverNode.x} ${driverNode.y} H762 V120"/>`);
+            components.push(`<g data-cad-driver-symbol="${d.id}">${driverSymbolSvg(d, driverX, driverY)}<circle class="iem-cad-component-terminal ${driverTerminalConnectionCount(d, "plus") ? "connected" : ""}" data-cad-driver-terminal="${d.id}:plus" cx="${driverX - 38}" cy="${driverY}" r="7"/><circle class="iem-cad-component-terminal connected" data-cad-driver-terminal="${d.id}:minus" cx="${driverX}" cy="${driverY + 38}" r="7"/></g>`);
         }
 
         if (state.wireDraft?.driverId === d.id && state.wireDraft.points?.length) {
@@ -1344,28 +1460,27 @@
         bindCadSvg(d, svg);
     }
 
-    function groupUpdateRotation(svg, d, component, angle) {
-        const group = svg.querySelector(`[data-cad-component="${d.id}:${component.id}"]`);
-        const rotator = group?.querySelector(".iem-cad-symbol-rotator");
-        if (rotator) rotator.setAttribute("transform", `rotate(${angle})`);
-        const text = group?.querySelector(".iem-cad-rotation-text");
-        if (text) text.textContent = `${angle}°`;
-    }
-
     function bindCadSvg(d, svg) {
         const point = event => {
-            const rect = svg.getBoundingClientRect();
-            const rawX = (event.clientX - rect.left) * 900 / rect.width;
-            const rawY = (event.clientY - rect.top) * 360 / rect.height;
+            // Respect viewBox letterboxing and page zoom, not just the SVG box.
+            const cursor = svg.createSVGPoint();
+            cursor.x = event.clientX; cursor.y = event.clientY;
+            const local = cursor.matrixTransform(svg.getScreenCTM().inverse());
             const shouldSnap = state.cadSnapToGrid && !event.shiftKey;
             return {
-                x: clamp(shouldSnap ? snap(rawX) : rawX, 20, 880),
-                y: clamp(shouldSnap ? snap(rawY) : rawY, 20, 340),
+                x: clamp(shouldSnap ? snap(local.x) : local.x, 20, 880),
+                y: clamp(shouldSnap ? snap(local.y) : local.y, 20, 340),
             };
         };
 
         const setSelection = componentId => {
+            state.activeCircuit = d.id;
+            svg.focus();
             state.selectedCircuit = { driverId: d.id, componentId };
+            const selected = d.circuit.components.find(c => c.id === componentId);
+            document.querySelector(`[data-circuit-properties="${d.id}"]`).disabled = !selected;
+            document.querySelector(`[data-circuit-delete="${d.id}"]`).disabled = !selected;
+            document.querySelector(`[data-circuit-duplicate="${d.id}"]`).disabled = !selected || selected.kind === "wire";
             svg.querySelectorAll("[data-cad-component]").forEach(el => {
                 const [, id] = el.dataset.cadComponent.split(":");
                 el.classList.toggle("selected", id === componentId);
@@ -1374,9 +1489,15 @@
                 const [, id] = el.dataset.cadWireVisual.split(":");
                 el.classList.toggle("selected", id === componentId);
             });
+            svg.querySelectorAll("[data-wire-bend]").forEach(el => {
+                const [, id] = el.dataset.wireBend.split(":");
+                el.classList.toggle("selected", id === componentId);
+            });
         };
 
         const updateGeometry = () => {
+            const legacy = svg.querySelector(`[data-legacy-connections="${d.id}"]`);
+            if (legacy) legacy.innerHTML = legacyConnectionSvg(d);
             for (const component of d.circuit.components) {
                 const a = nodeById(d, component.nodeA);
                 const b = nodeById(d, component.nodeB);
@@ -1384,7 +1505,7 @@
                 if (component.kind === "wire") {
                     const startPoint = cadTerminalPoint(d, component.endpointA, component.nodeA) || a;
                     const endPoint = cadTerminalPoint(d, component.endpointB, component.nodeB) || b;
-                    const pts = [startPoint, ...(component.route || []), endPoint];
+                    const pts = window.HCCircuit.wirePoints(startPoint, endPoint, component);
                     const path = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
                     svg.querySelector(`[data-cad-wire="${d.id}:${component.id}"]`)?.setAttribute("d", path);
                     svg.querySelector(`[data-cad-wire-visual="${d.id}:${component.id}"]`)?.setAttribute("d", path);
@@ -1410,13 +1531,8 @@
                 svg.querySelector(`[data-cad-node="${d.id}:${node.id}"]`)?.setAttribute("transform", `translate(${node.x},${node.y})`);
             }
 
-            const out = nodeById(d, d.circuit.output) || nodeById(d, d.circuit.input);
-            if (out) {
-                const driverX = Math.min(840, out.x + 120);
-                svg.querySelector(`[data-cad-driver-lead="${d.id}"]`)?.setAttribute("d", `M ${out.x} ${out.y} L ${driverX - 30} ${out.y}`);
-                const holder = svg.querySelector(`[data-cad-driver-symbol="${d.id}"]`);
-                if (holder) holder.innerHTML = driverSymbolSvg(d, driverX, out.y);
-            }
+            const ground = nodeById(d, d.circuit.ground);
+            if (ground) svg.querySelector(".fixed-return")?.setAttribute("d", `M800 158 V${ground.y} H${ground.x}`);
         };
 
         const commitDrag = before => {
@@ -1441,30 +1557,14 @@
                 const before = JSON.stringify(d.circuit);
                 const offsetX = num(component.x) - startPoint.x;
                 const offsetY = num(component.y) - startPoint.y;
-                let armed = false;
                 let moved = false;
-                let ended = false;
-
-                group.classList.add("hold-pending");
-                const holdTimer = window.setTimeout(() => {
-                    if (ended) return;
-                    armed = true;
-                    group.classList.remove("hold-pending");
-                    group.classList.add("hold-dragging");
-                }, state.cadHoldToDragMs);
-
                 const move = ev => {
                     ev.preventDefault();
                     const p = point(ev);
-                    const distance = Math.hypot(p.x - startPoint.x, p.y - startPoint.y);
-                    if (!armed) {
-                        // A quick movement before the hold threshold remains a selection gesture.
-                        if (distance > 12) group.classList.add("hold-needs-pause");
-                        return;
-                    }
+                    if (!moved && Math.hypot(p.x - startPoint.x, p.y - startPoint.y) < 3) return;
                     moved = true;
-                    component.x = clamp(p.x + offsetX, 20, 880);
-                    component.y = clamp(p.y + offsetY, 20, 340);
+                    component.x = clamp(p.x + offsetX, 60, 740);
+                    component.y = clamp(p.y + offsetY, 40, 300);
                     if (state.cadSnapToGrid && !ev.shiftKey) {
                         component.x = snap(component.x);
                         component.y = snap(component.y);
@@ -1473,14 +1573,13 @@
                 };
 
                 const up = () => {
-                    ended = true;
-                    window.clearTimeout(holdTimer);
-                    group.classList.remove("hold-pending", "hold-dragging", "hold-needs-pause");
                     window.removeEventListener("pointermove", move);
                     window.removeEventListener("pointerup", up);
                     window.removeEventListener("pointercancel", up);
-                    if (moved) commitDrag(before);
-                    renderCircuitSvg(d);
+                    if (moved) {
+                        commitDrag(before);
+                        renderCircuitSvg(d);
+                    }
                 };
 
                 window.addEventListener("pointermove", move, { passive: false });
@@ -1500,36 +1599,6 @@
             handle.onpointerdown = event => {
                 event.preventDefault();
                 event.stopPropagation();
-                const [, componentId] = handle.dataset.cadRotate.split(":");
-                const component = d.circuit.components.find(c => c.id === componentId);
-                if (!component) return;
-                setSelection(componentId);
-                const before = JSON.stringify(d.circuit);
-                const rect = svg.getBoundingClientRect();
-                const toSvgPoint = ev => ({
-                    x: (ev.clientX - rect.left) * 900 / rect.width,
-                    y: (ev.clientY - rect.top) * 360 / rect.height,
-                });
-                const move = ev => {
-                    ev.preventDefault();
-                    const p = toSvgPoint(ev);
-                    const degrees = Math.atan2(p.y - component.y, p.x - component.x) * 180 / Math.PI + 90;
-                    component.rotationDeg = normalizeRotation45(degrees);
-                    const angle = componentDisplayAngle(d, component);
-                    groupUpdateRotation(svg, d, component, angle);
-                    updateGeometry();
-                };
-                const up = () => {
-                    window.removeEventListener("pointermove", move);
-                    window.removeEventListener("pointerup", up);
-                    window.removeEventListener("pointercancel", up);
-                    commitDrag(before);
-                    renderCircuitSvg(d);
-                    calculate();
-                };
-                window.addEventListener("pointermove", move, { passive: false });
-                window.addEventListener("pointerup", up, { once: true });
-                window.addEventListener("pointercancel", up, { once: true });
             };
             handle.onclick = event => {
                 event.preventDefault();
@@ -1564,11 +1633,11 @@
             return null;
         };
 
-        // v0.22: click-to-click cabling. Click one connection point, then click the
-        // destination point. The route is generated automatically; dragging is no
-        // longer required to make a connection.
+        // Terminal clicks define connectivity; grid clicks only shape the route.
         const handleEndpointClick = (event, info) => {
             if (event.button !== 0 || !info) return;
+            state.activeCircuit = d.id;
+            state.cadConnectPointMode = null;
             event.preventDefault();
             event.stopPropagation();
 
@@ -1606,6 +1675,8 @@
                 if (event.button !== 0) return;
                 event.preventDefault();
                 event.stopPropagation();
+                state.activeCircuit = d.id;
+                svg.focus();
                 const [, nodeId] = group.dataset.cadNode.split(":");
                 const node = nodeById(d, nodeId);
                 if (!node) return;
@@ -1635,8 +1706,12 @@
                     window.removeEventListener("pointermove", move);
                     window.removeEventListener("pointerup", up);
                     window.removeEventListener("pointercancel", up);
-                    if (moved) commitDrag(before);
-                    renderCircuitSvg(d);
+                    if (moved) {
+                        commitDrag(before);
+                        renderCircuitSvg(d);
+                    } else {
+                        handleEndpointClick(event, { endpoint: { nodeId }, point: { x: node.x, y: node.y } });
+                    }
                 };
                 window.addEventListener("pointermove", move, { passive: false });
                 window.addEventListener("pointerup", up, { once: true });
@@ -1649,8 +1724,15 @@
                 event.preventDefault();
                 event.stopPropagation();
                 const [, componentId] = path.dataset.cadWire.split(":");
-                setSelection(componentId);
-                renderCircuitSvg(d);
+                if (state.cadConnectPointMode === d.id) {
+                    const wire = d.circuit.components.find(c => c.id === componentId);
+                    const points = wireGeometry(d, wire);
+                    mutateCircuit(d, () => window.HCCircuit.splitWire(d.circuit, componentId, points, point(event)));
+                    state.cadConnectPointMode = null;
+                    renderDrivers();
+                } else {
+                    setSelection(componentId);
+                }
             };
             path.ondblclick = event => {
                 event.preventDefault(); event.stopPropagation();
@@ -1659,8 +1741,11 @@
                 if (!wire) return;
                 const before = JSON.stringify(d.circuit);
                 const p = point(event);
-                if (!Array.isArray(wire.route)) wire.route = [];
-                wire.route.push(p);
+                const points = wireGeometry(d, wire);
+                const nearest = closestWireSegment(points, p);
+                // Insert into the nearest segment, preserving the path order.
+                wire.route = [...points.slice(1, nearest.index), nearest.point, ...points.slice(nearest.index, -1)];
+                wire.routing = state.wireRouting;
                 commitDrag(before);
                 setSelection(componentId);
                 renderCircuitSvg(d);
@@ -1702,7 +1787,9 @@
             if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
             const last = state.wireDraft.points[state.wireDraft.points.length - 1];
             state.wireDraft.cursor = routedPoint(last, point(event));
-            const pts = [...state.wireDraft.points, state.wireDraft.cursor];
+            const pts = window.HCCircuit.wirePoints(state.wireDraft.points[0], point(event), {
+                route: state.wireDraft.points.slice(1), routing: state.wireRouting
+            });
             const path = pts.map((p, i) => `${i ? "L" : "M"} ${p.x} ${p.y}`).join(" ");
             svg.querySelector(`[data-wire-preview="${d.id}"]`)?.setAttribute("d", path);
         };
@@ -1716,7 +1803,7 @@
                 return;
             }
             if (!state.wireDraft || state.wireDraft.driverId !== d.id) return;
-            if (event.target.closest?.("[data-cad-node], [data-cad-component], [data-cad-wire]")) return;
+            if (event.target.closest?.("[data-cad-node], [data-cad-component], [data-cad-wire], [data-cad-terminal], [data-cad-driver-terminal]")) return;
             addWireBend(d, point(event));
         };
 
@@ -1726,7 +1813,7 @@
             const payload = event.dataTransfer.getData("text/plain");
             if (!payload.startsWith(`${d.id}:`)) return;
             const type = payload.split(":")[1];
-            addCadComponent(d, type);
+            addCadComponent(d, type, point(event));
         };
     }
 
@@ -1736,31 +1823,38 @@
     }
 
     function mutateCircuit(d, mutation, rerender = true) {
+        if (!d) return;
+        syncAll();
+        const before = JSON.stringify(d.circuit);
+        mutation();
+        if (before === JSON.stringify(d.circuit)) return;
         const history = historyFor(d);
-        history.undo.push(JSON.stringify(d.circuit));
+        history.undo.push(before);
         if (history.undo.length > 50) history.undo.shift();
         history.redo = [];
-        mutation();
+        state.activeCircuit = d.id;
         if (rerender) renderDrivers();
+        calculate();
     }
 
-    function undoCircuit(d) {
+    function restoreCircuitHistory(d, from, to) {
+        if (!d) return;
         const history = historyFor(d);
-        if (!history.undo.length) return;
-        history.redo.push(JSON.stringify(d.circuit));
-        d.circuit = JSON.parse(history.undo.pop());
+        if (!history[from].length) return;
+        syncAll();
+        history[to].push(JSON.stringify(d.circuit));
+        d.circuit = JSON.parse(history[from].pop());
         state.selectedCircuit = null;
+        state.wireStart = null;
+        state.wireDraft = null;
+        state.cadConnectPointMode = null;
+        state.activeCircuit = d.id;
         renderDrivers();
+        calculate();
     }
 
-    function redoCircuit(d) {
-        const history = historyFor(d);
-        if (!history.redo.length) return;
-        history.undo.push(JSON.stringify(d.circuit));
-        d.circuit = JSON.parse(history.redo.pop());
-        state.selectedCircuit = null;
-        renderDrivers();
-    }
+    function undoCircuit(d) { restoreCircuitHistory(d, "undo", "redo"); }
+    function redoCircuit(d) { restoreCircuitHistory(d, "redo", "undo"); }
 
     function nextComponentLabel(d, kind) {
         const prefix = kind === "resistor" ? "R" : kind === "capacitor" ? "C" : kind === "inductor" ? "L" : kind === "low_pass" ? "LP" : "W";
@@ -1822,7 +1916,7 @@
         if (rerender) renderDrivers();
     }
 
-    function addCadComponent(d, type) {
+    function addCadComponent(d, type, position) {
         // v0.19: components are electrically isolated when placed.
         // The user must cable every terminal manually; placement never creates a connection.
         mutateCircuit(d, () => {
@@ -1834,9 +1928,12 @@
                 { id: nodeB, label: `${nextComponentLabel(d, kind)}B`, x: 460, y: 180, hidden: true }
             );
             const label = nextComponentLabel(d, kind);
+            const count = d.circuit.components.filter(c => c.kind !== "wire").length;
+            const x = clamp(position?.x ?? 260 + (count % 4) * 140, 60, 740);
+            const y = clamp(position?.y ?? 120 + (Math.floor(count / 4) % 2) * 120, 40, 300);
             d.circuit.components.push({
                 id: uid(), label, kind, value: defaultValue(kind), nodeA, nodeB,
-                bypassed: false, rotationDeg: 0, x: snap(410), y: snap(180),
+                bypassed: false, rotationDeg: 0, x: state.cadSnapToGrid ? snap(x) : x, y: state.cadSnapToGrid ? snap(y) : y,
                 ...(kind === "low_pass" ? { frequency: 400, q: 0.707 } : {})
             });
         });
@@ -1904,34 +2001,14 @@
             return;
         }
 
-        const startNode = state.wireStart.nodeId;
-        const startEndpoint = state.wireStart.endpoint || { nodeId: startNode };
-        if (startNode === nodeId && !endpoint?.componentId && !startEndpoint?.componentId) return;
-        const draft = state.wireDraft;
-        const startPoint = draft?.points?.[0] || cadTerminalPoint(d, startEndpoint, startNode);
-        const route = [];
-        // Automatically line the two clicked connection points up. A straight wire
-        // is used when possible; otherwise use a clean orthogonal dog-leg with a
-        // centred trunk so moving parts remains visually predictable.
-        if (startPoint) {
-            const dx = Math.abs(visualPoint.x - startPoint.x);
-            const dy = Math.abs(visualPoint.y - startPoint.y);
-            if (dx > 1 && dy > 1) {
-                const midX = snap((startPoint.x + visualPoint.x) / 2);
-                route.push({ x: midX, y: startPoint.y });
-                route.push({ x: midX, y: visualPoint.y });
-            }
-        }
+        const startEndpoint = state.wireStart.endpoint || { nodeId: state.wireStart.nodeId };
+        const route = state.wireDraft?.points?.slice(1) || [];
         state.wireStart = null;
         state.wireDraft = null;
-        mutateCircuit(d, () => {
-            d.circuit.components.push({
-                id: uid(), label: nextComponentLabel(d, "wire"), kind: "wire", value: 0,
-                nodeA: startNode, nodeB: nodeId, bypassed: false, route,
-                endpointA: startEndpoint,
-                endpointB: endpoint,
-            });
-        });
+        mutateCircuit(d, () => window.HCCircuit.createWire(d.circuit, startEndpoint, endpoint, {
+            route, routing: state.wireRouting, label: nextComponentLabel(d, "wire")
+        }));
+        renderCircuitSvg(d);
     }
 
     function cancelWireMode(d) {
@@ -1961,37 +2038,6 @@
         });
     }
 
-    function mainSeriesPathComponents(d) {
-        const result = [];
-        let current = d.circuit.input;
-        const visited = new Set();
-        while (current !== d.circuit.output && !visited.has(current)) {
-            visited.add(current);
-            const candidate = d.circuit.components.find(c => !c.bypassed && c.kind !== "wire" && c.nodeA === current && c.nodeB !== d.circuit.ground);
-            if (!candidate) break;
-            result.push(candidate);
-            current = candidate.nodeB;
-        }
-        return result;
-    }
-
-    function moveSeriesComponent(d, componentId, direction) {
-        const series = mainSeriesPathComponents(d);
-        const index = series.findIndex(c => c.id === componentId);
-        const otherIndex = index + direction;
-        if (index < 0 || otherIndex < 0 || otherIndex >= series.length) return;
-        const a = series[index];
-        const b = series[otherIndex];
-        mutateCircuit(d, () => {
-            // Swap component electrical identities while preserving the node chain.
-            const fields = ["kind", "value", "label", "bypassed"];
-            for (const field of fields) [a[field], b[field]] = [b[field], a[field]];
-        });
-        closeCircuitPropertyPage();
-        renderDrivers();
-        calculate();
-    }
-
     function openCircuitPropertyPage(d, componentId) {
         const component = d?.circuit?.components?.find(c => c.id === componentId);
         const modal = $("iemCadPropertyModal");
@@ -1999,20 +2045,19 @@
         if (!component || !modal || !body) return;
 
         const draft = structuredClone(component);
-        const options = d.circuit.nodes.map(node => `<option value="${node.id}">${esc(node.label || node.id)}</option>`).join("");
         const meta = component.kind === "resistor"
-            ? { title: "Resistor", unit: "Ω", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="1"></label><label>POWER RATING W<input data-property-extra="power" type="number" min="0" step="0.01" value="0.25"></label>' }
+            ? { title: "Resistor", unit: "Ω", extra: "" }
             : component.kind === "capacitor"
-            ? { title: "Capacitor", unit: "µF", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="10"></label><label>VOLTAGE RATING V<input data-property-extra="voltage" type="number" min="0" step="1" value="50"></label>' }
+            ? { title: "Capacitor", unit: "µF", extra: "" }
             : component.kind === "inductor"
-            ? { title: "Inductor", unit: "mH", extra: '<label>TOLERANCE %<input data-property-extra="tolerance" type="number" min="0" step="0.1" value="10"></label><label>DCR Ω<input data-property-extra="dcr" type="number" min="0" step="0.01" value="0"></label>' }
+            ? { title: "Inductor", unit: "mH", extra: "" }
             : component.kind === "low_pass"
             ? { title: "Low-Pass Filter", unit: "Hz", extra: `<label>Q<input data-property-field="q" type="number" min="0.05" step="0.01" value="${component.q || 0.707}"></label>` }
             : { title: "Wire", unit: "", extra: "" };
 
         body.innerHTML = `
             <div class="iem-property-hero">
-                <div class="iem-property-symbol">${componentSymbolSvg(component)}</div>
+                <div class="iem-property-symbol"><svg viewBox="-60 -35 120 70" aria-hidden="true">${componentSymbolSvg(component)}</svg></div>
                 <div><span class="eyebrow">COMPONENT PROPERTY</span><h2>${meta.title} ${esc(component.label || component.id)}</h2><p>Changes are staged here. The circuit is only updated when you press Apply Changes.</p></div>
             </div>
             <div class="iem-property-grid">
@@ -2022,19 +2067,15 @@
                     ${meta.extra}
                 </section>
                 <section class="iem-property-section"><span class="eyebrow">CONNECTION</span>
-                    <label>NODE A<select data-property-field="nodeA">${options}</select></label>
-                    <label>NODE B<select data-property-field="nodeB">${options}</select></label>
+                    <p class="iem-field-note">Connect or disconnect terminals on the canvas. Moving or rotating this part keeps its connections.</p>
                     <label class="iem-cad-check"><input data-property-field="bypassed" type="checkbox" ${draft.bypassed ? "checked" : ""}> BYPASS / SHORT</label>
                     ${component.kind !== "wire" ? `<div class="iem-property-rotation"><span class="eyebrow">ORIENTATION</span><label>ANGLE<select data-property-field="rotationDeg"><option value="auto" ${draft.rotationDeg === null || draft.rotationDeg === undefined ? "selected" : ""}>Auto from connection</option>${[0,45,90,135,180,225,270,315].map(angle => `<option value="${angle}" ${draft.rotationDeg !== null && draft.rotationDeg !== undefined && normalizeRotation45(draft.rotationDeg) === angle ? "selected" : ""}>${angle}°</option>`).join("")}</select></label><div class="iem-property-rotate-actions"><button class="outline-button" data-property-rotate="-45" type="button">↶ ROTATE -45°</button><button class="outline-button" data-property-rotate="45" type="button">ROTATE +45° ↷</button></div></div>` : ""}
-                    <div class="iem-property-order-actions"><button class="outline-button" data-component-move="-1" type="button">← MOVE EARLIER</button><button class="outline-button" data-component-move="1" type="button">MOVE LATER →</button></div>
                 </section>
                 <section class="iem-property-section"><span class="eyebrow">CALCULATED DATA</span><div id="iemPropertyCalculated" class="iem-property-calculated"></div></section>
             </div>`;
         const propertySymbol = body.querySelector('.iem-property-symbol svg');
         if (propertySymbol) propertySymbol.style.transform = `rotate(${componentDisplayAngle(d, component)}deg)`;
-        body.querySelector('[data-property-field="nodeA"]').value = draft.nodeA;
-        body.querySelector('[data-property-field="nodeB"]').value = draft.nodeB;
-        body.querySelectorAll('[data-component-move]').forEach(button => button.onclick = () => moveSeriesComponent(d, component.id, Number(button.dataset.componentMove)));
+
         body.querySelectorAll('[data-property-rotate]').forEach(button => button.onclick = () => {
             const select = body.querySelector('[data-property-field="rotationDeg"]');
             const current = select?.value === "auto"
@@ -2128,26 +2169,27 @@
 
     function copyCircuitComponent(d, id) {
         const component = d.circuit.components.find(c => c.id === id);
-        if (component) state.circuitClipboard = structuredClone(component);
+        if (component && component.kind !== "wire") state.circuitClipboard = structuredClone(component);
+    }
+
+    function pasteCircuitComponent(d, original) {
+        if (!d || !original || original.kind === "wire") return;
+        mutateCircuit(d, () => {
+            const copy = window.HCCircuit.duplicateComponent(d.circuit, original, nextComponentLabel(d, original.kind));
+            state.selectedCircuit = { driverId: d.id, componentId: copy.id };
+        });
     }
 
     function duplicateCircuitComponent(d, id) {
-        const component = d.circuit.components.find(c => c.id === id);
-        if (!component) return;
-        mutateCircuit(d, () => {
-            const copy = structuredClone(component);
-            copy.id = uid();
-            copy.label = nextComponentLabel(d, copy.kind);
-            copy.x = (copy.x || 400) + 20;
-            copy.y = (copy.y || 160) + 40;
-            d.circuit.components.push(copy);
-        });
+        pasteCircuitComponent(d, d?.circuit.components.find(c => c.id === id));
     }
 
     function deleteCircuitComponent(d, id) {
         mutateCircuit(d, () => {
-            d.circuit.components = d.circuit.components.filter(c => c.id !== id);
+            window.HCCircuit.removeComponent(d.circuit, id);
             if (state.selectedCircuit?.componentId === id) state.selectedCircuit = null;
+            state.wireStart = null;
+            state.wireDraft = null;
         });
     }
 
@@ -2205,21 +2247,46 @@
         node.querySelectorAll(`[data-${property}-field]`).forEach(input => element[input.dataset[property + "Field"]] = num(input.value));
     }
 
+    function syncDriverField(d, input) {
+        const key = input.dataset.f;
+        if (key === "name" || key === "type") d[key] = input.value;
+        else if (key === "polarity") d.polarity = num(input.value, 1);
+        else if (key === "responseAbsolute") d.responseAbsolute = input.value === "absolute";
+        else d[key] = num(input.value, d[key]);
+    }
+
+    function markDesignDirty() {
+        ++state.calculationRevision;
+        state.last = null;
+        state.chart?.destroy(); state.chart = null;
+        state.validationChart?.destroy(); state.validationChart = null;
+        updateValidationPanel(null);
+        $("iemEngineStatus").textContent = "RECALCULATE";
+        $("iemSimulationMessage").textContent = "Design changed. Calculate to update the response.";
+        updateReferenceValidationReadouts();
+        metrics();
+    }
+
     function syncAll() {
         document.querySelectorAll(".iem-driver-card").forEach(card => {
             const d = find(card.dataset.driverId);
             if (!d) return;
-            card.querySelectorAll("[data-f]").forEach(input => {
-                const key = input.dataset.f;
-                if (key === "name" || key === "type") d[key] = input.value;
-                else if (key === "polarity") d.polarity = num(input.value, 1);
-                else if (key === "responseAbsolute") d.responseAbsolute = input.value === "absolute";
-                else d[key] = num(input.value, d[key]);
-            });
+            card.querySelectorAll("[data-f]").forEach(input => syncDriverField(d, input));
         });
     }
 
     function bindDriverEvents() {
+        document.querySelectorAll(".iem-driver-card").forEach(card => {
+            card.querySelectorAll("[data-f]").forEach(input => {
+                input.oninput = input.onchange = () => {
+                    const d = find(card.dataset.driverId);
+                    if (!d) return;
+                    syncDriverField(d, input);
+                    markDesignDirty();
+                    if (input.dataset.f === "name") refreshReverseDrivers();
+                };
+            });
+        });
         document.querySelectorAll("[data-delete-driver]").forEach(button => button.onclick = () => {
             if (confirm("Remove this driver path?")) {
                 state.drivers = state.drivers.filter(d => d.id !== button.dataset.deleteDriver);
@@ -2246,6 +2313,14 @@
             const selected = state.selectedCircuit?.driverId === d?.id ? state.selectedCircuit.componentId : null;
             if (selected) openCircuitPropertyPage(d, selected);
         });
+        document.querySelectorAll("[data-circuit-duplicate]").forEach(button => button.onclick = () => {
+            const d = find(button.dataset.circuitDuplicate);
+            if (state.selectedCircuit?.driverId === d?.id) duplicateCircuitComponent(d, state.selectedCircuit.componentId);
+        });
+        document.querySelectorAll("[data-circuit-delete]").forEach(button => button.onclick = () => {
+            const d = find(button.dataset.circuitDelete);
+            if (state.selectedCircuit?.driverId === d?.id) deleteCircuitComponent(d, state.selectedCircuit.componentId);
+        });
         document.querySelectorAll("[data-cad-symbol-standard]").forEach(select => select.onchange = () => {
             state.cadSymbolStandard = select.value === "ansi" ? "ansi" : "iec";
             state.drivers.forEach(driver => renderCircuitSvg(driver));
@@ -2253,16 +2328,6 @@
         });
         document.querySelectorAll("[data-cad-snap-toggle]").forEach(toggle => toggle.onchange = () => {
             state.cadSnapToGrid = Boolean(toggle.checked);
-            if (state.cadSnapToGrid) {
-                state.drivers.forEach(d => {
-                    ensureDriverShape(d);
-                    d.circuit.components.forEach(c => {
-                        if (c.kind !== "wire") { c.x = snap(num(c.x, 400)); c.y = snap(num(c.y, 180)); }
-                        else if (Array.isArray(c.route)) c.route = c.route.map(p => ({ x: snap(p.x), y: snap(p.y) }));
-                    });
-                    d.circuit.nodes.forEach(n => { if (!n.hidden) { n.x = snap(n.x); n.y = snap(n.y); } });
-                });
-            }
             document.querySelectorAll("[data-cad-snap-toggle]").forEach(other => {
                 other.checked = state.cadSnapToGrid;
             });
@@ -2282,23 +2347,27 @@
 
         document.querySelectorAll("[data-add-filter]").forEach(button => button.onclick = () => {
             const [id, type] = button.dataset.addFilter.split(":");
-            find(id).circuit.filters.push(newFilter(type));
-            renderDrivers();
+            const d = find(id);
+            mutateCircuit(d, () => d.circuit.filters.push(newFilter(type)));
         });
         document.querySelectorAll("[data-remove-filter]").forEach(button => button.onclick = () => {
             const [id, index] = button.dataset.removeFilter.split(":");
-            find(id).circuit.filters.splice(+index, 1);
-            renderDrivers();
+            const d = find(id);
+            mutateCircuit(d, () => d.circuit.filters.splice(+index, 1));
         });
         document.querySelectorAll("[data-filter-properties]").forEach(button => button.onclick = () => {
             const [id, index] = button.dataset.filterProperties.split(":");
             openFilterPropertyPage(find(id), +index);
         });
         document.querySelectorAll("[data-filter-earlier]").forEach(button => button.onclick = () => {
-            const [id, index] = button.dataset.filterEarlier.split(":"); move(find(id).circuit.filters, +index, -1); renderDrivers(); calculate();
+            const [id, index] = button.dataset.filterEarlier.split(":");
+            const d = find(id);
+            mutateCircuit(d, () => move(d.circuit.filters, +index, -1));
         });
         document.querySelectorAll("[data-filter-later]").forEach(button => button.onclick = () => {
-            const [id, index] = button.dataset.filterLater.split(":"); move(find(id).circuit.filters, +index, 1); renderDrivers(); calculate();
+            const [id, index] = button.dataset.filterLater.split(":");
+            const d = find(id);
+            mutateCircuit(d, () => move(d.circuit.filters, +index, 1));
         });
         let draggedFilter = null;
         document.querySelectorAll("[data-filter-chip], [data-filter-drag]").forEach(item => {
@@ -2311,11 +2380,12 @@
                 const [sourceDriver, sourceIndex] = draggedFilter.split(":");
                 const [targetDriver, targetIndex] = target.split(":");
                 if (sourceDriver !== targetDriver) return;
-                const filters = find(sourceDriver).circuit.filters;
-                const [moved] = filters.splice(+sourceIndex, 1);
-                filters.splice(+targetIndex, 0, moved);
+                const d = find(sourceDriver);
+                mutateCircuit(d, () => {
+                    const [moved] = d.circuit.filters.splice(+sourceIndex, 1);
+                    d.circuit.filters.splice(+targetIndex, 0, moved);
+                });
                 draggedFilter = null;
-                renderDrivers(); calculate();
             };
         });
         document.querySelectorAll("[data-filter-node]").forEach(node => node.oninput = () => {
@@ -2338,54 +2408,80 @@
             const [id, type] = button.dataset.addPath.split(":");
             find(id).path.push(newPath(type));
             find(id).referenceValidationMode = false;
+            markDesignDirty();
             renderDrivers();
         });
         document.querySelectorAll("[data-remove-path]").forEach(button => button.onclick = () => {
             const [id, index] = button.dataset.removePath.split(":");
             find(id).path.splice(+index, 1);
             find(id).referenceValidationMode = false;
+            markDesignDirty();
             renderDrivers();
         });
         document.querySelectorAll("[data-move-path]").forEach(button => button.onclick = () => {
             const [id, index, direction] = button.dataset.movePath.split(":");
             move(find(id).path, +index, +direction);
             find(id).referenceValidationMode = false;
+            markDesignDirty();
             renderDrivers();
         });
-        document.querySelectorAll("[data-path-node]").forEach(node => node.oninput = () => syncNode(node, "path"));
+        document.querySelectorAll("[data-path-node]").forEach(node => node.oninput = () => { syncNode(node, "path"); markDesignDirty(); });
 
         document.querySelectorAll("[data-fr-file]").forEach(input => input.onchange = async () => {
             const file = input.files[0];
-            if (file) {
-                find(input.dataset.frFile).measurement = await parseFile(file, "fr");
-                renderDrivers();
-            }
+            if (file) await importDriverFile(find(input.dataset.frFile), file, "fr");
         });
         document.querySelectorAll("[data-z-file]").forEach(input => input.onchange = async () => {
             const file = input.files[0];
-            if (file) {
-                find(input.dataset.zFile).impedanceCurve = await parseFile(file, "z");
-                renderDrivers();
-            }
+            if (file) await importDriverFile(find(input.dataset.zFile), file, "z");
         });
     }
 
+    async function importDriverFile(d, file, mode) {
+        if (!d) return;
+        const key = `${d.id}:${mode}`;
+        const revision = (state.importRevisions.get(key) || 0) + 1;
+        state.importRevisions.set(key, revision);
+        try {
+            const points = await parseFile(file, mode);
+            if (!state.drivers.includes(d) || revision !== state.importRevisions.get(key)) return;
+            if (mode === "z") d.impedanceCurve = points;
+            else {
+                d.measurement = points;
+                // A user FR upload has its own phase and measurement conditions.
+                // Do not apply the database sample's reference correction to it.
+                for (const field of ["databaseDriverId", "databaseMeasurementId", "databaseSource", "databaseSparseResponse",
+                    "measurementReferencePath", "measurementReferenceCoupler", "measurementReferenceLoad"]) delete d[field];
+                d.measurementReferenceCompensation = false;
+                d.referenceValidationMode = false;
+            }
+            markDesignDirty();
+            renderDrivers();
+            $("iemSimulationMessage").textContent = `Imported ${points.length} ${mode === "z" ? "impedance" : "response"} points. Calculate to update the response.`;
+        } catch (error) {
+            if (state.drivers.includes(d) && revision === state.importRevisions.get(key)) {
+                $("iemSimulationMessage").textContent = `${d.name}: ${error.message}`;
+            }
+        }
+    }
+
     async function parseFile(file, mode) {
-        const output = [];
+        const output = new Map();
         for (const raw of (await file.text()).split(/\r?\n/)) {
             const line = raw.trim();
             if (!line || line.startsWith("#") || line.startsWith(";")) continue;
             const columns = line.split(/[\s,;\t]+/).filter(Boolean);
             const frequency = +columns[0];
             const value = +columns[1];
-            const phase = +columns[2] || 0;
-            if (Number.isFinite(frequency) && Number.isFinite(value) && frequency > 0) {
-                output.push(mode === "z"
+            const phase = columns[2] === undefined ? 0 : Number(columns[2]);
+            if (Number.isFinite(frequency) && Number.isFinite(value) && Number.isFinite(phase) && frequency > 0 && (mode !== "z" || value > 0)) {
+                output.set(frequency, mode === "z"
                     ? { frequency, ohm: value, phase }
                     : { frequency, db: value, phase });
             }
         }
-        return output.sort((a, b) => a.frequency - b.frequency);
+        if (!output.size) throw new Error(`No valid ${mode === "z" ? "impedance" : "response"} points found. Use numeric frequency, magnitude and optional phase columns.`);
+        return [...output.values()].sort((a, b) => a.frequency - b.frequency);
     }
 
     // ---------------------------------------------------------------------
@@ -2394,12 +2490,20 @@
 
     function saveLibrary(id) {
         syncAll();
-        const d = structuredClone(find(id));
-        d.id = uid();
-        state.library = JSON.parse(localStorage.getItem("hc_iem_driver_library") || "[]");
-        state.library.push(d);
-        localStorage.setItem("hc_iem_driver_library", JSON.stringify(state.library));
-        renderLibrary();
+        try {
+            const d = structuredClone(find(id));
+            if (!d) return;
+            d.id = uid();
+            const saved = JSON.parse(localStorage.getItem("hc_iem_driver_library") || "[]");
+            if (!Array.isArray(saved)) throw new Error("Saved library is invalid.");
+            saved.push(d);
+            localStorage.setItem("hc_iem_driver_library", JSON.stringify(saved));
+            state.library = saved;
+            $("iemSimulationMessage").textContent = `${d.name} saved to the driver library.`;
+            renderLibrary();
+        } catch (error) {
+            $("iemSimulationMessage").textContent = `Unable to save driver: ${error.message}`;
+        }
     }
 
     function databaseDriverToDesign(row) {
@@ -2457,9 +2561,6 @@
         }
 
         state.databaseLibraryError = "";
-        const { data: sessionData } = await db.auth.getSession();
-        console.info("IEM Driver Library Supabase session:", sessionData?.session?.user?.email || "anonymous");
-
         const { data: drivers, error } = await db
             .from("iem_drivers")
             .select("id,manufacturer,model,driver_type,nominal_impedance_ohm,sensitivity_db,sensitivity_reference,rated_power_mw,notes")
@@ -2536,8 +2637,21 @@
     }
 
     async function renderLibrary() {
-        state.library = JSON.parse(localStorage.getItem("hc_iem_driver_library") || "[]").map(ensureDriverShape);
-        await loadDatabaseLibrary();
+        $("iemLibraryMessage").textContent = "";
+        try {
+            const saved = JSON.parse(localStorage.getItem("hc_iem_driver_library") || "[]");
+            if (!Array.isArray(saved)) throw new Error("Expected a driver list.");
+            state.library = saved.map(ensureDriverShape);
+        } catch (error) {
+            state.library = [];
+            $("iemLibraryMessage").textContent = `Unable to read saved drivers: ${error.message}. The saved data has been kept.`;
+        }
+        try {
+            await loadDatabaseLibrary();
+        } catch (error) {
+            state.databaseLibrary = [];
+            state.databaseLibraryError = error.message || "Unable to reach the driver database.";
+        }
 
         const databaseCards = state.databaseLibrary.map((row, i) => {
             const frCount = row.fr?.length || 0;
@@ -2610,7 +2724,11 @@
     }
 
     function refreshReverseDrivers() {
-        $("iemReverseDriver").innerHTML = state.drivers.map((d, i) => `<option value="${i}">${esc(d.name)}</option>`).join("");
+        const select = $("iemReverseDriver");
+        const selectedId = select.selectedOptions?.[0]?.dataset.driverId;
+        select.innerHTML = state.drivers.map((d, i) => `<option value="${i}" data-driver-id="${d.id}">${esc(d.name)}</option>`).join("");
+        const index = state.drivers.findIndex(d => d.id === selectedId);
+        if (index >= 0) select.value = String(index);
     }
 
     function targetPeqOffsetDb(frequency) {
@@ -2860,15 +2978,42 @@
     }
 
     function listNums(value) {
-        return String(value).split(",").map(Number).filter(Number.isFinite);
+        return String(value).split(",").map(text => text.trim()).filter(Boolean).map(Number);
+    }
+
+    function reverseContextKey(driverId) {
+        return JSON.stringify({ driverId, selectedDriverId: state.drivers[Number($("iemReverseDriver").value)]?.id,
+            request: rustRequest(logFreq(120), true), target: state.reverse,
+            settings: Object.fromEntries(Object.keys(projectDefaults).filter(id => id.startsWith("iemReverse")).map(id => [id, $(id).value])) });
     }
 
     async function reverseRun() {
         syncAll();
-        if (state.reverse.length < 2) return;
+        const revision = ++state.reverseRevision;
+        $("iemReverseResults").innerHTML = "";
+        $("iemReverseMessage").textContent = "";
+        if (state.reverse.length < 2) { $("iemReverseMessage").textContent = "Add at least two target response points."; return; }
         const driverIndex = +$("iemReverseDriver").value;
+        const selectedDriver = state.drivers[driverIndex];
+        if (!selectedDriver) { $("iemReverseMessage").textContent = "Select a driver to optimise."; return; }
+        // The optimiser replaces the selected driver's circuit with each candidate.
+        const errors = [...physicalInputErrors(), ...state.drivers.flatMap((d, index) => index === driverIndex ? [] :
+            window.HCCircuit.compile(d.circuit).errors.map(message => `${d.name}: ${message}`))];
+        for (const [name, minId, maxId] of [["Tube length", "iemReverseLengthMin", "iemReverseLengthMax"], ["Tube diameter", "iemReverseDiameterMin", "iemReverseDiameterMax"]]) {
+            const min = Number($(minId).value), max = Number($(maxId).value);
+            if (!(Number.isFinite(min) && Number.isFinite(max) && min > 0 && max >= min)) errors.push(`${name}: use a positive minimum and a maximum at least as large.`);
+        }
+        for (const [name, id] of [["Dampers", "iemReverseDampers"], ["Capacitors", "iemReverseCaps"], ["Resistors", "iemReverseResistors"]]) {
+            const values = listNums($(id).value);
+            if (!values.length || values.some(value => !Number.isFinite(value) || value < 0)) errors.push(`${name}: enter a list of non-negative numbers.`);
+        }
+        const gainRange = Number($("iemReverseGainRange").value);
+        if (!Number.isFinite(gainRange) || gainRange < 0 || $("iemReverseGainRange").value === "") errors.push("Gain range must be a non-negative number.");
+        if (errors.length) { $("iemReverseMessage").textContent = errors.join(" "); return; }
         const request = {
-            base_request: rustRequest(logFreq(120)),
+            // The optimiser scores full SPL; the forward renderer alone adds
+            // the database baseline back to a delta-only engine response.
+            base_request: rustRequest(logFreq(120), true),
             target: state.reverse.map(p => ({ frequency_hz: p.frequency, db: p.db, phase_deg: 0 })),
             driver_index: driverIndex,
             min_tube_length_mm: num($("iemReverseLengthMin").value, 3),
@@ -2891,8 +3036,18 @@
             $("iemReverseMessage").textContent = "Build the Rust/WASM engine first for reverse optimisation.";
             return;
         }
+        const driverId = selectedDriver.id;
+        const contextKey = reverseContextKey(driverId);
+        const runButton = $("iemReverseRunButton");
+        runButton.disabled = true;
+        $("iemReverseMessage").textContent = "Searching for designs…";
         try {
             const results = await window.HCAcousticEngine.reverseDesign(request);
+            if (revision !== state.reverseRevision) return;
+            if (contextKey !== reverseContextKey(driverId)) {
+                $("iemReverseMessage").textContent = "Design changed during the search. Run Find Design again.";
+                return;
+            }
             $("iemReverseResults").innerHTML = results.map((candidate, index) => `
                 <article class="iem-reverse-result-card">
                     <div class="iem-reverse-result-head">
@@ -2905,13 +3060,28 @@
                     </div>
                 </article>`).join("");
 
-            document.querySelectorAll("[data-apply-rev-physical]").forEach(button => button.onclick = () => applyRevPhysical(results[+button.dataset.applyRevPhysical], driverIndex));
+            $("iemReverseMessage").textContent = results.length ? `${results.length} candidate designs found.` : "No candidates found for these constraints.";
+            document.querySelectorAll("[data-apply-rev-physical]").forEach(button => button.onclick = () => {
+                syncAll();
+                const currentIndex = state.drivers.findIndex(d => d.id === driverId);
+                if (currentIndex < 0 || contextKey !== reverseContextKey(driverId)) {
+                    $("iemReverseResults").innerHTML = "";
+                    $("iemReverseMessage").textContent = "Design or target changed. Run Find Design again before applying a result.";
+                    return;
+                }
+                applyRevPhysical(results[+button.dataset.applyRevPhysical], currentIndex);
+                $("iemReverseResults").innerHTML = "";
+                $("iemReverseMessage").textContent = "Candidate applied.";
+            });
         } catch (error) {
-            $("iemReverseMessage").textContent = error.message || "Reverse design failed";
+            if (revision === state.reverseRevision) $("iemReverseMessage").textContent = error.message || "Reverse design failed";
+        } finally {
+            if (revision === state.reverseRevision) runButton.disabled = false;
         }
     }
 
     function applyRevPhysical(candidate, index, recalc = true) {
+        if (!candidate || !state.drivers[index]) return;
         const d = ensureDriverShape(state.drivers[index]);
         d.gain = candidate.gain_db;
         let tube = d.path.find(element => element.type === "tube");
@@ -2922,12 +3092,22 @@
         if (candidate.damper_ohm > 0) {
             if (!damper) d.path.push(damper = { type: "damper", value: 1000 });
             damper.value = candidate.damper_ohm;
-        } else if (damper) {
-            d.path = d.path.filter(element => element !== damper);
+        } else {
+            d.path = d.path.filter(element => element.type !== "damper");
         }
-        const existingFilters = structuredClone(d.circuit?.filters || []);
+        const existingFilters = [
+            ...structuredClone(d.circuit?.filters || []),
+            ...window.HCCircuit.compile(d.circuit).activeComponents
+                .filter(c => c.kind === "low_pass" && !c.bypassed)
+                .map(c => ({ type: "low_pass", frequency: c.frequency || 400, q: c.q || 0.707 })),
+        ];
         d.circuit = createCircuit();
+        // Generated series chains start at the source, as in the optimiser.
+        // The empty CAD template deliberately has an unconnected driver node.
+        d.circuit.nodes = d.circuit.nodes.filter(node => node.id !== d.circuit.output);
+        d.circuit.output = d.circuit.input;
         d.circuit.filters = existingFilters;
+        d.referenceValidationMode = false;
         if (candidate.resistor_ohm > 0) appendSeriesComponent(d, "resistor", candidate.resistor_ohm, false);
         if (candidate.capacitor_uf > 0) appendSeriesComponent(d, "capacitor", candidate.capacitor_uf, false);
         if (recalc) {
@@ -2959,21 +3139,66 @@
 
     function saveProject() {
         syncAll();
-        localStorage.setItem("hc_iem_project", JSON.stringify({
-            name: $("iemProjectName").value,
-            drivers: state.drivers,
-            target: state.target,
-            reverseBase: state.reverseBase,
-            targetPeq: state.targetPeq,
-        }));
+        try {
+            localStorage.setItem("hc_iem_project", JSON.stringify({
+                version: 2,
+                name: $("iemProjectName").value,
+                drivers: state.drivers,
+                target: state.target,
+                reverseBase: state.reverseBase,
+                targetPeq: state.targetPeq,
+                settings: Object.fromEntries(Object.entries(projectDefaults).map(([id, fallback]) =>
+                    [id, typeof fallback === "boolean" ? $(id).checked : $(id).value])),
+                reverseView: state.reverseView,
+                cadSettings: { wireRouting: state.wireRouting, cadSymbolStandard: state.cadSymbolStandard, cadSnapToGrid: state.cadSnapToGrid },
+            }));
+            $("iemProjectMessage").textContent = "Project saved in this browser.";
+        } catch (error) {
+            $("iemProjectMessage").textContent = `Unable to save project: ${error.message}`;
+        }
+    }
+
+    function restoreProjectSettings(settings = {}) {
+        settings ||= {};
+        for (const [id, fallback] of Object.entries(projectDefaults)) {
+            const value = settings[id] ?? fallback;
+            if (typeof fallback === "boolean") $(id).checked = Boolean(value);
+            else $(id).value = String(value);
+        }
+        $("iemReverseNormalizeFrequency").disabled = $("iemReverseMatchMode").value !== "relative";
+    }
+
+    function resetCadSession() {
+        markDesignDirty();
+        state.histories.clear();
+        state.activeCircuit = null;
+        state.selectedCircuit = null;
+        state.wireStart = null;
+        state.wireDraft = null;
+        state.cadConnectPointMode = null;
+        state.importRevisions.clear();
+        ++state.reverseRevision;
+        $("iemReverseResults").innerHTML = "";
+        $("iemReverseMessage").textContent = "";
+        $("iemReverseRunButton").disabled = false;
     }
 
     function loadProject() {
         try {
             const project = JSON.parse(localStorage.getItem("hc_iem_project") || "null");
-            if (!project) return;
+            if (!project) { $("iemProjectMessage").textContent = "No saved project in this browser."; return; }
+            if (!Array.isArray(project.drivers)) throw new Error("Saved project has no driver list.");
+            const drivers = project.drivers.map(ensureDriverShape);
+            for (const key of ["target", "reverseBase", "targetPeq"]) {
+                if (project[key] !== undefined && !Array.isArray(project[key])) throw new Error(`Invalid saved ${key}.`);
+            }
+            resetCadSession();
+            restoreProjectSettings(project.settings);
+            state.wireRouting = ["orthogonal", "45", "free"].includes(project.cadSettings?.wireRouting) ? project.cadSettings.wireRouting : "orthogonal";
+            state.cadSymbolStandard = project.cadSettings?.cadSymbolStandard === "ansi" ? "ansi" : "iec";
+            state.cadSnapToGrid = project.cadSettings?.cadSnapToGrid !== false;
             $("iemProjectName").value = project.name || "Untitled IEM";
-            state.drivers = (project.drivers || []).map(ensureDriverShape);
+            state.drivers = drivers;
             state.target = project.target || [];
             state.reverseBase = project.reverseBase || [];
             state.targetPeq = project.targetPeq || [];
@@ -2981,13 +3206,19 @@
             renderTargetPeq();
             renderDrivers();
             refreshReverseDrivers();
+            setReverseView(project.reverseView?.min ?? 60, project.reverseView?.max ?? 100, false);
+            drawReverse();
+            $("iemProjectMessage").textContent = "Project loaded.";
             calculate();
         } catch (error) {
             console.error("Unable to load IEM project", error);
+            $("iemProjectMessage").textContent = `Unable to load project: ${error.message}`;
         }
     }
 
     function newProject() {
+        resetCadSession();
+        restoreProjectSettings();
         state.drivers = [driver()];
         state.target = [];
         state.targetPeq = [];
@@ -2995,9 +3226,11 @@
         state.reverse = structuredClone(state.reverseBase);
         renderTargetPeq();
         $("iemProjectName").value = "Untitled IEM";
+        $("iemProjectMessage").textContent = "New project.";
         renderDrivers();
         refreshReverseDrivers();
         calculate();
+        setReverseView(60, 100, false);
         drawReverse();
     }
 
@@ -3005,6 +3238,7 @@
         tabs();
         $("iemAddDriverButton").onclick = () => {
             state.drivers.push(driver());
+            markDesignDirty();
             renderDrivers();
             refreshReverseDrivers();
         };
@@ -3015,6 +3249,9 @@
         $("iemNewProjectButton").onclick = newProject;
         $("iemTargetProduct").onchange = event => loadTargetProduct(event.target.value);
         ["iemSplMode", "iemNormalizeFrequency", "iemNormalizeMode", "iemShowTarget", "iemShowIndividual", "iemShowCombined"].forEach(id => $(id).onchange = draw);
+        ["iemTemperature", "iemHumidity", "iemAcousticLoadType", "iemCouplerVolume", "iemLoadLossResistance", "iemLeakResistance"].forEach(id => {
+            $(id).onchange = markDesignDirty;
+        });
         $("iemReverseFlat").onclick = reverseFlat;
         const addTargetFilter = (type) => {
             if (!state.reverseBase.length) reverseFlat();
@@ -3065,34 +3302,38 @@
         };
         $("iemReverseFile").onchange = async event => {
             if (event.target.files[0]) {
-                setReverseBase(await parseFile(event.target.files[0], "fr"), true);
-                if ($("iemReverseMatchMode")) $("iemReverseMatchMode").value = "absolute";
-                if ($("iemReverseNormalizeFrequency")) $("iemReverseNormalizeFrequency").disabled = true;
-                autoFitReverseView();
-                drawReverse();
+                try {
+                    const points = await parseFile(event.target.files[0], "fr");
+                    if (points.length < 2) throw new Error("A target needs at least two valid response points.");
+                    setReverseBase(points, true);
+                    if ($("iemReverseMatchMode")) $("iemReverseMatchMode").value = "absolute";
+                    if ($("iemReverseNormalizeFrequency")) $("iemReverseNormalizeFrequency").disabled = true;
+                    autoFitReverseView();
+                    drawReverse();
+                    $("iemReverseMessage").textContent = `Imported ${points.length} target points.`;
+                } catch (error) { $("iemReverseMessage").textContent = error.message; }
             }
         };
         $("iemReverseRunButton").onclick = reverseRun;
 
         document.addEventListener("keydown", event => {
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c" && state.selectedCircuit) {
-                const d = find(state.selectedCircuit.driverId);
-                copyCircuitComponent(d, state.selectedCircuit.componentId);
-            }
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v" && state.circuitClipboard && state.selectedCircuit) {
-                const d = find(state.selectedCircuit.driverId);
-                mutateCircuit(d, () => {
-                    const copy = structuredClone(state.circuitClipboard);
-                    copy.id = uid();
-                    copy.label = nextComponentLabel(d, copy.kind);
-                    copy.x = (copy.x || 400) + 40;
-                    copy.y = (copy.y || 160) + 40;
-                    d.circuit.components.push(copy);
-                });
-            }
-            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && state.selectedCircuit) {
+            const editing = /^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName || "") || event.target?.isContentEditable;
+            if (editing || !(event.ctrlKey || event.metaKey)) return;
+            const d = find(state.activeCircuit || state.selectedCircuit?.driverId);
+            if (!d) return;
+            const key = event.key.toLowerCase();
+            if (key === "c" && state.selectedCircuit?.driverId === d.id) {
                 event.preventDefault();
-                undoCircuit(find(state.selectedCircuit.driverId));
+                copyCircuitComponent(d, state.selectedCircuit.componentId);
+            } else if (key === "v" && state.circuitClipboard) {
+                event.preventDefault();
+                pasteCircuitComponent(d, state.circuitClipboard);
+            } else if (key === "z") {
+                event.preventDefault();
+                if (event.shiftKey) redoCircuit(d); else undoCircuit(d);
+            } else if (key === "y") {
+                event.preventDefault();
+                redoCircuit(d);
             }
         });
     }
@@ -3141,7 +3382,7 @@
             if (modal.dataset.mode === "filter") {
                 const index = Number(modal.dataset.filterIndex);
                 if (Number.isInteger(index) && confirm("Delete this filter?")) {
-                    d.circuit.filters.splice(index, 1);
+                    mutateCircuit(d, () => d.circuit.filters.splice(index, 1));
                     closeCircuitPropertyPage();
                     renderDrivers();
                     calculate();
@@ -3155,16 +3396,19 @@
     });
 
     window.addEventListener("keydown", event => {
-        const editing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
+        const editing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "") || document.activeElement?.isContentEditable;
         if (!editing && (event.key === "Delete" || event.key === "Backspace") && state.selectedCircuit) {
             event.preventDefault();
             const d = find(state.selectedCircuit.driverId);
             if (d) { deleteCircuitComponent(d, state.selectedCircuit.componentId); state.selectedCircuit = null; calculate(); }
             return;
         }
-        if (event.key === "Escape" && state.wireStart) {
-            const d = find(state.wireStart.driverId);
-            if (d) cancelWireMode(d);
+        if (event.key === "Escape") {
+            const d = find(state.wireStart?.driverId || state.cadConnectPointMode);
+            state.wireStart = null;
+            state.wireDraft = null;
+            state.cadConnectPointMode = null;
+            if (d) renderDrivers();
         }
     });
 

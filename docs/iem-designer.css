@@ -257,11 +257,6 @@
 /* =========================================================
    V17 HOLD-TO-DRAG + CAD LOW PASS
 ========================================================= */
-.iem-cad-component.hold-pending{cursor:progress}
-.iem-cad-component.hold-dragging{cursor:grabbing}
-.iem-cad-component.hold-dragging .iem-cad-symbol,
-.iem-cad-component.hold-dragging rect{stroke:var(--admin-accent)!important;stroke-width:3!important}
-.iem-cad-component.hold-needs-pause{opacity:.72}
 .iem-cad-filter-label{font-size:12px;font-weight:800;fill:var(--admin-text);pointer-events:none}
 .iem-cad-tool .iem-cad-tool-symbol text{font-family:Arial,Helvetica,sans-serif;fill:var(--admin-text);font-weight:700}
 
@@ -397,3 +392,19 @@
 .iem-cad-node:not(.input):not(.ground):hover circle {
     r: 7px;
 }
+
+/* Circuit graph status and predictable canvas gestures. */
+.iem-cad-status { padding: 10px 14px; border-bottom: 1px solid var(--admin-border); color: var(--admin-muted); font-size: 11px; line-height: 1.5; }
+.iem-cad-status.needs-attention { color: #843d25; background: rgba(155,103,57,.07); }
+.iem-cad-canvas { touch-action: none; }
+.iem-cad-canvas:focus-visible { outline: 2px solid var(--admin-accent); outline-offset: 2px; }
+.iem-cad-component { cursor: grab; }
+.iem-cad-component:active { cursor: grabbing; }
+.iem-cad-node, .iem-cad-component-terminal { cursor: crosshair; }
+.iem-cad-junction-dot { fill: var(--admin-text); }
+.iem-cad-wire.fixed-return, .iem-cad-wire.legacy-lead { pointer-events: none; }
+.iem-wire-bend:not(.selected){display:none}
+.iem-cad-component .iem-cad-component-hit,
+.iem-cad-component.selected .iem-cad-component-hit{fill:transparent!important;stroke:none!important;pointer-events:all}
+.iem-cad-history{flex-wrap:wrap;justify-content:flex-end}
+.iem-cad-history button:disabled{opacity:.4;cursor:default}

@@ -7,7 +7,7 @@
     <title>IEM Designer 0.25 | Hammer Craft</title>
     <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
     <link rel="stylesheet" href="admin.css?v=64">
-    <link rel="stylesheet" href="iem-designer.css?v=47">
+    <link rel="stylesheet" href="iem-designer.css?v=48">
 <style>
 .iem-validation-panel{margin:12px 0 18px;border:2px solid currentColor;padding:16px 18px;background:rgba(255,255,255,.55)}
 .iem-validation-panel[hidden]{display:none!important}.iem-validation-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:12px}
@@ -62,6 +62,8 @@
                     <button id="iemLoadProjectButton" class="outline-button" type="button">LOAD</button>
                 </div>
             </div>
+
+            <p id="iemProjectMessage" class="iem-field-note" role="status"></p>
 
             <div class="admin-panel">
                 <div class="iem-panel-title"><div><span class="eyebrow">DISPLAY / REFERENCE</span><h3>Graph settings.</h3></div><span id="iemEngineStatus" class="iem-engine-badge">ENGINE LOADING</span></div>
@@ -200,8 +202,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="supabase-client.js"></script>
 <script src="auth.js?v=40"></script>
-<script src="wasm-loader.js?v=15"></script>
-<script src="iem-designer.js?v=48"></script>
+<script src="wasm-loader.js?v=16"></script>
+<script src="cad-circuit.js?v=1"></script>
+<script src="iem-designer.js?v=51"></script>
 <script src="iem-designer-page.js?v=48"></script>
 </body>
 </html>

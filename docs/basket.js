@@ -233,7 +233,7 @@ function renderBasket() {
 
                 <br><br>
 
-                <a href="index.html#models">
+                <a href="product.html">
                     Browse Hammer Craft models →
                 </a>
 
@@ -911,84 +911,23 @@ function updateSummary() {
 ========================================================= */
 
 async function checkoutBasket() {
-
-    if (
-        basketRows.length ===
-        0
-    ) {
-
-        return;
+    const button = document.getElementById("checkoutButton");
+    if (!basketRows.length || button.disabled) return;
+    button.disabled = true;
+    button.textContent = "OPENING PAYPAL...";
+    showBasketMessage("");
+    try {
+        const { data, error } = await basketDB.functions.invoke("paypal-create-basket-order", { body: {} });
+        if (error || !data?.approval_url) {
+            throw new Error(data?.error || error?.message || "Unable to start checkout.");
+        }
+        window.location.href = data.approval_url;
+    } catch (error) {
+        showBasketMessage(error.message || "Unable to start checkout. Please retry.");
+        button.disabled = false;
+        button.textContent = "CHECKOUT WITH PAYPAL →";
     }
-
-
-    const button =
-        document.getElementById(
-            "checkoutButton"
-        );
-
-
-    button.disabled =
-        true;
-
-
-    button.textContent =
-        "OPENING PAYPAL...";
-
-
-    showBasketMessage(
-        ""
-    );
-
-
-    const {
-        data,
-        error
-    } =
-        await basketDB
-            .functions
-            .invoke(
-                "paypal-create-basket-order",
-                {
-                    body: {}
-                }
-            );
-
-
-    if (
-        error ||
-        !data?.approval_url
-    ) {
-
-        console.error(
-            error,
-            data
-        );
-
-
-        showBasketMessage(
-            data?.error ||
-            error?.message ||
-            "Unable to start checkout."
-        );
-
-
-        button.disabled =
-            false;
-
-
-        button.textContent =
-            "CHECKOUT WITH PAYPAL →";
-
-
-        return;
-    }
-
-
-    window.location.href =
-        data.approval_url;
-
 }
-
 
 
 /* =========================================================

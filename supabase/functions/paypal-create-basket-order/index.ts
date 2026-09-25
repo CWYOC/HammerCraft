@@ -481,7 +481,10 @@ Deno.serve(
                             "pending_payment",
 
                         payment_status:
-                            "unpaid"
+                            "unpaid",
+
+                        checkout_basket_snapshot:
+                            basket
 
                     })
                     .select()

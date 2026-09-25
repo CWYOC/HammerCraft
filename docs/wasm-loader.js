@@ -13,7 +13,11 @@
             if (typeof mod.default === "function") await mod.default();
             moduleRef = mod;
             return mod;
-        })();
+        })().catch(error => {
+            // A temporary fetch/initialisation failure must not poison future loads.
+            loading = null;
+            throw error;
+        });
 
         return loading;
     }
