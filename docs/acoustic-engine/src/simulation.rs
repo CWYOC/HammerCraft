@@ -92,7 +92,11 @@ pub fn simulate_driver_at_frequency(
 
     // Imported FR already includes its measurement/reference acoustic path.
     // Divide that reference transfer out before applying the design path.
-    let acoustic = if driver.measurement_reference_path.is_empty() {
+    // A specified reference load with no intervening elements is a tubeless
+    // measurement, not an unreferenced response. Keep applying its correction.
+    let acoustic = if driver.measurement_reference_path.is_empty()
+        && driver.measurement_reference_load.is_none()
+    {
         design_transfer
     } else {
         let mut reference_driver = driver.clone();

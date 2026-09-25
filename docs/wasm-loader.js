@@ -9,8 +9,8 @@
         if (loading) return loading;
 
         loading = (async () => {
-            const mod = await import("./wasm/acoustic_engine.js");
-            if (typeof mod.default === "function") await mod.default();
+            const mod = await import("./wasm/acoustic_engine.js?v=0.16.0");
+            if (typeof mod.default === "function") await mod.default({ module_or_path: "./wasm/acoustic_engine_bg.wasm?v=0.16.0" });
             moduleRef = mod;
             return mod;
         })().catch(error => {

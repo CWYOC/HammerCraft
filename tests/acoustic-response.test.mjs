@@ -83,6 +83,25 @@ test('catalog damper units yield the independently calculated pressure divider a
     assert.ok(Math.abs(simulate(request).combined[0].db - expected) < 1e-9);
 });
 
+test('a tubeless reference de-embeds the source/load divider instead of applying it twice', () => {
+    const d = designer(), driver = d.driver();
+    driver.circuit.output = 'in'; driver.circuit.nodes = driver.circuit.nodes.filter(n => n.id !== 'drv');
+    driver.path = [{ type: 'damper', value: 1000 }];
+    driver.sourceModel = 'custom_resistance'; driver.sourceResistanceCgs = 2000;
+    driver.measurementReferenceCompensation = true;
+    driver.measurementReferencePath = [];
+    driver.measurementReferenceLoad = { type: 'anechoic' };
+    d.state.drivers = [driver];
+    const request = d.rustRequest([1000]);
+    const rho = 1.2929 * 273.15 / 293.15, c = 331.3 + .606 * 20 + .0124 * 50;
+    const zl = rho * c / (Math.PI * .001 ** 2), zs = 2e8, damper = 1e8;
+    const expected = 20 * Math.log10((zl + zs) / (zl + zs + damper));
+    assert.ok(Math.abs(simulate(request).combined[0].db - expected) < 1e-9);
+    request.drivers[0].measurement_reference_load = null;
+    assert.ok(Math.abs(simulate(request).combined[0].db - 20 * Math.log10(zl / (zl + zs + damper))) < 1e-9,
+        'An unreferenced response still includes the complete transfer');
+});
+
 test('copying a reference damper preserves catalog units and cancellation', async () => {
     const { d, driver } = sonion();
     driver.measurementReferencePath.push({ element_type: 'damper', damper_ohm: 680 });
