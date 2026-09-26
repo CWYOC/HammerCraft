@@ -2,6 +2,8 @@
 
 The screenshot is reproducible in the shipped WASM engine. It is a source/load-model problem, not a chart-rendering error. An exact reference match was hiding it because the acoustic model cancels itself.
 
+For the 2026-09-26 polarity control, experimental resonant-source model and damper calibration workflow, see [Polarity and acoustic damping](POLARITY_AND_DAMPING.md). That follow-up distinguishes software checks from calibration against real damped measurements.
+
 ## Reproduction
 
 The live database's default Sonion 2356 measurement contains 38 digitised magnitude points, no measured phase, and this reference fixture:

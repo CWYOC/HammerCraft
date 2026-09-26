@@ -408,3 +408,8 @@
 .iem-cad-component.selected .iem-cad-component-hit{fill:transparent!important;stroke:none!important;pointer-events:all}
 .iem-cad-history{flex-wrap:wrap;justify-content:flex-end}
 .iem-cad-history button:disabled{opacity:.4;cursor:default}
+.iem-driver-card .iem-polarity-toggle{flex-direction:row;align-items:center;gap:10px;cursor:pointer}
+.iem-driver-card .iem-polarity-toggle input{min-height:0;width:18px;height:18px;padding:0;accent-color:var(--admin-accent)}
+.iem-polarity-status{display:inline-block;margin-top:8px;padding:5px 8px;border:1px solid var(--admin-border);font-size:9px;letter-spacing:.07em}
+.iem-polarity-status[data-inverted="true"]{background:var(--admin-accent);color:#fff;border-color:var(--admin-accent)}
+.iem-source-resonance{margin-top:12px}.iem-source-resonance[hidden]{display:none}

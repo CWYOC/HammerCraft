@@ -181,6 +181,9 @@ pub fn source_impedance(
     environment: &Environment,
 ) -> Complex64 {
     match source {
+        AcousticSource::Resonant { resistance_acoustic_ohm, resonance_hz, q } => {
+            resonant_source_impedance(*resistance_acoustic_ohm, *resonance_hz, *q, 1000.0)
+        }
         AcousticSource::IdealPressure => Complex64::new(0.0, 0.0),
 
         AcousticSource::Characteristic {
@@ -219,6 +222,9 @@ pub fn source_impedance_at_frequency(
     environment: &Environment,
 ) -> Complex64 {
     match source {
+        AcousticSource::Resonant { resistance_acoustic_ohm, resonance_hz, q } => {
+            resonant_source_impedance(*resistance_acoustic_ohm, *resonance_hz, *q, frequency_hz)
+        }
         AcousticSource::OutletInertance {
             outlet_diameter_mm,
             effective_length_mm,
@@ -236,4 +242,14 @@ pub fn source_impedance_at_frequency(
         }
         _ => source_impedance(source, input_diameter_mm, environment),
     }
+}
+
+fn resonant_source_impedance(resistance: f64, resonance_hz: f64, q: f64, frequency_hz: f64) -> Complex64 {
+    // Zs = R + j(wM - 1/wC), M = R*Q/w0, C = 1/(w0*R*Q).
+    // A series damper adds real resistance to the coupled network. With a
+    // resistive load it lowers the resonance and broadens its -3 dB bandwidth;
+    // no smoothing of the measured response is performed.
+    let ratio = frequency_hz.max(1e-9) / resonance_hz.max(1e-9);
+    let r = resistance.max(0.0);
+    Complex64::new(r, r * q.max(0.0) * (ratio - 1.0 / ratio))
 }

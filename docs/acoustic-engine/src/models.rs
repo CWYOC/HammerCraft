@@ -108,6 +108,13 @@ pub enum AcousticSource {
         #[serde(default)]
         resistance_acoustic_ohm: f64,
     },
+    // One series R-M-C mode at the acoustic source port. These are fitted
+    // source parameters, not the frequency/Q of a peak in a loaded FR curve.
+    Resonant {
+        resistance_acoustic_ohm: f64,
+        resonance_hz: f64,
+        q: f64,
+    },
 }
 
 fn default_source_multiplier() -> f64 { 1.0 }

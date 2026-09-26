@@ -169,12 +169,12 @@ test('the WASM loader retries after a temporary initialization failure', async (
     let attempts = 0;
     const window = { importEngine: async () => ({
         default: async options => {
-            assert.match(options.module_or_path, /acoustic_engine_bg\.wasm\?v=0\.16\.0$/);
+            assert.match(options.module_or_path, /acoustic_engine_bg\.wasm\?v=0\.17\.0$/);
             if (++attempts === 1) throw Error('Temporary network failure');
         },
         engine_version: () => 'test engine',
     }) };
-    vm.runInNewContext(read('docs/wasm-loader.js').replace('import("./wasm/acoustic_engine.js?v=0.16.0")', 'window.importEngine()'), { window });
+    vm.runInNewContext(read('docs/wasm-loader.js').replace('import("./wasm/acoustic_engine.js?v=0.17.0")', 'window.importEngine()'), { window });
     await assert.rejects(window.HCAcousticEngine.load(), /Temporary/);
     assert.equal(await window.HCAcousticEngine.version(), 'test engine');
     assert.equal(attempts, 2);

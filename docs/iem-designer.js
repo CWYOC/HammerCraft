@@ -154,7 +154,7 @@
             if (reference.profile && !d.referenceProfileVersion) {
                 d.referenceProfileVersion = 1;
                 d.measurementReferenceCompensation = true;
-                if (d.sourceModel !== "custom_resistance") {
+                if (!["custom_resistance", "resonant"].includes(d.sourceModel)) {
                     d.sourceModel = "estimated_resistance";
                     d.sourceReferenceDiameterMm = reference.profile.sourceBore;
                 }
@@ -166,6 +166,9 @@
         // impedance. Use an explicit finite estimate for de-embedding, anchored
         // to the reference bore once, never to an edited design/candidate bore.
         if (!d.sourceModel) d.sourceModel = d.measurementReferenceCompensation ? "estimated_resistance" : "ideal_pressure";
+        // Starting values for the optional one-mode source, never a catalog fit.
+        if (d.sourceResonanceHz == null) d.sourceResonanceHz = 3000;
+        if (d.sourceQ == null) d.sourceQ = 2;
         if (d.sourceReferenceDiameterMm == null) {
             d.sourceReferenceDiameterMm = finitePositive(d.measurementReferencePath?.find(e => e.element_type === "tube")?.inner_diameter_mm)
                 || finitePositive(d.path.find(e => e.type === "tube" || e.type === "nozzle")?.diameter) || 2;
@@ -672,7 +675,7 @@
     }
 
     function editReference(d, edit) {
-        if (!d.measurementReferenceCompensation && d.sourceModel !== "custom_resistance") d.sourceModel = "estimated_resistance";
+        if (!d.measurementReferenceCompensation && !["custom_resistance", "resonant"].includes(d.sourceModel)) d.sourceModel = "estimated_resistance";
         if (!d.measurementReferenceOverride) d.measurementReferenceOverride = {
             path: structuredClone(referenceInfo(d).raw.filter(e => e.element_type !== "coupler")),
             status: "USER REFERENCE", note: "User-entered reference setup. Predictions depend on the accuracy of these dimensions and the source/coupler models.",
@@ -760,7 +763,10 @@
                     measurement_reference_load: d.measurementReferenceCompensation
                         ? referenceLoadToRust(d.measurementReferenceLoad)
                         : null,
-                    acoustic_source: d.sourceModel === "ideal_pressure" ? { type: "ideal_pressure" } : {
+                    acoustic_source: d.sourceModel === "ideal_pressure" ? { type: "ideal_pressure" } : d.sourceModel === "resonant" ? {
+                        type: "resonant", resistance_acoustic_ohm: d.sourceResistanceCgs * ACOUSTIC_CGS_TO_SI,
+                        resonance_hz: d.sourceResonanceHz, q: d.sourceQ,
+                    } : {
                         // Fixed physical R in both paths, using the existing R+M
                         // source with M=0. Characteristic would change R whenever
                         // the design bore differs from the reference bore.
@@ -788,8 +794,9 @@
             ensureDriverShape(d);
             const referenceError = databaseReferenceError(d);
             if (referenceError) errors.push(`${d.name}: acoustic prediction unavailable. ${referenceError} Add verified measurement-fixture data to the driver reference before simulating.`);
-            if (!["ideal_pressure", "estimated_resistance", "custom_resistance"].includes(d.sourceModel)) errors.push(`${d.name}: select a valid source model.`);
+            if (!["ideal_pressure", "estimated_resistance", "custom_resistance", "resonant"].includes(d.sourceModel)) errors.push(`${d.name}: select a valid source model.`);
             if (d.sourceModel !== "ideal_pressure" && !positive(d.sourceResistanceCgs)) errors.push(`${d.name}: source resistance must be greater than zero.`);
+            if (d.sourceModel === "resonant" && (!positive(d.sourceResonanceHz) || !positive(d.sourceQ))) errors.push(`${d.name}: source resonance frequency and Q must be greater than zero.`);
             if (!positive(d.sourceReferenceDiameterMm)) errors.push(`${d.name}: source reference bore must be greater than zero.`);
             if (!positive(d.impedance)) errors.push(`${d.name}: impedance must be greater than zero.`);
             if (!positive(d.sensitivityRef)) errors.push(`${d.name}: sensitivity reference frequency must be greater than zero.`);
@@ -922,6 +929,17 @@
             }
         } catch (error) {
             if (revision !== state.calculationRevision) return;
+            if (state.drivers.some(d => d.sourceModel === "resonant" || [...d.path, ...(d.measurementReferenceCompensation ? referenceInfo(d).modelled : [])].some(e => e.type === "damper" && e.value > 0))) {
+                // The heuristic fallback only applies a tonal tilt. It cannot
+                // predict resistance interacting with resonances or position.
+                state.last = null;
+                state.chart?.destroy(); state.chart = null;
+                state.validationChart?.destroy(); state.validationChart = null;
+                updateValidationPanel(null); updateReferenceValidationReadouts(); metrics();
+                $("iemEngineStatus").textContent = "ACOUSTIC ENGINE REQUIRED";
+                $("iemSimulationMessage").textContent = `Damper/resonance calculation requires the WASM engine: ${error?.message || error}. Reload and calculate again. The simplified fallback cannot predict resonance damping.`;
+                return;
+            }
             console.warn("Rust engine unavailable, using JS fallback", error);
             result = fallback();
             $("iemEngineStatus").textContent = "JS FALLBACK";
@@ -997,7 +1015,7 @@
             state.last.drivers.forEach((response, index) => {
                 const d = state.drivers[index];
                 datasets.push({
-                    label: d?.name || `Driver ${index + 1}`,
+                    label: `${d?.name || `Driver ${index + 1}`}${d?.polarity < 0 ? " · INVERTED 180°" : ""}`,
                     data: displaySeries(response, "driver").map(point => ({ x: point.frequency, y: point.db })),
                     pointRadius: 0,
                     borderWidth: 1.5,
@@ -1130,6 +1148,10 @@
         if (state.drivers.some(d => d.sourceModel === "estimated_resistance")) notes.push("Acoustic prediction uses an estimated source resistance, not a measured receiver model. Tube changes remain approximate.");
         if (state.drivers.some(d => d.sourceModel === "ideal_pressure")) notes.push("Ideal-pressure source selected: zero source impedance can exaggerate tube/coupler resonances.");
         if (state.drivers.some(d => d.sourceModel === "custom_resistance")) notes.push("Custom source resistance is frequency-independent; it does not describe the receiver's full acoustic impedance.");
+        if (state.drivers.some(d => d.sourceModel === "resonant")) notes.push("Resonant source: one RLC mode, using user-set R, frequency and Q. Starting values are uncalibrated. Fit against undamped and damped measurements in the same fixture, then validate another damper value. This does not identify every receiver resonance.");
+        if (state.drivers.some(d => d.path.some(e => e.type === "damper" && e.value > 0))) notes.push("Dampers dissipate acoustic energy at their position in the path. A constant-resistance source cannot predict changes to all peaks embedded in the measured driver baseline. Path order is receiver → coupler; relative normalization can hide overall attenuation.");
+        const inverted = state.drivers.filter(d => d.polarity < 0).map(d => d.name);
+        if (inverted.length) notes.push(`Polarity inverted (180°): ${inverted.join(", ")}. Individual SPL is unchanged; interference in the combined response changes.`);
         if (loadObj().type === "generic711_approx" || state.drivers.some(d => d.measurementReferenceCompensation && referenceLoadToRust(d.measurementReferenceLoad)?.type === "generic711_approx")) notes.push("Simplified 711: main tube and microphone only; damping side cavities are missing. This is not a validated IEC 711 coupler, especially for treble predictions.");
         if (state.drivers.some(d => d.measurementReferenceCompensation && d.measurementReferenceLoad?.type === "closed_cavity")) notes.push("The reference cavity uses a volume-only approximation; microphone and adapter resonances are not calibrated.");
         if (state.drivers.some(d => d.measurementReferenceCompensation && JSON.stringify(referenceLoadToRust(d.measurementReferenceLoad)) !== JSON.stringify(loadObj()))) notes.push("Output load differs from the measurement reference: the curve includes a change of test fixture as well as your acoustic path.");
@@ -1168,6 +1190,7 @@
                         <div>
                             <span class="eyebrow">DRIVER PATH ${index + 1}</span>
                             <h3>${esc(d.name)}</h3>
+                            <span class="iem-polarity-status" data-polarity-status="${d.id}" data-inverted="${d.polarity < 0}">${d.polarity < 0 ? "POLARITY INVERTED · 180°" : "POLARITY NORMAL"}</span>
                         </div>
                         <div class="iem-driver-card-actions">
                             <button class="outline-button" data-save-driver="${d.id}">SAVE TO LIBRARY</button>
@@ -1180,7 +1203,7 @@
                             <label>TYPE<select data-f="type">${["dd", "ba", "planar", "magnetostatic", "bc", "other"].map(type => `<option ${d.type === type ? "selected" : ""} value="${type}">${type.toUpperCase()}</option>`).join("")}</select></label>
                             <label>IMPEDANCE Ω<input data-f="impedance" type="number" value="${d.impedance}" step="0.1"></label>
                             <label>GAIN dB<input data-f="gain" type="number" value="${d.gain}" step="0.1"></label>
-                            <label>POLARITY<select data-f="polarity"><option value="1" ${d.polarity > 0 ? "selected" : ""}>Normal</option><option value="-1" ${d.polarity < 0 ? "selected" : ""}>Inverted</option></select></label>
+                            <label class="iem-polarity-toggle"><input type="checkbox" data-f="polarity" ${d.polarity < 0 ? "checked" : ""}><span>INVERT POLARITY (180°)</span></label>
                             <label>SENSITIVITY dB SPL<input data-f="sensitivity" type="number" value="${d.sensitivity}" step="0.1"></label>
                             <label>SENSITIVITY REF Hz<input data-f="sensitivityRef" type="number" value="${d.sensitivityRef}"></label>
                             <label>FR DATA TYPE<select data-f="responseAbsolute"><option value="relative" ${!d.responseAbsolute ? "selected" : ""}>Relative</option><option value="absolute" ${d.responseAbsolute ? "selected" : ""}>Absolute SPL</option></select></label>
@@ -2361,6 +2384,7 @@
     // ---------------------------------------------------------------------
 
     function sourceNote(d) {
+        if (d.sourceModel === "resonant") return "One acoustic RLC mode: R sets dissipation, source frequency and Q set its mass/compliance. Fit all three to measurements with known dampers and geometry. Source frequency/Q are not the frequency/Q of the loaded SPL peak. Default values are uncalibrated.";
         if (d.sourceModel === "estimated_resistance") return `Source R estimated from a fixed ${d.sourceReferenceDiameterMm} mm source-model bore at 20°C; no measured receiver source impedance is available. The same source is used for the reference and design.`;
         if (d.sourceModel === "custom_resistance") return "Enter a frequency-independent acoustic source resistance. 1 CGS acoustic Ω = 100,000 Pa·s/m³.";
         return "Ideal pressure holds the driver outlet pressure constant for every load. Use it to inspect the limiting case; it can produce very sharp resonances.";
@@ -2372,10 +2396,15 @@
                 <div class="iem-panel-title"><div><span class="eyebrow">ACOUSTIC PATH</span><h3>Driver to nozzle.</h3></div></div>
                 ${referenceSummaryHtml(d)}
                 <div class="iem-driver-grid">
-                    <label>ACOUSTIC SOURCE<select data-f="sourceModel">${[["estimated_resistance", "Finite resistance estimate"], ["custom_resistance", "Custom resistance"], ["ideal_pressure", "Ideal pressure (diagnostic)"]].map(([value, label]) => `<option value="${value}" ${d.sourceModel === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
-                    <label>SOURCE R · CGS ACOUSTIC Ω<input data-f="sourceResistanceCgs" type="number" min="0.001" step="any" value="${Math.round(d.sourceResistanceCgs * 1000) / 1000}" ${d.sourceModel !== "custom_resistance" ? "disabled" : ""}></label>
+                    <label>ACOUSTIC SOURCE<select data-f="sourceModel">${[["estimated_resistance", "Finite resistance estimate"], ["custom_resistance", "Custom resistance"], ["resonant", "Resonant source (RLC estimate)"], ["ideal_pressure", "Ideal pressure (diagnostic)"]].map(([value, label]) => `<option value="${value}" ${d.sourceModel === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+                    <label>SOURCE R · CGS ACOUSTIC Ω<input data-f="sourceResistanceCgs" type="number" min="0.001" step="any" value="${Math.round(d.sourceResistanceCgs * 1000) / 1000}" ${["custom_resistance", "resonant"].includes(d.sourceModel) ? "" : "disabled"}></label>
+                </div>
+                <div class="iem-driver-grid iem-source-resonance" data-source-resonance ${d.sourceModel === "resonant" ? "" : "hidden"}>
+                    <label>SOURCE RESONANCE Hz<input data-f="sourceResonanceHz" type="number" min="0.001" step="any" value="${d.sourceResonanceHz}"></label>
+                    <label>SOURCE Q<input data-f="sourceQ" type="number" min="0.001" step="any" value="${d.sourceQ}"></label>
                 </div>
                 <p class="iem-field-note" data-source-note>${esc(sourceNote(d))}</p>
+                <p class="iem-field-note">Path order: receiver → coupler. Damper position matters: use ↑ / ↓ to move it, or split a tube into sections and place the damper between them.</p>
                 <div class="iem-path-toolbar">
                     ${[["tube", "+ TUBE"], ["damper", "+ DAMPER"], ["chamber", "+ CHAMBER"], ["nozzle", "+ NOZZLE"]].map(item => `<button class="iem-mini" data-add-path="${d.id}:${item[0]}">${item[1]}</button>`).join("")}
                 </div>
@@ -2386,7 +2415,8 @@
     function pathNode(d, element, index) {
         let fields = "";
         if (element.type === "damper") {
-            fields = `<label>RESISTANCE · CGS ACOUSTIC Ω<input data-path-field="value" value="${element.value}" type="number"></label>`;
+            const distance = d.path.slice(0, index).reduce((sum, e) => sum + (e.type === "damper" ? 0 : num(e.length)), 0);
+            fields = `<label>RESISTANCE · CGS ACOUSTIC Ω<input data-path-field="value" value="${element.value}" type="number" min="0" step="any"></label><p class="iem-field-note" data-damper-position="${d.id}:${index}">${distance.toFixed(2)} mm along path from receiver</p>`;
         } else {
             fields = `<label>LENGTH mm<input data-path-field="length" value="${element.length}" type="number" step="0.1"></label><label>DIAMETER mm<input data-path-field="diameter" value="${element.diameter}" type="number" step="0.05"></label>${element.type === "tube" ? `<label>LOSS<input data-path-field="loss" value="${element.loss || 0}" type="number" step="0.0001"></label>` : ""}`;
         }
@@ -2419,12 +2449,21 @@
         if (property === "path" && owner) owner.referenceValidationMode = false;
         const element = owner[property][+index];
         node.querySelectorAll(`[data-${property}-field]`).forEach(input => element[input.dataset[property + "Field"]] = num(input.value));
+        if (property === "path") {
+            let distance = 0;
+            owner.path.forEach((part, i) => {
+                if (part.type === "damper") {
+                    const label = document.querySelector(`[data-damper-position="${id}:${i}"]`);
+                    if (label) label.textContent = `${distance.toFixed(2)} mm along path from receiver`;
+                } else distance += num(part.length);
+            });
+        }
     }
 
     function syncDriverField(d, input) {
         const key = input.dataset.f;
         if (key === "name" || key === "type" || key === "sourceModel") d[key] = input.value;
-        else if (key === "polarity") d.polarity = num(input.value, 1);
+        else if (key === "polarity") d.polarity = input.type === "checkbox" ? (input.checked ? -1 : 1) : num(input.value, 1);
         else if (key === "responseAbsolute") d.responseAbsolute = input.value === "absolute";
         else d[key] = num(input.value, d[key]);
     }
@@ -2499,13 +2538,19 @@
                     if (!d) return;
                     syncDriverField(d, input);
                     markDesignDirty();
+                    if (input.dataset.f === "polarity") {
+                        const badge = card.querySelector("[data-polarity-status]");
+                        badge.textContent = d.polarity < 0 ? "POLARITY INVERTED · 180°" : "POLARITY NORMAL";
+                        badge.dataset.inverted = String(d.polarity < 0);
+                    }
                     if (input.dataset.f === "name") refreshReverseDrivers();
                     if (input.dataset.f === "sourceModel") {
                         ensureDriverShape(d);
                         const resistance = card.querySelector('[data-f="sourceResistanceCgs"]');
-                        resistance.disabled = d.sourceModel !== "custom_resistance";
+                        resistance.disabled = !["custom_resistance", "resonant"].includes(d.sourceModel);
                         resistance.value = Math.round(d.sourceResistanceCgs * 1000) / 1000;
                         card.querySelector("[data-source-note]").textContent = sourceNote(d);
+                        card.querySelector("[data-source-resonance]").hidden = d.sourceModel !== "resonant";
                     }
                 };
             });

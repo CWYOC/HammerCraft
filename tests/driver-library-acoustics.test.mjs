@@ -91,6 +91,11 @@ test('documented and assumed references stay distinct and preserve raw library m
         driver.sourceModel = 'ideal_pressure'; // Later explicit diagnostic choice survives.
         d.ensureDriverShape(driver);
         assert.equal(driver.sourceModel, 'ideal_pressure');
+        delete driver.referenceProfileVersion;
+        driver.sourceModel = 'resonant'; driver.sourceQ = 7;
+        d.ensureDriverShape(driver);
+        assert.equal(driver.sourceModel, 'resonant');
+        assert.equal(driver.sourceQ, 7);
     }
 });
 
