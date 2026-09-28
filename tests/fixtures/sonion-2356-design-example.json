@@ -1,0 +1,1603 @@
+{
+  "source": {
+    "title": "Sonion Academy: Designing Earphones with Balanced Armature Receivers",
+    "document_code": "304",
+    "version": "001",
+    "date": "2013-12-23",
+    "page": 12,
+    "url": "https://datasheet.datasheetarchive.com/originals/crawler/america.sonion.com/64f5a330a4357be5bd691f46e9beae16.pdf"
+  },
+  "provenance": "Approximate digitisation of the two vector polylines in the single-driver example, not original measurement data. PDF plot quantisation and axis placement introduce uncertainty. Do not infer phase or source impedance from these points.",
+  "driver": "Sonion 2356",
+  "damper_cgs_ohm": 1500,
+  "damper_type": "SSD 02 (table); use numeric resistance because the guide has inconsistent SSD 01/02 labels on another page.",
+  "tube_sections_mm": [
+    {
+      "length": 7,
+      "diameter": 1.5
+    },
+    {
+      "length": 2.5,
+      "diameter": 2.1
+    },
+    {
+      "length": 3,
+      "diameter": 2.5
+    }
+  ],
+  "coupler": "IEC 711 as indicated by the user and the guide equipment section; exact coupler, adapter and insertion depth are not specified for this example.",
+  "damper_position_mm": null,
+  "drive_voltage_v": null,
+  "comparison_band_hz": [
+    100,
+    8000
+  ],
+  "digitisation": {
+    "method": "PDF page 12 vector paths, not image pixel tracing",
+    "x_log10_frequency_ticks": [
+      [
+        185.4058075,
+        1
+      ],
+      [
+        236.2467957,
+        2
+      ],
+      [
+        287.086792,
+        3
+      ],
+      [
+        338.389801,
+        4
+      ]
+    ],
+    "y_130_db": 385.97638,
+    "points_per_10_db": 12.041,
+    "clipping": "Discarded values below the visible 80 dB floor and outside 25 to 18000 Hz."
+  },
+  "undamped": [
+    {
+      "frequency": 25.919,
+      "db": 110.405
+    },
+    {
+      "frequency": 26.468,
+      "db": 110.675
+    },
+    {
+      "frequency": 27.6,
+      "db": 110.675
+    },
+    {
+      "frequency": 28.779,
+      "db": 110.675
+    },
+    {
+      "frequency": 29.389,
+      "db": 110.675
+    },
+    {
+      "frequency": 30.645,
+      "db": 110.675
+    },
+    {
+      "frequency": 31.293,
+      "db": 110.675
+    },
+    {
+      "frequency": 32.63,
+      "db": 110.675
+    },
+    {
+      "frequency": 34.026,
+      "db": 110.675
+    },
+    {
+      "frequency": 34.746,
+      "db": 110.675
+    },
+    {
+      "frequency": 36.23,
+      "db": 110.675
+    },
+    {
+      "frequency": 36.998,
+      "db": 110.675
+    },
+    {
+      "frequency": 38.579,
+      "db": 110.675
+    },
+    {
+      "frequency": 40.228,
+      "db": 110.675
+    },
+    {
+      "frequency": 41.081,
+      "db": 110.675
+    },
+    {
+      "frequency": 42.836,
+      "db": 110.675
+    },
+    {
+      "frequency": 43.742,
+      "db": 110.675
+    },
+    {
+      "frequency": 45.613,
+      "db": 110.675
+    },
+    {
+      "frequency": 47.563,
+      "db": 110.675
+    },
+    {
+      "frequency": 48.568,
+      "db": 110.675
+    },
+    {
+      "frequency": 50.646,
+      "db": 110.675
+    },
+    {
+      "frequency": 52.811,
+      "db": 110.675
+    },
+    {
+      "frequency": 53.927,
+      "db": 110.675
+    },
+    {
+      "frequency": 56.235,
+      "db": 110.675
+    },
+    {
+      "frequency": 57.424,
+      "db": 110.675
+    },
+    {
+      "frequency": 59.878,
+      "db": 110.675
+    },
+    {
+      "frequency": 62.439,
+      "db": 110.675
+    },
+    {
+      "frequency": 63.76,
+      "db": 110.675
+    },
+    {
+      "frequency": 66.484,
+      "db": 110.675
+    },
+    {
+      "frequency": 67.89,
+      "db": 110.405
+    },
+    {
+      "frequency": 70.795,
+      "db": 110.405
+    },
+    {
+      "frequency": 73.82,
+      "db": 110.405
+    },
+    {
+      "frequency": 75.381,
+      "db": 110.405
+    },
+    {
+      "frequency": 78.606,
+      "db": 110.405
+    },
+    {
+      "frequency": 80.268,
+      "db": 110.405
+    },
+    {
+      "frequency": 83.699,
+      "db": 110.405
+    },
+    {
+      "frequency": 87.279,
+      "db": 110.405
+    },
+    {
+      "frequency": 89.125,
+      "db": 110.405
+    },
+    {
+      "frequency": 92.934,
+      "db": 110.405
+    },
+    {
+      "frequency": 94.899,
+      "db": 110.135
+    },
+    {
+      "frequency": 98.959,
+      "db": 110.135
+    },
+    {
+      "frequency": 103.188,
+      "db": 110.135
+    },
+    {
+      "frequency": 105.37,
+      "db": 110.135
+    },
+    {
+      "frequency": 109.878,
+      "db": 110.135
+    },
+    {
+      "frequency": 114.569,
+      "db": 110.135
+    },
+    {
+      "frequency": 116.996,
+      "db": 109.865
+    },
+    {
+      "frequency": 121.996,
+      "db": 109.865
+    },
+    {
+      "frequency": 124.576,
+      "db": 109.865
+    },
+    {
+      "frequency": 129.912,
+      "db": 109.865
+    },
+    {
+      "frequency": 135.458,
+      "db": 109.865
+    },
+    {
+      "frequency": 138.328,
+      "db": 109.595
+    },
+    {
+      "frequency": 144.24,
+      "db": 109.595
+    },
+    {
+      "frequency": 147.29,
+      "db": 109.595
+    },
+    {
+      "frequency": 153.591,
+      "db": 109.595
+    },
+    {
+      "frequency": 160.155,
+      "db": 109.324
+    },
+    {
+      "frequency": 163.542,
+      "db": 109.324
+    },
+    {
+      "frequency": 170.539,
+      "db": 109.324
+    },
+    {
+      "frequency": 174.137,
+      "db": 109.324
+    },
+    {
+      "frequency": 181.587,
+      "db": 109.053
+    },
+    {
+      "frequency": 189.348,
+      "db": 109.053
+    },
+    {
+      "frequency": 193.36,
+      "db": 109.053
+    },
+    {
+      "frequency": 201.624,
+      "db": 108.783
+    },
+    {
+      "frequency": 205.887,
+      "db": 108.783
+    },
+    {
+      "frequency": 214.696,
+      "db": 108.783
+    },
+    {
+      "frequency": 223.871,
+      "db": 108.513
+    },
+    {
+      "frequency": 228.605,
+      "db": 108.513
+    },
+    {
+      "frequency": 238.386,
+      "db": 108.513
+    },
+    {
+      "frequency": 248.573,
+      "db": 108.244
+    },
+    {
+      "frequency": 253.829,
+      "db": 108.244
+    },
+    {
+      "frequency": 264.677,
+      "db": 108.244
+    },
+    {
+      "frequency": 270.286,
+      "db": 108.244
+    },
+    {
+      "frequency": 281.837,
+      "db": 107.973
+    },
+    {
+      "frequency": 293.882,
+      "db": 107.973
+    },
+    {
+      "frequency": 300.109,
+      "db": 107.973
+    },
+    {
+      "frequency": 312.935,
+      "db": 107.702
+    },
+    {
+      "frequency": 319.552,
+      "db": 107.702
+    },
+    {
+      "frequency": 333.224,
+      "db": 107.702
+    },
+    {
+      "frequency": 347.465,
+      "db": 107.432
+    },
+    {
+      "frequency": 354.812,
+      "db": 107.432
+    },
+    {
+      "frequency": 369.975,
+      "db": 107.432
+    },
+    {
+      "frequency": 377.816,
+      "db": 107.161
+    },
+    {
+      "frequency": 393.962,
+      "db": 107.161
+    },
+    {
+      "frequency": 410.817,
+      "db": 107.161
+    },
+    {
+      "frequency": 419.504,
+      "db": 106.892
+    },
+    {
+      "frequency": 437.432,
+      "db": 106.892
+    },
+    {
+      "frequency": 446.682,
+      "db": 106.892
+    },
+    {
+      "frequency": 465.793,
+      "db": 106.622
+    },
+    {
+      "frequency": 485.699,
+      "db": 106.622
+    },
+    {
+      "frequency": 495.969,
+      "db": 106.622
+    },
+    {
+      "frequency": 517.188,
+      "db": 106.351
+    },
+    {
+      "frequency": 539.267,
+      "db": 106.351
+    },
+    {
+      "frequency": 550.695,
+      "db": 106.351
+    },
+    {
+      "frequency": 574.255,
+      "db": 106.351
+    },
+    {
+      "frequency": 586.398,
+      "db": 106.081
+    },
+    {
+      "frequency": 611.459,
+      "db": 106.081
+    },
+    {
+      "frequency": 637.619,
+      "db": 106.081
+    },
+    {
+      "frequency": 651.102,
+      "db": 105.81
+    },
+    {
+      "frequency": 678.927,
+      "db": 105.81
+    },
+    {
+      "frequency": 693.283,
+      "db": 105.81
+    },
+    {
+      "frequency": 722.945,
+      "db": 105.81
+    },
+    {
+      "frequency": 753.806,
+      "db": 105.81
+    },
+    {
+      "frequency": 769.781,
+      "db": 105.81
+    },
+    {
+      "frequency": 802.679,
+      "db": 105.81
+    },
+    {
+      "frequency": 819.651,
+      "db": 105.81
+    },
+    {
+      "frequency": 854.719,
+      "db": 105.81
+    },
+    {
+      "frequency": 891.288,
+      "db": 106.081
+    },
+    {
+      "frequency": 910.133,
+      "db": 106.081
+    },
+    {
+      "frequency": 949.03,
+      "db": 106.351
+    },
+    {
+      "frequency": 989.633,
+      "db": 106.351
+    },
+    {
+      "frequency": 1010.417,
+      "db": 106.622
+    },
+    {
+      "frequency": 1053.249,
+      "db": 106.892
+    },
+    {
+      "frequency": 1075.364,
+      "db": 107.161
+    },
+    {
+      "frequency": 1120.899,
+      "db": 107.432
+    },
+    {
+      "frequency": 1168.362,
+      "db": 107.702
+    },
+    {
+      "frequency": 1192.84,
+      "db": 107.973
+    },
+    {
+      "frequency": 1243.349,
+      "db": 108.244
+    },
+    {
+      "frequency": 1269.457,
+      "db": 108.513
+    },
+    {
+      "frequency": 1323.209,
+      "db": 108.783
+    },
+    {
+      "frequency": 1379.238,
+      "db": 109.053
+    },
+    {
+      "frequency": 1408.136,
+      "db": 109.053
+    },
+    {
+      "frequency": 1467.826,
+      "db": 109.324
+    },
+    {
+      "frequency": 1498.58,
+      "db": 109.595
+    },
+    {
+      "frequency": 1562.104,
+      "db": 109.865
+    },
+    {
+      "frequency": 1628.248,
+      "db": 110.135
+    },
+    {
+      "frequency": 1662.364,
+      "db": 110.405
+    },
+    {
+      "frequency": 1732.752,
+      "db": 110.675
+    },
+    {
+      "frequency": 1769.057,
+      "db": 110.946
+    },
+    {
+      "frequency": 1844.046,
+      "db": 111.487
+    },
+    {
+      "frequency": 1922.129,
+      "db": 112.027
+    },
+    {
+      "frequency": 1962.402,
+      "db": 112.567
+    },
+    {
+      "frequency": 2045.589,
+      "db": 113.108
+    },
+    {
+      "frequency": 2132.204,
+      "db": 113.648
+    },
+    {
+      "frequency": 2176.878,
+      "db": 114.459
+    },
+    {
+      "frequency": 2269.154,
+      "db": 115.27
+    },
+    {
+      "frequency": 2316.803,
+      "db": 116.351
+    },
+    {
+      "frequency": 2414.905,
+      "db": 117.161
+    },
+    {
+      "frequency": 2517.157,
+      "db": 117.973
+    },
+    {
+      "frequency": 2569.897,
+      "db": 118.513
+    },
+    {
+      "frequency": 2678.715,
+      "db": 118.513
+    },
+    {
+      "frequency": 2734.96,
+      "db": 118.243
+    },
+    {
+      "frequency": 2850.768,
+      "db": 117.703
+    },
+    {
+      "frequency": 2971.61,
+      "db": 116.892
+    },
+    {
+      "frequency": 3033.871,
+      "db": 115.81
+    },
+    {
+      "frequency": 3162.336,
+      "db": 115.0
+    },
+    {
+      "frequency": 3228.736,
+      "db": 114.189
+    },
+    {
+      "frequency": 3365.452,
+      "db": 113.648
+    },
+    {
+      "frequency": 3507.952,
+      "db": 113.108
+    },
+    {
+      "frequency": 3581.451,
+      "db": 112.838
+    },
+    {
+      "frequency": 3733.102,
+      "db": 112.567
+    },
+    {
+      "frequency": 3811.319,
+      "db": 112.567
+    },
+    {
+      "frequency": 3973.058,
+      "db": 112.567
+    },
+    {
+      "frequency": 4141.285,
+      "db": 113.108
+    },
+    {
+      "frequency": 4228.054,
+      "db": 113.648
+    },
+    {
+      "frequency": 4407.085,
+      "db": 114.73
+    },
+    {
+      "frequency": 4593.69,
+      "db": 116.081
+    },
+    {
+      "frequency": 4690.15,
+      "db": 118.243
+    },
+    {
+      "frequency": 4888.962,
+      "db": 119.595
+    },
+    {
+      "frequency": 4991.178,
+      "db": 118.513
+    },
+    {
+      "frequency": 5202.514,
+      "db": 115.27
+    },
+    {
+      "frequency": 5423.052,
+      "db": 112.027
+    },
+    {
+      "frequency": 5536.677,
+      "db": 109.324
+    },
+    {
+      "frequency": 5771.372,
+      "db": 106.892
+    },
+    {
+      "frequency": 5892.296,
+      "db": 105.0
+    },
+    {
+      "frequency": 6141.788,
+      "db": 103.379
+    },
+    {
+      "frequency": 6401.852,
+      "db": 102.297
+    },
+    {
+      "frequency": 6536.281,
+      "db": 101.757
+    },
+    {
+      "frequency": 6813.04,
+      "db": 100.675
+    },
+    {
+      "frequency": 6955.789,
+      "db": 100.405
+    },
+    {
+      "frequency": 7250.639,
+      "db": 100.675
+    },
+    {
+      "frequency": 7557.998,
+      "db": 101.216
+    },
+    {
+      "frequency": 7716.355,
+      "db": 102.567
+    },
+    {
+      "frequency": 8043.082,
+      "db": 104.729
+    },
+    {
+      "frequency": 8211.242,
+      "db": 106.622
+    },
+    {
+      "frequency": 8559.31,
+      "db": 106.081
+    },
+    {
+      "frequency": 8921.741,
+      "db": 102.837
+    },
+    {
+      "frequency": 9108.659,
+      "db": 99.594
+    },
+    {
+      "frequency": 9494.768,
+      "db": 96.622
+    },
+    {
+      "frequency": 9896.809,
+      "db": 94.188
+    },
+    {
+      "frequency": 10104.626,
+      "db": 92.567
+    },
+    {
+      "frequency": 10532.492,
+      "db": 91.757
+    },
+    {
+      "frequency": 10753.642,
+      "db": 91.486
+    },
+    {
+      "frequency": 11208.974,
+      "db": 91.486
+    },
+    {
+      "frequency": 11683.601,
+      "db": 92.297
+    },
+    {
+      "frequency": 11928.398,
+      "db": 94.459
+    },
+    {
+      "frequency": 12433.471,
+      "db": 97.973
+    },
+    {
+      "frequency": 12694.554,
+      "db": 101.757
+    },
+    {
+      "frequency": 13232.086,
+      "db": 97.973
+    },
+    {
+      "frequency": 13792.983,
+      "db": 94.729
+    },
+    {
+      "frequency": 14081.977,
+      "db": 93.918
+    },
+    {
+      "frequency": 14678.237,
+      "db": 93.918
+    },
+    {
+      "frequency": 14985.8,
+      "db": 93.378
+    },
+    {
+      "frequency": 15621.036,
+      "db": 87.432
+    },
+    {
+      "frequency": 16282.485,
+      "db": 81.486
+    }
+  ],
+  "damped": [
+    {
+      "frequency": 25.919,
+      "db": 110.134
+    },
+    {
+      "frequency": 26.468,
+      "db": 110.134
+    },
+    {
+      "frequency": 27.6,
+      "db": 110.405
+    },
+    {
+      "frequency": 28.779,
+      "db": 110.405
+    },
+    {
+      "frequency": 29.389,
+      "db": 110.405
+    },
+    {
+      "frequency": 30.645,
+      "db": 110.405
+    },
+    {
+      "frequency": 31.293,
+      "db": 110.405
+    },
+    {
+      "frequency": 32.63,
+      "db": 110.405
+    },
+    {
+      "frequency": 34.026,
+      "db": 110.405
+    },
+    {
+      "frequency": 34.746,
+      "db": 110.405
+    },
+    {
+      "frequency": 36.23,
+      "db": 110.405
+    },
+    {
+      "frequency": 36.998,
+      "db": 110.405
+    },
+    {
+      "frequency": 38.579,
+      "db": 110.405
+    },
+    {
+      "frequency": 40.228,
+      "db": 110.405
+    },
+    {
+      "frequency": 41.081,
+      "db": 110.405
+    },
+    {
+      "frequency": 42.836,
+      "db": 110.405
+    },
+    {
+      "frequency": 43.742,
+      "db": 110.405
+    },
+    {
+      "frequency": 45.613,
+      "db": 110.405
+    },
+    {
+      "frequency": 47.563,
+      "db": 110.405
+    },
+    {
+      "frequency": 48.568,
+      "db": 110.405
+    },
+    {
+      "frequency": 50.646,
+      "db": 110.405
+    },
+    {
+      "frequency": 52.811,
+      "db": 110.405
+    },
+    {
+      "frequency": 53.927,
+      "db": 110.405
+    },
+    {
+      "frequency": 56.235,
+      "db": 110.405
+    },
+    {
+      "frequency": 57.424,
+      "db": 110.405
+    },
+    {
+      "frequency": 59.878,
+      "db": 110.405
+    },
+    {
+      "frequency": 62.439,
+      "db": 110.405
+    },
+    {
+      "frequency": 63.76,
+      "db": 110.405
+    },
+    {
+      "frequency": 66.484,
+      "db": 110.405
+    },
+    {
+      "frequency": 67.89,
+      "db": 110.405
+    },
+    {
+      "frequency": 70.795,
+      "db": 110.134
+    },
+    {
+      "frequency": 73.82,
+      "db": 110.134
+    },
+    {
+      "frequency": 75.381,
+      "db": 110.134
+    },
+    {
+      "frequency": 78.606,
+      "db": 110.134
+    },
+    {
+      "frequency": 80.268,
+      "db": 110.134
+    },
+    {
+      "frequency": 83.699,
+      "db": 110.134
+    },
+    {
+      "frequency": 87.279,
+      "db": 110.134
+    },
+    {
+      "frequency": 89.125,
+      "db": 110.134
+    },
+    {
+      "frequency": 92.934,
+      "db": 110.134
+    },
+    {
+      "frequency": 94.899,
+      "db": 110.134
+    },
+    {
+      "frequency": 98.959,
+      "db": 109.864
+    },
+    {
+      "frequency": 103.188,
+      "db": 109.864
+    },
+    {
+      "frequency": 105.37,
+      "db": 109.864
+    },
+    {
+      "frequency": 109.878,
+      "db": 109.864
+    },
+    {
+      "frequency": 114.569,
+      "db": 109.864
+    },
+    {
+      "frequency": 116.996,
+      "db": 109.864
+    },
+    {
+      "frequency": 121.996,
+      "db": 109.595
+    },
+    {
+      "frequency": 124.576,
+      "db": 109.595
+    },
+    {
+      "frequency": 129.912,
+      "db": 109.595
+    },
+    {
+      "frequency": 135.458,
+      "db": 109.595
+    },
+    {
+      "frequency": 138.328,
+      "db": 109.595
+    },
+    {
+      "frequency": 144.24,
+      "db": 109.324
+    },
+    {
+      "frequency": 147.29,
+      "db": 109.324
+    },
+    {
+      "frequency": 153.591,
+      "db": 109.324
+    },
+    {
+      "frequency": 160.155,
+      "db": 109.324
+    },
+    {
+      "frequency": 163.542,
+      "db": 109.054
+    },
+    {
+      "frequency": 170.539,
+      "db": 109.054
+    },
+    {
+      "frequency": 174.137,
+      "db": 109.054
+    },
+    {
+      "frequency": 181.587,
+      "db": 108.783
+    },
+    {
+      "frequency": 189.348,
+      "db": 108.783
+    },
+    {
+      "frequency": 193.36,
+      "db": 108.783
+    },
+    {
+      "frequency": 201.624,
+      "db": 108.783
+    },
+    {
+      "frequency": 205.887,
+      "db": 108.513
+    },
+    {
+      "frequency": 214.696,
+      "db": 108.513
+    },
+    {
+      "frequency": 223.871,
+      "db": 108.513
+    },
+    {
+      "frequency": 228.605,
+      "db": 108.243
+    },
+    {
+      "frequency": 238.386,
+      "db": 108.243
+    },
+    {
+      "frequency": 248.573,
+      "db": 108.243
+    },
+    {
+      "frequency": 253.829,
+      "db": 107.973
+    },
+    {
+      "frequency": 264.677,
+      "db": 107.973
+    },
+    {
+      "frequency": 270.286,
+      "db": 107.973
+    },
+    {
+      "frequency": 281.837,
+      "db": 107.703
+    },
+    {
+      "frequency": 293.882,
+      "db": 107.703
+    },
+    {
+      "frequency": 300.109,
+      "db": 107.703
+    },
+    {
+      "frequency": 312.935,
+      "db": 107.432
+    },
+    {
+      "frequency": 319.552,
+      "db": 107.432
+    },
+    {
+      "frequency": 333.224,
+      "db": 107.432
+    },
+    {
+      "frequency": 347.465,
+      "db": 107.162
+    },
+    {
+      "frequency": 354.812,
+      "db": 107.162
+    },
+    {
+      "frequency": 369.975,
+      "db": 107.162
+    },
+    {
+      "frequency": 377.816,
+      "db": 106.891
+    },
+    {
+      "frequency": 393.962,
+      "db": 106.891
+    },
+    {
+      "frequency": 410.817,
+      "db": 106.621
+    },
+    {
+      "frequency": 419.504,
+      "db": 106.621
+    },
+    {
+      "frequency": 437.432,
+      "db": 106.621
+    },
+    {
+      "frequency": 446.682,
+      "db": 106.351
+    },
+    {
+      "frequency": 465.793,
+      "db": 106.351
+    },
+    {
+      "frequency": 485.699,
+      "db": 106.351
+    },
+    {
+      "frequency": 495.969,
+      "db": 106.351
+    },
+    {
+      "frequency": 517.188,
+      "db": 106.351
+    },
+    {
+      "frequency": 539.267,
+      "db": 106.081
+    },
+    {
+      "frequency": 550.695,
+      "db": 106.081
+    },
+    {
+      "frequency": 574.255,
+      "db": 106.081
+    },
+    {
+      "frequency": 586.398,
+      "db": 105.811
+    },
+    {
+      "frequency": 611.459,
+      "db": 105.811
+    },
+    {
+      "frequency": 637.619,
+      "db": 105.811
+    },
+    {
+      "frequency": 651.102,
+      "db": 105.54
+    },
+    {
+      "frequency": 678.927,
+      "db": 105.54
+    },
+    {
+      "frequency": 693.283,
+      "db": 105.54
+    },
+    {
+      "frequency": 722.945,
+      "db": 105.54
+    },
+    {
+      "frequency": 753.806,
+      "db": 105.27
+    },
+    {
+      "frequency": 769.781,
+      "db": 105.27
+    },
+    {
+      "frequency": 802.679,
+      "db": 105.27
+    },
+    {
+      "frequency": 819.651,
+      "db": 105.27
+    },
+    {
+      "frequency": 854.719,
+      "db": 105.27
+    },
+    {
+      "frequency": 891.288,
+      "db": 105.27
+    },
+    {
+      "frequency": 910.133,
+      "db": 105.54
+    },
+    {
+      "frequency": 949.03,
+      "db": 105.54
+    },
+    {
+      "frequency": 989.633,
+      "db": 105.811
+    },
+    {
+      "frequency": 1010.417,
+      "db": 106.081
+    },
+    {
+      "frequency": 1053.249,
+      "db": 106.081
+    },
+    {
+      "frequency": 1075.364,
+      "db": 106.351
+    },
+    {
+      "frequency": 1120.899,
+      "db": 106.621
+    },
+    {
+      "frequency": 1168.362,
+      "db": 106.891
+    },
+    {
+      "frequency": 1192.84,
+      "db": 107.162
+    },
+    {
+      "frequency": 1243.349,
+      "db": 107.432
+    },
+    {
+      "frequency": 1269.457,
+      "db": 107.432
+    },
+    {
+      "frequency": 1323.209,
+      "db": 107.703
+    },
+    {
+      "frequency": 1379.238,
+      "db": 107.703
+    },
+    {
+      "frequency": 1408.136,
+      "db": 107.973
+    },
+    {
+      "frequency": 1467.826,
+      "db": 107.973
+    },
+    {
+      "frequency": 1498.58,
+      "db": 108.243
+    },
+    {
+      "frequency": 1562.104,
+      "db": 108.243
+    },
+    {
+      "frequency": 1628.248,
+      "db": 108.513
+    },
+    {
+      "frequency": 1662.364,
+      "db": 108.513
+    },
+    {
+      "frequency": 1732.752,
+      "db": 108.783
+    },
+    {
+      "frequency": 1769.057,
+      "db": 108.783
+    },
+    {
+      "frequency": 1844.046,
+      "db": 109.054
+    },
+    {
+      "frequency": 1922.129,
+      "db": 109.324
+    },
+    {
+      "frequency": 1962.402,
+      "db": 109.595
+    },
+    {
+      "frequency": 2045.589,
+      "db": 109.864
+    },
+    {
+      "frequency": 2132.204,
+      "db": 110.134
+    },
+    {
+      "frequency": 2176.878,
+      "db": 110.405
+    },
+    {
+      "frequency": 2269.154,
+      "db": 110.676
+    },
+    {
+      "frequency": 2316.803,
+      "db": 110.946
+    },
+    {
+      "frequency": 2414.905,
+      "db": 111.216
+    },
+    {
+      "frequency": 2517.157,
+      "db": 111.486
+    },
+    {
+      "frequency": 2569.897,
+      "db": 111.756
+    },
+    {
+      "frequency": 2678.715,
+      "db": 112.027
+    },
+    {
+      "frequency": 2734.96,
+      "db": 112.297
+    },
+    {
+      "frequency": 2850.768,
+      "db": 112.297
+    },
+    {
+      "frequency": 2971.61,
+      "db": 112.027
+    },
+    {
+      "frequency": 3033.871,
+      "db": 112.027
+    },
+    {
+      "frequency": 3162.336,
+      "db": 111.756
+    },
+    {
+      "frequency": 3228.736,
+      "db": 111.486
+    },
+    {
+      "frequency": 3365.452,
+      "db": 110.946
+    },
+    {
+      "frequency": 3507.952,
+      "db": 110.676
+    },
+    {
+      "frequency": 3581.451,
+      "db": 110.405
+    },
+    {
+      "frequency": 3733.102,
+      "db": 110.134
+    },
+    {
+      "frequency": 3811.319,
+      "db": 109.595
+    },
+    {
+      "frequency": 3973.058,
+      "db": 109.324
+    },
+    {
+      "frequency": 4141.285,
+      "db": 109.054
+    },
+    {
+      "frequency": 4228.054,
+      "db": 108.783
+    },
+    {
+      "frequency": 4407.085,
+      "db": 108.513
+    },
+    {
+      "frequency": 4593.69,
+      "db": 108.243
+    },
+    {
+      "frequency": 4690.15,
+      "db": 107.973
+    },
+    {
+      "frequency": 4888.962,
+      "db": 107.432
+    },
+    {
+      "frequency": 4991.178,
+      "db": 106.621
+    },
+    {
+      "frequency": 5202.514,
+      "db": 105.811
+    },
+    {
+      "frequency": 5423.052,
+      "db": 104.729
+    },
+    {
+      "frequency": 5536.677,
+      "db": 103.648
+    },
+    {
+      "frequency": 5771.372,
+      "db": 102.568
+    },
+    {
+      "frequency": 5892.296,
+      "db": 101.486
+    },
+    {
+      "frequency": 6141.788,
+      "db": 100.405
+    },
+    {
+      "frequency": 6401.852,
+      "db": 99.324
+    },
+    {
+      "frequency": 6536.281,
+      "db": 98.242
+    },
+    {
+      "frequency": 6813.04,
+      "db": 97.431
+    },
+    {
+      "frequency": 6955.789,
+      "db": 96.891
+    },
+    {
+      "frequency": 7250.639,
+      "db": 96.351
+    },
+    {
+      "frequency": 7557.998,
+      "db": 95.81
+    },
+    {
+      "frequency": 7716.355,
+      "db": 95.81
+    },
+    {
+      "frequency": 8043.082,
+      "db": 95.81
+    },
+    {
+      "frequency": 8211.242,
+      "db": 94.999
+    },
+    {
+      "frequency": 8559.31,
+      "db": 95.27
+    },
+    {
+      "frequency": 8921.741,
+      "db": 96.081
+    },
+    {
+      "frequency": 9108.659,
+      "db": 96.891
+    },
+    {
+      "frequency": 9494.768,
+      "db": 97.431
+    },
+    {
+      "frequency": 9896.809,
+      "db": 97.431
+    },
+    {
+      "frequency": 10104.626,
+      "db": 96.621
+    },
+    {
+      "frequency": 10532.492,
+      "db": 95.54
+    },
+    {
+      "frequency": 10753.642,
+      "db": 94.459
+    },
+    {
+      "frequency": 11208.974,
+      "db": 93.918
+    },
+    {
+      "frequency": 11683.601,
+      "db": 93.918
+    },
+    {
+      "frequency": 11928.398,
+      "db": 94.459
+    },
+    {
+      "frequency": 12433.471,
+      "db": 95.81
+    },
+    {
+      "frequency": 12694.554,
+      "db": 98.513
+    },
+    {
+      "frequency": 13232.086,
+      "db": 101.486
+    },
+    {
+      "frequency": 13792.983,
+      "db": 102.838
+    },
+    {
+      "frequency": 14081.977,
+      "db": 102.568
+    },
+    {
+      "frequency": 14678.237,
+      "db": 101.756
+    },
+    {
+      "frequency": 14985.8,
+      "db": 93.648
+    },
+    {
+      "frequency": 15621.036,
+      "db": 85.81
+    }
+  ]
+}

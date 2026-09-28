@@ -46,6 +46,11 @@ for (const row of rows) test(`${row.manufacturer} ${row.model}: reference, chang
     const forward = d.state.last.drivers[0];
     const full = simulate(d.rustRequest(forward.map(p => p.frequency), true)).combined;
     assert.ok(full.every((p, i) => Math.abs(p.db - forward[i].db) < 1e-8), 'Forward and optimizer baselines agree');
+    const undampedRequest = d.rustRequest(forward.map(p => p.frequency), true);
+    undampedRequest.drivers[0].acoustic_path = undampedRequest.drivers[0].acoustic_path.filter(p => p.type !== 'damper');
+    const undamped = simulate(undampedRequest).combined;
+    assert.ok(undamped.every((p, i) => Math.abs(p.db - d.state.last.undampedDrivers[0][i].db) < 1e-8),
+        'The undamped comparison preserves this driver baseline and reference fixture');
     const results = JSON.parse(engine.reverse_design_json(JSON.stringify({
         base_request: d.rustRequest([100, 1000, 10000], true), target: [{ frequency_hz: 100, db: 110, phase_deg: 0 }, { frequency_hz: 10000, db: 100, phase_deg: 0 }],
         driver_index: 0, min_tube_length_mm: 12, max_tube_length_mm: 12,

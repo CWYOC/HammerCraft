@@ -1,4 +1,4 @@
-use crate::complex::{db_to_amplitude, polar};
+use crate::complex::{db_to_amplitude, interpolate_phase, polar};
 use crate::models::FrequencyPoint;
 use num_complex::Complex64;
 
@@ -23,7 +23,8 @@ pub fn interpolate_frequency_response(points: &[FrequencyPoint], frequency_hz: f
             return FrequencyPoint {
                 frequency_hz,
                 db: a.db + (b.db - a.db) * ratio,
-                phase_deg: a.phase_deg + (b.phase_deg - a.phase_deg) * ratio,
+                phase_deg: interpolate_phase(a.phase_deg, b.phase_deg, ratio,
+                    points.iter().all(|p| p.phase_deg.abs() <= 180.0)),
             };
         }
     }

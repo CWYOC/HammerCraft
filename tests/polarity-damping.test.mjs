@@ -116,3 +116,46 @@ test('invalid resonant parameters and missing WASM cannot produce misleading dam
     await d.calculate(); assert.equal(d.state.last, null);
     assert.equal(d.document.getElementById('iemEngineStatus').textContent, 'ACOUSTIC ENGINE REQUIRED');
 });
+
+test('undamped comparison removes only design dampers and never enters the combined sum', async () => {
+    const { d, driver } = setup();
+    Object.assign(driver, { gain: 3, polarity: -1, sourceModel: 'resonant', sourceResistanceCgs: 500, sourceResonanceHz: 3000, sourceQ: 4,
+        measurementReferenceCompensation: true, measurementReferenceLoad: { type: 'anechoic' },
+        measurementReferencePath: [{ element_type: 'damper', damper_ohm: 320 }] });
+    driver.path = [{ type: 'tube', length: 7, diameter: 1.5, loss: 0 }, { type: 'damper', value: 1500 },
+        { type: 'tube', length: 5.5, diameter: 2.5, loss: 0 }, { type: 'damper', value: 680 }];
+    d.state.drivers.push({ ...structuredClone(driver), id: 'second', path: [], polarity: 1 });
+    const original = JSON.stringify(d.state.drivers);
+    let request;
+    d.context.window.HCAcousticEngine.simulate = async input => { request = structuredClone(input); return simulate(input); };
+    await d.calculate();
+    assert.equal(request.drivers.length, 3);
+    const comparison = request.drivers[2];
+    assert.deepEqual(comparison.acoustic_path, request.drivers[0].acoustic_path.filter(e => e.type !== 'damper'));
+    for (const key of ['measurement_reference_path', 'measurement_reference_load', 'acoustic_source', 'circuit_netlist', 'electrical', 'gain_db', 'polarity_inverted']) {
+        assert.deepEqual(comparison[key], request.drivers[0][key], key);
+    }
+    const expected = simulate({ ...request, drivers: request.drivers.slice(0, 2) });
+    const expectedUndamped = simulate({ ...request, drivers: [comparison] });
+    assert.ok(d.state.last.combined.every((p, i) => Math.abs(p.db - expected.combined[i].db) < 1e-8));
+    assert.equal(d.state.last.undampedDrivers[1], null);
+    assert.ok(d.state.last.undampedDrivers[0].every((p, i) => Math.abs(p.db - expectedUndamped.combined[i].db) < 1e-8));
+    // ensureDriverShape can add defaults, but simulation must never change the path.
+    assert.equal(JSON.stringify(driver.path), JSON.stringify(JSON.parse(original)[0].path));
+});
+
+test('relative undamped comparison preserves attenuation and its visibility persists', async () => {
+    const { d, driver } = setup();
+    driver.path = [{ type: 'damper', value: 1500 }];
+    await d.calculate();
+    const plotted = () => d.state.chart.data.datasets.find(s => /Undamped, same geometry/.test(s.label));
+    const current = d.state.chart.data.datasets[0];
+    assert.ok(plotted().data.every((p, i) => Math.abs((p.y - current.data[i].y) -
+        (d.state.last.undampedDrivers[0][i].db - d.state.last.drivers[0][i].db)) < 1e-8));
+    d.document.getElementById('iemShowIndividual').checked = false; d.draw();
+    assert.ok(plotted(), 'The comparison toggle also works when individual traces are hidden');
+    d.document.getElementById('iemShowUndamped').checked = false; d.draw();
+    assert.equal(plotted(), undefined);
+    d.saveProject(); d.newProject(); d.loadProject();
+    assert.equal(d.document.getElementById('iemShowUndamped').checked, false);
+});

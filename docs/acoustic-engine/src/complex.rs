@@ -11,3 +11,14 @@ pub fn amplitude_to_db(amplitude: f64) -> f64 {
 pub fn polar(amplitude: f64, phase_deg: f64) -> Complex64 {
     Complex64::from_polar(amplitude, phase_deg.to_radians())
 }
+
+// Wrapped measurements cross the ±180° branch cut along the short arc.
+// Curves containing angles outside that range are explicitly unwrapped;
+// preserve their full turns (for example, measured propagation delay).
+pub fn interpolate_phase(left: f64, right: f64, ratio: f64, wrapped: bool) -> f64 {
+    let mut delta = right - left;
+    if wrapped && delta.abs() > 180.0 {
+        delta = (delta + 180.0).rem_euclid(360.0) - 180.0;
+    }
+    left + delta * ratio
+}

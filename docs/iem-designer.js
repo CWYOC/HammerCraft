@@ -35,14 +35,17 @@
         activeCircuit: null,
         calculationRevision: 0,
         reverseRevision: 0,
+        targetProductRevision: 0,
+        reverseImportRevision: 0,
         importRevisions: new Map(),
     };
 
     const projectDefaults = {
-        iemSplMode: "relative", iemNormalizeFrequency: "1000", iemNormalizeMode: "system",
+        iemSplMode: "relative", iemNormalizeFrequency: "1000",
         iemTemperature: "20", iemHumidity: "50", iemAcousticLoadType: "anechoic",
         iemCouplerVolume: "2000", iemLoadLossResistance: "0", iemLeakResistance: "500000000",
         iemTargetProduct: "", iemShowTarget: true, iemShowIndividual: true, iemShowCombined: true,
+        iemShowUndamped: true,
         iemShowValidationError: false, iemReverseMatchMode: "absolute", iemReverseNormalizeFrequency: "1000",
         iemReverseLengthMin: "3", iemReverseLengthMax: "20", iemReverseDiameterMin: "0.8", iemReverseDiameterMax: "3",
         iemReverseDampers: "330,680,1000,1500,2200", iemReverseCaps: "0,4.7,10,15,22,33,47",
@@ -200,7 +203,13 @@
             if (frequency >= left.frequency && frequency <= right.frequency) {
                 const ratio = (Math.log10(frequency) - Math.log10(left.frequency)) /
                     (Math.log10(right.frequency) - Math.log10(left.frequency));
-                return left[key] + (right[key] - left[key]) * ratio;
+                let delta = right[key] - left[key];
+                // Preserve explicit unwrapped phase, but cross ±180° on the
+                // short arc for wrapped measurements, matching the engine.
+                if (key === "phase" && sorted.every(p => Math.abs(p[key]) <= 180) && Math.abs(delta) > 180) {
+                    delta = ((delta + 180) % 360 + 360) % 360 - 180;
+                }
+                return left[key] + delta * ratio;
             }
         }
         return 0;
@@ -842,19 +851,32 @@
         let result;
         try {
             if (window.HCAcousticEngine) {
-                const rust = await window.HCAcousticEngine.simulate(rustRequest());
+                const request = rustRequest();
+                const comparisonIndices = [];
+                // Compare damping with this exact design, not the datasheet's
+                // different fixture. Reference dampers, source, wiring, gain
+                // and polarity stay unchanged; only design dampers are removed.
+                state.drivers.forEach((d, index) => {
+                    if (!d.path.some(e => e.type === "damper" && e.value > 0)) return;
+                    const undamped = structuredClone(request.drivers[index]);
+                    undamped.id += ":undamped-comparison";
+                    undamped.acoustic_path = undamped.acoustic_path.filter(e => e.type !== "damper");
+                    request.drivers.push(undamped);
+                    comparisonIndices.push(index);
+                });
+                const rust = await window.HCAcousticEngine.simulate(request);
                 if (revision !== state.calculationRevision) return;
-                const rustDrivers = rust.drivers.map(item => item.points.map(p => ({
+                const responsePoints = item => item.points.map(p => ({
                     frequency: p.frequency_hz,
                     db: p.db,
                     phase: p.phase_deg,
-                })));
+                }));
 
                 // Database FR is the measured manufacturer baseline. Rust
                 // returns the electrical/acoustic DESIGN DELTA for database
                 // drivers; compose it explicitly here so the measured curve
                 // can never be replaced by a flat transfer-function trace.
-                const composedDrivers = rustDrivers.map((response, index) => {
+                const composeResponse = (response, index) => {
                     const d = state.drivers[index];
                     if (!d?.databaseDriverId || !d.measurement?.length) return response;
                     return response.map(point => ({
@@ -864,6 +886,13 @@
                         // digitised datasets, so model phase is retained.
                         phase: point.phase,
                     }));
+                };
+                const composedDrivers = rust.drivers.slice(0, state.drivers.length)
+                    .map((item, index) => composeResponse(responsePoints(item), index));
+                const undampedDrivers = state.drivers.map(() => null);
+                comparisonIndices.forEach((driverIndex, comparisonIndex) => {
+                    undampedDrivers[driverIndex] = composeResponse(
+                        responsePoints(rust.drivers[state.drivers.length + comparisonIndex]), driverIndex);
                 });
 
                 // Re-sum the composed driver pressures. The combined curve
@@ -905,7 +934,7 @@
                         minFrequencyHz:lo,maxFrequencyHz:hi,errorCurve,pass:maxAbsDb<=0.05};
                 });
 
-                result = { drivers: composedDrivers, combined, validation };
+                result = { drivers: composedDrivers, combined, validation, undampedDrivers };
                 const activeValidation = validation.filter(Boolean);
                 const validationText = activeValidation.length
                     ? (() => {
@@ -962,23 +991,12 @@
     // Display graph and normalization.
     // ---------------------------------------------------------------------
 
-    function displaySeries(series, kind = "driver") {
+    function displaySeries(series, _kind, normalizationReference = series) {
         if ($("iemSplMode")?.value === "absolute") return series;
         const frequency = clamp(num($("iemNormalizeFrequency")?.value, 1000), 20, 20000);
-        const mode = $("iemNormalizeMode")?.value || "system";
-        let offset;
-
-        // Individual-driver traces must be stable when another driver is
-        // added/removed. In relative view they are therefore normalized to
-        // their own response. "System" normalization belongs to the combined
-        // trace only.
-        if (kind === "driver" || mode === "each" || kind === "target") {
-            offset = interp(series, frequency);
-        } else {
-            offset = state.last?.combined?.length
-                ? interp(state.last.combined, frequency)
-                : interp(series, frequency);
-        }
+        // Normalize each plotted curve after complex summation. Individual
+        // traces stay stable when another driver is added or removed.
+        const offset = interp(normalizationReference, frequency);
         return series.map(point => ({ ...point, db: point.db - offset }));
     }
 
@@ -1009,26 +1027,36 @@
 
     function draw() {
         updateModelNotes();
+        metrics();
         if (!state.last || !window.Chart) return;
         const datasets = [];
-        if ($("iemShowIndividual")?.checked) {
+        if ($("iemShowIndividual")?.checked || $("iemShowUndamped")?.checked) {
             state.last.drivers.forEach((response, index) => {
                 const d = state.drivers[index];
-                datasets.push({
+                if ($("iemShowIndividual")?.checked) datasets.push({
                     label: `${d?.name || `Driver ${index + 1}`}${d?.polarity < 0 ? " · INVERTED 180°" : ""}`,
                     data: displaySeries(response, "driver").map(point => ({ x: point.frequency, y: point.db })),
                     pointRadius: 0,
                     borderWidth: 1.5,
                 });
 
-                if (d?.databaseDriverId && d.measurement?.length > 1) {
+                const undamped = state.last.undampedDrivers?.[index];
+                if ($("iemShowUndamped")?.checked && undamped) datasets.push({
+                    label: `${d.name} · Undamped, same geometry`,
+                    // A shared offset preserves the damped/undamped level
+                    // difference even in the relative display mode.
+                    data: displaySeries(undamped, "driver", response).map(p => ({ x: p.frequency, y: p.db })),
+                    pointRadius: 0, borderWidth: 1.5, borderDash: [3, 3],
+                });
+
+                if ($("iemShowIndividual")?.checked && d?.databaseDriverId && d.measurement?.length > 1) {
                     const baseline = d.measurement.map(point => ({
                         frequency: point.frequency,
                         db: point.db,
                         phase: point.phase || 0,
                     }));
                     datasets.push({
-                        label: `${d.name} · Datasheet baseline`,
+                        label: `${d.name} · Datasheet, reference fixture`,
                         data: displaySeries(baseline, "driver").map(point => ({ x: point.frequency, y: point.db })),
                         pointRadius: 0,
                         borderWidth: 1.25,
@@ -1124,8 +1152,9 @@
 
         if (state.target.length > 1 && state.last?.combined.length) {
             const normFrequency = clamp(num($("iemNormalizeFrequency")?.value, 1000), 20, 20000);
-            const actualNorm = interp(state.last.combined, normFrequency);
-            const targetNorm = interp(state.target, normFrequency);
+            const absolute = $("iemSplMode")?.value === "absolute";
+            const actualNorm = absolute ? 0 : interp(state.last.combined, normFrequency);
+            const targetNorm = absolute ? 0 : interp(state.target, normFrequency);
             let sum = 0;
             let count = 0;
             for (const p of state.last.combined) {
@@ -1149,7 +1178,7 @@
         if (state.drivers.some(d => d.sourceModel === "ideal_pressure")) notes.push("Ideal-pressure source selected: zero source impedance can exaggerate tube/coupler resonances.");
         if (state.drivers.some(d => d.sourceModel === "custom_resistance")) notes.push("Custom source resistance is frequency-independent; it does not describe the receiver's full acoustic impedance.");
         if (state.drivers.some(d => d.sourceModel === "resonant")) notes.push("Resonant source: one RLC mode, using user-set R, frequency and Q. Starting values are uncalibrated. Fit against undamped and damped measurements in the same fixture, then validate another damper value. This does not identify every receiver resonance.");
-        if (state.drivers.some(d => d.path.some(e => e.type === "damper" && e.value > 0))) notes.push("Dampers dissipate acoustic energy at their position in the path. A constant-resistance source cannot predict changes to all peaks embedded in the measured driver baseline. Path order is receiver → coupler; relative normalization can hide overall attenuation.");
+        if (state.drivers.some(d => d.path.some(e => e.type === "damper" && e.value > 0))) notes.push("Compare damping against ‘Undamped, same geometry’. The datasheet trace uses its original reference fixture, so it is not a before/after damper comparison. The undamped comparison keeps the current source, load, wiring, gain and polarity, and shares the damped trace's normalization. A constant-resistance source cannot predict changes to all peaks embedded in the measured baseline. Path order is receiver → coupler.");
         const inverted = state.drivers.filter(d => d.polarity < 0).map(d => d.name);
         if (inverted.length) notes.push(`Polarity inverted (180°): ${inverted.join(", ")}. Individual SPL is unchanged; interference in the combined response changes.`);
         if (loadObj().type === "generic711_approx" || state.drivers.some(d => d.measurementReferenceCompensation && referenceLoadToRust(d.measurementReferenceLoad)?.type === "generic711_approx")) notes.push("Simplified 711: main tube and microphone only; damping side cavities are missing. This is not a validated IEC 711 coupler, especially for treble predictions.");
@@ -1213,6 +1242,7 @@
                             <label>IMPEDANCE FILE<input type="file" data-z-file="${d.id}" accept=".txt,.csv,.zma"></label>
                         </div>
                         <div class="iem-file-status">FR: ${d.measurement.length} points · Z: ${d.impedanceCurve.length} points</div>
+                        <p class="iem-field-note">File columns: frequency Hz, magnitude (dB or Ω), optional phase in degrees. Use phase wrapped to −180°…+180°, or an unwrapped curve with full turns preserved. Values outside ±180° identify an unwrapped curve.</p>
                     </section>
                     ${circuitHtml(d)}
                     ${pathHtml(d)}
@@ -2775,6 +2805,7 @@
     }
 
     function databaseDriverToDesign(row) {
+        if (row.data_error) throw new Error(`Driver data is incomplete: ${row.data_error}`);
         const d = driver();
         d.name = [row.manufacturer, row.model].filter(Boolean).join(" ");
         d.type = String(row.driver_type || "ba").toLowerCase();
@@ -2849,12 +2880,13 @@
 
         const rows = [];
         for (const drv of drivers || []) {
+            const dataErrors = [];
             const { data: sets, error: setError } = await db
                 .from("iem_driver_measurements")
                 .select("id,measurement_name,source_type,source_name,is_default,fixture,coupler,drive_voltage_v,notes")
                 .eq("driver_id", drv.id)
                 .order("is_default", { ascending: false });
-            if (setError) console.warn("Unable to load measurement set:", setError);
+            if (setError) dataErrors.push(`Measurement sets: ${setError.message || "query failed"}`);
 
             const set = sets?.[0] || null;
             let fr = [], impedance_curve = [], reference_path = [];
@@ -2870,9 +2902,9 @@
                         .select("element_order,element_type,length_mm,inner_diameter_mm,damper_ohm,volume_mm3,description")
                         .eq("measurement_id", set.id).order("element_order")
                 ]);
-                if (frResult.error) console.warn("Unable to load driver FR:", frResult.error);
-                if (zResult.error) console.warn("Unable to load driver impedance:", zResult.error);
-                if (pathResult.error) console.warn("Unable to load measurement reference path:", pathResult.error);
+                for (const [label, result] of [["Frequency response", frResult], ["Impedance", zResult], ["Reference path", pathResult]]) {
+                    if (result.error) dataErrors.push(`${label}: ${result.error.message || "query failed"}`);
+                }
                 fr = frResult.data || [];
                 impedance_curve = zResult.data || [];
                 reference_path = pathResult.data || [];
@@ -2884,7 +2916,7 @@
                             .eq("measurement_id", impedanceSet.id)
                             .order("frequency_hz");
                         if (zFallback.error) {
-                            console.warn("Unable to load fallback driver impedance:", zFallback.error);
+                            dataErrors.push(`Alternate impedance: ${zFallback.error.message || "query failed"}`);
                             continue;
                         }
                         if (zFallback.data?.length) {
@@ -2904,10 +2936,13 @@
                 fr,
                 impedance_curve,
                 reference_path,
+                data_error: dataErrors.join("; "),
                 impedance_source: set?.impedance_source || set?.measurement_name || null
             });
         }
         state.databaseLibrary = rows;
+        const failed = rows.filter(row => row.data_error).length;
+        if (failed) state.databaseLibraryError = `${failed} of ${rows.length} drivers could not be fully loaded. Reload to retry; incomplete drivers cannot be added.`;
     }
 
     async function renderLibrary() {
@@ -2928,6 +2963,12 @@
         }
 
         const databaseCards = state.databaseLibrary.map((row, i) => {
+            if (row.data_error) return `<article class="iem-library-card">
+                <span class="eyebrow">DATABASE · DATA UNAVAILABLE</span>
+                <h4>${esc(row.manufacturer)} ${esc(row.model)}</h4>
+                <p class="iem-field-note">${esc(row.data_error)}. Reload the database before adding this driver.</p>
+                <div class="iem-library-actions"><button class="outline-button" disabled>ADD TO DESIGN</button></div>
+            </article>`;
             const frCount = row.fr?.length || 0;
             const zCount = row.impedance_curve?.length || 0;
             const sparse = frCount > 0 && frCount < 20;
@@ -3030,6 +3071,7 @@
     }
 
     function rebuildReverseFromBase(redraw = true) {
+        if (redraw) ++state.reverseImportRevision;
         state.reverse = (state.reverseBase || []).map(point => ({
             frequency: point.frequency,
             db: point.db + targetPeqOffsetDb(point.frequency),
@@ -3088,6 +3130,7 @@
     }
 
     function setReverseBase(points, clearPeq = true) {
+        ++state.reverseImportRevision;
         state.reverseBase = structuredClone(points || []);
         if (clearPeq) state.targetPeq = [];
         rebuildReverseFromBase(false);
@@ -3400,18 +3443,36 @@
     // ---------------------------------------------------------------------
 
     async function loadTargetProduct(id) {
-        if (!id || !window.hcSupabase) {
-            state.target = [];
-            draw();
-            return;
-        }
-        for (const table of ["product_frequency_response", "product_frequency_responses"]) {
-            const { data, error } = await window.hcSupabase.from(table).select("frequency_hz,db").eq("product_id", id).order("frequency_hz");
-            if (!error) {
-                state.target = (data || []).map(p => ({ frequency: +p.frequency_hz, db: +p.db }));
+        const revision = ++state.targetProductRevision;
+        state.target = [];
+        $("iemTargetMessage").textContent = id ? "Loading target response…" : "";
+        draw();
+        if (!id) return;
+        try {
+            if (!window.hcSupabase) throw new Error("Database client is unavailable.");
+            let lastError = null;
+            let queried = false;
+            for (const table of ["product_frequency_response", "product_frequency_responses"]) {
+                const { data, error } = await window.hcSupabase.from(table).select("frequency_hz,db").eq("product_id", id).order("frequency_hz");
+                if (revision !== state.targetProductRevision) return;
+                if (error) { lastError = error; continue; }
+                queried = true;
+                const points = new Map();
+                for (const p of data || []) {
+                    if (p.db !== null && p.db !== "" && Number.isFinite(+p.db) && Number.isFinite(+p.frequency_hz) && +p.frequency_hz > 0) {
+                        points.set(+p.frequency_hz, { frequency: +p.frequency_hz, db: +p.db });
+                    }
+                }
+                if (points.size < 2) continue;
+                state.target = [...points.values()].sort((a, b) => a.frequency - b.frequency);
+                $("iemTargetMessage").textContent = `Loaded ${state.target.length} target points.`;
                 draw();
                 return;
             }
+            if (!queried) throw lastError || new Error("Target query failed.");
+            $("iemTargetMessage").textContent = "No valid response data for this target. Choose another product.";
+        } catch (error) {
+            if (revision === state.targetProductRevision) $("iemTargetMessage").textContent = `Unable to load target: ${error.message || error}`;
         }
     }
 
@@ -3456,6 +3517,9 @@
         state.cadConnectPointMode = null;
         state.importRevisions.clear();
         ++state.reverseRevision;
+        ++state.targetProductRevision;
+        ++state.reverseImportRevision;
+        $("iemTargetMessage").textContent = "";
         $("iemReverseResults").innerHTML = "";
         $("iemReverseMessage").textContent = "";
         $("iemReverseRunButton").disabled = false;
@@ -3526,7 +3590,7 @@
         $("iemLoadProjectButton").onclick = loadProject;
         $("iemNewProjectButton").onclick = newProject;
         $("iemTargetProduct").onchange = event => loadTargetProduct(event.target.value);
-        ["iemSplMode", "iemNormalizeFrequency", "iemNormalizeMode", "iemShowTarget", "iemShowIndividual", "iemShowCombined"].forEach(id => $(id).onchange = draw);
+        ["iemSplMode", "iemNormalizeFrequency", "iemShowTarget", "iemShowIndividual", "iemShowCombined", "iemShowUndamped"].forEach(id => $(id).onchange = draw);
         ["iemTemperature", "iemHumidity", "iemAcousticLoadType", "iemCouplerVolume", "iemLoadLossResistance", "iemLeakResistance"].forEach(id => {
             $(id).onchange = () => {
                 // A previous unity check no longer describes this load/environment.
@@ -3584,8 +3648,10 @@
         };
         $("iemReverseFile").onchange = async event => {
             if (event.target.files[0]) {
+                const revision = ++state.reverseImportRevision;
                 try {
                     const points = await parseFile(event.target.files[0], "fr");
+                    if (revision !== state.reverseImportRevision) return;
                     if (points.length < 2) throw new Error("A target needs at least two valid response points.");
                     setReverseBase(points, true);
                     if ($("iemReverseMatchMode")) $("iemReverseMatchMode").value = "absolute";
@@ -3593,7 +3659,9 @@
                     autoFitReverseView();
                     drawReverse();
                     $("iemReverseMessage").textContent = `Imported ${points.length} target points.`;
-                } catch (error) { $("iemReverseMessage").textContent = error.message; }
+                } catch (error) {
+                    if (revision === state.reverseImportRevision) $("iemReverseMessage").textContent = error.message;
+                }
             }
         };
         $("iemReverseRunButton").onclick = reverseRun;

@@ -1,3 +1,4 @@
+use crate::complex::interpolate_phase;
 use crate::models::{
     CircuitComponentKind, CircuitNetlist, ElectricalElement, ImpedancePoint,
 };
@@ -64,7 +65,8 @@ pub fn interpolate_impedance(
                 / (right.frequency_hz.log10() - left.frequency_hz.log10());
             let magnitude = left.magnitude_ohm
                 + (right.magnitude_ohm - left.magnitude_ohm) * ratio;
-            let phase = left.phase_deg + (right.phase_deg - left.phase_deg) * ratio;
+            let phase = interpolate_phase(left.phase_deg, right.phase_deg, ratio,
+                points.iter().all(|p| p.phase_deg.abs() <= 180.0));
             return Complex64::from_polar(magnitude.max(0.001), phase.to_radians());
         }
     }
