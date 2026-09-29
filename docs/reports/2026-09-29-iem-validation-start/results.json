@@ -1,0 +1,2065 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-29T06:44:51.384Z",
+  "status": "INCOMPLETE",
+  "criteria": {
+    "spl_rmse_db": 1,
+    "spl_p95_abs_db": 2,
+    "phase_rmse_deg": 15,
+    "damping_rmse_db": 1,
+    "peak_level_error_db": 2,
+    "peak_frequency_error_percent": 5
+  },
+  "totals": {
+    "PASS": 0,
+    "FAIL": 0,
+    "INVALID": 0,
+    "INCOMPLETE": 0,
+    "AWAITING_MEASUREMENT": 133
+  },
+  "validation_cases": 103,
+  "passing_validation_cases": 0,
+  "engine_version": "Hammer Craft Acoustic Engine 0.18.0",
+  "wasm_sha256": "fa4bc0244f3f1a040232740f2dac5e4f4cc32ae56e5ab9dc309d54a84e52e225",
+  "manifest_sha256": "1677c72cc239737fb196bf5fad0375ce44893631e1ef07de72cbab43be35c177",
+  "interpretation": "A pass covers only the specified independent cases, specimens, bands and tolerances. It is not certification of every geometry, real-ear response, peak Q or production variation. Criteria are project targets, not IEC limits. No gain or phase fitting is performed.",
+  "results": [
+    {
+      "id": "sonion-2356-reference",
+      "driver": "Sonion 2356",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "7f2182b6930e3a28a31f83d2362ecda166bfc981ee0059da2f87b712443a9b41",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-straight",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "864c0039076786a6fe49bb2a577901b272397b2784347bdf1f886c56b6a0448b",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-damper-680",
+      "driver": "Sonion 2356",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "f81cad9d031adb6fabc160c6c48decd1338d8220cf7ba662f4c18c9dee1edc40",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-damper-1500",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "3eab61e8877a90e8418b063dc8142f0a7809e753bc05da45d780eadabcaaa5cd",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-damper-2200",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "d7b42ba9afec1199edd31690e9f61f36f3bd6f432bcf0a8b027f4886be30777f",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-tube-6",
+      "driver": "Sonion 2356",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "7603939d30c1cbb766bf6db4651b00aab337d1c35ac5605e04a06d1105700285",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-tube-20",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "b36ac961661c9e009bacac4953815a9a215af35ec6b7ed14aeee57b757594950",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-bore-1.5",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "89ebb1b8dcc56f568a71fcbf732bfda8b03c08419cb0dfacb98862224492d600",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-damper-1500-inlet",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "886af98a309c1f0be4528649413d25832dbca3dd34c4cd81658b95a5f49c44a4",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-resistor-10",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "8810f71223ccfa608720a0e78517fa43f0c7ddb0baa6fd7eeb7382bd842a7291",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-capacitor-1",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "1c724770ca5fa5af955423967bc3bb5545dc9632d769a79a88962aef993cc27c",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-inverted",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "2d531b0e0e9c48d8b12c4aa9078e3956eaab8fe3a3443212193c135735bf1d46",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-half-voltage",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "5f40c9bebece2f3dac3d3315aec06efdd7e9bd5c997ce2fe07b8a2926241940f",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-guide-geometry-undamped",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "c595d5a52eb63deb17554111236b80ef8c679e69b823e60938432bf5b6bba87c",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-guide-geometry-1500-at-7mm",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "13d93396a4ca8317bfd03f6d0ab48be544aab50b52c93d12e257a01f706b6d92",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-2356-guide-geometry-1500-at-9.5mm",
+      "driver": "Sonion 2356",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "f9371731c065ce84dc2db9e9317015d6c12e174085b034f01c970e62e438e14b",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-reference",
+      "driver": "Knowles CI-22955-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "bd198718e97f0c45ec677cdd7b547df2f690a340ce1af52568299d3a887e4f7b",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-straight",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "0f2d0eb4568c533bf922fb9b29f606c3cdb85ccc9d68afc19a156b82313c6f52",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-damper-680",
+      "driver": "Knowles CI-22955-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "36f8884929226d56ca1fe962fa599f417bb20a876967f8eb09ca2531641ab6e5",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-damper-1500",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "fbfb9c49fbf46528a873d292a3cc298c4b3eb54b6891d9dc4883f24d1c2a668e",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-damper-2200",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "7922ac0b618ff9c80fcbffb912065e27dee4b751f3d881acd580d092ac50ad0c",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-tube-6",
+      "driver": "Knowles CI-22955-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "8d84e2cc05b09cd08de401d178876b2cb59810606b8b1bc366a134e32ebbf5dc",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-tube-20",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "be1656302b9507ddb8fbf0801e9de5ce66fcf27c5e6142fc4ae415c7a1dc4cbe",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-bore-1.5",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "34e92364506f6fcfed109417b26f1550ebc1708a85c618b8e12c181306a11893",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-damper-1500-inlet",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "f22c09c129ebfffc7a029c6ca9c9fe6665e82e2cd78f50f1771405c0d7119ed6",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-resistor-10",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "89e18c06b586201e9477797eb58f5e8dfe99134662aa7946e3cd741ff9f0d044",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-capacitor-1",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "2e748bf2887073f10366f9b65941945d8fe9dd2d468c5aae69d0469b1aaa2305",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-inverted",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "5929dfb830678455687855a046d38ce3b11876655a88236ba5456d0e27e5a334",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-ci-22955-000-half-voltage",
+      "driver": "Knowles CI-22955-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "7faeb37455b96df466a72c557ecdc2734b641a21fb8167b2f2b322a3ad6fafa6",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-reference",
+      "driver": "Knowles RDI-34006-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "4e4a8f42c7c6a8be9a8f477513fb08d41cb746baa6cef28018efe0ad73d27922",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-straight",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "0832be02e9fcb21b577b701cbb2783f9e7e8aac3b54c47f38d7309a7be4e67aa",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-damper-680",
+      "driver": "Knowles RDI-34006-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "2f479595a0d2ac047ed2703c78dde388d0c0026ef04aa8e0b5d5a4576a793301",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-damper-1500",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "321cbffa894199b87f44dc997a858f03948aafa28f20ced252c1048ff04470c6",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-damper-2200",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "b00eccddf4fe0ed8fdb3c66bcddf7c73b3ea94ba0ac0993e9770b16641712c31",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-tube-6",
+      "driver": "Knowles RDI-34006-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "cc4cb39a02b7ddede262cde483d7893a5c17ed8d9d39c809a7eee3338545e799",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-tube-20",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "717f92929ef2aa8027d1c27e91dfd3368b00d690c14261d4871c08f2988a8c2a",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-bore-1.5",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "de1f98d48ca2b6de9f20a9114f3ec9fb1b9456bc59760f619d51359136f1cf23",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-damper-1500-inlet",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "ad9040dcdc2237df1df1d5090a732623e860d05b8d8b011d31c272c7e3f11c12",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-resistor-10",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "a01e93ae2f9f3060d51c7168bb816799d8d0242db4a3e4106828e9be4866cc79",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-capacitor-1",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "4790f221eb3914a59da39d6b6b3556c402de24e5fae47ffea582c0b2fc3e59b3",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-inverted",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "55027a13e5f67cf9500fabe6083ce1a9051458f2df6df29e07b5207d6e689a4b",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rdi-34006-000-half-voltage",
+      "driver": "Knowles RDI-34006-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "de9be70373acd53bea245c0257951934bfeaeef7a9f64c0c37bcb0a4ac279914",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-reference",
+      "driver": "Sonion 28UAP01",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "9a4cef5943701a8e4f561e5d29a7ebb96f528a49cd5f5f05e2cc726b8a6af947",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-straight",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "c80b3a2abb03212095e85cd58f2484ce85ad938fabea84e50505a7994356e0d2",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-damper-680",
+      "driver": "Sonion 28UAP01",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "74ad3e1f0eb6a38fedf0e660b1312b330f8c8c7067c3da77d14f9d246846a908",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-damper-1500",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "c9738052f191f32cbdeb4e451efacd97fd794300a79d37cb91cbc9bba33f46eb",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-damper-2200",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "6f484fe938dfa5d588cb1e589d4ebb79873b7d070fae385d3e194b06b2a8ae7a",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-tube-6",
+      "driver": "Sonion 28UAP01",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "3ccbc7c53622016121d46ad345c2533a54ae84587858fc8b1aa92a88e1778ef2",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-tube-20",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "7099827c4a2084455c5a2a201bb441d8b84875fb062c69ae32cf5b8ddc639f36",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-bore-1.5",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "e3090b63686f1296fb653a03d3d63d9c5e9a51b8aed1146e70cdcc13a5a4029e",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-damper-1500-inlet",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "cdf8d80d0075a89faa62d72649128eab279876fafa808fcc828d349fa8d59b17",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-resistor-10",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "905a6cb20c1c6ff618e7544ba7437ecf27bf4269d0043819bb9599332054d267",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-capacitor-1",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "70d6ad91ebe1745606beeae576ac5e1f1c8ddf8491f8c00232844989e0d264d1",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-inverted",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "f65662087dffd83114d3023f7ed7fcbe8640403ca858776dfefec4811af9f17d",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-28uap01-half-voltage",
+      "driver": "Sonion 28UAP01",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "d729b740252807632f576e936ab1ee3d38bdc0924ab831c81c5a442e9b1dfd7c",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-reference",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "3e98b0dc518e1dd746396b26965b6def6cc315be48be999bb7707e5c2072a2d9",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-straight",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "64d40af2da49fb89d75161efd5ef0283f0811403956f0da4fbe2e9deaa9f4b4f",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-damper-680",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "ed6f0a042400e70bb3f15a2f9fc2b1adb2edf6e9486854c18af4fda181378f87",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-damper-1500",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "b34e42e06168030c9ef4f1972da161ca87c59880b2d4a1170cf8178a7094176d",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-damper-2200",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "109f05a792582b32c86012b7b9379c465bebe93e7e4d3772391e6cf5408d3799",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-tube-6",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "df477f2332543dac4641ead5359b48c52699eef78b8411a0df1256fdb7521f1d",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-tube-20",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "13490fd19fb263729e75fa3c9bf2717f44d5f025803fc88abe272b13643981e5",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-bore-1.5",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "1fcc79c85002f78c83bb4a67fde3de9cc161f8df1bef588f3d7b03165d174c55",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-damper-1500-inlet",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "a0c866c8bc779dbcb2c438892b0301e52c39ea8a4e6d6c74d1c79bd63a61952c",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-resistor-10",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "0e4917f8ed456bf45e913a51939737455ad8d6c48ffa3695c344737a084a6cbc",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-capacitor-1",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "f522e314fd4023c1a908cc99841e6d252031612750134e00844ef2533f875f77",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-inverted",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "4966cdff632d1f61c4da737d9d0a78f1b80c9fd8e41fe4587b3d5649f27e0c0e",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-38d1xj007mi-8a-half-voltage",
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "f22ae7d90d510ab5499fb50211692f4e18f90d306f9d4d7833b2751983fac379",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-reference",
+      "driver": "Sonion EST65DA01",
+      "role": "fit",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "40c2e8a6ba1367948428616209f78c992cb3d5e50f587ad02b40b888893a9a9d",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-straight",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "6e3f5e7d0257d9cb9f101694362da660c0096a66adab892984f0e514d8244322",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-damper-680",
+      "driver": "Sonion EST65DA01",
+      "role": "fit",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "ea6545627539ca161ae02768406c9d1bd31caaef77964f287afefa8c2e405271",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-damper-1500",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "4b2d52647d02881d14d18f263823c34e8c2fe7eb5e42511b0209e6990508d8e9",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-damper-2200",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "d14a7877410ea7810f9c7f24de98b23af4fb050cf26428649041e10810250c23",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-tube-6",
+      "driver": "Sonion EST65DA01",
+      "role": "fit",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "eaa5e11be7df42f022e260008499b822601fc4273e636b746c385d9dcf453469",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-tube-20",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "1b3ce427692494984093f44a11f761a2914d9be814644b0d9e01758866d9fa91",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-bore-1.5",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "ceca9334aaa67afefc39b56cc07b4a15ba24ede7f61f0fe05ca2a165de9d6490",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-damper-1500-inlet",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "e813d41d3eb42a4368b4ecfeef81c285c259cd8c27e046df2d4b36c0bf15a50e",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-resistor-10",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "46c6919453551d5bf7f826c8617b832958b4dcbb031e0819f345a707c5176e65",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-capacitor-1",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "866238a6a0fd0384bebc2853bcb35248b5e3d245e8a09dd7c258e32782faf490",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-inverted",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "f2f9ed1ac2595527c0c3b45e0121b4555e51dc457acb058475f52f2b0e2e6ac7",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-est65da01-half-voltage",
+      "driver": "Sonion EST65DA01",
+      "role": "validation",
+      "band_hz": [
+        1000,
+        8000
+      ],
+      "setup_sha256": "28e2c62ad164b1d8c290bbce9ff5f445ed64d36cef1003ec987747b12d2f86d6",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-reference",
+      "driver": "Sonion 17A003",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "ee1622b6deb22d083babe1fd791ec180b7bfd7e640fa2910c4c7b0bc10aff171",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-straight",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "9fc186ef6501db0af885a2a6dd0de5ba2f8c008af7acc6ee41d29a9b854965bf",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-damper-680",
+      "driver": "Sonion 17A003",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "b38bb08163245b0088aa578004b1ea0f2f5e26c3248d3db200bda97b3f80bd39",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-damper-1500",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "865989709aa2c2463b98a30bc36e35f453b582187b2f57fe1a5c372c937cb331",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-damper-2200",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "5581bf05f892aac29191bf763529ce503f834f4ce2a52b83a435f8046c8a9f9c",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-tube-6",
+      "driver": "Sonion 17A003",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "777c2198492d11bfa47b73353224a976d496d8aa5d71c76cc89ed5e8110d394e",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-tube-20",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "ac7915b9089b5f0462357bbfa00ed7b9dd0b300ca307fed63ca4425318523cf3",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-bore-1.5",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "c45e261f573c0a4170c022c88d6664010121278fec499c195fcd930c7650f5ef",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-damper-1500-inlet",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "57d764eb34137f230cd12ac6956226b07d544b772c9be70b95a82be12c298942",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-resistor-10",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "b9d825dd7ea3d58cab8b00442aa181918af6ac5c1b8e42e6cbf0b5d69a949a11",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-capacitor-1",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "72915d5a3910c65e5e23b6a1bb361040e379b5d74d6d87d574b3348e9d014f04",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-inverted",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "19102afa00aa5b713abc25daa7546f0bb6f04f2dc83c22827ac01b6b81e9b26a",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-17a003-half-voltage",
+      "driver": "Sonion 17A003",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "87df82f34feb6381e6f9ecafdb9da5a958f953309fa75b4e58e6da175468dba8",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-reference",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "f16cf0a4e1b4a54abd05104daf9a1d1ee04765098b573e4fdd46a3b60821abe3",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-straight",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "2b65651beb5bd81e5ec43b0ac168a7f41b22857ca896ef26c5fe6ba951d81b76",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-damper-680",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "ab98758899a9ed2b5ecc56c8926d8df912eeabff88cbf67368b8203d001f1566",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-damper-1500",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "8f32f1fec565c2661089b61cfc03611e3041525fe59ec13538c682913e150a26",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-damper-2200",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "94d13a8aa3f3bec3c5549d9a6d3c5b8e448031f075d3dd20bbc81ab9e46f0c73",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-tube-6",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "63787d192db05eb126f7e67e7387fdf6671574c058b45762859226d15cd7bcf2",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-tube-20",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "1c2b35998698deed9bb52a5ce58f0d000bd084fed505376ec6217ac705671e2a",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-bore-1.5",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "3ed6324d482e3ab16d10f6d63fa2c00aa9dc627ddfb82f5419661f6883d478df",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-damper-1500-inlet",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "69c153c2cef4465a4b81d0fd981ffa3d3c5bfed701efc31e099af5aef9e552bb",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-resistor-10",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "e5c923543a05a3e4b64b69b1a025d0aff14cdbccf6611f36eb4e89cbbe75bb04",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-capacitor-1",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "a53eb1f4026604b01921ff24fc8cf51ca26883e429f41b23f2f9f16cab08a98f",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-inverted",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "370c43fd4580ae33c1a5c6e7a731afffaa149dc626e27835c4c1c252d6439342",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "sonion-33aj007i-9-half-voltage",
+      "driver": "Sonion 33AJ007i/9",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "d63ccfbab7d24a7a09cdcbf8bfe06a345d86024a75aa82bdddf99edf63379d9e",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-reference",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "80eca778daf37c0d8102be13ee227bd7b889ba269034a7912a403b8487fd0693",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-straight",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "56a2c23c14763c65518d24f16543c1997b888bb18071fc5d5ce811a6bb4a9ed3",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-damper-680",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "00253932f20696acf5992c967b120ab6df1b4a3676e2bb1bc3e95f28b851a3b8",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-damper-1500",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "e73462691709178896a5d3b4ef0971b25d1849f1c76885b226d9f25d00d28691",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-damper-2200",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "6804a5f708f376e6a1873b4659566d540c0495f7686d173ac310c2c96055f256",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-tube-6",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "9902180d12a97e0e699dc123c3adb170a12710b464b10010184c9f055b9a0de5",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-tube-20",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "8196e583d0b6c462a60e5fee9fdb734162a3955ba5cc16d036f762177c1cb7f5",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-bore-1.5",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "d9cf3a56c78a6992f19751ef35259ecfcf1e50b468162b3b55fd06c41b567aed",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-damper-1500-inlet",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "6642f3d113c7506aa33fb7ef427af2db64be4a0d2e49f71dbaace2f352c015cb",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-resistor-10",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "9078dfe19a403bb90359744907f8708cf910a3bf66ae345435a8831cf5560b78",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-capacitor-1",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "508fdcf05922f72249a044961f8f5679dbcbdc5602f91fa8afc154c5673d076e",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-inverted",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "6d1c8f5f5e465d472c13486b4a29bb0e2ac19c2969866846b0661a92d571cc78",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-hodvtec-31618-000-half-voltage",
+      "driver": "Knowles HODVTEC-31618-000",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "74c18e0868a8a1710860c69559627f3d896a4f1cb83ae6151ffd3d84e946ffe6",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-reference",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "4bf906297cb3792bf1c3504fdce13808cdd0bf672f230774835fff5c1e62e635",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-straight",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "53f12fb25ef4f6f9b4875268fabb26f65ab6675f2df8b9b674d3fd686694619e",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-damper-680",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "e59d5828c7ea07b394b97b1ff0f00aa9805049f93b76ea5aa04fb21f52cde5ba",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-damper-1500",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "aab3f916b2f9201c0db7e808ea0a51be3436341a77594afb3c03ecc4d7e38860",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-damper-2200",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "d5f587b78ac866f3bfbea62b6f4502bdefd763d3dd58b94a9cedac7d2593a1e8",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-tube-6",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "fit",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "8bc6ef80b5b2f3c4189b5ca7140299be49dc1cf76c91b56fec82eb8b4caa2357",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-tube-20",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "4fe8dc6f440d4fbf089251a2d2ca91531d66ed99c981aba20dc967879d77f227",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-bore-1.5",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "d32588baa11f2e5f78f144bd409e2939f6fa140b6a3110c814bceab1f04338ba",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-damper-1500-inlet",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "8497acae1c6d629f49431ce5392050da0eca29f8fe238d1b785499af1b672559",
+      "blockers": [
+        "No physical measurement file supplied",
+        "Paired undamped measurement is unavailable"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-resistor-10",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "41e85c6b1c91d4d9e728409b0dcd2e42a0e3e65ac59764939920703c41e04d38",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-capacitor-1",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "b46926f0f622216442eefe29313b3547d8e1616d75ad6cbeda90766bf6b95729",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-inverted",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "fba077a5d0bef003e0dcac4878ed5611a8358d93be6006ef602d554ddbb0c59a",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    },
+    {
+      "id": "knowles-rau-34832-b148-half-voltage",
+      "driver": "Knowles RAU-34832-B148",
+      "role": "validation",
+      "band_hz": [
+        100,
+        8000
+      ],
+      "setup_sha256": "9c984b70e38639e32fd2defcbe23a7be31538b62c628d2c02a55247970407f48",
+      "blockers": [
+        "No physical measurement file supplied"
+      ],
+      "failures": [],
+      "status": "AWAITING_MEASUREMENT"
+    }
+  ]
+}

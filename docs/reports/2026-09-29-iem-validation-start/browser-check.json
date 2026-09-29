@@ -1,0 +1,9 @@
+{
+  "model": "Sonion 17A003",
+  "input_voltage_v": "0.1",
+  "baseline_voltage_v": "0.07",
+  "voltage_mode": "common",
+  "status": "Simulation complete.",
+  "console_errors": [],
+  "scope": "Local fixture preview. Voltage edit, calculation and save/load verified. Export action reported success; the browser download event was not available to verify the downloaded file."
+}

@@ -1,0 +1,297 @@
+{
+  "retrieved_at": "2026-09-29T05:51:35.393432+00:00",
+  "access": "Read-only public Supabase REST; no login or write operations",
+  "table_counts": {
+    "iem_drivers": 10,
+    "iem_driver_measurements": 16,
+    "iem_driver_fr": 703,
+    "iem_driver_impedance": 240,
+    "iem_driver_measurement_paths": 30
+  },
+  "drivers": [
+    {
+      "manufacturer": "Knowles",
+      "model": "CI-22955-000",
+      "measurement_sets": [
+        {
+          "id": "c3cb756a-0aa7-46c1-a9f6-375681a53790",
+          "measurement_name": "Knowles CI-22955-000 Datasheet - Digitised",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Knowles CI-22955-000 Product Data Sheet",
+          "fixture": "IEC60318-4 (711) coupler with DB2012 adapter",
+          "coupler": "IEC 60318-4 / 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Frequency response and impedance digitised from the supplied Knowles CI-22955-000 manufacturer graph. 100 mVrms drive. IEC60318-4 (711) coupler with DB2012 adapter. Exact published 1 kHz anchors retained: 112 dB SPL and 80 ohm. Graph-derived values are approximate. Phase is not published.",
+          "fr_count": 56,
+          "impedance_count": 58,
+          "path_count": 2
+        }
+      ]
+    },
+    {
+      "manufacturer": "Knowles",
+      "model": "HODVTEC-31618-000",
+      "measurement_sets": [
+        {
+          "id": "2a793f6d-387c-4977-9445-b49cd825df97",
+          "measurement_name": "Knowles HODVTEC-31618-000 Datasheet - Digitised",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Knowles HODVTEC-31618-000 Product Data Sheet",
+          "fixture": "IEC60318-4 (711) coupler",
+          "coupler": "IEC 60318-4 / 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Frequency response and impedance digitised from the supplied Knowles HODVTEC-31618-000 manufacturer graph. 100 mVrms drive. IEC60318-4 (711) coupler. Exact published 1 kHz anchors retained: 123 dB SPL and 48 ohm. Graph-derived values are approximate. Phase is not published.",
+          "fr_count": 56,
+          "impedance_count": 58,
+          "path_count": 1
+        }
+      ]
+    },
+    {
+      "manufacturer": "Knowles",
+      "model": "RAU-34832-B148",
+      "measurement_sets": [
+        {
+          "id": "cfb680f3-917f-4bc5-94a3-aa4464f7b501",
+          "measurement_name": "Knowles RAU-34832-B148 Datasheet - 711 Hi-Res",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Knowles RAU-34832-B148 Datasheet",
+          "fixture": "GRAS 403 711 Hi-Res",
+          "coupler": "711 Hi-Res",
+          "drive_voltage_v": 0.1,
+          "notes": "Frequency response and impedance digitised from the Knowles RAU-34832-B148 manufacturer datasheet. FR measured with 100 mVrms using 711 Hi-Res GRAS 403. Exact published specification remains in the driver record: 103 dB SPL sensitivity and 14 ohm impedance at 10 kHz. Dense graph values are approximate digitisation. Phase not published.",
+          "fr_count": 56,
+          "impedance_count": 56,
+          "path_count": 1
+        }
+      ]
+    },
+    {
+      "manufacturer": "Knowles",
+      "model": "RDI-34006-000",
+      "measurement_sets": [
+        {
+          "id": "aff41887-bec2-4b3a-bfe8-134d44680c3c",
+          "measurement_name": "Knowles RDI-34006-000 Datasheet - 711 Hi-Res",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Knowles RDI-34006-000 Datasheet",
+          "fixture": "GRAS 403 711 Hi-Res",
+          "coupler": "711 Hi-Res",
+          "drive_voltage_v": 0.1,
+          "notes": "Frequency response and impedance digitised from the Knowles RDI-34006-000 manufacturer datasheet. FR measured with 100 mVrms using 711 Hi-Res GRAS 403. Exact published specification remains in the driver record: 124 dB SPL sensitivity and 25 ohm impedance at 1 kHz. Dense graph values are approximate digitisation. Phase not published.",
+          "fr_count": 56,
+          "impedance_count": 56,
+          "path_count": 1
+        }
+      ]
+    },
+    {
+      "manufacturer": "Sonion",
+      "model": "17A003",
+      "measurement_sets": [
+        {
+          "id": "7df5f548-bb75-4386-bbb3-b323f7a08696",
+          "measurement_name": "Sonion Typical Response Curve - Digitised",
+          "is_default": true,
+          "source_type": "datasheet",
+          "source_name": "Sonion 17A003 Data Sheet 3170-3013308 Version 2, page 3",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.07,
+          "notes": "Digitised from manufacturer plotted typical response. Approximate graph extraction; not a Hammer Craft measurement.",
+          "fr_count": 129,
+          "impedance_count": 0,
+          "path_count": 3
+        },
+        {
+          "id": "dbce223b-8f1c-4da4-a547-cdb296fa8de4",
+          "measurement_name": "Sonion Datasheet 3013308",
+          "is_default": false,
+          "source_type": "datasheet",
+          "source_name": "Sonion 17A003 Data Sheet - 3170-3013308 Version 2",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.07,
+          "notes": "Manufacturer conditions: 23 C, 50% RH. Datasheet dated 13-Feb-2008.",
+          "fr_count": 9,
+          "impedance_count": 2,
+          "path_count": 3
+        }
+      ]
+    },
+    {
+      "manufacturer": "Sonion",
+      "model": "2356",
+      "measurement_sets": [
+        {
+          "id": "e6625d16-81c8-4a01-8908-fc8f4bf6c2f0",
+          "measurement_name": "Sonion Typical Response Curve - Digitised - 2356",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Sonion 2356 Data Sheet 3230-3018235 Version 2",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Approximate digitisation of manufacturer Typical response curve. Magnitude only; phase not supplied. Reference acoustic path copied from source datasheet measurement.",
+          "fr_count": 38,
+          "impedance_count": 0,
+          "path_count": 2
+        },
+        {
+          "id": "84ce9833-304c-41ec-a180-583e020fbeee",
+          "measurement_name": "Sonion Datasheet 3018235",
+          "is_default": false,
+          "source_type": "datasheet",
+          "source_name": "Sonion 2356 Data Sheet 3230-3018235 Version 2",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Manufacturer specification landmarks. Open vent.",
+          "fr_count": 10,
+          "impedance_count": 2,
+          "path_count": 2
+        }
+      ]
+    },
+    {
+      "manufacturer": "Sonion",
+      "model": "28UAP01",
+      "measurement_sets": [
+        {
+          "id": "6dab9b67-2852-4590-a007-d821a3f821b4",
+          "measurement_name": "Sonion Typical Response Curve - Digitised - 28UAP01",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Sonion 28UAP01 Data Sheet 3281-3024702 Version 1",
+          "fixture": "10.0 mm x 1.0 mm ID tubing",
+          "coupler": "2 cc coupler",
+          "drive_voltage_v": 0.16,
+          "notes": "Approximate digitisation of manufacturer Typical response curve. Magnitude only; phase not supplied. Reference acoustic path copied from source datasheet measurement.",
+          "fr_count": 27,
+          "impedance_count": 0,
+          "path_count": 1
+        },
+        {
+          "id": "8c7cc2e6-e03f-4672-8609-b4b22ed01ce0",
+          "measurement_name": "Sonion Datasheet 3024702",
+          "is_default": false,
+          "source_type": "datasheet",
+          "source_name": "Sonion 28UAP01 Data Sheet 3281-3024702 Version 1",
+          "fixture": "10.0 mm x 1.0 mm ID tubing",
+          "coupler": "2 cc coupler",
+          "drive_voltage_v": 0.16,
+          "notes": "Constant voltage drive. Parallel configuration.",
+          "fr_count": 6,
+          "impedance_count": 2,
+          "path_count": 1
+        }
+      ]
+    },
+    {
+      "manufacturer": "Sonion",
+      "model": "33AJ007i/9",
+      "measurement_sets": [
+        {
+          "id": "1ef82740-1400-4cd6-b5a6-52fa0af6557a",
+          "measurement_name": "Sonion Typical Response Curve - Digitised - 33AJ007i/9",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Sonion 33AJ007i/9 Data Sheet 3330-3101808 Version 1",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Approximate digitisation of manufacturer Typical response curve. Magnitude only; phase not supplied. Reference acoustic path copied from source datasheet measurement.",
+          "fr_count": 41,
+          "impedance_count": 0,
+          "path_count": 2
+        },
+        {
+          "id": "d708758d-7cf6-486f-966d-49358a38088a",
+          "measurement_name": "Sonion Datasheet 3101808",
+          "is_default": false,
+          "source_type": "datasheet",
+          "source_name": "Sonion 33AJ007i/9 Data Sheet 3330-3101808 Version 1",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Manufacturer specification landmarks.",
+          "fr_count": 10,
+          "impedance_count": 2,
+          "path_count": 2
+        }
+      ]
+    },
+    {
+      "manufacturer": "Sonion",
+      "model": "38D1XJ007Mi/8a",
+      "measurement_sets": [
+        {
+          "id": "892bcfc5-88c3-4993-b259-bd4a7eff902b",
+          "measurement_name": "Sonion Typical Response Curve - Digitised - 38D1XJ007Mi/8a",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Sonion 38D1XJ007Mi/8a Data Sheet 3382-3202936 Version 1",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Approximate digitisation of manufacturer Typical response curve. Magnitude only; phase not supplied. Reference acoustic path copied from source datasheet measurement.",
+          "fr_count": 31,
+          "impedance_count": 0,
+          "path_count": 2
+        },
+        {
+          "id": "d7c1494c-c06a-4020-b0f1-2a61b2003693",
+          "measurement_name": "Sonion Datasheet 3202936",
+          "is_default": false,
+          "source_type": "datasheet",
+          "source_name": "Sonion 38D1XJ007Mi/8a Data Sheet 3382-3202936 Version 1",
+          "fixture": "4.5 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Measured with open vent holes. Integrated Acupass damper remains part of receiver.",
+          "fr_count": 5,
+          "impedance_count": 2,
+          "path_count": 2
+        }
+      ]
+    },
+    {
+      "manufacturer": "Sonion",
+      "model": "EST65DA01",
+      "measurement_sets": [
+        {
+          "id": "80724e60-dd29-48ba-9839-95719f2d0188",
+          "measurement_name": "Sonion EST65DA01 Typical Response - IEC711",
+          "is_default": true,
+          "source_type": "datasheet_digitised",
+          "source_name": "Sonion EST65DA01 Datasheet",
+          "fixture": "3 mm x 1.4 mm ID + 11 mm x 1.9 mm ID acoustic termination",
+          "coupler": "IEC 60318-4 / IEC 711",
+          "drive_voltage_v": 0.1,
+          "notes": "Digitised from Sonion EST65DA01 manufacturer typical response graph. Purple trace. 3 mm x 1.4 mm ID + 11 mm x 1.9 mm ID into IEC 60318-4 / IEC 711. 100 mVrms low impedance source. Magnitude only; acoustic phase not published.",
+          "fr_count": 84,
+          "impedance_count": 0,
+          "path_count": 3
+        },
+        {
+          "id": "8e6ec3d2-3683-4bc2-a441-981c468b0d42",
+          "measurement_name": "Sonion EST65DA01 Typical Response - 0.4cc",
+          "is_default": false,
+          "source_type": "datasheet_digitised",
+          "source_name": "Sonion EST65DA01 Datasheet",
+          "fixture": "5 mm x 1.4 mm ID acoustic termination",
+          "coupler": "0.4 cc coupler",
+          "drive_voltage_v": 0.1,
+          "notes": "Digitised from Sonion EST65DA01 manufacturer typical response graph. Orange trace. 5 mm x 1.4 mm ID into 0.4 cc coupler. 100 mVrms low impedance source. Published specification landmarks are stored at their exact stated values. Magnitude only; acoustic phase not published.",
+          "fr_count": 89,
+          "impedance_count": 2,
+          "path_count": 2
+        }
+      ]
+    }
+  ]
+}

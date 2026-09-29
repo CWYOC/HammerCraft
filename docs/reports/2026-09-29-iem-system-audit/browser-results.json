@@ -1,0 +1,177 @@
+{
+  "environment": "Isolated localhost fixture preview with current repository assets and downloaded deployed WASM; no authenticated production session.",
+  "fixture": "12 mm total tube, 2 mm ID, 1500 CGS acoustic-ohm damper at 6 mm; each driver uses its reference load.",
+  "drivers": [
+    {
+      "model": "CI-22955-000",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Knowles CI-22955-000",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "HODVTEC-31618-000",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Knowles HODVTEC-31618-000",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "RAU-34832-B148",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Knowles RAU-34832-B148",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "RDI-34006-000",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Knowles RDI-34006-000",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "17A003",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Sonion 17A003",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "2356",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Sonion 2356",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "28UAP01",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Sonion 28UAP01",
+      "outputLoad": "closed_cavity",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "33AJ007i/9",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Sonion 33AJ007i/9",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "38D1XJ007Mi/8a",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Sonion 38D1XJ007Mi/8a",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    },
+    {
+      "model": "EST65DA01",
+      "canvasHeight": 498,
+      "canvasWidth": 1136,
+      "engine": "Hammer Craft Acoustic Engine 0.18.0 · BASELINE + MODEL DELTA",
+      "mode": "relative",
+      "name": "Sonion EST65DA01",
+      "outputLoad": "generic_711_approx",
+      "polarityBadge": "POLARITY INVERTED · 180°",
+      "simulation": "Simulation complete.",
+      "persistence": {
+        "comparison": false,
+        "polarity": true
+      },
+      "renderedModel": true,
+      "pass": true
+    }
+  ],
+  "console": []
+}

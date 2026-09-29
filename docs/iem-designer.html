@@ -60,6 +60,7 @@
                     <button id="iemNewProjectButton" class="outline-button" type="button">NEW</button>
                     <button id="iemSaveProjectButton" class="primary-button" type="button">SAVE</button>
                     <button id="iemLoadProjectButton" class="outline-button" type="button">LOAD</button>
+                    <button id="iemExportValidationButton" class="outline-button" type="button">EXPORT VALIDATION SETUP</button>
                 </div>
             </div>
 
@@ -71,6 +72,7 @@
                 <div class="iem-display-grid">
                     <label>SPL MODE<select id="iemSplMode"><option value="relative">Relative / normalised</option><option value="absolute">Absolute SPL</option></select></label>
                     <label>NORMALISE AT Hz<input id="iemNormalizeFrequency" type="number" min="20" max="20000" value="1000"></label>
+                    <label>COMMON INPUT · V RMS<input id="iemInputVoltage" type="number" min="0.000001" step="any" value="0.1"></label>
                     <label>TEMPERATURE °C<input id="iemTemperature" type="number" value="20" step="0.1"></label>
                     <label>HUMIDITY %<input id="iemHumidity" type="number" value="50" min="0" max="100"></label>
                     <label>OUTPUT LOAD<select id="iemAcousticLoadType"><option value="anechoic">Anechoic / matched</option><option value="closed_cavity">Closed cavity</option><option value="cavity_with_leak">Cavity with leak</option><option value="radiation">Free radiation</option><option value="generic_711_approx">Simplified 711 (experimental)</option></select></label>
@@ -206,7 +208,7 @@
 <script src="auth.js?v=40"></script>
 <script src="wasm-loader.js?v=19"></script>
 <script src="cad-circuit.js?v=1"></script>
-<script src="iem-designer.js?v=57"></script>
+<script src="iem-designer.js?v=58"></script>
 <script src="iem-designer-page.js?v=48"></script>
 </body>
 </html>

@@ -1,0 +1,56 @@
+[
+  {
+    "path": "iem-designer.html",
+    "url": "https://www.hammer-craft.co.uk/iem-designer.html",
+    "status": 200,
+    "bytes": 16927,
+    "content_type": "text/html; charset=utf-8",
+    "sha256": "bc6e10bd82473b6f0ed6141abb83d7c6f77e0eece7318b01237abfbb28fd8fde",
+    "matches_checkout": true
+  },
+  {
+    "path": "iem-designer.js",
+    "url": "https://www.hammer-craft.co.uk/iem-designer.js",
+    "status": 200,
+    "bytes": 215019,
+    "content_type": "application/javascript; charset=utf-8",
+    "sha256": "0f33fa1cb839b63817df00f5a371643c7fdddf399233f1e042d1a82accc9a9ed",
+    "matches_checkout": true
+  },
+  {
+    "path": "cad-circuit.js",
+    "url": "https://www.hammer-craft.co.uk/cad-circuit.js",
+    "status": 200,
+    "bytes": 13086,
+    "content_type": "application/javascript; charset=utf-8",
+    "sha256": "c43f62ae453543cfdae74860c509229fb3f84089b6e055b4271e9bc511d42d80",
+    "matches_checkout": true
+  },
+  {
+    "path": "wasm-loader.js",
+    "url": "https://www.hammer-craft.co.uk/wasm-loader.js",
+    "status": 200,
+    "bytes": 1551,
+    "content_type": "application/javascript; charset=utf-8",
+    "sha256": "6276e35860fde282f18b278bd76e96df0eba2aa058a6e82cab00d42d63974711",
+    "matches_checkout": true
+  },
+  {
+    "path": "wasm/acoustic_engine.js",
+    "url": "https://www.hammer-craft.co.uk/wasm/acoustic_engine.js",
+    "status": 200,
+    "bytes": 10330,
+    "content_type": "application/javascript; charset=utf-8",
+    "sha256": "81fa288abcba74b8c04745f9ee18690dd1f6356608777b8c1840a4fd8ab2f07b",
+    "matches_checkout": true
+  },
+  {
+    "path": "wasm/acoustic_engine_bg.wasm",
+    "url": "https://www.hammer-craft.co.uk/wasm/acoustic_engine_bg.wasm",
+    "status": 200,
+    "bytes": 363542,
+    "content_type": "application/wasm",
+    "sha256": "6821ed4758d1bb9175ee42f8117e5b6bd6abd2f020b7d1d9975382f95c782bde",
+    "matches_checkout": false
+  }
+]

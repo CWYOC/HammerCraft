@@ -41,7 +41,7 @@
     };
 
     const projectDefaults = {
-        iemSplMode: "relative", iemNormalizeFrequency: "1000",
+        iemSplMode: "relative", iemNormalizeFrequency: "1000", iemInputVoltage: "0.1",
         iemTemperature: "20", iemHumidity: "50", iemAcousticLoadType: "anechoic",
         iemCouplerVolume: "2000", iemLoadLossResistance: "0", iemLeakResistance: "500000000",
         iemTargetProduct: "", iemShowTarget: true, iemShowIndividual: true, iemShowCombined: true,
@@ -86,6 +86,8 @@
             sensitivity: 0,
             sensitivityRef: 1000,
             responseAbsolute: false,
+            measurementVoltageV: null,
+            voltageMode: "reference",
             gain: 0,
             polarity: 1,
             measurement: [],
@@ -106,6 +108,10 @@
             if (d[key] === undefined || d[key] === null) d[key] = value;
         }
         if (!Array.isArray(d.measurement)) d.measurement = [];
+        // Old projects may already contain a manual gain correction. Keep their
+        // levels until the user explicitly enters a voltage and selects common input.
+        if (d.voltageMode == null) d.voltageMode = "reference";
+        if (d.measurementVoltageV === undefined) d.measurementVoltageV = null;
         if (!Array.isArray(d.impedanceCurve)) d.impedanceCurve = [];
         // Migration for projects saved by the v0.6 ordered circuit editor.
         if (Array.isArray(d.circuit)) {
@@ -238,15 +244,25 @@
         return 331.3 + 0.606 * num($("iemTemperature")?.value, 20) + 0.0124 * num($("iemHumidity")?.value, 50);
     }
 
+    function voltageCorrectionDb(d) {
+        if (d.voltageMode !== "common") return 0;
+        const input = Number($("iemInputVoltage")?.value);
+        const measured = Number(d.measurementVoltageV);
+        if (!(input > 0 && measured > 0 && Number.isFinite(input) && Number.isFinite(measured))) {
+            throw new Error(`${d.name}: common input requires positive input and measurement voltages.`);
+        }
+        return 20 * Math.log10(input / measured);
+    }
+
     function rawDb(d, frequency) {
         if (d.measurement.length) {
             let value = interp(d.measurement, frequency);
             if (!d.responseAbsolute && d.sensitivity !== 0) {
                 value = value - interp(d.measurement, d.sensitivityRef) + d.sensitivity;
             }
-            return value;
+            return value + voltageCorrectionDb(d);
         }
-        return d.sensitivity || 0;
+        return (d.sensitivity || 0) + voltageCorrectionDb(d);
     }
 
     function impedanceAt(d, frequency) {
@@ -469,7 +485,7 @@
             const h = circuitH(d, frequency);
             const acoustic = acousticDbPhase(d, frequency);
             const amplitude = 10 ** ((rawDb(d, frequency) + d.gain + acoustic.db) / 20) * cabs(h);
-            const measuredPhase = d.databaseDriverId ? 0 : interp(d.measurement, frequency, "phase") * Math.PI / 180;
+            const measuredPhase = interp(d.measurement, frequency, "phase") * Math.PI / 180;
             const phase = measuredPhase + cphase(h) + acoustic.phase + (d.polarity < 0 ? Math.PI : 0);
             return {
                 frequency,
@@ -746,18 +762,19 @@
                     name: d.name,
                     driver_type: ({ dd: "dynamic", ba: "balanced_armature", planar: "planar", magnetostatic: "magnetostatic", bc: "bone_conduction" }[d.type] || "other"),
                     nominal_impedance_ohm: d.impedance,
-                    sensitivity_db: hasDatabaseBaseline ? 0 : d.sensitivity,
+                    // Convert level and voltage before sending the baseline, so
+                    // optimizer gain remains an independent tuning parameter.
+                    sensitivity_db: 0,
                     sensitivity_reference_hz: d.sensitivityRef,
-                    response_absolute_spl: hasDatabaseBaseline ? includeMeasuredBaseline : d.responseAbsolute,
+                    response_absolute_spl: hasDatabaseBaseline ? includeMeasuredBaseline : true,
                     gain_db: hasDatabaseBaseline && !includeMeasuredBaseline ? 0 : d.gain,
                     polarity_inverted: d.polarity < 0,
                     response: hasDatabaseBaseline && !includeMeasuredBaseline
                         ? []
                         : measurement.map(p => ({
                             frequency_hz: p.frequency,
-                            db: hasDatabaseBaseline ? rawDb(d, p.frequency) : p.db,
-                            // Match the forward pipeline: database measurements supply magnitude only.
-                            phase_deg: hasDatabaseBaseline ? 0 : p.phase || 0,
+                            db: rawDb(d, p.frequency),
+                            phase_deg: p.phase || 0,
                         })),
                     impedance: d.impedanceCurve.map(p => ({ frequency_hz: p.frequency, magnitude_ohm: p.ohm, phase_deg: p.phase || 0 })),
                     electrical: [
@@ -793,6 +810,7 @@
         const positive = value => numeric(value) && Number(value) > 0;
         const nonnegative = value => numeric(value) && Number(value) >= 0;
         if (!state.drivers.length) errors.push("Add a driver path before calculating.");
+        if (!positive($("iemInputVoltage").value)) errors.push("Input voltage must be greater than zero.");
         if (!numeric($("iemTemperature").value) || Number($("iemTemperature").value) <= -273.15) errors.push("Enter a valid temperature above absolute zero.");
         if (!nonnegative($("iemHumidity").value) || Number($("iemHumidity").value) > 100) errors.push("Humidity must be between 0 and 100%.");
         const loadType = $("iemAcousticLoadType").value;
@@ -801,6 +819,8 @@
         if (loadType === "cavity_with_leak" && !positive($("iemLeakResistance").value)) errors.push("Leak resistance must be greater than zero.");
         for (const d of state.drivers) {
             ensureDriverShape(d);
+            if (!["reference", "common"].includes(d.voltageMode)) errors.push(`${d.name}: select a valid voltage mode.`);
+            if (d.voltageMode === "common" && !positive(d.measurementVoltageV)) errors.push(`${d.name}: enter the baseline measurement voltage before using common input.`);
             const referenceError = databaseReferenceError(d);
             if (referenceError) errors.push(`${d.name}: acoustic prediction unavailable. ${referenceError} Add verified measurement-fixture data to the driver reference before simulating.`);
             if (!["ideal_pressure", "estimated_resistance", "custom_resistance", "resonant"].includes(d.sourceModel)) errors.push(`${d.name}: select a valid source model.`);
@@ -882,9 +902,7 @@
                     return response.map(point => ({
                         frequency: point.frequency,
                         db: rawDb(d, point.frequency) + point.db + num(d.gain),
-                        // Manufacturer phase is currently unavailable for the
-                        // digitised datasets, so model phase is retained.
-                        phase: point.phase,
+                        phase: point.phase + interp(d.measurement, point.frequency, "phase"),
                     }));
                 };
                 const composedDrivers = rust.drivers.slice(0, state.drivers.length)
@@ -922,7 +940,7 @@
                     if(measured.length<2)return null;
                     const lo=measured[0].frequency, hi=measured[measured.length-1].frequency;
                     const errorCurve=response.filter(p=>Number.isFinite(p.frequency)&&Number.isFinite(p.db)&&p.frequency>=lo&&p.frequency<=hi).map(p=>{
-                        const baselineDb=interp(measured,p.frequency)+num(d.gain);
+                        const baselineDb=rawDb(d,p.frequency)+num(d.gain);
                         return{frequency:p.frequency,errorDb:p.db-baselineDb,predictedDb:p.db,baselineDb};
                     }).filter(p=>Number.isFinite(p.errorDb));
                     if(!errorCurve.length)return null;
@@ -1052,7 +1070,7 @@
                 if ($("iemShowIndividual")?.checked && d?.databaseDriverId && d.measurement?.length > 1) {
                     const baseline = d.measurement.map(point => ({
                         frequency: point.frequency,
-                        db: point.db,
+                        db: rawDb(d, point.frequency),
                         phase: point.phase || 0,
                     }));
                     datasets.push({
@@ -1174,6 +1192,9 @@
 
     function updateModelNotes() {
         const notes = [];
+        const unscaled = state.drivers.filter(d => d.voltageMode !== "common").map(d => d.name);
+        if (unscaled.length) notes.push(`Reference-level drivers (not scaled to the common input voltage): ${unscaled.join(", ")}. Enter their measurement voltage and select Common input to compare absolute levels. For older projects, remove any manual voltage correction from Gain before switching.`);
+        if (state.drivers.some(d => d.measurement.length && (!d.baselinePhaseMeasured || d.measurement.some(p => !Number.isFinite(p.phase))))) notes.push("Some baseline phase data is missing or its provenance is unknown. Missing phase is assumed zero; multi-driver interference is not physically validated.");
         if (state.drivers.some(d => d.sourceModel === "estimated_resistance")) notes.push("Acoustic prediction uses an estimated source resistance, not a measured receiver model. Tube changes remain approximate.");
         if (state.drivers.some(d => d.sourceModel === "ideal_pressure")) notes.push("Ideal-pressure source selected: zero source impedance can exaggerate tube/coupler resonances.");
         if (state.drivers.some(d => d.sourceModel === "custom_resistance")) notes.push("Custom source resistance is frequency-independent; it does not describe the receiver's full acoustic impedance.");
@@ -1236,7 +1257,10 @@
                             <label>SENSITIVITY dB SPL<input data-f="sensitivity" type="number" value="${d.sensitivity}" step="0.1"></label>
                             <label>SENSITIVITY REF Hz<input data-f="sensitivityRef" type="number" value="${d.sensitivityRef}"></label>
                             <label>FR DATA TYPE<select data-f="responseAbsolute"><option value="relative" ${!d.responseAbsolute ? "selected" : ""}>Relative</option><option value="absolute" ${d.responseAbsolute ? "selected" : ""}>Absolute SPL</option></select></label>
+                            <label>BASELINE VOLTAGE · V RMS<input data-f="measurementVoltageV" type="number" min="0.000001" step="any" value="${esc(d.measurementVoltageV ?? "")}" placeholder="Unknown"></label>
+                            <label>VOLTAGE MODE<select data-f="voltageMode"><option value="reference" ${d.voltageMode === "reference" ? "selected" : ""}>Keep reference level</option><option value="common" ${d.voltageMode === "common" ? "selected" : ""}>Common input voltage</option></select></label>
                         </div>
+                        <p class="iem-field-note">Baseline voltage is the voltage across the receiver terminals when its FR or sensitivity was measured. Common input scales this baseline before the circuit and acoustic path. Gain remains additional tuning; remove any manual voltage correction before enabling common input on an older project.</p>
                         <div class="iem-driver-grid" style="margin-top:12px">
                             <label>FR / PHASE FILE<input type="file" data-fr-file="${d.id}" accept=".txt,.csv,.frd"></label>
                             <label>IMPEDANCE FILE<input type="file" data-z-file="${d.id}" accept=".txt,.csv,.zma"></label>
@@ -2492,7 +2516,8 @@
 
     function syncDriverField(d, input) {
         const key = input.dataset.f;
-        if (key === "name" || key === "type" || key === "sourceModel") d[key] = input.value;
+        if (key === "name" || key === "type" || key === "sourceModel" || key === "voltageMode") d[key] = input.value;
+        else if (key === "measurementVoltageV") d[key] = input.value === "" ? null : Number(input.value);
         else if (key === "polarity") d.polarity = input.type === "checkbox" ? (input.checked ? -1 : 1) : num(input.value, 1);
         else if (key === "responseAbsolute") d.responseAbsolute = input.value === "absolute";
         else d[key] = num(input.value, d[key]);
@@ -2742,9 +2767,15 @@
         try {
             const points = await parseFile(file, mode);
             if (!state.drivers.includes(d) || revision !== state.importRevisions.get(key)) return;
-            if (mode === "z") d.impedanceCurve = points;
+            if (mode === "z") {
+                d.impedanceCurve = points;
+                d.impedancePhaseMeasured = points.every(p => Number.isFinite(p.phase));
+            }
             else {
                 d.measurement = points;
+                d.baselinePhaseMeasured = points.every(p => Number.isFinite(p.phase));
+                d.measurementVoltageV = null;
+                d.voltageMode = "reference";
                 // A user FR upload has its own phase and measurement conditions.
                 // Do not apply the database sample's reference correction to it.
                 for (const field of ["databaseDriverId", "databaseMeasurementId", "databaseSource", "databaseSparseResponse",
@@ -2771,8 +2802,8 @@
             const columns = line.split(/[\s,;\t]+/).filter(Boolean);
             const frequency = +columns[0];
             const value = +columns[1];
-            const phase = columns[2] === undefined ? 0 : Number(columns[2]);
-            if (Number.isFinite(frequency) && Number.isFinite(value) && Number.isFinite(phase) && frequency > 0 && (mode !== "z" || value > 0)) {
+            const phase = columns[2] === undefined ? null : Number(columns[2]);
+            if (Number.isFinite(frequency) && Number.isFinite(value) && (phase === null || Number.isFinite(phase)) && frequency > 0 && (mode !== "z" || value > 0)) {
                 output.set(frequency, mode === "z"
                     ? { frequency, ohm: value, phase }
                     : { frequency, db: value, phase });
@@ -2813,15 +2844,19 @@
         d.sensitivity = num(row.sensitivity_db, 0);
         d.sensitivityRef = 1000;
         d.responseAbsolute = true;
+        d.measurementVoltageV = finitePositive(row.drive_voltage_v) || null;
+        d.voltageMode = d.measurementVoltageV ? "common" : "reference";
+        d.baselinePhaseMeasured = Boolean(row.fr?.length && row.fr.every(p => Number.isFinite(p.phase_deg)));
+        d.impedancePhaseMeasured = Boolean(row.impedance_curve?.length && row.impedance_curve.every(p => Number.isFinite(p.phase_deg)));
         d.measurement = (row.fr || []).map(p => ({
             frequency: num(p.frequency_hz),
             db: num(p.magnitude_db),
-            phase: num(p.phase_deg, 0),
+            phase: p.phase_deg == null ? null : num(p.phase_deg, 0),
         })).filter(p => p.frequency > 0).sort((a, b) => a.frequency - b.frequency);
         d.impedanceCurve = (row.impedance_curve || []).map(p => ({
             frequency: num(p.frequency_hz),
             ohm: num(p.impedance_ohm),
-            phase: num(p.phase_deg, 0),
+            phase: p.phase_deg == null ? null : num(p.phase_deg, 0),
         })).filter(p => p.frequency > 0 && p.ohm > 0).sort((a, b) => a.frequency - b.frequency);
         d.databaseDriverId = row.id;
         d.databaseManufacturer = row.manufacturer;
@@ -2933,6 +2968,7 @@
                 measurement_name: set?.measurement_name || null,
                 source_name: set?.source_name || null,
                 coupler: set?.coupler || null,
+                drive_voltage_v: set?.drive_voltage_v ?? null,
                 fr,
                 impedance_curve,
                 reference_path,
@@ -3476,11 +3512,45 @@
         }
     }
 
+    function validationSetup() {
+        syncAll();
+        const errors = [...physicalInputErrors(), ...state.drivers.flatMap(d =>
+            window.HCCircuit.compile(d.circuit).errors.map(message => `${d.name}: ${message}`))];
+        if (errors.length) throw new Error(errors.join(" "));
+        return {
+            schema_version: 1,
+            input_voltage_v: Number($("iemInputVoltage").value),
+            request: rustRequest(logFreq(), true),
+            drivers: state.drivers.map(d => ({
+                id: d.id, name: d.name, voltage_mode: d.voltageMode,
+                measurement_voltage_v: d.measurementVoltageV,
+                baseline_band_hz: d.measurement.length > 1 ? [d.measurement[0].frequency, d.measurement.at(-1).frequency] : null,
+                measured_phase: d.baselinePhaseMeasured === true && d.measurement.length > 1 && d.measurement.every(p => Number.isFinite(p.phase)),
+                measured_impedance_phase: d.impedancePhaseMeasured === true && d.impedanceCurve.length > 1 && d.impedanceCurve.every(p => Number.isFinite(p.phase)),
+                reference_status: d.databaseDriverId ? referenceInfo(d).status : "USER BASELINE",
+                source_model: d.sourceModel,
+            })),
+        };
+    }
+
+    function exportValidationSetup() {
+        try {
+            const blob = new Blob([JSON.stringify(validationSetup(), null, 2) + "\n"], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url; link.download = "iem-validation-setup.json"; link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            $("iemProjectMessage").textContent = "Validation setup exported. Record the actual assembly and measurements separately; this file is a prediction setup, not measured evidence.";
+        } catch (error) {
+            $("iemProjectMessage").textContent = `Unable to export validation setup: ${error.message}`;
+        }
+    }
+
     function saveProject() {
         syncAll();
         try {
             localStorage.setItem("hc_iem_project", JSON.stringify({
-                version: 2,
+                version: 3,
                 name: $("iemProjectName").value,
                 drivers: state.drivers,
                 target: state.target,
@@ -3587,11 +3657,12 @@
         $("iemCalculateButton").onclick = calculate;
         $("iemShowValidationError").onchange = draw;
         $("iemSaveProjectButton").onclick = saveProject;
+        $("iemExportValidationButton").onclick = exportValidationSetup;
         $("iemLoadProjectButton").onclick = loadProject;
         $("iemNewProjectButton").onclick = newProject;
         $("iemTargetProduct").onchange = event => loadTargetProduct(event.target.value);
         ["iemSplMode", "iemNormalizeFrequency", "iemShowTarget", "iemShowIndividual", "iemShowCombined", "iemShowUndamped"].forEach(id => $(id).onchange = draw);
-        ["iemTemperature", "iemHumidity", "iemAcousticLoadType", "iemCouplerVolume", "iemLoadLossResistance", "iemLeakResistance"].forEach(id => {
+        ["iemInputVoltage", "iemTemperature", "iemHumidity", "iemAcousticLoadType", "iemCouplerVolume", "iemLoadLossResistance", "iemLeakResistance"].forEach(id => {
             $(id).onchange = () => {
                 // A previous unity check no longer describes this load/environment.
                 state.drivers.forEach(d => d.referenceValidationMode = false);

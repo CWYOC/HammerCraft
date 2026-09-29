@@ -1,0 +1,92 @@
+[
+  {
+    "driver": "Sonion 2356",
+    "cases": 16,
+    "measurement_voltage_v": 0.1,
+    "fixture": "IEC 711",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Knowles CI-22955-000",
+    "cases": 13,
+    "measurement_voltage_v": 0.1,
+    "fixture": "IEC 60318-4 / 711",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Knowles RDI-34006-000",
+    "cases": 13,
+    "measurement_voltage_v": 0.1,
+    "fixture": "711 Hi-Res",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Sonion 28UAP01",
+    "cases": 13,
+    "measurement_voltage_v": 0.16,
+    "fixture": "2 cc coupler",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Sonion 38D1XJ007Mi/8a",
+    "cases": 13,
+    "measurement_voltage_v": 0.1,
+    "fixture": "IEC 711",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Sonion EST65DA01",
+    "cases": 13,
+    "measurement_voltage_v": 0.1,
+    "fixture": "IEC 60318-4 / IEC 711",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Only 1–8 kHz pilot; a characterized extended-frequency fixture and transformer conditions are still needed for its intended upper band."
+  },
+  {
+    "driver": "Sonion 17A003",
+    "cases": 13,
+    "measurement_voltage_v": 0.07,
+    "fixture": "IEC 711",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Sonion 33AJ007i/9",
+    "cases": 13,
+    "measurement_voltage_v": 0.1,
+    "fixture": "IEC 711",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Knowles HODVTEC-31618-000",
+    "cases": 13,
+    "measurement_voltage_v": 0.1,
+    "fixture": "IEC 60318-4 / 711",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  },
+  {
+    "driver": "Knowles RAU-34832-B148",
+    "cases": 13,
+    "measurement_voltage_v": 0.1,
+    "fixture": "711 Hi-Res",
+    "measured_fr_phase": false,
+    "physical_status": "AWAITING_MEASUREMENTS",
+    "additional_scope": "Pilot band only; low bass, upper treble and assembly validation remain separate."
+  }
+]
