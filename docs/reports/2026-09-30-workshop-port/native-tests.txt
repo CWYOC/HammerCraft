@@ -1,0 +1,9 @@
+build/driver_selection_tests
+Driver selection tests passed
+build/iem_driver_path_tests
+Checking driver move and machining transaction...
+Checking smooth driver rotation...
+Checking right-side driver remains selected...
+IEM smooth driver path tests passed
+build/implicit_surface_tests
+Implicit surface topology, deterministic parallel sampling, and bounds-cache tests passed

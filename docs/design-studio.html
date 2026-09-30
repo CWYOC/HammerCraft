@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Design Studio | Hammer Craft</title>
+        <link rel="icon" href="assets/favicon-32.png" />
+        <link rel="stylesheet" href="design-studio.css?v=1" />
+    </head>
+    <body>
+        <header class="studio-header">
+            <a href="index.html">HAMMER CRAFT</a><span>IEM / DESIGN STUDIO</span
+            ><a href="admin.html">ADMIN ↗</a>
+        </header>
+        <main>
+            <div class="studio-heading">
+                <div>
+                    <span class="eyebrow"
+                        >ONE PROJECT · ASSEMBLY / CIRCUIT / ACOUSTICS</span
+                    >
+                    <h1>Design <em>studio.</em></h1>
+                    <p>
+                        Build the assembly, connect each driver to its circuit,
+                        and use the 3D tube dimensions in your response
+                        calculation.
+                    </p>
+                </div>
+                <span id="projectState">LOADING EDITORS</span>
+            </div>
+            <div class="project-tools">
+                <label
+                    >PROJECT NAME<input
+                        id="studioName"
+                        maxlength="200"
+                        value="Untitled IEM" /></label
+                ><button id="saveAll" class="primary">SAVE ALL</button
+                ><button id="openAll">OPEN / IMPORT FILE</button
+                ><button id="importSaved">IMPORT BROWSER CIRCUIT PROJECT</button
+                ><input id="studioFile" type="file" accept=".json" hidden />
+            </div>
+            <p id="studioMessage" role="status" aria-live="polite">
+                Loading the Rust geometry and circuit editors…
+            </p>
+            <a id="studioDownload" hidden>DOWNLOAD PROJECT</a>
+            <div class="studio-tabs" role="tablist" aria-label="Design tools">
+                <button
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="geometryPanel"
+                    data-view="geometry"
+                >
+                    01 / ASSEMBLY & TUBES</button
+                ><button
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="linksPanel"
+                    data-view="links"
+                >
+                    02 / DRIVER LINKS <span id="linkCount">0</span></button
+                ><button
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="acousticsPanel"
+                    data-view="acoustics"
+                >
+                    03 / CIRCUIT & RESPONSE
+                </button>
+            </div>
+            <div class="editor-area" id="editorArea">
+                <section
+                    id="geometryPanel"
+                    role="tabpanel"
+                    aria-label="Assembly and tubes"
+                >
+                    <iframe
+                        id="geometryEditor"
+                        title="3D assembly and tube designer"
+                    ></iframe>
+                </section>
+                <section
+                    id="acousticsPanel"
+                    role="tabpanel"
+                    aria-label="Circuit and response"
+                    hidden
+                >
+                    <iframe
+                        id="acousticsEditor"
+                        title="Circuit and frequency response designer"
+                    ></iframe>
+                </section>
+                <section
+                    id="linksPanel"
+                    role="tabpanel"
+                    aria-label="Driver links"
+                    hidden
+                >
+                    <div class="links-intro">
+                        <span class="eyebrow">CONNECT THE TWO VIEWS</span>
+                        <h2>One physical driver. One circuit path.</h2>
+                        <p>
+                            Select the matching acoustic driver and the tube
+                            section represented by its 3D route. The route
+                            controls that section’s length and bore. Circuit
+                            parts, polarity, damping, chambers and measured
+                            reference data remain editable in the acoustic
+                            designer.
+                        </p>
+                        <p class="note">
+                            Verify that the package and acoustic data represent
+                            the same receiver. A geometry preset supplies
+                            dimensions; it does not supply measured frequency
+                            response. Each 3D route currently represents one
+                            constant-bore tube section. Extra acoustic sections
+                            are saved but are not drawn in 3D.
+                        </p>
+                    </div>
+                    <div class="link-form">
+                        <label
+                            >3D DRIVER<select id="linkGeometry"></select></label
+                        ><label
+                            >ACOUSTIC / CIRCUIT DRIVER<select
+                                id="linkAcoustic"
+                            ></select></label
+                        ><label
+                            >ACOUSTIC TUBE SECTION<select
+                                id="linkTube"
+                            ></select></label
+                        ><button id="connectTube" class="primary">
+                            LINK TUBE
+                        </button>
+                    </div>
+                    <div class="link-actions">
+                        <button id="createCircuit">
+                            CREATE BLANK CIRCUIT FOR 3D DRIVER</button
+                        ><span
+                            >A blank path needs measured driver data before
+                            useful acoustic validation.</span
+                        >
+                    </div>
+                    <div id="linkRows"></div>
+                    <p id="unlinkedNote" class="note"></p>
+                    <div class="flow-note">
+                        3D route → calculated length and bore → acoustic tube →
+                        driver’s crossover + measured response → frequency
+                        response
+                    </div>
+                    <p class="note">
+                        Shell machining, exact clearance verification and
+                        physical measurement validation remain separate work.
+                        Circuit wires here are electrical connections, not
+                        routed 3D wiring.
+                    </p>
+                </section>
+            </div>
+            <footer>
+                One .hcdesign.json file contains the source STL mesh,
+                placements, routes, circuit graphs, acoustic settings,
+                measurements and driver links.
+                <a href="DESIGN_STUDIO.md">Workflow and limits ↗</a>
+            </footer>
+        </main>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script src="supabase-client.js"></script>
+        <script src="auth.js?v=40"></script>
+        <script type="module" src="design-studio.js?v=1"></script>
+    </body>
+</html>

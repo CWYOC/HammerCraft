@@ -1,0 +1,420 @@
+import { createViewer } from "./workshop-viewer.js?v=1";
+const $ = (id) => document.getElementById(id);
+let project = {
+    format: "hc-headphone-workshop",
+    version: 1,
+    name: "Untitled IEM",
+    shell_scale: [1, 1, 1],
+    mirrored: false,
+    drivers: [],
+};
+let catalog = [],
+    selected,
+    built,
+    viewer,
+    busy = false,
+    sequence = 0,
+    worker,
+    workerFailed = false;
+const pending = new Map();
+function tell(text, error = false) {
+    $("status").textContent = text;
+    $("status").classList.toggle("error", error);
+}
+function setBusy(value) {
+    busy = value;
+    for (const el of document.querySelectorAll(
+        ".workshop-controls input,.workshop-controls select,.workshop-controls button,.project-bar input,.project-bar button,.exports button,.exports select",
+    ))
+        el.disabled = value;
+}
+function rpc(action, data = {}) {
+    return new Promise((resolve, reject) => {
+        if (workerFailed)
+            return reject(
+                new Error("Reload the page to restart the geometry worker."),
+            );
+        const id = ++sequence;
+        pending.set(id, { resolve, reject });
+        worker.postMessage({ id, action, ...data });
+    });
+}
+function number(id) {
+    const input = $(id);
+    if (input.value.trim() === "" || !Number.isFinite(input.valueAsNumber))
+        throw new Error(
+            `Enter a valid value for ${input.getAttribute("aria-label") || id}.`,
+        );
+    return input.valueAsNumber;
+}
+function option(value, label) {
+    const o = document.createElement("option");
+    o.value = value;
+    o.textContent = label;
+    return o;
+}
+function newDriver(index = 0) {
+    return {
+        id: crypto.randomUUID(),
+        preset: 13,
+        position_mm: [index * 3.5, 0, 0],
+        rotation_deg: [0, 0, 0],
+        end_mm: [-3, 11, -2.4],
+        bend_mm: [-4, 6, 0],
+        lead_mm: 2,
+        inner_diameter_mm: 1.6,
+        outer_diameter_mm: 2.4,
+    };
+}
+function draft() {
+    const p = structuredClone(project);
+    p.name = $("projectName").value;
+    p.shell_scale = [0, 1, 2].map((i) => number(`scale${i}`));
+    p.mirrored = $("mirrored").checked;
+    const d = p.drivers.find((d) => d.id === selected);
+    if (d) {
+        d.preset = Number($("preset").value);
+        for (const [key, prefix] of [
+            ["position_mm", "position"],
+            ["rotation_deg", "rotation"],
+            ["bend_mm", "bend"],
+            ["end_mm", "end"],
+        ])
+            d[key] = [0, 1, 2].map((i) => number(`${prefix}${i}`));
+        d.lead_mm = number("lead");
+        d.inner_diameter_mm = number("innerDiameter");
+        d.outer_diameter_mm = number("outerDiameter");
+    }
+    return p;
+}
+function showDriver() {
+    const d = project.drivers.find((d) => d.id === selected);
+    $("driverFields").hidden = !d;
+    $("routeFields").hidden = !d;
+    if (d) {
+        $("preset").value = d.preset;
+        for (const [key, prefix] of [
+            ["position_mm", "position"],
+            ["rotation_deg", "rotation"],
+            ["bend_mm", "bend"],
+            ["end_mm", "end"],
+        ])
+            d[key].forEach((x, i) => ($(`${prefix}${i}`).value = x));
+        $("lead").value = d.lead_mm;
+        $("innerDiameter").value = d.inner_diameter_mm;
+        $("outerDiameter").value = d.outer_diameter_mm;
+        showPreset();
+    }
+    const path = built?.paths.find((p) => p.driver_id === selected);
+    $("pathLength").textContent = path
+        ? `${path.length_mm.toFixed(2)} mm`
+        : "—";
+    $("pathVolume").textContent = path
+        ? `${path.bore_volume_mm3.toFixed(2)} mm³`
+        : "—";
+    viewer?.select(selected);
+}
+function showPreset() {
+    const s = catalog.find((s) => s.id === Number($("preset").value));
+    if (!s) return;
+    $("driverNote").textContent =
+        `${s.size_mm.map((x) => x.toFixed(2)).join(" × ")} mm · ${s.supplier_dimensioned ? "Supplier package dimensions" : "Planning package dimensions"}. ${s.note}`;
+}
+function accept(result) {
+    // A previous download describes the old accepted geometry.
+    $("downloadFile").hidden = true;
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    downloadUrl = undefined;
+    window.HCDesignBridge?.changed();
+    project = result.project;
+    built = result.built;
+    if (!project.drivers.some((d) => d.id === selected))
+        selected = project.drivers[0]?.id;
+    $("projectName").value = project.name;
+    project.shell_scale.forEach((x, i) => ($(`scale${i}`).value = x));
+    $("mirrored").checked = project.mirrored;
+    $("shellName").textContent = result.sourceName;
+    $("driverSelect").replaceChildren(
+        ...project.drivers.map((d, i) =>
+            option(
+                d.id,
+                `${String(i + 1).padStart(2, "0")} · ${catalog.find((s) => s.id === d.preset)?.name || "Driver"}`,
+            ),
+        ),
+    );
+    $("driverSelect").value = selected || "";
+    $("driverCount").textContent = `${project.drivers.length} / 12`;
+    $("shellSize").textContent =
+        `${built.shell.size_mm.map((x) => x.toFixed(1)).join(" × ")} mm`;
+    $("meshStatus").textContent =
+        `Shell: ${built.shell.triangles.toLocaleString()} triangles · ${built.shell.boundary_edges} boundary edges · ${built.shell.nonmanifold_edges} nonmanifold edges · ${built.shell.inconsistent_edges} winding conflicts · ${built.shell.degenerate_triangles} degenerate faces.`;
+    $("warnings").replaceChildren(
+        ...built.warnings.map((text) => {
+            const li = document.createElement("li");
+            li.textContent = text;
+            return li;
+        }),
+    );
+    const previous = $("exportPart").value;
+    $("exportPart").replaceChildren(
+        ...built.parts.map((p) => option(p.id, p.name)),
+    );
+    if (built.parts.some((p) => p.id === previous))
+        $("exportPart").value = previous;
+    viewer.setParts(built.parts, selected);
+    showDriver();
+}
+async function run(action, data, message = "Geometry updated.") {
+    if (busy) return;
+    setBusy(true);
+    tell("Calculating geometry in Rust…");
+    try {
+        const result = await rpc(action, data);
+        if (result.built) accept(result);
+        tell(message);
+        return result;
+    } catch (error) {
+        tell(
+            `${error.message || error} Previous accepted geometry is retained.`,
+            true,
+        );
+    } finally {
+        setBusy(false);
+    }
+}
+let downloadUrl;
+function download(data, name, type) {
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    downloadUrl = URL.createObjectURL(new Blob([data], { type }));
+    const link = $("downloadFile");
+    link.href = downloadUrl;
+    link.download = name;
+    link.textContent = `DOWNLOAD ${name}`;
+    link.hidden = false;
+    link.click();
+}
+
+function filename() {
+    return (
+        project.name.replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) ||
+        "iem-workshop"
+    );
+}
+function guarded(fn) {
+    return async (...args) => {
+        try {
+            await fn(...args);
+        } catch (e) {
+            tell(e.message || String(e), true);
+        }
+    };
+}
+async function apply() {
+    return run("build", { project: draft() });
+}
+async function start() {
+    setBusy(true);
+    if (!window.HCAuth)
+        throw new Error("Authentication helper is unavailable.");
+    const auth = await window.HCAuth.requireAdmin();
+    if (!auth) return;
+    viewer = createViewer($("viewport"));
+    worker = new Worker(new URL("./workshop-worker.js?v=1", import.meta.url), {
+        type: "module",
+    });
+    worker.onmessage = ({ data }) => {
+        const request = pending.get(data.id);
+        if (!request) return;
+        pending.delete(data.id);
+        data.ok ? request.resolve(data) : request.reject(new Error(data.error));
+    };
+    worker.onerror = () => {
+        workerFailed = true;
+        for (const request of pending.values())
+            request.reject(
+                new Error(
+                    "The geometry worker could not load. Reload this page to retry.",
+                ),
+            );
+        pending.clear();
+        tell("Geometry worker failed to load. Reload to retry.", true);
+    };
+    const response = await fetch("./assets/workshop/drivers.json");
+    if (!response.ok) throw new Error("Driver catalog could not load.");
+    catalog = await response.json();
+    $("preset").replaceChildren(...catalog.map((s) => option(s.id, s.name)));
+    for (const prefix of ["position", "rotation", "bend", "end"])
+        for (let i = 0; i < 3; i++) {
+            const label = document.createElement("label");
+            label.textContent = ["X", "Y", "Z"][i];
+            const input = document.createElement("input");
+            input.type = "number";
+            input.step = prefix === "rotation" ? "1" : "0.1";
+            input.id = `${prefix}${i}`;
+            input.setAttribute("aria-label", `${prefix} ${["X", "Y", "Z"][i]}`);
+            label.append(input);
+            $(`${prefix}Fields`).append(label);
+        }
+    project.drivers = [newDriver()];
+    $("apply").onclick = guarded(apply);
+    $("driverSelect").onchange = guarded(async () => {
+        const next = $("driverSelect").value;
+        const result = await apply();
+        if (result) {
+            selected = next;
+            $("driverSelect").value = next;
+            showDriver();
+        } else $("driverSelect").value = selected || "";
+    });
+    $("preset").onchange = showPreset;
+    $("addDriver").onclick = guarded(async () => {
+        const p = draft();
+        if (p.drivers.length >= 12)
+            throw new Error("A maximum of 12 drivers is supported.");
+        const d = newDriver(p.drivers.length);
+        p.drivers.push(d);
+        const result = await run("build", { project: p });
+        if (result) {
+            selected = d.id;
+            $("driverSelect").value = selected;
+            showDriver();
+        }
+    });
+    $("duplicateDriver").onclick = guarded(async () => {
+        const p = draft();
+        if (p.drivers.length >= 12)
+            throw new Error("A maximum of 12 drivers is supported.");
+        const d = structuredClone(p.drivers.find((d) => d.id === selected));
+        d.id = crypto.randomUUID();
+        d.position_mm[0] += 3;
+        p.drivers.push(d);
+        const result = await run("build", { project: p });
+        if (result) {
+            selected = d.id;
+            $("driverSelect").value = selected;
+            showDriver();
+        }
+    });
+    $("removeDriver").onclick = guarded(() => {
+        const p = draft();
+        p.drivers = p.drivers.filter((d) => d.id !== selected);
+        return run("build", { project: p });
+    });
+    $("resetView").onclick = () => viewer.reset();
+    for (const id of ["showShell", "showPaths"])
+        $(id).onchange = () =>
+            viewer.visibility($("showShell").checked, $("showPaths").checked);
+    $("saveProject").onclick = guarded(async () => {
+        if (!(await apply())) return;
+        const result = await run("save", {}, "Project file ready to download.");
+        if (result)
+            download(
+                JSON.stringify(result.file),
+                `${filename()}.hcworkshop.json`,
+                "application/json",
+            );
+    });
+    $("loadProject").onclick = () => $("projectFile").click();
+    $("projectFile").onchange = guarded(async (e) => {
+        const file = e.target.files[0];
+        e.target.value = "";
+        if (!file) return;
+        if (file.size > 32 * 1024 * 1024)
+            throw new Error("Project files must be under 32 MB.");
+        await run(
+            "open",
+            { file: JSON.parse(await file.text()) },
+            "Project opened.",
+        );
+    });
+    $("importShell").onclick = () => $("shellFile").click();
+    $("shellFile").onchange = guarded(async (e) => {
+        const file = e.target.files[0];
+        e.target.value = "";
+        if (!file) return;
+        if (file.size > 16 * 1024 * 1024)
+            throw new Error("STL files must be under 16 MB.");
+        const p = draft();
+        p.shell_scale = [1, 1, 1];
+        await run(
+            "import",
+            {
+                bytes: await file.arrayBuffer(),
+                unit: Number($("importUnits").value),
+                name: file.name,
+                project: p,
+            },
+            "Shell imported and centred. Inspect driver placement in the new shell.",
+        );
+    });
+    $("exportStl").onclick = guarded(async () => {
+        const part = $("exportPart").value;
+        if (!(await apply())) return;
+        const result = await run(
+            "export",
+            { part },
+            "STL ready to download in millimetres.",
+        );
+        if (result)
+            download(
+                result.bytes,
+                `${filename()}-${result.name.replace(/[^a-zA-Z0-9_-]+/g, "-")}.stl`,
+                "model/stl",
+            );
+    });
+    $("exportPaths").onclick = guarded(async () => {
+        if (!(await apply())) return;
+        download(
+            JSON.stringify(
+                {
+                    format: "hc-workshop-path-dimensions",
+                    version: 1,
+                    project: project.name,
+                    units: "mm",
+                    note: "Geometric dimensions only. Assign measured driver data in the acoustic designer. No frequency response or physical validation is implied.",
+                    paths: built.paths.map((path) => ({
+                        ...path,
+                        inner_diameter_mm: project.drivers.find(
+                            (d) => d.id === path.driver_id,
+                        ).inner_diameter_mm,
+                    })),
+                },
+                null,
+                2,
+            ),
+            `${filename()}-path-dimensions.json`,
+            "application/json",
+        );
+        tell("Path dimensions exported.");
+    });
+    const shellResponse = await fetch("./assets/workshop/solid-shell.stl");
+    if (!shellResponse.ok) throw new Error("Starter shell could not load.");
+    setBusy(false);
+    await run(
+        "import",
+        {
+            bytes: await shellResponse.arrayBuffer(),
+            unit: 1,
+            name: "HeadphoneWorkshop starter",
+            project,
+        },
+        "Ready. Geometry is calculated by Rust / WebAssembly.",
+    );
+    if (!built) throw new Error("Initial geometry did not load.");
+    const snapshot = async () => ({file: (await rpc("save")).file, paths: structuredClone(built.paths)});
+    window.HCDesignBridge?.connect("geometry", {
+        snapshot,
+        flush: async () => {
+            if (!(await apply())) throw new Error($("status").textContent);
+            return snapshot();
+        },
+        open: async file => {
+            if (!(await run("open", {file}, "Shared project geometry loaded."))) throw new Error($("status").textContent);
+            return snapshot();
+        },
+    });
+}
+start().catch((error) => {
+    setBusy(true);
+    tell(`Unable to start workshop: ${error.message || error}`, true);
+});

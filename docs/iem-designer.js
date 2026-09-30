@@ -819,6 +819,7 @@
         if (loadType === "cavity_with_leak" && !positive($("iemLeakResistance").value)) errors.push("Leak resistance must be greater than zero.");
         for (const d of state.drivers) {
             ensureDriverShape(d);
+            if (d.geometryLinkError) errors.push(`${d.name}: ${d.geometryLinkError} Open Driver links in Design Studio.`);
             if (!["reference", "common"].includes(d.voltageMode)) errors.push(`${d.name}: select a valid voltage mode.`);
             if (d.voltageMode === "common" && !positive(d.measurementVoltageV)) errors.push(`${d.name}: enter the baseline measurement voltage before using common input.`);
             const referenceError = databaseReferenceError(d);
@@ -1230,6 +1231,7 @@
     }
 
     function renderDrivers() {
+        window.HCDesignBridge?.changed();
         const root = $("iemDriverPaths");
         root.innerHTML = state.drivers.map((raw, index) => {
             const d = ensureDriverShape(raw);
@@ -2468,13 +2470,14 @@
 
     function pathNode(d, element, index) {
         let fields = "";
+        const geometryLocked = Boolean(element.geometryBinding);
         if (element.type === "damper") {
             const distance = d.path.slice(0, index).reduce((sum, e) => sum + (e.type === "damper" ? 0 : num(e.length)), 0);
             fields = `<label>RESISTANCE · CGS ACOUSTIC Ω<input data-path-field="value" value="${element.value}" type="number" min="0" step="any"></label><p class="iem-field-note" data-damper-position="${d.id}:${index}">${distance.toFixed(2)} mm along path from receiver</p>`;
         } else {
-            fields = `<label>LENGTH mm<input data-path-field="length" value="${element.length}" type="number" step="0.1"></label><label>DIAMETER mm<input data-path-field="diameter" value="${element.diameter}" type="number" step="0.05"></label>${element.type === "tube" ? `<label>LOSS<input data-path-field="loss" value="${element.loss || 0}" type="number" step="0.0001"></label>` : ""}`;
+            fields = `<label>LENGTH mm<input data-path-field="length" ${geometryLocked ? "readonly" : ""} value="${element.length}" type="number" step="0.1"></label><label>DIAMETER mm<input data-path-field="diameter" ${geometryLocked ? "readonly" : ""} value="${element.diameter}" type="number" step="0.05"></label>${element.type === "tube" ? `<label>LOSS<input data-path-field="loss" value="${element.loss || 0}" type="number" step="0.0001"></label>` : ""}`;
         }
-        return `<div class="iem-node" data-path-node="${d.id}:${index}"><strong>${esc(element.type.toUpperCase())}</strong><div class="iem-node-fields">${fields}</div><div class="iem-node-tools"><button class="iem-mini" data-move-path="${d.id}:${index}:-1">↑</button><button class="iem-mini" data-move-path="${d.id}:${index}:1">↓</button><button class="iem-mini" data-remove-path="${d.id}:${index}">REMOVE</button></div></div>`;
+        return `<div class="iem-node" data-path-node="${d.id}:${index}"><strong>${esc(element.type.toUpperCase())}</strong><div class="iem-node-fields">${fields}${geometryLocked ? `<p class="iem-geometry-binding">${element.geometryBinding.stale ? "3D LINK NEEDS ATTENTION" : "DIMENSIONS FROM 3D ROUTE"} · Edit geometry or unlink in Design Studio.</p>` : ""}</div><div class="iem-node-tools"><button class="iem-mini" data-move-path="${d.id}:${index}:-1">↑</button><button class="iem-mini" data-move-path="${d.id}:${index}:1">↓</button><button class="iem-mini" data-remove-path="${d.id}:${index}" ${geometryLocked ? "disabled" : ""}>REMOVE</button></div></div>`;
     }
 
     function newFilter(type) {
@@ -2502,7 +2505,11 @@
         const owner = find(id);
         if (property === "path" && owner) owner.referenceValidationMode = false;
         const element = owner[property][+index];
-        node.querySelectorAll(`[data-${property}-field]`).forEach(input => element[input.dataset[property + "Field"]] = num(input.value));
+        node.querySelectorAll(`[data-${property}-field]`).forEach(input => {
+            const field = input.dataset[property + "Field"];
+            if (element.geometryBinding && ["length", "diameter"].includes(field)) return;
+            element[field] = num(input.value);
+        });
         if (property === "path") {
             let distance = 0;
             owner.path.forEach((part, i) => {
@@ -2524,6 +2531,7 @@
     }
 
     function markDesignDirty() {
+        window.HCDesignBridge?.changed();
         ++state.calculationRevision;
         state.last = null;
         state.chart?.destroy(); state.chart = null;
@@ -3426,7 +3434,7 @@
                     $("iemReverseMessage").textContent = "Design or target changed. Run Find Design again before applying a result.";
                     return;
                 }
-                applyRevPhysical(results[+button.dataset.applyRevPhysical], currentIndex);
+                if (!applyRevPhysical(results[+button.dataset.applyRevPhysical], currentIndex)) return;
                 $("iemReverseResults").innerHTML = "";
                 $("iemReverseMessage").textContent = "Candidate applied.";
             });
@@ -3438,8 +3446,12 @@
     }
 
     function applyRevPhysical(candidate, index, recalc = true) {
-        if (!candidate || !state.drivers[index]) return;
+        if (!candidate || !state.drivers[index]) return false;
         const d = ensureDriverShape(state.drivers[index]);
+        if (d.path.find(element => element.type === "tube")?.geometryBinding) {
+            $("iemReverseMessage").textContent = "This tube is controlled by the 3D route. Unlink it in Design Studio before applying a different tube length or bore.";
+            return false;
+        }
         d.gain = candidate.gain_db;
         let tube = d.path.find(element => element.type === "tube");
         if (!tube) d.path.unshift(tube = { type: "tube", length: 10, diameter: 2, loss: 0 });
@@ -3472,6 +3484,7 @@
             document.querySelector('[data-iem-tab="design"]')?.click();
             calculate();
         }
+        return true;
     }
 
     // ---------------------------------------------------------------------
@@ -3546,21 +3559,21 @@
         }
     }
 
-    function saveProject() {
+    function exportProject() {
         syncAll();
+        return structuredClone({
+            version: 3, name: $("iemProjectName").value, drivers: state.drivers,
+            target: state.target, reverseBase: state.reverseBase, targetPeq: state.targetPeq,
+            settings: Object.fromEntries(Object.entries(projectDefaults).map(([id, fallback]) =>
+                [id, typeof fallback === "boolean" ? $(id).checked : $(id).value])),
+            reverseView: state.reverseView,
+            cadSettings: { wireRouting: state.wireRouting, cadSymbolStandard: state.cadSymbolStandard, cadSnapToGrid: state.cadSnapToGrid },
+        });
+    }
+
+    function saveProject() {
         try {
-            localStorage.setItem("hc_iem_project", JSON.stringify({
-                version: 3,
-                name: $("iemProjectName").value,
-                drivers: state.drivers,
-                target: state.target,
-                reverseBase: state.reverseBase,
-                targetPeq: state.targetPeq,
-                settings: Object.fromEntries(Object.entries(projectDefaults).map(([id, fallback]) =>
-                    [id, typeof fallback === "boolean" ? $(id).checked : $(id).value])),
-                reverseView: state.reverseView,
-                cadSettings: { wireRouting: state.wireRouting, cadSymbolStandard: state.cadSymbolStandard, cadSnapToGrid: state.cadSnapToGrid },
-            }));
+            localStorage.setItem("hc_iem_project", JSON.stringify(exportProject()));
             $("iemProjectMessage").textContent = "Project saved in this browser.";
         } catch (error) {
             $("iemProjectMessage").textContent = `Unable to save project: ${error.message}`;
@@ -3595,37 +3608,72 @@
         $("iemReverseRunButton").disabled = false;
     }
 
+    function prepareProject(input) {
+        const project = structuredClone(input);
+        if (!project || !Array.isArray(project.drivers)) throw new Error("Saved project has no driver list.");
+        if (project.version !== undefined && ![1, 2, 3].includes(project.version)) throw new Error("Unsupported acoustic project version.");
+        project.drivers = project.drivers.map(ensureDriverShape);
+        const ids = new Set();
+        for (const d of project.drivers) {
+            if (typeof d.id !== "string" || !/^[A-Za-z0-9_.-]{1,200}$/.test(d.id) || ids.has(d.id)) throw new Error("Acoustic driver IDs must be unique.");
+            ids.add(d.id);
+        }
+        for (const key of ["target", "reverseBase", "targetPeq"]) {
+            if (project[key] !== undefined && !Array.isArray(project[key])) throw new Error(`Invalid saved ${key}.`);
+        }
+        return project;
+    }
+
+    function importProject(input) {
+        const project = prepareProject(input);
+        resetCadSession();
+        restoreProjectSettings(project.settings);
+        state.wireRouting = ["orthogonal", "45", "free"].includes(project.cadSettings?.wireRouting) ? project.cadSettings.wireRouting : "orthogonal";
+        state.cadSymbolStandard = project.cadSettings?.cadSymbolStandard === "ansi" ? "ansi" : "iec";
+        state.cadSnapToGrid = project.cadSettings?.cadSnapToGrid !== false;
+        $("iemProjectName").value = project.name || "Untitled IEM";
+        state.drivers = project.drivers;
+        state.target = project.target || [];
+        state.reverseBase = project.reverseBase || [];
+        state.targetPeq = project.targetPeq || [];
+        rebuildReverseFromBase(false);
+        renderTargetPeq();
+        renderDrivers();
+        refreshReverseDrivers();
+        setReverseView(project.reverseView?.min ?? 60, project.reverseView?.max ?? 100, false);
+        drawReverse();
+        $("iemProjectMessage").textContent = "Project loaded.";
+        calculate();
+    }
+
     function loadProject() {
         try {
             const project = JSON.parse(localStorage.getItem("hc_iem_project") || "null");
             if (!project) { $("iemProjectMessage").textContent = "No saved project in this browser."; return; }
-            if (!Array.isArray(project.drivers)) throw new Error("Saved project has no driver list.");
-            const drivers = project.drivers.map(ensureDriverShape);
-            for (const key of ["target", "reverseBase", "targetPeq"]) {
-                if (project[key] !== undefined && !Array.isArray(project[key])) throw new Error(`Invalid saved ${key}.`);
-            }
-            resetCadSession();
-            restoreProjectSettings(project.settings);
-            state.wireRouting = ["orthogonal", "45", "free"].includes(project.cadSettings?.wireRouting) ? project.cadSettings.wireRouting : "orthogonal";
-            state.cadSymbolStandard = project.cadSettings?.cadSymbolStandard === "ansi" ? "ansi" : "iec";
-            state.cadSnapToGrid = project.cadSettings?.cadSnapToGrid !== false;
-            $("iemProjectName").value = project.name || "Untitled IEM";
-            state.drivers = drivers;
-            state.target = project.target || [];
-            state.reverseBase = project.reverseBase || [];
-            state.targetPeq = project.targetPeq || [];
-            rebuildReverseFromBase(false);
-            renderTargetPeq();
-            renderDrivers();
-            refreshReverseDrivers();
-            setReverseView(project.reverseView?.min ?? 60, project.reverseView?.max ?? 100, false);
-            drawReverse();
-            $("iemProjectMessage").textContent = "Project loaded.";
-            calculate();
+            importProject(project);
         } catch (error) {
             console.error("Unable to load IEM project", error);
             $("iemProjectMessage").textContent = `Unable to load project: ${error.message}`;
         }
+    }
+
+    async function applyGeometryLinks(incoming) {
+        // The studio owns only bound path dimensions and link state. Circuits,
+        // measured baselines, voltage calibration and component undo stay here.
+        let changed = false;
+        for (const d of state.drivers) {
+            const next = incoming.drivers.find(other => other.id === d.id);
+            if (!next) continue;
+            if (JSON.stringify(d.path) !== JSON.stringify(next.path) || d.geometryLinkError !== next.geometryLinkError) {
+                d.path = structuredClone(next.path);
+                if (next.geometryLinkError) d.geometryLinkError = next.geometryLinkError;
+                else delete d.geometryLinkError;
+                d.referenceValidationMode = false;
+                changed = true;
+            }
+        }
+        if (changed) { markDesignDirty(); renderDrivers(); await calculate(); }
+        return exportProject();
     }
 
     function newProject() {
@@ -3788,6 +3836,18 @@
             $("iemEngineStatus").textContent = "JS FALLBACK";
         }
         calculate();
+        window.HCDesignBridge?.connect("acoustics", {
+            snapshot: exportProject,
+            flush: exportProject,
+            validate: prepareProject,
+            open: input => { importProject(input); return exportProject(); },
+            applyLinks: applyGeometryLinks,
+            addDriver: name => {
+                const d = driver(); d.name = String(name || "New Driver");
+                state.drivers.push(d); markDesignDirty(); renderDrivers(); refreshReverseDrivers();
+                return structuredClone(d);
+            },
+        });
     }
 
     window.HCIemDesigner = { init, populateTargetProducts };

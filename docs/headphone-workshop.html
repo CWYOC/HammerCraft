@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Headphone Workshop | Hammer Craft</title>
+<link rel="icon" href="assets/favicon-32.png"><link rel="stylesheet" href="admin.css?v=64"><link rel="stylesheet" href="headphone-workshop.css?v=1">
+<link rel="stylesheet" href="design-embedded.css?v=1">
+<script src="design-bridge.js?v=1"></script>
+</head>
+<body>
+<header class="admin-header"><div class="admin-header-inner">
+<a class="admin-brand" href="index.html"><img src="assets/logo.png" alt="Hammer Craft" class="admin-logo"><span>HAMMER CRAFT</span></a>
+<nav class="admin-nav"><a href="design-studio.html">DESIGN STUDIO ↗</a><a href="iem-designer.html">ACOUSTIC DESIGNER ↗</a><a href="admin.html">ADMIN</a></nav>
+</div></header>
+<main class="workshop">
+<header class="workshop-heading"><div><span class="eyebrow">ENGINEERING / IEM GEOMETRY</span><h1>Headphone <em>workshop.</em></h1><p>Place your drivers. Shape the sound paths. Inspect the assembly.</p></div><span class="version">WEB PREVIEW · 01</span></header>
+<div class="project-bar"><label class="project-name">PROJECT NAME<input id="projectName" value="Untitled IEM" maxlength="200"></label>
+<button id="saveProject" type="button">SAVE PROJECT</button><button id="loadProject" type="button">OPEN PROJECT</button><input id="projectFile" type="file" accept=".json" hidden>
+<a href="iem-designer.html">FREQUENCY RESPONSE ↗</a></div>
+<p id="status" role="status" aria-live="polite">Loading workshop…</p>
+<a id="downloadFile" class="download-file" hidden>DOWNLOAD FILE</a>
+<div class="workspace">
+<aside class="workshop-controls">
+<section><div class="section-title"><span>01 / SHELL</span><button type="button" id="importShell">IMPORT STL</button></div>
+<p id="shellName">HeadphoneWorkshop starter</p>
+<label>STL SOURCE UNITS<select id="importUnits"><option value="1">Millimetres</option><option value="10">Centimetres</option><option value="1000">Metres</option><option value="25.4">Inches</option></select></label><input id="shellFile" type="file" accept=".stl" hidden>
+<div class="triple"><label>SCALE X<input id="scale0" type="number" min="0.25" max="4" step="0.05" value="1"></label><label>SCALE Y<input id="scale1" type="number" min="0.25" max="4" step="0.05" value="1"></label><label>SCALE Z<input id="scale2" type="number" min="0.25" max="4" step="0.05" value="1"></label></div>
+<label class="check"><input id="mirrored" type="checkbox"> MIRROR ASSEMBLY ON X</label>
+<p class="hint">Imports are centred at the origin. Shell scaling leaves driver positions in millimetres. The stock is solid; cavities are not cut in this preview.</p></section>
+<section><div class="section-title"><span>02 / DRIVERS</span><button id="addDriver" type="button">+ ADD</button></div>
+<label>SELECT DRIVER<select id="driverSelect"></select></label><div id="driverFields">
+<label>PACKAGE PRESET<select id="preset"></select></label><p id="driverNote" class="hint"></p>
+<span class="group-label">POSITION · mm</span><div class="triple" id="positionFields"></div>
+<span class="group-label">ROTATION · degrees (X → Y → Z)</span><div class="triple" id="rotationFields"></div>
+<div class="row"><button id="duplicateDriver" type="button">DUPLICATE</button><button id="removeDriver" type="button">REMOVE</button></div>
+</div></section>
+<section id="routeFields"><div class="section-title"><span>03 / SOUND PATH</span></div>
+<p class="hint">The inlet follows the selected package outlet and rotation. These controls use the unmirrored assembly coordinates.</p>
+<label>OUTLET LEAD · mm<input id="lead" type="number" min="0.1" max="50" step="0.1"></label>
+<span class="group-label">BEND CONTROL · mm</span><div class="triple" id="bendFields"></div>
+<span class="group-label">PATH END · mm</span><div class="triple" id="endFields"></div>
+<div class="double"><label>BORE Ø · mm<input id="innerDiameter" type="number" min="0.1" max="19.9" step="0.1"></label><label>OUTER Ø · mm<input id="outerDiameter" type="number" min="0.2" max="20" step="0.1"></label></div>
+</section><button class="apply" id="apply" type="button">APPLY CHANGES</button>
+</aside>
+<div class="workshop-main">
+<div class="viewport"><canvas id="viewport" aria-label="Interactive 3D IEM assembly. Drag to orbit and scroll to zoom." tabindex="0"></canvas>
+<div class="view-toolbar"><span>ASSEMBLY / mm</span><button id="resetView" type="button">RESET VIEW</button><label><input id="showShell" type="checkbox" checked> SHELL</label><label><input id="showPaths" type="checkbox" checked> PATHS</label></div>
+<div class="view-help">DRAG TO ORBIT · SCROLL TO ZOOM · ARROW KEYS TO ROTATE</div><div class="view-legend"><i class="shell-dot"></i> STOCK <i class="driver-dot"></i> PACKAGES <i class="path-dot"></i> SOUND TUBES</div>
+</div>
+<div class="metrics"><article><span>SHELL ENVELOPE</span><strong id="shellSize">—</strong></article><article><span>DRIVERS</span><strong id="driverCount">—</strong></article><article><span>SELECTED PATH LENGTH</span><strong id="pathLength">—</strong></article><article><span>SELECTED BORE VOLUME</span><strong id="pathVolume">—</strong></article></div>
+<section class="verification"><div class="section-title"><span>04 / INSPECTION</span><span class="pending">MANUFACTURING CHECKS PENDING</span></div><p id="meshStatus"></p><ul id="warnings"></ul><p class="hint">Bounding-box checks are coarse warnings, not shell containment or clearance verification. Sound paths are independent tubes: they are not boolean-subtracted from the stock. Tube self-intersections, fit and physical acoustic accuracy have not been verified.</p></section>
+<section class="exports"><div class="section-title"><span>05 / EXPORT</span></div><div class="row"><label>GEOMETRY PART<select id="exportPart"></select></label><button id="exportStl" type="button">EXPORT STL · mm</button><button id="exportPaths" type="button">EXPORT PATH DIMENSIONS</button></div><p class="hint">Exported shell = unmachined stock. Driver shapes = package envelopes. Save the project to retain your shell, placements and routes. Native .fmp, 3MF, ear-fit and manufacturing packages are not supported yet. <a href="HEADPHONE_WORKSHOP_PORT.md">Port status</a></p></section>
+</div>
+</div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=1"></script>
+</body></html>

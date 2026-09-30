@@ -10,9 +10,10 @@ mod response;
 mod simulation;
 mod summation;
 mod tube;
+mod workshop;
 
-use wasm_bindgen::prelude::*;
 use models::{ReverseDesignRequest, SimulationRequest};
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]
 pub fn start() {
@@ -21,7 +22,7 @@ pub fn start() {
 
 #[wasm_bindgen]
 pub fn engine_version() -> String {
-    "Hammer Craft Acoustic Engine 0.18.0".to_string()
+    "Hammer Craft Acoustic Engine 0.19.0".to_string()
 }
 
 #[wasm_bindgen]
@@ -55,4 +56,33 @@ pub fn reverse_design_json(request_json: &str) -> Result<String, JsValue> {
     let result = optimiser::reverse_design(&request);
     serde_json::to_string(&result)
         .map_err(|e| JsValue::from_str(&format!("Unable to serialize reverse-design result: {e}")))
+}
+
+#[wasm_bindgen]
+pub fn workshop_import_stl(bytes: &[u8], unit_mm: f64) -> Result<String, JsValue> {
+    let mesh = workshop::import_stl(bytes, unit_mm).map_err(|e| JsValue::from_str(&e))?;
+    serde_json::to_string(&mesh).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+#[wasm_bindgen]
+pub fn workshop_build_json(project: &str, shell: &str) -> Result<String, JsValue> {
+    let project = serde_json::from_str(project)
+        .map_err(|e| JsValue::from_str(&format!("Invalid project: {e}")))?;
+    let shell = serde_json::from_str(shell)
+        .map_err(|e| JsValue::from_str(&format!("Invalid shell: {e}")))?;
+    let result = workshop::build(&project, &shell).map_err(|e| JsValue::from_str(&e))?;
+    serde_json::to_string(&result).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+#[wasm_bindgen]
+pub fn workshop_tube_json(tube: &str) -> Result<String, JsValue> {
+    let tube = serde_json::from_str(tube).map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let mesh = workshop::swept_tube(&tube).map_err(|e| JsValue::from_str(&e))?;
+    serde_json::to_string(&mesh).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+#[wasm_bindgen]
+pub fn workshop_export_stl(mesh: &str) -> Result<Vec<u8>, JsValue> {
+    let mesh = serde_json::from_str(mesh).map_err(|e| JsValue::from_str(&e.to_string()))?;
+    workshop::export_stl(&mesh).map_err(|e| JsValue::from_str(&e))
 }

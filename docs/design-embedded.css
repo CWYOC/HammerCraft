@@ -1,0 +1,27 @@
+.design-embedded .admin-header,
+.design-embedded .iem-standalone-hero,
+.design-embedded .workshop-heading {
+    display: none !important;
+}
+.design-embedded .workshop,
+.design-embedded .admin-main.iem-standalone-main {
+    padding-top: 18px !important;
+}
+.design-embedded .project-bar,
+.design-embedded .iem-project-actions,
+.design-embedded .iem-project-bar > label:first-child {
+    display: none !important;
+}
+.design-embedded .workshop {
+    padding-left: 18px;
+    padding-right: 18px;
+}
+.design-embedded .iem-standalone-main {
+    max-width: none;
+}
+.iem-geometry-binding {
+    font-size: 10px;
+    color: #9b511e;
+    margin-top: 8px;
+    line-height: 1.4;
+}

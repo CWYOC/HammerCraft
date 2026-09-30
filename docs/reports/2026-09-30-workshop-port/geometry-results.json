@@ -1,0 +1,182 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.19.0",
+  "parity": [
+    {
+      "fixture": 1,
+      "vertices": 600,
+      "triangles": 1200,
+      "max_vertex_error_mm": 3.552713678800501e-15
+    },
+    {
+      "fixture": 2,
+      "vertices": 600,
+      "triangles": 1200,
+      "max_vertex_error_mm": 3.552713678800501e-15
+    },
+    {
+      "fixture": 3,
+      "vertices": 600,
+      "triangles": 1200,
+      "max_vertex_error_mm": 2.220446049250313e-16
+    }
+  ],
+  "shell": {
+    "size_mm": [
+      19.71851181983948,
+      25.401827812194824,
+      24.710762977600098
+    ],
+    "triangles": 24474,
+    "boundary_edges": 0,
+    "nonmanifold_edges": 0,
+    "inconsistent_edges": 0,
+    "degenerate_triangles": 0,
+    "signed_volume_mm3": 4133.04131591092
+  },
+  "drivers": [
+    {
+      "id": 0,
+      "name": "9 mm Dynamic Reference",
+      "parts": 3,
+      "length_mm": 14.095582188199367,
+      "bore_volume_mm3": 28.340849568331702,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 1,
+      "name": "10 mm Dynamic Reference",
+      "parts": 3,
+      "length_mm": 14.095582188199367,
+      "bore_volume_mm3": 28.340849568331702,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 2,
+      "name": "Knowles RAB-32257",
+      "parts": 3,
+      "length_mm": 11.954184826653874,
+      "bore_volume_mm3": 24.03531470788505,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 3,
+      "name": "Knowles WBFK-23990",
+      "parts": 3,
+      "length_mm": 11.968301077964107,
+      "bore_volume_mm3": 24.06369711518902,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 4,
+      "name": "Knowles TWFK-30017",
+      "parts": 3,
+      "length_mm": 13.88856965729271,
+      "bore_volume_mm3": 27.924626178701374,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 5,
+      "name": "14.2 mm Planar Reference",
+      "parts": 3,
+      "length_mm": 13.352149968376901,
+      "bore_volume_mm3": 26.846090400180525,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 6,
+      "name": "USound Adap UT-P2019",
+      "parts": 3,
+      "length_mm": 12.762337048804524,
+      "bore_volume_mm3": 25.66020116170313,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 7,
+      "name": "Knowles CI-22955",
+      "parts": 3,
+      "length_mm": 15.885492555424836,
+      "bore_volume_mm3": 31.939677894897933,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 8,
+      "name": "Knowles RAU-34832",
+      "parts": 3,
+      "length_mm": 13.919333288630616,
+      "bore_volume_mm3": 27.986480129555076,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 9,
+      "name": "Sonion 4100",
+      "parts": 3,
+      "length_mm": 13.87539266804029,
+      "bore_volume_mm3": 27.898132269816998,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 10,
+      "name": "xMEMS Cowell",
+      "parts": 3,
+      "length_mm": 12.820824075018063,
+      "bore_volume_mm3": 25.7777963053081,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 11,
+      "name": "xMEMS Muir",
+      "parts": 3,
+      "length_mm": 12.43019076013018,
+      "bore_volume_mm3": 24.992381423836616,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 12,
+      "name": "Knowles RAD-33518",
+      "parts": 3,
+      "length_mm": 13.88856965729271,
+      "bore_volume_mm3": 27.924626178701374,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 13,
+      "name": "Knowles RAF-32873-P183",
+      "parts": 3,
+      "length_mm": 11.946959560794864,
+      "bore_volume_mm3": 24.020787448913598,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 14,
+      "name": "Knowles ED-29689",
+      "parts": 3,
+      "length_mm": 14.588516691525498,
+      "bore_volume_mm3": 29.331953193515897,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 15,
+      "name": "Knowles SR-32453-000",
+      "parts": 3,
+      "length_mm": 14.401362521019236,
+      "bore_volume_mm3": 28.95565740653915,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 16,
+      "name": "5.0 mm Marketplace Planar Treble",
+      "parts": 3,
+      "length_mm": 13.963323092246732,
+      "bore_volume_mm3": 28.074926877633953,
+      "geometry_tests": "PASS"
+    },
+    {
+      "id": 17,
+      "name": "5.7 mm Marketplace Planar Treble",
+      "parts": 3,
+      "length_mm": 14.051448076266942,
+      "bore_volume_mm3": 28.252112671167144,
+      "geometry_tests": "PASS"
+    }
+  ]
+}

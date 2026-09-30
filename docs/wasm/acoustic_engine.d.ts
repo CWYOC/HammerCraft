@@ -13,6 +13,14 @@ export function simulate_json(request_json: string): string;
 
 export function start(): void;
 
+export function workshop_build_json(project: string, shell: string): string;
+
+export function workshop_export_stl(mesh: string): Uint8Array;
+
+export function workshop_import_stl(bytes: Uint8Array, unit_mm: number): string;
+
+export function workshop_tube_json(tube: string): string;
+
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
@@ -23,6 +31,10 @@ export interface InitOutput {
     readonly reverse_design_json: (a: number, b: number) => [number, number, number, number];
     readonly simulate_json: (a: number, b: number) => [number, number, number, number];
     readonly start: () => void;
+    readonly workshop_build_json: (a: number, b: number, c: number, d: number) => [number, number, number, number];
+    readonly workshop_export_stl: (a: number, b: number) => [number, number, number, number];
+    readonly workshop_import_stl: (a: number, b: number, c: number) => [number, number, number, number];
+    readonly workshop_tube_json: (a: number, b: number) => [number, number, number, number];
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
