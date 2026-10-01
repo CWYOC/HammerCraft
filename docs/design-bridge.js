@@ -20,5 +20,11 @@
             );
         },
     };
+    // Draft input is unsaved even before blur or a successful geometry build.
+    // Keep this separate from accepted-state changes so programmatic rebuilds
+    // after Save do not immediately mark the same project dirty again.
+    document.addEventListener("input", () => {
+        if (embedded) window.dispatchEvent(new Event("hc-design-draft"));
+    });
     document.addEventListener("change", () => window.HCDesignBridge.changed());
 })();

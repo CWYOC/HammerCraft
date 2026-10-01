@@ -2,10 +2,11 @@ import {
     FORMAT,
     createProject,
     validateProject,
+    validProjectName,
     connectTube,
     disconnectTube,
     synchronize,
-} from "./design-project.mjs";
+} from "./design-project.mjs?v=2";
 const $ = (id) => document.getElementById(id);
 let project,
     geometry,
@@ -15,6 +16,7 @@ let project,
     busy = false,
     dirty = false,
     changeTimer,
+    captureRequested = false,
     downloadUrl;
 const frames = [$("geometryEditor"), $("acousticsEditor")];
 const uid = () => crypto.randomUUID();
@@ -146,25 +148,27 @@ async function operation(fn) {
         message(e.message || String(e), true);
     } finally {
         setBusy(false);
+        if (captureRequested) queueCapture();
     }
 }
-async function capture(flush = false) {
+async function capture(flush = false, name = $("studioName").value) {
     const before = project ? JSON.stringify(project) : null;
-    const [g, a] = await Promise.all([
-        flush ? geometry.flush() : geometry.snapshot(),
-        Promise.resolve(flush ? acoustics.flush() : acoustics.snapshot()),
-    ]);
-    if (!project) project = createProject(g.file, a, uid());
-    else project = { ...project, geometry: g.file, acoustics: a };
-    project.name = $("studioName").value;
-    project.geometry.project.name = project.name;
-    project.acoustics.name = project.name;
-    await updateLinks(g.paths);
+    // File imports can finish while Rust is working. Read the acoustic editor
+    // afterwards so applying links cannot restore an older acoustic path.
+    const g = await (flush ? geometry.flush() : geometry.snapshot());
+    const a = await (flush ? acoustics.flush() : acoustics.snapshot());
+    const next = project
+        ? { ...project, geometry: g.file, acoustics: a }
+        : createProject(g.file, a, uid());
+    next.name = name;
+    next.geometry.project.name = name;
+    next.acoustics.name = name;
+    await updateLinks(g.paths, next);
     if (before && JSON.stringify(project) !== before) changed();
 }
-async function updateLinks(paths) {
+async function updateLinks(paths, candidate = project) {
     if (!paths) paths = (await geometry.snapshot()).paths;
-    const result = synchronize(project, paths);
+    const result = synchronize(candidate, paths);
     project = result.project;
     statuses = result.statuses;
     project.acoustics = await acoustics.applyLinks(project.acoustics);
@@ -172,9 +176,17 @@ async function updateLinks(paths) {
     render();
 }
 function scheduleCapture() {
-    if (busy || !project) return;
+    if (!project) return;
+    captureRequested = true;
+    queueCapture();
+}
+function queueCapture() {
     clearTimeout(changeTimer);
-    changeTimer = setTimeout(() => operation(() => capture()), 250);
+    changeTimer = setTimeout(() => {
+        if (busy || !captureRequested) return;
+        captureRequested = false;
+        return operation(() => capture());
+    }, 250);
 }
 async function switchView(view) {
     await capture(true);
@@ -195,6 +207,7 @@ function waitForEditor(frame, url) {
                 if (w.HCDesignAdapter) {
                     clearTimeout(timeout);
                     w.addEventListener("hc-design-change", scheduleCapture);
+                    w.addEventListener("hc-design-draft", changed);
                     resolve(w.HCDesignAdapter);
                     return;
                 }
@@ -251,7 +264,18 @@ async function openPackage(input) {
     }
 }
 async function importFile(input) {
-    await capture(true);
+    // Opening a saved file is also a recovery action. Retain accepted state for
+    // rollback without requiring an invalid geometry/name draft to build first.
+    const draftName = $("studioName").value;
+    const replacesGeometry = [FORMAT, "hc-workshop-file"].includes(
+        input?.format,
+    );
+    // A circuit-only import must retain pending geometry edits, since it does
+    // not replace that part of the project.
+    await capture(
+        !replacesGeometry,
+        validProjectName(draftName) ? draftName : project.name,
+    );
     if (input?.format === FORMAT) return openPackage(input);
     const next = structuredClone(project);
     if (input?.format === "hc-workshop-file") next.geometry = input;
@@ -279,6 +303,7 @@ async function start() {
     $("projectState").textContent = "NEW PROJECT";
     for (const button of document.querySelectorAll("[data-view]"))
         button.onclick = () => operation(() => switchView(button.dataset.view));
+    $("studioName").oninput = changed;
     $("studioName").onchange = () =>
         operation(async () => {
             await capture();

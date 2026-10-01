@@ -311,6 +311,90 @@ test("acoustic project import is non-mutating and rejects bad IDs before replaci
     );
 });
 
+test("reference-unity action cannot replace a managed tube or change the output load", async () => {
+    const { app, project, paths } = fixture();
+    app.state.drivers = synchronize(
+        link(project),
+        paths,
+    ).project.acoustics.drivers;
+    const d = app.state.drivers[0];
+    d.measurementReferenceLoad = { type: "generic_711_approx" };
+    app.document.getElementById("iemAcousticLoadType").dispatchEvent = () => {};
+    const button = { dataset: { useReferencePath: d.id } };
+    app.document.querySelectorAll = (selector) =>
+        selector === "[data-use-reference-path]" ? [button] : [];
+    app.bindDriverEvents();
+    const before = plain(d),
+        load = app.document.getElementById("iemAcousticLoadType").value;
+    await button.onclick();
+    assert.deepEqual(plain(d), before);
+    assert.equal(
+        app.document.getElementById("iemAcousticLoadType").value,
+        load,
+    );
+    assert.match(
+        app.document.getElementById("iemSimulationMessage").textContent,
+        /unlink/i,
+    );
+});
+
+test("reusing a library driver clears old project bindings but preserves its dimensions and measurements", async () => {
+    const { app, project, paths } = fixture();
+    const saved = synchronize(link(project), paths).project.acoustics
+        .drivers[0];
+    saved.geometryLinkError = "Old project driver removed";
+    app.storage.set("hc_iem_driver_library", JSON.stringify([saved]));
+    const button = { dataset: { libUse: "0" } };
+    app.document.querySelectorAll = (selector) =>
+        selector === "[data-lib-use]" ? [button] : [];
+    await app.renderLibrary();
+    button.onclick();
+    const added = app.state.drivers.at(-1);
+    assert.equal(added.geometryLinkError, undefined);
+    assert.equal(added.path[0].geometryBinding, undefined);
+    assert.equal(added.path[0].length, paths[0].length_mm);
+    assert.deepEqual(plain(added.measurement), saved.measurement);
+});
+
+test("saving a reusable driver detaches the library copy without unlinking the current design", () => {
+    const { app, project, paths } = fixture();
+    app.state.drivers = synchronize(
+        link(project),
+        paths,
+    ).project.acoustics.drivers;
+    const d = app.state.drivers[0],
+        before = plain(d);
+    const button = { dataset: { saveDriver: d.id } };
+    app.document.querySelectorAll = (selector) =>
+        selector === "[data-save-driver]" ? [button] : [];
+    app.bindDriverEvents();
+    button.onclick();
+    const stored = JSON.parse(app.storage.get("hc_iem_driver_library"))[0];
+    assert.equal(stored.path[0].geometryBinding, undefined);
+    assert.equal(stored.path[0].length, paths[0].length_mm);
+    assert.deepEqual(plain(d), before);
+});
+
+test("shared names obey the Rust UTF-8 byte limit so saved projects remain reopenable", () => {
+    const { project } = fixture();
+    project.name = project.geometry.project.name = "中".repeat(66);
+    assert.doesNotThrow(() => validateProject(project));
+    assert.doesNotThrow(() =>
+        engine.workshop_build_json(
+            JSON.stringify(project.geometry.project),
+            JSON.stringify(project.geometry.shell),
+        ),
+    );
+    project.name = project.geometry.project.name = "中".repeat(67);
+    assert.throws(() => validateProject(project), /name/i);
+    assert.throws(() =>
+        engine.workshop_build_json(
+            JSON.stringify(project.geometry.project),
+            JSON.stringify(project.geometry.shell),
+        ),
+    );
+});
+
 test("reverse candidate button preserves the managed-tube warning instead of reporting success", async () => {
     const { app, project, paths } = fixture();
     app.state.drivers = synchronize(

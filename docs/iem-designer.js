@@ -2728,6 +2728,10 @@
         document.querySelectorAll("[data-use-reference-path]").forEach(button => button.onclick = async () => {
             const d = find(button.dataset.useReferencePath);
             if (!d || !referenceInfo(d).complete) return;
+            if (d.path.some(part => part.geometryBinding)) {
+                $("iemSimulationMessage").textContent = "Reference unity replaces the acoustic path. Unlink its 3D routes in Design Studio before using this check.";
+                return;
+            }
             d.path = structuredClone(referenceInfo(d).modelled);
             d.referenceValidationMode = applyMeasurementReferenceLoadToUi(d);
             renderDrivers();
@@ -2825,12 +2829,19 @@
     // Driver library.
     // ---------------------------------------------------------------------
 
+    function detachGeometryLinks(d) {
+        delete d.geometryLinkError;
+        for (const part of d.path || []) delete part.geometryBinding;
+        return d;
+    }
+
     function saveLibrary(id) {
         syncAll();
         try {
             const d = structuredClone(find(id));
             if (!d) return;
             d.id = uid();
+            detachGeometryLinks(d);
             const saved = JSON.parse(localStorage.getItem("hc_iem_driver_library") || "[]");
             if (!Array.isArray(saved)) throw new Error("Saved library is invalid.");
             saved.push(d);
@@ -3051,7 +3062,9 @@
             calculate();
         });
         document.querySelectorAll("[data-lib-use]").forEach(button => button.onclick = () => {
-            const d = structuredClone(state.library[+button.dataset.libUse]);
+            // Also detach entries saved by older versions. Geometry identities
+            // belong to their original project, never to a reusable driver.
+            const d = detachGeometryLinks(structuredClone(state.library[+button.dataset.libUse]));
             d.id = uid();
             state.drivers.push(d);
             renderDrivers();

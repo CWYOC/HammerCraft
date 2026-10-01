@@ -6,6 +6,8 @@ const object = (value) =>
     value && typeof value === "object" && !Array.isArray(value);
 const stringId = (value) =>
     typeof value === "string" && /^[A-Za-z0-9_.-]{1,200}$/.test(value);
+export const validProjectName = (value) =>
+    typeof value === "string" && new TextEncoder().encode(value).length <= 200;
 function unique(items, label) {
     const ids = new Set();
     for (const item of items) {
@@ -17,12 +19,10 @@ function unique(items, label) {
 export function validateProject(input) {
     if (!object(input) || input.format !== FORMAT || input.version !== 1)
         throw new Error("Open a version 1 .hcdesign.json project.");
-    if (
-        !stringId(input.id) ||
-        typeof input.name !== "string" ||
-        input.name.length > 200
-    )
-        throw new Error("Invalid project identity/name.");
+    if (!stringId(input.id) || !validProjectName(input.name))
+        throw new Error(
+            "Invalid project identity/name. Names must be at most 200 UTF-8 bytes.",
+        );
     const g = input.geometry,
         a = input.acoustics;
     if (
@@ -34,6 +34,10 @@ export function validateProject(input) {
         !object(g.shell)
     )
         throw new Error("Project has no valid workshop section.");
+    if (!validProjectName(g.project.name))
+        throw new Error(
+            "Workshop project name must be at most 200 UTF-8 bytes.",
+        );
     if (
         !Array.isArray(g.project.drivers) ||
         g.project.drivers.length > 12 ||

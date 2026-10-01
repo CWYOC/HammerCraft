@@ -31,7 +31,11 @@ The studio is the owner of the shared project and links. Each editor retains its
 
 Imported geometry is rebuilt before its dimensions are used; saved derived metrics are not trusted. Changing a linked package, removing a driver, or replacing a linked tube produces a visible link error. An affected acoustic driver cannot calculate until the link is repaired. **Unlink** keeps the last dimensions and makes them editable again. Unlinked acoustic drivers still contribute to the combined response; remove unwanted paths in the acoustic editor.
 
-Opening a file validates its format and saves rollback snapshots before replacing either editor. Rejected geometry leaves the previous accepted design intact. Save and tab changes apply pending geometry fields, so invalid geometry must be corrected before those actions can complete.
+Opening a file validates its format and saves rollback snapshots before replacing either editor. Rejected geometry leaves the previous accepted design intact. Save and tab changes apply pending geometry fields, so invalid geometry must be corrected before those actions can complete. Opening a shared or workshop file remains available as a recovery action even when the current geometry fields or project name are invalid. A circuit-only import applies pending geometry edits first because it retains that part of the project.
+
+Typing into an editor immediately marks the project as unsaved, including geometry edits that have not been applied yet. Project names must fit the Rust engine's 200-byte UTF-8 limit; this allows fewer than 200 characters for some languages. The studio rejects longer names before preparing a file.
+
+Reference-unity checks replace the current acoustic path, so linked routes must be unlinked before using that diagnostic. Saving or reusing a driver in the local library retains its dimensions and measurements but removes links to the old project's geometry.
 
 ## Current scope
 
