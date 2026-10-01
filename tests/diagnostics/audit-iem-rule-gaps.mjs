@@ -27,21 +27,21 @@ for (let k = 0; k <= 1000; k++) {
     if (point.every((x,i) => Math.abs(x - obstruction.position_mm[i]) < obstructionSize[i]/2)) insideSamples++;
 }
 observations.push({ id: 'route-through-package', build_accepted: true, samples_strictly_inside_unrelated_box_package: insideSamples,
-    sample_count: 1001, warnings: crossed.warnings,
+    sample_count: 1001, warnings: crossed.warnings, placement_checks: crossed.placement_checks,
     interpretation: 'The second preset is a box at zero rotation; these samples penetrate the actual displayed package, not merely a conservative bounding box.' });
 
 const broadOutlet = geometryDriver('broad-outlet', 15), outletBuild = build([broadOutlet]);
 observations.push({ id: 'outlet-transition-not-described', build_accepted: true,
     catalog_outlet_diameter_mm: catalog.find(p => p.id === 15).outlet_diameter_mm,
-    tube_bore_mm: broadOutlet.inner_diameter_mm, warnings: outletBuild.warnings,
+    tube_bore_mm: broadOutlet.inner_diameter_mm, warnings: outletBuild.warnings, placement_checks: outletBuild.placement_checks,
     interpretation: 'A narrower tube can be valid with a designed transition. No adapter/sealing geometry or compatibility check is requested here.' });
 
 const inverted = structuredClone(shell); inverted.triangles.forEach(t => [t[1],t[2]] = [t[2],t[1]]);
 const invertedBuild = build([], inverted);
 observations.push({ id: 'globally-inverted-shell', build_accepted: true, signed_volume_mm3: invertedBuild.shell.signed_volume_mm3,
     boundary_edges: invertedBuild.shell.boundary_edges, inconsistent_edges: invertedBuild.shell.inconsistent_edges,
-    warnings: invertedBuild.warnings,
-    interpretation: 'Consistent inward winding is not the same as a valid solid orientation. The signed volume is reported, but no specific orientation warning is generated.' });
+    warnings: invertedBuild.warnings, placement_checks: invertedBuild.placement_checks,
+    interpretation: 'Consistent inward winding is not the same as a valid solid orientation. Inspect the signed volume and shell-orientation diagnostic; build acceptance permits editing and is not manufacturing approval.' });
 
 const app = designer(), a = app.driver();
 Object.assign(a, { id: 'synthetic-a', name: 'Synthetic flat receiver', responseAbsolute: true, path: [],

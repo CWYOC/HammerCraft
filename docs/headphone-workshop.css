@@ -344,6 +344,13 @@ canvas:active {
 #meshStatus {
     font-size: 12px;
 }
+#placementChecks { list-style: none; padding: 0; font-size: 12px; line-height: 1.6; }
+#placementChecks li { padding: 10px 12px; margin-bottom: 8px; border-left: 3px solid #8a8170; background: #eeeae2; }
+#placementChecks li[data-status="error"] { border-color: #ab341f; background: #f6e7e2; }
+#placementChecks li[data-status="warning"] { border-color: #b77a27; }
+#placementChecks strong { font-size: 10px; }
+#placementChecks button { display: block; margin-top: 6px; padding: 4px 6px; font-size: 9px; }
+.verification summary { cursor: pointer; font-size: 12px; }
 .exports .row {
     flex-wrap: wrap;
 }

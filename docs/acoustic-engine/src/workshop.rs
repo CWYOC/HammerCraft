@@ -2,6 +2,7 @@
 //! Swept tubes retain the native parallel-transport frames, taper and triangle order.
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+mod placement;
 type V = [f64; 3];
 fn add(a: V, b: V) -> V {
     std::array::from_fn(|i| a[i] + b[i])
@@ -394,6 +395,7 @@ struct Preset {
     cylindrical: bool,
     outlet_mm: V,
     outlet_axis: V,
+    outlet_diameter_mm: f64,
     supplier_dimensioned: bool,
     supplier_interface_dimensioned: bool,
     dedicated_drive: bool,
@@ -433,6 +435,7 @@ pub struct PathInfo {
     pub length_mm: f64,
     pub bore_volume_mm3: f64,
     pub control_points: [V; 4],
+    pub placement_errors: Vec<String>,
 }
 #[derive(Serialize)]
 pub struct Build {
@@ -440,6 +443,7 @@ pub struct Build {
     pub paths: Vec<PathInfo>,
     pub shell: MeshInfo,
     pub warnings: Vec<String>,
+    pub placement_checks: Vec<placement::Check>,
 }
 fn envelope(s: &Preset) -> Mesh {
     if s.cylindrical {
@@ -522,7 +526,6 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         }
     }
     shell.validate()?;
-    let bounds = shell.bounds();
     let mut info = inspect(&shell);
     let mut warnings=vec!["Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet.".into()];
     if info.boundary_edges
@@ -541,7 +544,6 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
     }];
     let mut paths = vec![];
     let mut ids = HashSet::new();
-    let mut boxes = vec![];
     let catalog: Vec<Preset> =
         serde_json::from_str(include_str!("../../assets/workshop/drivers.json"))
             .map_err(|e| e.to_string())?;
@@ -570,23 +572,6 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         for v in &mut mesh.vertices {
             *v = add(rotate(*v, d.rotation_deg), d.position_mm);
         }
-        let bb = mesh.bounds();
-        if (0..3).any(|i| bb[0][i] < bounds[0][i] || bb[1][i] > bounds[1][i]) {
-            warnings.push(format!(
-                "{}: package exceeds the shell's bounding box.",
-                s.name
-            ));
-        }
-        for (name, b) in &boxes {
-            let b: &[V; 2] = b;
-            if (0..3).all(|i| bb[0][i] < b[1][i] && bb[1][i] > b[0][i]) {
-                warnings.push(format!(
-                    "{} / {}: package bounding boxes overlap; inspect placement.",
-                    s.name, name
-                ));
-            }
-        }
-        boxes.push((s.name.clone(), bb));
         if !s.supplier_dimensioned || !s.supplier_interface_dimensioned {
             warnings.push(format!(
                 "{}: package or outlet includes planning dimensions; verify supplier drawing.",
@@ -626,6 +611,7 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
             length_mm: len,
             bore_volume_mm3: len * std::f64::consts::PI * tube.inner_radius_mm.powi(2),
             control_points: tube.control_points,
+            placement_errors: vec![],
         });
         parts.push(Part {
             id: d.id.clone(),
@@ -639,6 +625,24 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
             kind: "path".into(),
             mesh: route,
         });
+    }
+    // Run before whole-assembly reflection, which preserves these distances and intersections.
+    let placement_checks = placement::inspect_layout(p, &catalog, &parts, &paths, &info);
+    for check in &placement_checks {
+        if check.status == "error" || check.status == "warning" {
+            warnings.push(check.message.clone());
+        }
+        if check.status == "error" {
+            for path in &mut paths {
+                if check
+                    .part_ids
+                    .iter()
+                    .any(|id| *id == path.driver_id || *id == format!("path:{}", path.driver_id))
+                {
+                    path.placement_errors.push(check.message.clone());
+                }
+            }
+        }
     }
     if p.mirrored {
         for part in &mut parts {
@@ -661,6 +665,7 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         paths,
         shell: info,
         warnings,
+        placement_checks,
     })
 }
 pub fn export_stl(m: &Mesh) -> Result<Vec<u8>, String> {

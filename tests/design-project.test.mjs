@@ -60,8 +60,8 @@ function fixture() {
         position_mm: [0, 0, 0],
         rotation_deg: [0, 0, 0],
         end_mm: [-3, 11, -2.4],
-        bend_mm: [-4, 6, 0],
-        lead_mm: 2,
+        bend_mm: [-7, 5, 0],
+        lead_mm: 3,
         inner_diameter_mm: 1.6,
         outer_diameter_mm: 2.4,
     };
@@ -445,13 +445,21 @@ test("all 18 geometry presets feed the same Rust acoustic request as manual dime
     const baseline = simulate();
     for (let preset = 0; preset < 18; preset++) {
         const p = plain(project);
-        p.geometry.project.drivers[0].preset = preset;
+        const g = p.geometry.project.drivers[0];
+        g.preset = preset;
+        // Each package has its own outlet axis. Use a feasible straight route;
+        // reusing the RAF bend behind other receivers now correctly fails placement.
+        const catalog = JSON.parse(fs.readFileSync(new URL('../docs/assets/workshop/drivers.json', import.meta.url)));
+        const s = catalog.find(s => s.id === preset);
+        g.bend_mm = s.outlet_mm.map((x, i) => x + s.outlet_axis[i] * 6);
+        g.end_mm = s.outlet_mm.map((x, i) => x + s.outlet_axis[i] * 12);
         const built = JSON.parse(
             engine.workshop_build_json(
                 JSON.stringify(p.geometry.project),
                 JSON.stringify(p.geometry.shell),
             ),
         );
+        assert.deepEqual(built.paths[0].placement_errors, [], `preset ${preset}: feasible geometry`);
         const linked = synchronize(link(p), built.paths).project;
         app.state.drivers = plain(linked.acoustics.drivers);
         const linkedResponse = simulate();

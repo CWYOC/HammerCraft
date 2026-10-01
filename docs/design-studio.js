@@ -6,7 +6,7 @@ import {
     connectTube,
     disconnectTube,
     synchronize,
-} from "./design-project.mjs?v=2";
+} from "./design-project.mjs?v=3";
 const $ = (id) => document.getElementById(id);
 let project,
     geometry,

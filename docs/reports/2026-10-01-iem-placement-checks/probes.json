@@ -1,0 +1,375 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.20.0",
+  "wasm_sha256": "3c4f0f12d710418d31b65787c2b7ddb3aa8ad8f08446099333d367c894a23322",
+  "scope": "Synthetic diagnostic probes of missing checks; not physical validation and not an acceptance pass.",
+  "observations": [
+    {
+      "id": "route-through-package",
+      "build_accepted": true,
+      "samples_strictly_inside_unrelated_box_package": 319,
+      "sample_count": 1001,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet.",
+        "01 · Knowles RAF-32873-P183: tube penetrates driver 02. Reroute it outside the package.",
+        "01 · Knowles RAF-32873-P183 / driver 02: tube envelopes may overlap. Separate the routes or define a real acoustic junction; shared junctions are not modeled.",
+        "02 · Knowles RAF-32873-P183: sampled bend radius 0.711 mm is smaller than tube outside radius 1.200 mm; the sweep folds locally."
+      ],
+      "placement_checks": [
+        {
+          "code": "shell-topology",
+          "status": "pass",
+          "part_ids": [
+            "shell"
+          ],
+          "message": "Shell edge topology and total orientation passed; self-intersections and individual solid components remain unchecked."
+        },
+        {
+          "code": "package-stock-bounds",
+          "status": "pass",
+          "part_ids": [
+            "route-owner"
+          ],
+          "message": "01 · Knowles RAF-32873-P183: inside stock bounds; finished cavity containment is unverified."
+        },
+        {
+          "code": "part-dimensions",
+          "status": "pass",
+          "part_ids": [
+            "route-owner"
+          ],
+          "message": "01 · Knowles RAF-32873-P183: catalog marks package and outlet as supplier-dimensioned; mounting allowances remain unverified."
+        },
+        {
+          "code": "outlet-adapter",
+          "status": "unverified",
+          "part_ids": [
+            "route-owner",
+            "path:route-owner"
+          ],
+          "message": "01 · Knowles RAF-32873-P183: 1.42 mm catalog outlet → 1.60 mm tube bore. Adapter, spout engagement and seal geometry are not defined."
+        },
+        {
+          "code": "package-package",
+          "status": "pass",
+          "part_ids": [
+            "route-owner",
+            "obstruction"
+          ],
+          "message": "01 · Knowles RAF-32873-P183 / driver 02: represented package envelopes do not overlap; manufacturing clearance is unverified."
+        },
+        {
+          "code": "tube-own-package",
+          "status": "pass",
+          "part_ids": [
+            "path:route-owner",
+            "route-owner"
+          ],
+          "message": "01 · Knowles RAF-32873-P183: route checked against driver 01. No penetration/contact detected in this check; physical outlet and assembly allowances remain unverified."
+        },
+        {
+          "code": "tube-package",
+          "status": "error",
+          "part_ids": [
+            "path:route-owner",
+            "obstruction"
+          ],
+          "message": "01 · Knowles RAF-32873-P183: tube penetrates driver 02. Reroute it outside the package."
+        },
+        {
+          "code": "tube-bend",
+          "status": "unverified",
+          "part_ids": [
+            "path:route-owner"
+          ],
+          "message": "01 · Knowles RAF-32873-P183: no local fold found in 257 bend samples. A material/process minimum bend radius has not been supplied."
+        },
+        {
+          "code": "tube-self-contact",
+          "status": "pass",
+          "part_ids": [
+            "path:route-owner"
+          ],
+          "message": "01 · Knowles RAF-32873-P183: no nonlocal route contact detected; local bends are checked separately."
+        },
+        {
+          "code": "tube-tube",
+          "status": "warning",
+          "part_ids": [
+            "path:route-owner",
+            "path:obstruction"
+          ],
+          "message": "01 · Knowles RAF-32873-P183 / driver 02: tube envelopes may overlap. Separate the routes or define a real acoustic junction; shared junctions are not modeled."
+        },
+        {
+          "code": "package-stock-bounds",
+          "status": "pass",
+          "part_ids": [
+            "obstruction"
+          ],
+          "message": "02 · Knowles RAF-32873-P183: inside stock bounds; finished cavity containment is unverified."
+        },
+        {
+          "code": "part-dimensions",
+          "status": "pass",
+          "part_ids": [
+            "obstruction"
+          ],
+          "message": "02 · Knowles RAF-32873-P183: catalog marks package and outlet as supplier-dimensioned; mounting allowances remain unverified."
+        },
+        {
+          "code": "outlet-adapter",
+          "status": "unverified",
+          "part_ids": [
+            "obstruction",
+            "path:obstruction"
+          ],
+          "message": "02 · Knowles RAF-32873-P183: 1.42 mm catalog outlet → 1.60 mm tube bore. Adapter, spout engagement and seal geometry are not defined."
+        },
+        {
+          "code": "tube-package",
+          "status": "pass",
+          "part_ids": [
+            "path:obstruction",
+            "route-owner"
+          ],
+          "message": "02 · Knowles RAF-32873-P183: route checked against driver 01. No penetration/contact detected in this check; physical outlet and assembly allowances remain unverified."
+        },
+        {
+          "code": "tube-own-package",
+          "status": "pass",
+          "part_ids": [
+            "path:obstruction",
+            "obstruction"
+          ],
+          "message": "02 · Knowles RAF-32873-P183: route checked against driver 02. No penetration/contact detected in this check; physical outlet and assembly allowances remain unverified."
+        },
+        {
+          "code": "tube-bend",
+          "status": "error",
+          "part_ids": [
+            "path:obstruction"
+          ],
+          "message": "02 · Knowles RAF-32873-P183: sampled bend radius 0.711 mm is smaller than tube outside radius 1.200 mm; the sweep folds locally."
+        },
+        {
+          "code": "tube-self-contact",
+          "status": "pass",
+          "part_ids": [
+            "path:obstruction"
+          ],
+          "message": "02 · Knowles RAF-32873-P183: no nonlocal route contact detected; local bends are checked separately."
+        },
+        {
+          "code": "finished-shell",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "Finished cavities, tube-to-shell containment, remaining wall thickness and shell self-intersections are not evaluated."
+        },
+        {
+          "code": "manufacturing-clearance",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."
+        },
+        {
+          "code": "physical-assembly",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "Damper seats, connectors, crossover components, insulated wires, adhesive regions and assembly access are not represented in 3D."
+        }
+      ],
+      "interpretation": "The second preset is a box at zero rotation; these samples penetrate the actual displayed package, not merely a conservative bounding box."
+    },
+    {
+      "id": "outlet-transition-not-described",
+      "build_accepted": true,
+      "catalog_outlet_diameter_mm": 4.460000000000001,
+      "tube_bore_mm": 1.6,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet.",
+        "01 · Knowles SR-32453-000: tube penetrates driver 01. Reroute it outside the package.",
+        "01 · Knowles SR-32453-000: sampled bend radius 0.377 mm is smaller than tube outside radius 1.200 mm; the sweep folds locally."
+      ],
+      "placement_checks": [
+        {
+          "code": "shell-topology",
+          "status": "pass",
+          "part_ids": [
+            "shell"
+          ],
+          "message": "Shell edge topology and total orientation passed; self-intersections and individual solid components remain unchecked."
+        },
+        {
+          "code": "package-stock-bounds",
+          "status": "pass",
+          "part_ids": [
+            "broad-outlet"
+          ],
+          "message": "01 · Knowles SR-32453-000: inside stock bounds; finished cavity containment is unverified."
+        },
+        {
+          "code": "part-dimensions",
+          "status": "pass",
+          "part_ids": [
+            "broad-outlet"
+          ],
+          "message": "01 · Knowles SR-32453-000: catalog marks package and outlet as supplier-dimensioned; mounting allowances remain unverified."
+        },
+        {
+          "code": "outlet-adapter",
+          "status": "unverified",
+          "part_ids": [
+            "broad-outlet",
+            "path:broad-outlet"
+          ],
+          "message": "01 · Knowles SR-32453-000: 4.46 mm catalog outlet → 1.60 mm tube bore. Adapter, spout engagement and seal geometry are not defined."
+        },
+        {
+          "code": "tube-own-package",
+          "status": "error",
+          "part_ids": [
+            "path:broad-outlet",
+            "broad-outlet"
+          ],
+          "message": "01 · Knowles SR-32453-000: tube penetrates driver 01. Reroute it outside the package."
+        },
+        {
+          "code": "tube-bend",
+          "status": "error",
+          "part_ids": [
+            "path:broad-outlet"
+          ],
+          "message": "01 · Knowles SR-32453-000: sampled bend radius 0.377 mm is smaller than tube outside radius 1.200 mm; the sweep folds locally."
+        },
+        {
+          "code": "tube-self-contact",
+          "status": "pass",
+          "part_ids": [
+            "path:broad-outlet"
+          ],
+          "message": "01 · Knowles SR-32453-000: no nonlocal route contact detected; local bends are checked separately."
+        },
+        {
+          "code": "finished-shell",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "Finished cavities, tube-to-shell containment, remaining wall thickness and shell self-intersections are not evaluated."
+        },
+        {
+          "code": "manufacturing-clearance",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."
+        },
+        {
+          "code": "physical-assembly",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "Damper seats, connectors, crossover components, insulated wires, adhesive regions and assembly access are not represented in 3D."
+        }
+      ],
+      "interpretation": "A narrower tube can be valid with a designed transition. No adapter/sealing geometry or compatibility check is requested here."
+    },
+    {
+      "id": "globally-inverted-shell",
+      "build_accepted": true,
+      "signed_volume_mm3": -33064.33052728736,
+      "boundary_edges": 0,
+      "inconsistent_edges": 0,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet.",
+        "Shell has inward or zero-volume orientation. Check solid winding and disconnected components."
+      ],
+      "placement_checks": [
+        {
+          "code": "shell-orientation",
+          "status": "error",
+          "part_ids": [
+            "shell"
+          ],
+          "message": "Shell has inward or zero-volume orientation. Check solid winding and disconnected components."
+        },
+        {
+          "code": "finished-shell",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "Finished cavities, tube-to-shell containment, remaining wall thickness and shell self-intersections are not evaluated."
+        },
+        {
+          "code": "manufacturing-clearance",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."
+        },
+        {
+          "code": "physical-assembly",
+          "status": "unverified",
+          "part_ids": [],
+          "message": "Damper seats, connectors, crossover components, insulated wires, adhesive regions and assembly access are not represented in 3D."
+        }
+      ],
+      "interpretation": "Consistent inward winding is not the same as a valid solid orientation. Inspect the signed volume and shell-orientation diagnostic; build acceptance permits editing and is not manufacturing approval."
+    },
+    {
+      "id": "assumed-phase-combined-response",
+      "input_errors": [],
+      "individual_level_db": 90,
+      "combined_level_db": 96.02059991327963,
+      "measured_phase_flags": [
+        false,
+        false
+      ],
+      "ui_notes": "Some baseline phase data is missing or its provenance is unknown. Missing phase is assumed zero; multi-driver interference is not physically validated. Ideal-pressure source selected: zero source impedance can exaggerate tube/coupler resonances.",
+      "interpretation": "Exploratory summation is allowed and the missing phase is warned about. Validation metadata correctly preserves the missing evidence; a design-release gate is still absent."
+    },
+    {
+      "id": "outside-measured-band",
+      "baseline_band_hz": [
+        100,
+        10000
+      ],
+      "requested_frequencies_hz": [
+        20,
+        100,
+        1000,
+        10000,
+        20000
+      ],
+      "response": [
+        {
+          "frequency_hz": 20,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 100,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 1000,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 10000,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 20000,
+          "db": 90,
+          "phase_deg": 0
+        }
+      ],
+      "interpretation": "The baseline endpoints are held outside the recorded range and a full-band response is returned. This is a numerical extension, not measured evidence at 20 Hz or 20 kHz."
+    },
+    {
+      "id": "reverse-candidate-gain-realizability",
+      "applied_gain_db": 8,
+      "circuit_component_kinds": [],
+      "input_errors": [],
+      "interpretation": "The independent 8 dB gain parameter is accepted without a mapped amplifier or other hardware implementation. This does not establish that an all-passive assembly can realise the scored candidate."
+    }
+  ]
+}

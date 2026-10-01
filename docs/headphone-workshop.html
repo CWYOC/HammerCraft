@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Headphone Workshop | Hammer Craft</title>
-<link rel="icon" href="assets/favicon-32.png"><link rel="stylesheet" href="admin.css?v=64"><link rel="stylesheet" href="headphone-workshop.css?v=1">
+<link rel="icon" href="assets/favicon-32.png"><link rel="stylesheet" href="admin.css?v=64"><link rel="stylesheet" href="headphone-workshop.css?v=2">
 <link rel="stylesheet" href="design-embedded.css?v=1">
 <script src="design-bridge.js?v=2"></script>
 </head>
@@ -48,10 +48,10 @@
 <div class="view-help">DRAG TO ORBIT · SCROLL TO ZOOM · ARROW KEYS TO ROTATE</div><div class="view-legend"><i class="shell-dot"></i> STOCK <i class="driver-dot"></i> PACKAGES <i class="path-dot"></i> SOUND TUBES</div>
 </div>
 <div class="metrics"><article><span>SHELL ENVELOPE</span><strong id="shellSize">—</strong></article><article><span>DRIVERS</span><strong id="driverCount">—</strong></article><article><span>SELECTED PATH LENGTH</span><strong id="pathLength">—</strong></article><article><span>SELECTED BORE VOLUME</span><strong id="pathVolume">—</strong></article></div>
-<section class="verification"><div class="section-title"><span>04 / INSPECTION</span><span class="pending">MANUFACTURING CHECKS PENDING</span></div><p id="meshStatus"></p><ul id="warnings"></ul><p class="hint">Bounding-box checks are coarse warnings, not shell containment or clearance verification. Sound paths are independent tubes: they are not boolean-subtracted from the stock. Tube self-intersections, fit and physical acoustic accuracy have not been verified.</p></section>
+<section class="verification"><div class="section-title"><span>04 / PLACEMENT CHECKS</span><span id="placementStatus" class="pending" role="status" aria-live="polite">CHECKS PENDING</span></div><p id="meshStatus"></p><ul id="placementChecks"></ul><details><summary>Other geometry notes</summary><ul id="warnings"></ul></details><p class="hint">Checks update when you apply a layout. Errors identify invalid represented geometry; warnings identify possible contact. Unverified items need additional geometry or part/process data. Sound paths remain independent tubes, with no shell machining or shared-junction model. Preview exports do not certify manufacturing or acoustic performance.</p></section>
 <section class="exports"><div class="section-title"><span>05 / EXPORT</span></div><div class="row"><label>GEOMETRY PART<select id="exportPart"></select></label><button id="exportStl" type="button">EXPORT STL · mm</button><button id="exportPaths" type="button">EXPORT PATH DIMENSIONS</button></div><p class="hint">Exported shell = unmachined stock. Driver shapes = package envelopes. Save the project to retain your shell, placements and routes. Native .fmp, 3MF, ear-fit and manufacturing packages are not supported yet. <a href="HEADPHONE_WORKSHOP_PORT.md">Port status</a></p></section>
 </div>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=3"></script>
 </body></html>

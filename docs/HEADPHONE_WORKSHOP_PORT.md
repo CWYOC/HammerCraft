@@ -11,7 +11,7 @@ The website now has `headphone-workshop.html`, linked from the IEM Designer's **
 - All 18 native IEM package presets, including published-versus-planning dimension flags, outlet positions and axes, rear-vent notes and dedicated-electronics warnings. Up to 12 packages per assembly.
 - Driver XYZ placement and Euler rotation (X, then Y, then Z). Acoustic path inlet and tangent follow the catalog outlet and transformed package pose.
 - Editable cubic Bézier sound paths, constant bore/outer diameter, physical path length and bore-volume estimates. The Rust tube API also supports the native inlet taper, checked against C++ fixtures; the current interface exposes constant-diameter tubes.
-- Mesh edge-topology inspection and coarse package bounding-box warnings.
+- Mesh edge-topology/orientation inspection and structured placement checks: rotated convex package overlap, tube/package penetration, possible route contact, local folds and nonlocal self-contact. Errors, warnings and unverified requirements are shown separately. See the [placement implementation report](reports/2026-10-01-iem-placement-checks/report.md).
 - Project save/open using a versioned `.hcworkshop.json` file containing the source mesh and parameters. Failed imports/edits retain the worker's previous accepted state.
 - Individual STL exports: unmachined shell stock, package envelopes and swept tubes. Explicit millimetre units. JSON path-dimension export for manual transfer into acoustic design.
 - Orbit/zoom, keyboard view controls, selected-driver highlighting and shell/path visibility.
@@ -23,7 +23,7 @@ The [Design Studio](DESIGN_STUDIO.md) now combines the workshop and acoustic des
 | Area | Current limitation / next implementation |
 | --- | --- |
 | Shell construction | Uses imported stock. Port implicit solid fields, cavities, drilled channels, connectors, faceplates and nozzle machining, with C++ mesh parity fixtures. |
-| Fit / collision | Bounding boxes only. Port shell containment, manufacturing clearance, wall thickness, rear-vent reservations and rejection/rollback of mechanically invalid moves. |
+| Fit / collision | Package and route checks now report represented-geometry errors and conservative contact warnings. Finished-cavity containment, manufacturing clearance, wall thickness and rear-vent geometry remain unverified. Error layouts stay editable; confirmed errors block affected linked acoustic calculations. |
 | Ear-fit | Port ear-profile schema, surface fitting and constraints. |
 | Acoustic integration | Shared project and explicit driver/tube links implemented in Design Studio. Stepped routes, physical damper placement, manifolds and 3D electrical wiring remain pending; matching measurement data must still be supplied. |
 | Measurement evidence | Native file imports, sample/reseat tracking and release gates are not part of this geometry page. The website's existing physical-validation protocol still applies. |
@@ -38,6 +38,7 @@ Even a closed, consistently wound mesh can self-intersect or fail fit/clearance 
 ## Implementation boundaries
 
 - `acoustic-engine/src/workshop.rs`: Rust mesh/STL types, bounded input validation, native swept-tube port, catalog-based transforms, metrics and exports.
+- `acoustic-engine/src/workshop/placement.rs`: placement diagnostics against represented geometry, with explicit missing-data coverage.
 - `acoustic-engine/src/lib.rs`: additive `workshop_*` WASM exports; acoustic simulation equations are unchanged.
 - `workshop-worker.js`: transactional shell/project state and asynchronous calculation.
 - `workshop-viewer.js`: presentation-only WebGL buffers and camera controls.
@@ -58,7 +59,7 @@ cd ../..
 node --test tests/*.test.mjs
 ```
 
-The checked-in browser WASM was built with Rust 1.98.1 and wasm-bindgen 0.2.129, matching `Cargo.lock`. Geometry exports are added to engine version 0.19.0. The browser wrapper and binary cache versions move together.
+The checked-in browser WASM uses wasm-bindgen 0.2.129, matching `Cargo.lock`. Geometry exports were added in engine 0.19.0; placement checking is included in 0.20.0. The browser wrapper and binary cache versions move together.
 
 For a local interface test without an account or database connection:
 

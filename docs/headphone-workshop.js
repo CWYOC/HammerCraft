@@ -24,7 +24,7 @@ function tell(text, error = false) {
 function setBusy(value) {
     busy = value;
     for (const el of document.querySelectorAll(
-        ".workshop-controls input,.workshop-controls select,.workshop-controls button,.project-bar input,.project-bar button,.exports button,.exports select",
+        ".workshop-controls input,.workshop-controls select,.workshop-controls button,.project-bar input,.project-bar button,.exports button,.exports select,#placementChecks button",
     ))
         el.disabled = value;
 }
@@ -60,8 +60,8 @@ function newDriver(index = 0) {
         position_mm: [index * 3.5, 0, 0],
         rotation_deg: [0, 0, 0],
         end_mm: [-3, 11, -2.4],
-        bend_mm: [-4, 6, 0],
-        lead_mm: 2,
+        bend_mm: [-7 + index * 3.5, 5, 0],
+        lead_mm: 3,
         inner_diameter_mm: 1.6,
         outer_diameter_mm: 2.4,
     };
@@ -120,6 +120,40 @@ function showPreset() {
     $("driverNote").textContent =
         `${s.size_mm.map((x) => x.toFixed(2)).join(" × ")} mm · ${s.supplier_dimensioned ? "Supplier package dimensions" : "Planning package dimensions"}. ${s.note}`;
 }
+function showPlacementChecks() {
+    const checks = built.placement_checks || [];
+    const counts = Object.fromEntries(["error", "warning", "unverified"].map(status => [status, checks.filter(c => c.status === status).length]));
+    $("placementStatus").textContent = checks.length
+        ? `${counts.error} ERROR${counts.error === 1 ? "" : "S"} · ${counts.warning} WARNING${counts.warning === 1 ? "" : "S"} · ${counts.unverified} UNVERIFIED`
+        : "PLACEMENT CHECKS UNAVAILABLE";
+    $("placementStatus").classList.toggle("error", counts.error > 0);
+    $("placementChecks").replaceChildren(...checks.filter(c => c.status !== "pass").sort((a, b) =>
+        ["error", "warning", "unverified"].indexOf(a.status) - ["error", "warning", "unverified"].indexOf(b.status)
+    ).map(check => {
+        const li = document.createElement("li");
+        li.dataset.status = check.status;
+        const label = document.createElement("strong");
+        label.textContent = `${check.status.toUpperCase()} · `;
+        const message = document.createElement("span");
+        message.textContent = check.message;
+        li.append(label, message);
+        const partId = check.part_ids.find(id => id !== "shell");
+        const driverId = partId?.startsWith("path:") ? partId.slice(5) : partId;
+        if (project.drivers.some(d => d.id === driverId)) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.disabled = busy;
+            button.textContent = "SELECT DRIVER";
+            button.onclick = guarded(async () => {
+                if (busy) return;
+                $("driverSelect").value = driverId;
+                await $("driverSelect").onchange();
+            });
+            li.append(button);
+        }
+        return li;
+    }));
+}
 function accept(result) {
     // A previous download describes the old accepted geometry.
     $("downloadFile").hidden = true;
@@ -149,12 +183,13 @@ function accept(result) {
     $("meshStatus").textContent =
         `Shell: ${built.shell.triangles.toLocaleString()} triangles · ${built.shell.boundary_edges} boundary edges · ${built.shell.nonmanifold_edges} nonmanifold edges · ${built.shell.inconsistent_edges} winding conflicts · ${built.shell.degenerate_triangles} degenerate faces.`;
     $("warnings").replaceChildren(
-        ...built.warnings.map((text) => {
+        ...built.warnings.filter(text => !built.placement_checks?.some(c => c.message === text)).map((text) => {
             const li = document.createElement("li");
             li.textContent = text;
             return li;
         }),
     );
+    showPlacementChecks();
     const previous = $("exportPart").value;
     $("exportPart").replaceChildren(
         ...built.parts.map((p) => option(p.id, p.name)),
@@ -171,7 +206,8 @@ async function run(action, data, message = "Geometry updated.") {
     try {
         const result = await rpc(action, data);
         if (result.built) accept(result);
-        tell(message);
+        const errors = result.built?.placement_checks?.filter(c => c.status === "error").length || 0;
+        tell(errors ? `${message} ${errors} placement error${errors === 1 ? "" : "s"}; see Placement checks.` : message, errors > 0);
         return result;
     } catch (error) {
         tell(
@@ -219,7 +255,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=2", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=3", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {
@@ -372,6 +408,7 @@ async function start() {
                     project: project.name,
                     units: "mm",
                     note: "Geometric dimensions only. Assign measured driver data in the acoustic designer. No frequency response or physical validation is implied.",
+                    placement_checks: built.placement_checks,
                     paths: built.paths.map((path) => ({
                         ...path,
                         inner_diameter_mm: project.drivers.find(

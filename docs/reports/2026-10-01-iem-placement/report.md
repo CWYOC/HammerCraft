@@ -1,5 +1,7 @@
 # IEM component placement review — 1 October 2026
 
+**Follow-up:** the first set of software placement checks has now been implemented. The observations below describe the pre-implementation audit; see the [implementation and verification report](../2026-10-01-iem-placement-checks/report.md) for current behavior and remaining limitations.
+
 **There are important placement requirements, but there is no single correct arrangement for every IEM.** Physical fit, acoustic paths, vents, electrical packaging and assembly access must be designed together. A visually tidy layout is not evidence that the assembly fits or produces the predicted response.
 
 This review compares the website's current Rust geometry code, its 18 placement presets, the original HeadphoneWorkshop code and manufacturer guidance. It covers the wired IEM workflow. It adds documentation and diagnostic observations; it does not implement new placement checks or certify a physical assembly.

@@ -163,6 +163,8 @@ export function synchronize(input, paths) {
                 g.inner_diameter_mm <= 0)
         )
             error = "Accepted 3D path dimensions are unavailable.";
+        if (!error && metrics.placement_errors?.length)
+            error = `3D placement error: ${metrics.placement_errors.join(" ")}`;
         if (error) {
             if (a) a.geometryLinkError = error;
             if (tube)
