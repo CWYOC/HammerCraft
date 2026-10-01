@@ -12,7 +12,7 @@ The website now has `headphone-workshop.html`, linked from the IEM Designer's **
 - Driver XYZ placement and Euler rotation (X, then Y, then Z). Acoustic path inlet and tangent follow the catalog outlet and transformed package pose.
 - Editable cubic Bézier sound paths, constant bore/outer diameter, physical path length and bore-volume estimates. The Rust tube API also supports the native inlet taper, checked against C++ fixtures; the current interface exposes constant-diameter tubes.
 - Mesh edge-topology/orientation inspection and structured placement checks: rotated convex package overlap, tube/package penetration, possible route contact, local folds and nonlocal self-contact. Errors, warnings and unverified requirements are shown separately. See the [placement implementation report](reports/2026-10-01-iem-placement-checks/report.md).
-- Optional Rust shell construction: sampled inner offset, separate faceplate on a positive X/Y/Z cut plane, seam gap, sound-bore subtraction and a rotated rectangular/cylindrical connector opening. Full package faces are checked against the requested inner offset and cap plane. See the [construction report](reports/2026-10-01-shell-construction/report.md).
+- Optional Rust shell construction: sampled inner offset, separate faceplate using automatic broad-face detection, either side of X/Y/Z, or a custom outward normal, seam gap, sound-bore subtraction and a rotated rectangular/cylindrical connector opening. Full package faces are checked against the requested inner offset and cap plane. See the [construction report](reports/2026-10-01-shell-construction/report.md) and [cap placement fix](reports/2026-10-01-faceplate-placement/report.md).
 - Complete represented package and tube surfaces must stay inside the actual curved shell envelope before STL export. Tube outside diameter, concave shell crossings and float32 export positions are checked. Violations are highlighted red; invalid or unverified containment blocks STL exports and affected acoustic links while allowing project saving. See the [containment report](reports/2026-10-01-shell-containment/report.md).
 - Project save/open using a versioned `.hcworkshop.json` file containing the source mesh and parameters. Failed imports/edits retain the worker's previous accepted state.
 - Individual STL exports: constructed body and faceplate when enabled, otherwise unmachined stock; package envelopes and swept tubes. Explicit millimetre units. JSON path-dimension export for manual transfer into acoustic design.
@@ -66,7 +66,7 @@ cd ../..
 node --test tests/*.test.mjs
 ```
 
-The checked-in browser WASM uses wasm-bindgen 0.2.129, matching `Cargo.lock`. Geometry exports were added in engine 0.19.0, placement checking in 0.20.0, shell construction in 0.21.0, shell containment/export blocking in 0.22.0, and arrangement/integral drilled channels in 0.23.0. The browser wrapper and binary cache versions move together.
+The checked-in browser WASM uses wasm-bindgen 0.2.129, matching `Cargo.lock`. Geometry exports were added in engine 0.19.0, placement checking in 0.20.0, shell construction in 0.21.0, shell containment/export blocking in 0.22.0, arrangement/integral drilled channels in 0.23.0, and oriented faceplate detection in 0.24.0. The browser wrapper and binary cache versions move together.
 
 For a local interface test without an account or database connection:
 

@@ -352,11 +352,11 @@ fn inside(
     tree: &solid::DistanceMesh,
     mesh: &Mesh,
     offset: f64,
-    plane: Option<(usize, f64)>,
+    plane: Option<faceplate::Plane>,
 ) -> bool {
     mesh.vertices
         .iter()
-        .all(|&v| tree.signed(v) < -offset && plane.is_none_or(|(i, q)| v[i] < q))
+        .all(|&v| tree.signed(v) < -offset && plane.is_none_or(|plane| plane.signed(v) < 0.))
         && mesh
             .triangles
             .iter()
@@ -369,12 +369,15 @@ fn segment_inside(
     u: V,
     v: V,
     r: f64,
-    plane: Option<(usize, f64)>,
+    plane: Option<faceplate::Plane>,
+    cap_margin: f64,
 ) -> bool {
     tree.signed(u) < -r
         && tree.signed(v) < -r
         && !tree.near_triangle([u, v, v], r)
-        && plane.is_none_or(|(i, q)| u[i] + r < q && v[i] + r < q)
+        && plane.is_none_or(|plane| {
+            plane.signed(u) + cap_margin < 0. && plane.signed(v) + cap_margin < 0.
+        })
 }
 fn layout_ok(b: &Build) -> bool {
     b.export_blockers.is_empty()
@@ -412,12 +415,12 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
     let bounds = stock.bounds();
     let clearance = p.assembly.as_ref().map_or(0.2, |a| a.clearance_mm);
     let offset = p.construction.as_ref().map_or(0., |c| c.wall_mm) + clearance;
-    let plane = p.construction.as_ref().map(|c| {
-        (
-            c.faceplate_axis,
-            bounds[1][c.faceplate_axis] - c.faceplate_depth_mm - clearance,
-        )
-    });
+    let cap_plane = p
+        .construction
+        .as_ref()
+        .map(|c| faceplate::resolve(c, &stock))
+        .transpose()?;
+    let plane = cap_plane.map(|plane| plane.inset(clearance));
     let step = 2.;
     let dims: Vec<usize> = (0..3)
         .map(|i| ((bounds[1][i] - bounds[0][i]) / step).ceil() as usize)
@@ -509,7 +512,7 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
                 let b = build_inner(&p, base, false);
                 let ok = b
                     .as_ref()
-                    .is_ok_and(|b| layout_ok(b) && anchors_clear(&p, b, &tree, bounds));
+                    .is_ok_and(|b| layout_ok(b) && anchors_clear(&p, b, &tree, cap_plane));
                 p.drivers.pop();
                 attempts += 1;
                 if ok {
@@ -562,7 +565,7 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
                 }
                 p.assembly = Some(a.clone());
                 let b = build_inner(&p, base, false)?;
-                if layout_ok(&b) && anchors_clear(&p, &b, &tree, bounds) {
+                if layout_ok(&b) && anchors_clear(&p, &b, &tree, cap_plane) {
                     found = Some(item.clone());
                     break;
                 }
@@ -579,7 +582,7 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
             }
         }
         p.assembly = Some(a);
-        route_cables(&mut p, base, &tree, bounds)?;
+        route_cables(&mut p, base, &tree, bounds, cap_plane)?;
     }
     p.mirrored = mirrored;
     let result = build(&p, base)?;
@@ -650,7 +653,12 @@ pub fn reroute(mut p: Project, base: &Mesh) -> Result<Project, String> {
         }
     }
     let tree = solid::DistanceMesh::new(&stock);
-    route_cables(&mut p, base, &tree, stock.bounds())?;
+    let plane = p
+        .construction
+        .as_ref()
+        .map(|c| faceplate::resolve(c, &stock))
+        .transpose()?;
+    route_cables(&mut p, base, &tree, stock.bounds(), plane)?;
     let b = build(&p, base)?;
     if !layout_ok(&b) {
         return Err(format!(
@@ -667,6 +675,7 @@ fn route_cables(
     base: &Mesh,
     tree: &solid::DistanceMesh,
     bounds: [V; 2],
+    plane: Option<faceplate::Plane>,
 ) -> Result<(), String> {
     let Some(a) = &mut p.assembly else {
         return Err("Enable assembly planning first.".into());
@@ -712,18 +721,12 @@ fn route_cables(
         .collect();
     let sounds = route_segments(&b.paths, p);
     let offset = p.construction.as_ref().map_or(0., |c| c.wall_mm) + radius + clearance;
-    let plane = p.construction.as_ref().map(|c| {
-        (
-            c.faceplate_axis,
-            bounds[1][c.faceplate_axis] - c.faceplate_depth_mm,
-        )
-    });
     let mut routed: Vec<Cable> = vec![];
     for (from, to) in pairs {
         let start = port(p, &from, &to).ok_or("Missing harness start anchor.")?;
         let end = port(p, &to, &from).ok_or("Missing harness end anchor.")?;
         let free = |u: V, v: V| {
-            segment_inside(tree, u, v, offset, plane)
+            segment_inside(tree, u, v, offset, plane, radius + clearance)
                 && bodies
                     .iter()
                     .all(|b| b.distance(u, v) >= radius + clearance - 1e-5)
@@ -747,16 +750,15 @@ fn route_cables(
     p.assembly.as_mut().unwrap().cables = routed;
     Ok(())
 }
-fn anchors_clear(p: &Project, b: &Build, tree: &solid::DistanceMesh, bounds: [V; 2]) -> bool {
+fn anchors_clear(
+    p: &Project,
+    b: &Build,
+    tree: &solid::DistanceMesh,
+    plane: Option<faceplate::Plane>,
+) -> bool {
     let Some(a) = &p.assembly else { return true };
     let r = a.cable_diameter_mm / 2. + a.clearance_mm;
     let offset = p.construction.as_ref().map_or(0., |c| c.wall_mm) + r;
-    let plane = p.construction.as_ref().map(|c| {
-        (
-            c.faceplate_axis,
-            bounds[1][c.faceplate_axis] - c.faceplate_depth_mm,
-        )
-    });
     let packages = package_parts(&b.parts);
     let bodies: Vec<_> = packages
         .iter()
@@ -779,7 +781,7 @@ fn anchors_clear(p: &Project, b: &Build, tree: &solid::DistanceMesh, bounds: [V;
     }
     anchors.into_iter().all(|q| {
         tree.signed(q) < -offset
-            && plane.is_none_or(|(i, v)| q[i] + r < v)
+            && plane.is_none_or(|plane| plane.signed(q) + r < 0.)
             && bodies.iter().all(|body| body.distance(q, q) >= r - 1e-5)
             && sounds
                 .iter()

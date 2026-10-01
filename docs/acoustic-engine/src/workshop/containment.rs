@@ -25,7 +25,12 @@ pub(super) fn one_surface(mesh: &Mesh) -> bool {
     mesh.triangles.iter().all(|t| root(&mut parent, t[0]) == r)
 }
 
-pub fn inspect_parts(p: &Project, parts: &[Part], info: &MeshInfo) -> Vec<placement::Check> {
+pub(super) fn inspect_parts(
+    p: &Project,
+    parts: &[Part],
+    info: &MeshInfo,
+    cap_plane: Option<faceplate::Plane>,
+) -> Vec<placement::Check> {
     let stock = &parts[0].mesh;
     let usable = info.boundary_edges
         + info.nonmanifold_edges
@@ -35,7 +40,6 @@ pub fn inspect_parts(p: &Project, parts: &[Part], info: &MeshInfo) -> Vec<placem
         && info.signed_volume_mm3 > 0.
         && one_surface(stock);
     let tree = usable.then(|| solid::DistanceMesh::new(stock));
-    let bounds = stock.bounds();
     let mut checks = vec![];
     for part in parts.iter().filter(|part| {
         matches!(
@@ -102,12 +106,7 @@ pub fn inspect_parts(p: &Project, parts: &[Part], info: &MeshInfo) -> Vec<placem
             "tube-shell"
         };
         let offset = cavity.map_or(0., |c| c.wall_mm);
-        let plane = cavity.map(|c| {
-            (
-                c.faceplate_axis,
-                bounds[1][c.faceplate_axis] - c.faceplate_depth_mm,
-            )
-        });
+        let plane = cavity.and(cap_plane);
         let region = if cavity.is_some() {
             "requested shell cavity"
         } else {
@@ -124,7 +123,7 @@ pub fn inspect_parts(p: &Project, parts: &[Part], info: &MeshInfo) -> Vec<placem
         let (status, detail) = if let Some(tree) = &tree {
             let outside = vertices.iter().any(|&v| {
                 tree.signed(v) > -offset + SEPARATION_MM
-                    || plane.is_some_and(|(axis, cut)| v[axis] > cut - SEPARATION_MM)
+                    || plane.is_some_and(|plane| plane.signed(v) > -SEPARATION_MM)
             });
             if outside {
                 ("error", format!("extends outside or touches the {region}. Move/rotate the part or shorten/reroute the tube; its full outside diameter must fit."))

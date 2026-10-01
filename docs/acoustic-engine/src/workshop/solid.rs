@@ -8,6 +8,12 @@ pub struct Construction {
     pub wall_mm: f64,
     pub resolution_mm: f64,
     pub faceplate_axis: usize,
+    #[serde(default, skip_serializing_if = "faceplate::is_axis")]
+    pub faceplate_mode: faceplate::Mode,
+    #[serde(default, skip_serializing_if = "faceplate::is_false")]
+    pub faceplate_negative: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub faceplate_normal: Option<V>,
     pub faceplate_depth_mm: f64,
     pub faceplate_gap_mm: f64,
     pub cut_sound_paths: bool,
@@ -35,7 +41,10 @@ pub enum CutShape {
 pub struct ConstructionInfo {
     pub resolution_mm: f64,
     pub requested_wall_mm: f64,
+    /// dot(normal, point) = plane_mm, in the displayed assembly frame.
     pub faceplate_plane_mm: f64,
+    pub faceplate_normal: V,
+    pub detected_face_area_mm2: Option<f64>,
     pub grid_points: usize,
     pub cavity_volume_estimate_mm3: f64,
     pub body: MeshInfo,
@@ -295,6 +304,20 @@ impl Grid {
             cells,
         })
     }
+    fn for_cut(bounds: [V; 2], spacing: f64, normal: V) -> Result<Self, String> {
+        let mut grid = Self::new(bounds, spacing)?;
+        if normal.iter().filter(|n| n.abs() > 1e-8).count() > 1 {
+            // With an oblique cut, exact zero edges along an axis-aligned inner
+            // wall can join four marching-tetrahedra faces (a pinched seam).
+            // Phase the sampling lattice away from those coincident creases.
+            // The padded domain still encloses the stock; spacing is unchanged.
+            grid.min = add(
+                grid.min,
+                std::array::from_fn(|i| grid.step[i] * [0.173, 0.271, 0.419][i]),
+            );
+        }
+        Ok(grid)
+    }
     fn index(&self, x: usize, y: usize, z: usize) -> usize {
         (z * (self.cells[1] + 1) + y) * (self.cells[0] + 1) + x
     }
@@ -494,7 +517,12 @@ fn add_check(
     });
 }
 
-pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<ResultParts, String> {
+pub(super) fn construct(
+    stock: &Mesh,
+    p: &Project,
+    paths: &[PathInfo],
+    plane: faceplate::Plane,
+) -> Result<ResultParts, String> {
     let c = p.construction.as_ref().unwrap();
     let si = inspect(stock);
     if si.boundary_edges + si.nonmanifold_edges + si.inconsistent_edges + si.degenerate_triangles
@@ -517,10 +545,6 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
         return Err("Use mesh spacing 0.2–1 mm, wall and faceplate depth at least 3× spacing, wall ≤5 mm, and a faceplate gap of 0–1 mm.".into());
     }
     let bounds = stock.bounds();
-    let plane = bounds[1][c.faceplate_axis] - c.faceplate_depth_mm;
-    if plane <= bounds[0][c.faceplate_axis] + c.wall_mm {
-        return Err("Faceplate cut leaves no usable shell body; reduce its depth.".into());
-    }
     if let Some(cut) = &c.connector {
         if !valid(cut.center_mm)
             || !valid(cut.rotation_deg)
@@ -551,7 +575,7 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
     {
         return Err("A sound bore is smaller than 3× mesh spacing. Refine the grid or disable sound-path cuts.".into());
     }
-    let grid = Grid::new(bounds, c.resolution_mm)?;
+    let grid = Grid::for_cut(bounds, c.resolution_mm, plane.normal)?;
     let source = DistanceMesh::new(stock);
     let routes: Vec<Vec<V>> = paths
         .iter()
@@ -575,8 +599,8 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
     for q in grid.points() {
         let d = source.signed(q);
         let cavity = d + c.wall_mm;
-        let mut body = d.max(-cavity).max(q[c.faceplate_axis] - plane);
-        let mut cap = d.max(plane + c.faceplate_gap_mm - q[c.faceplate_axis]);
+        let mut body = d.max(-cavity).max(plane.signed(q));
+        let mut cap = d.max(c.faceplate_gap_mm - plane.signed(q));
         if c.drilled_channels {
             // Keep material around each route BEFORE removing the bore. This is
             // part of the same shell field, clipped to the original stock.
@@ -588,7 +612,7 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
                     .fold(f64::INFINITY, f64::min)
                     - p.drivers[i].outer_diameter_mm / 2.;
                 let surround = surround.max(-dot(sub(q, route[0]), axis));
-                body = body.min(surround).max(d).max(q[c.faceplate_axis] - plane);
+                body = body.min(surround).max(d).max(plane.signed(q));
             }
         }
         if let Some(cut) = &c.connector {
@@ -613,7 +637,7 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
                 cap = cap.max(-hole);
             }
         }
-        if cavity < 0. && q[c.faceplate_axis] < plane && body >= 0. {
+        if cavity < 0. && plane.signed(q) < 0. && body >= 0. {
             cavity_samples += 1;
         }
         // At tangent grid crossings, differences below five parts per million
@@ -714,7 +738,9 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
         info: ConstructionInfo {
             resolution_mm: c.resolution_mm,
             requested_wall_mm: c.wall_mm,
-            faceplate_plane_mm: plane,
+            faceplate_plane_mm: plane.offset,
+            faceplate_normal: plane.normal,
+            detected_face_area_mm2: plane.detected_area,
             grid_points: grid.count(),
             cavity_volume_estimate_mm3: cavity_samples as f64 * grid.step.iter().product::<f64>(),
             body: body_info,
@@ -727,6 +753,32 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn diagonal_cap_is_closed() {
+        let grid = Grid::for_cut([[-10.; 3], [10.; 3]], 0.5, norm([1.; 3])).unwrap();
+        let n = norm([1.; 3]);
+        let values: Vec<_> = grid
+            .points()
+            .map(|p| {
+                let d = box_distance(p, [10.; 3]);
+                let v = d.max(-(d + 1.5)).max(dot(n, p) - (dot(n, [10.; 3]) - 4.));
+                if v.abs() < 1e-9 {
+                    0.
+                } else {
+                    v
+                }
+            })
+            .collect();
+        let m = stl_precision(mesh_field(&grid, &values).unwrap());
+        let info = inspect(&m);
+        assert_eq!(
+            info.boundary_edges
+                + info.nonmanifold_edges
+                + info.inconsistent_edges
+                + info.degenerate_triangles,
+            0
+        );
+    }
     #[test]
     fn integral_channel_is_closed() {
         let p:Project=serde_json::from_str(r#"{"format":"hc-headphone-workshop","version":1,"name":"drilled","shell_scale":[1,1,1],"mirrored":false,"drivers":[{"id":"d","preset":13,"position_mm":[0,0,0],"rotation_deg":[0,0,0],"lead_mm":2,"bend_mm":[-7,-0.69,0],"end_mm":[-9.8,-0.69,0],"inner_diameter_mm":2,"outer_diameter_mm":5}],"construction":{"wall_mm":1.5,"resolution_mm":0.5,"faceplate_axis":2,"faceplate_depth_mm":2,"faceplate_gap_mm":0,"cut_sound_paths":true,"drilled_channels":true,"connector":null}}"#).unwrap();

@@ -31,7 +31,11 @@
 <label class="check"><input id="constructionEnabled" type="checkbox"> CONSTRUCT HOLLOW SHELL</label>
 <div id="constructionFields" hidden>
 <div class="double"><label>WALL OFFSET · mm<input id="wallThickness" type="number" min="0.6" max="5" step="0.1" value="1.5"></label><label>MESH SPACING · mm<input id="meshSpacing" type="number" min="0.2" max="1" step="0.05" value="0.5"></label></div>
-<label>FACEPLATE CUT AXIS<select id="faceplateAxis"><option value="0">Positive X</option><option value="1">Positive Y</option><option value="2" selected>Positive Z</option></select></label>
+<label>FACEPLATE PLACEMENT<select id="faceplateAxis"><option value="auto" selected>Auto · detect broad flat face</option><option value="0">Positive X</option><option value="-0">Negative X</option><option value="1">Positive Y</option><option value="-1">Negative Y</option><option value="2">Positive Z</option><option value="-2">Negative Z</option><option value="normal">Custom outward normal</option></select></label>
+<div id="faceplateNormal" hidden><span class="group-label">OUTWARD NORMAL · X / Y / Z</span><div class="triple" id="faceplateNormalFields"></div></div>
+<button id="detectFaceplate" type="button">DETECT FACEPLATE &amp; REBUILD</button>
+<p class="hint">Auto follows the largest distinct flat face, including tilted shells. Cap depth is measured inward perpendicular to that face. If the surface is ambiguous, choose a side or custom outward normal. Older projects retain their saved cut until you select Auto or use Detect.</p>
+<p id="faceplateStatus" class="hint" role="status"></p>
 <div class="double"><label>CAP DEPTH · mm<input id="faceplateDepth" type="number" min="0.6" step="0.1" value="2.5"></label><label>SEAM GAP · mm<input id="faceplateGap" type="number" min="0" max="1" step="0.05" value="0"></label></div>
 <label>SOUND PATH CONSTRUCTION<select id="channelMode"><option value="tube">Separate sound tubes</option><option value="drilled">Drilled channels integral to shell</option></select></label>
 <button id="extendOutlets" type="button">EXTEND DRILLED OUTLETS TO SHELL</button>
@@ -82,5 +86,5 @@
 </div>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=8"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=9"></script>
 </body></html>

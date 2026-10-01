@@ -78,7 +78,11 @@ function draft() {
         p.construction = {
             drilled_channels: $("channelMode").value === "drilled",
             wall_mm: number("wallThickness"), resolution_mm: number("meshSpacing"),
-            faceplate_axis: Number($("faceplateAxis").value), faceplate_depth_mm: number("faceplateDepth"),
+            faceplate_mode: ["auto", "normal"].includes($("faceplateAxis").value) ? $("faceplateAxis").value : "axis",
+            faceplate_axis: Math.abs(Number($("faceplateAxis").value)) || 0,
+            faceplate_negative: $("faceplateAxis").value.startsWith("-"),
+            ...($("faceplateAxis").value === "normal" ? {faceplate_normal: [0,1,2].map(i=>number(`faceplateNormal${i}`))} : {}),
+            faceplate_depth_mm: number("faceplateDepth"),
             faceplate_gap_mm: number("faceplateGap"), cut_sound_paths: $("cutSoundPaths").checked,
             connector: $("connectorShape").value === "none" ? null : {
                 shape: $("connectorShape").value,
@@ -117,7 +121,8 @@ function showConstruction() {
         $("channelMode").value = c.drilled_channels ? "drilled" : "tube";
         $("wallThickness").value = c.wall_mm;
         $("meshSpacing").value = c.resolution_mm;
-        $("faceplateAxis").value = c.faceplate_axis;
+        $("faceplateAxis").value = c.faceplate_mode && c.faceplate_mode !== "axis" ? c.faceplate_mode : `${c.faceplate_negative ? "-" : ""}${c.faceplate_axis}`;
+        if (c.faceplate_normal) c.faceplate_normal.forEach((v,i)=>$(`faceplateNormal${i}`).value=v);
         $("faceplateDepth").value = c.faceplate_depth_mm;
         $("faceplateGap").value = c.faceplate_gap_mm;
         $("cutSoundPaths").checked = c.cut_sound_paths;
@@ -126,7 +131,11 @@ function showConstruction() {
             c.connector[field].forEach((value,i) => $(`${prefix}${i}`).value = value);
     }
     $("connectorFields").hidden = $("connectorShape").value === "none";
+    $("faceplateNormal").hidden = $("faceplateAxis").value !== "normal";
     const info = built?.construction;
+    $("faceplateStatus").textContent = info
+        ? `${info.detected_face_area_mm2 != null ? `Detected flat face: ${info.detected_face_area_mm2.toFixed(1)} mm².` : "Manual cap placement."} Outward normal (${info.faceplate_normal.map(v=>v.toFixed(3)).join(", ")}). Hide the shell to inspect the cap; hide the cap to inspect the matching opening.`
+        : "";
     $("constructionStatus").textContent = info
         ? `Constructed body + separate faceplate · ${info.resolution_mm.toFixed(2)} mm grid · ${info.requested_wall_mm.toFixed(2)} mm requested wall · cavity estimate ${info.cavity_volume_estimate_mm3.toFixed(0)} mm³ · cap ${info.faceplate.triangles.toLocaleString()} triangles. Inspect the result before manufacture.`
         : "Stock layout mode: hollowing and cuts are disabled.";
@@ -326,7 +335,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=6", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=7", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {
@@ -350,7 +359,7 @@ async function start() {
     if (!response.ok) throw new Error("Driver catalog could not load.");
     catalog = await response.json();
     $("preset").replaceChildren(...catalog.map((s) => option(s.id, s.name)));
-    for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation", "pinSize", "pinPosition", "pinRotation", "boardSize", "boardPosition", "boardRotation"])
+    for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation", "pinSize", "pinPosition", "pinRotation", "boardSize", "boardPosition", "boardRotation", "faceplateNormal"])
         for (let i = 0; i < 3; i++) {
             const label = document.createElement("label");
             label.textContent = ["X", "Y", "Z"][i];
@@ -361,7 +370,7 @@ async function start() {
             if (prefix === "connectorPosition") input.value = [8,0,0][i];
             if (prefix === "connectorSize") input.value = [3,3,8][i];
             if (prefix === "connectorRotation") input.value = [0,90,0][i];
-            const defaults={pinSize:[4,3,2],pinPosition:[-3,-4,1],pinRotation:[0,0,0],boardSize:[6,4,1.2],boardPosition:[2,-5,-2],boardRotation:[0,0,0]};
+            const defaults={faceplateNormal:[0,0,1],pinSize:[4,3,2],pinPosition:[-3,-4,1],pinRotation:[0,0,0],boardSize:[6,4,1.2],boardPosition:[2,-5,-2],boardRotation:[0,0,0]};
             if (defaults[prefix]) input.value=defaults[prefix][i];
             input.setAttribute("aria-label", `${prefix} ${["X", "Y", "Z"][i]}`);
             label.append(input);
@@ -369,6 +378,12 @@ async function start() {
         }
     project.drivers = [newDriver()];
     $("apply").onclick = guarded(apply);
+    $("faceplateAxis").onchange = () => $("faceplateNormal").hidden = $("faceplateAxis").value !== "normal";
+    $("detectFaceplate").onclick = guarded(async () => {
+        $("faceplateAxis").value = "auto";
+        $("faceplateNormal").hidden = true;
+        await apply();
+    });
     $("assemblyEnabled").onchange=()=>$("assemblyFields").hidden=!$("assemblyEnabled").checked;
     for (const prefix of ["pin","board"]) $(prefix+"Enabled").onchange=()=>$(prefix+"Fields").hidden=!$(prefix+"Enabled").checked;
     $("channelMode").onchange=()=>{if ($("channelMode").value==="drilled") $("cutSoundPaths").checked=true;};

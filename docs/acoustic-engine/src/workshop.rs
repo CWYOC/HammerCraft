@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 pub mod assembly;
 mod containment;
+mod faceplate;
 mod placement;
 mod solid;
 type V = [f64; 3];
@@ -538,6 +539,11 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
         }
     }
     shell.validate()?;
+    let cap_plane = p
+        .construction
+        .as_ref()
+        .map(|c| faceplate::resolve(c, &shell))
+        .transpose()?;
     let mut info = inspect(&shell);
     let mut warnings=vec!["Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet.".into()];
     if info.boundary_edges
@@ -646,9 +652,9 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
     // Run before whole-assembly reflection, which preserves these distances and intersections.
     let mut placement_checks = placement::inspect_layout(p, &catalog, &parts, &paths, &info);
     placement_checks.extend(assembly::inspect(p, &parts, &paths)?);
-    let construction = if p.construction.is_some() && make_solid {
-        let result = solid::construct(&parts[0].mesh, p, &paths)?;
-        placement_checks.extend(containment::inspect_parts(p, &parts, &info));
+    let mut construction = if p.construction.is_some() && make_solid {
+        let result = solid::construct(&parts[0].mesh, p, &paths, cap_plane.unwrap())?;
+        placement_checks.extend(containment::inspect_parts(p, &parts, &info, cap_plane));
         parts[0].mesh = result.body;
         parts[0].name = if p.construction.as_ref().unwrap().drilled_channels {
             "Shell body with drilled channels"
@@ -669,7 +675,7 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
         warnings.push("Sampled shell construction: inspect all machined openings, remaining walls and assembly access before manufacture. No process qualification is implied.".into());
         Some(result.info)
     } else {
-        placement_checks.extend(containment::inspect_parts(p, &parts, &info));
+        placement_checks.extend(containment::inspect_parts(p, &parts, &info, cap_plane));
         None
     };
     let export_blockers: Vec<String> = placement_checks
@@ -717,6 +723,9 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
         }
     }
     if p.mirrored {
+        if let Some(c) = &mut construction {
+            c.faceplate_normal[0] = -c.faceplate_normal[0];
+        }
         for part in &mut parts {
             for v in &mut part.mesh.vertices {
                 v[0] = -v[0];
