@@ -5,7 +5,7 @@ use super::*;
 // Numerical separation only, not an assembly/manufacturing allowance.
 const SEPARATION_MM: f64 = 1e-5;
 
-fn one_surface(mesh: &Mesh) -> bool {
+pub(super) fn one_surface(mesh: &Mesh) -> bool {
     let mut parent: Vec<usize> = (0..mesh.vertices.len()).collect();
     fn root(parent: &mut [usize], mut i: usize) -> usize {
         while parent[i] != i {
@@ -37,16 +37,64 @@ pub fn inspect_parts(p: &Project, parts: &[Part], info: &MeshInfo) -> Vec<placem
     let tree = usable.then(|| solid::DistanceMesh::new(stock));
     let bounds = stock.bounds();
     let mut checks = vec![];
-    for part in parts
-        .iter()
-        .filter(|part| part.kind == "driver" || part.kind == "path")
-    {
-        let cavity = if part.kind == "driver" {
+    for part in parts.iter().filter(|part| {
+        matches!(
+            part.kind.as_str(),
+            "driver" | "path" | "connector" | "crossover" | "cable"
+        )
+    }) {
+        if part.kind == "path" && p.construction.as_ref().is_some_and(|c| c.drilled_channels) {
+            // The guide is a subtractive tool, not a protruding physical tube.
+            // Only the terminal opening may approach the exterior; mid-route
+            // bores must remain contained. Retained stock is clipped by the CSG.
+            let id = part.id.strip_prefix("path:").unwrap();
+            let driver = p.drivers.iter().find(|d| d.id == id).unwrap();
+            let catalog: Vec<Preset> =
+                serde_json::from_str(include_str!("../../../assets/workshop/drivers.json"))
+                    .unwrap();
+            let preset = catalog.iter().find(|s| s.id == driver.preset).unwrap();
+            let start = add(
+                driver.position_mm,
+                rotate(preset.outlet_mm, driver.rotation_deg),
+            );
+            let points = [
+                start,
+                add(
+                    start,
+                    mul(
+                        rotate(preset.outlet_axis, driver.rotation_deg),
+                        driver.lead_mm,
+                    ),
+                ),
+                driver.bend_mm,
+                driver.end_mm,
+            ];
+            let r = driver.inner_diameter_mm / 2.;
+            let status = if let Some(tree) = &tree {
+                let contained = (0..=128).all(|i| {
+                    let v = bezier(points, i as f64 / 128.);
+                    let terminal = length(sub(v, driver.end_mm)) < 2. * r;
+                    tree.signed(v) < SEPARATION_MM && (terminal || tree.signed(v) < -r)
+                });
+                if contained {
+                    "pass"
+                } else {
+                    "error"
+                }
+            } else {
+                "unverified"
+            };
+            checks.push(placement::Check{code:"tube-shell".into(),status:status.into(),part_ids:vec![part.id.clone()],message:format!("{}: drilled centreline must remain inside stock, with the bore clear of external walls except at its outlet. Guide surrounds are clipped to the shell.",part.name)});
+            continue;
+        }
+        let cavity = if part.kind != "path" {
             p.construction.as_ref()
         } else {
             None
         };
-        let code = if cavity.is_some() {
+        let code = if matches!(part.kind.as_str(), "connector" | "crossover" | "cable") {
+            "assembly-shell"
+        } else if cavity.is_some() {
             "package-cavity"
         } else if part.kind == "driver" {
             "package-shell"

@@ -27,7 +27,7 @@ fn point_segment(p: V, a: V, b: V) -> f64 {
     length(sub(p, add(a, mul(v, t))))
 }
 // Closest distance and parameters on two finite line segments, including point segments.
-fn segment_distance(a: V, b: V, c: V, d: V) -> (f64, f64, f64) {
+pub(super) fn segment_distance(a: V, b: V, c: V, d: V) -> (f64, f64, f64) {
     let (u, v, w) = (sub(b, a), sub(d, c), sub(a, c));
     let (aa, bb, cc, dd, ee) = (dot(u, u), dot(u, v), dot(v, v), dot(u, w), dot(v, w));
     let (mut s, mut t);
@@ -94,7 +94,7 @@ fn add_axis(axes: &mut Vec<V>, v: V) {
         axes.push(v);
     }
 }
-struct Body<'a> {
+pub(super) struct Body<'a> {
     mesh: &'a Mesh,
     planes: Vec<(V, V)>,
     axes: Vec<V>,
@@ -102,7 +102,7 @@ struct Body<'a> {
     bounds: [V; 2],
 }
 impl<'a> Body<'a> {
-    fn new(mesh: &'a Mesh) -> Self {
+    pub(super) fn new(mesh: &'a Mesh) -> Self {
         let (mut planes, mut axes, mut edges) = (vec![], vec![], vec![]);
         for &[i, j, k] in &mesh.triangles {
             let (a, b, c) = (mesh.vertices[i], mesh.vertices[j], mesh.vertices[k]);
@@ -126,10 +126,10 @@ impl<'a> Body<'a> {
             bounds: mesh.bounds(),
         }
     }
-    fn inside(&self, p: V) -> bool {
+    pub(super) fn inside(&self, p: V) -> bool {
         self.planes.iter().all(|&(n, a)| dot(n, sub(p, a)) < -EPS)
     }
-    fn distance(&self, a: V, b: V) -> f64 {
+    pub(super) fn distance(&self, a: V, b: V) -> f64 {
         if self.inside(a) || self.inside(b) {
             return 0.;
         }
@@ -166,7 +166,7 @@ fn projection(m: &Mesh, axis: V) -> [f64; 2] {
         })
 }
 // SAT is exact for the represented convex box / faceted cylinder, including rotations.
-fn overlap(a: &Body, b: &Body) -> f64 {
+pub(super) fn overlap(a: &Body, b: &Body) -> f64 {
     if !ranges_overlap(a.bounds, b.bounds, EPS) {
         return -1.;
     }
@@ -326,7 +326,9 @@ pub fn inspect_layout(
             if outside {
                 format!("{label}: package exceeds the shell's bounding box.")
             } else {
-                format!("{label}: inside stock bounding box; the curved surface is checked separately.")
+                format!(
+                    "{label}: inside stock bounding box; the curved surface is checked separately."
+                )
             },
         );
         push(
@@ -554,7 +556,7 @@ pub fn inspect_layout(
     for (code,message) in [
         ("finished-shell","Outer containment is checked for represented parts. Enable shell construction to check package wall offset and faceplate clearance; remaining wall thickness and shell self-intersections are unverified."),
         ("manufacturing-clearance","No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."),
-        ("physical-assembly","Damper seats, connectors, crossover components, insulated wires, adhesive regions and assembly access are not represented in 3D."),
+        ("physical-assembly","Connector, crossover-board and harness envelopes are optional planning geometry. Exact pin assignments, solder joints, individual crossover parts, damper seats, adhesive and assembly access remain unverified."),
     ] {push(&mut out,code,"unverified",&[],message.into());}
     if p.mirrored {
         push(&mut out,"mirrored-components","unverified",&[],"Mirrored package interfaces must be realizable with actual purchased parts; handedness and both-side assembly access are not verified.".into());

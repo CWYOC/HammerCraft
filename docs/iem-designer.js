@@ -1627,13 +1627,15 @@
         const svg = $(`cad-${d.id}`);
         if (!svg) return;
         const circuit = d.circuit;
+        const canvasHeight = Math.max(360, ...circuit.components.map(c => num(c.y, 0) + 100), ...circuit.nodes.map(n => num(n.y, 0) + 40));
+        svg.setAttribute("viewBox", `0 0 900 ${canvasHeight}`);
         const driverNode = nodeById(d, circuit.output) || nodeById(d, circuit.input);
         const lines = [];
         const components = [];
         const nodes = [];
 
         lines.push(`<defs><pattern id="grid-${d.id}" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(23,23,23,.07)" stroke-width="1"/></pattern></defs>`);
-        lines.push(`<rect class="iem-cad-background" width="900" height="360" fill="url(#grid-${d.id})"/>`);
+        lines.push(`<rect class="iem-cad-background" width="900" height="${canvasHeight}" fill="url(#grid-${d.id})"/>`);
         lines.push(`<g data-legacy-connections="${d.id}">${legacyConnectionSvg(d)}</g>`);
 
         for (const component of circuit.components) {
@@ -2278,25 +2280,7 @@
     }
 
     function autoArrange(d) {
-        mutateCircuit(d, () => {
-            const circuit = d.circuit;
-            const input = nodeById(d, circuit.input);
-            const ground = nodeById(d, circuit.ground);
-            if (input) Object.assign(input, { x: 80, y: 120 });
-            if (ground) Object.assign(ground, { x: 450, y: 320 });
-            const others = circuit.nodes.filter(n => n.id !== circuit.input && n.id !== circuit.ground);
-            others.forEach((node, index) => {
-                node.x = 220 + index * Math.min(140, 520 / Math.max(1, others.length));
-                node.y = 120;
-            });
-            for (const component of circuit.components) {
-                const a = nodeById(d, component.nodeA);
-                const b = nodeById(d, component.nodeB);
-                component.x = snap(((a?.x || 0) + (b?.x || 0)) / 2);
-                component.y = snap(((a?.y || 0) + (b?.y || 0)) / 2);
-                if (component.nodeB === circuit.ground || component.nodeA === circuit.ground) component.x += 40;
-            }
-        });
+        mutateCircuit(d, () => window.HCCircuit.arrange(d.circuit));
     }
 
     function openCircuitPropertyPage(d, componentId) {

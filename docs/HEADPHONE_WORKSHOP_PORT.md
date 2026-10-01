@@ -1,6 +1,6 @@
 # HeadphoneWorkshop website port
 
-Status: **IEM layout and initial shell-construction milestones implemented; full native application migration remains incomplete.**
+Status: **IEM layout, automatic assembly planning and shell-construction milestones implemented; full native application migration remains incomplete.**
 
 The website now has `headphone-workshop.html`, linked from the IEM Designer's **3D WORKSHOP** button. Geometry runs in the existing Rust crate, compiled to browser WebAssembly. A module worker handles STL parsing, geometry generation, inspection and export. The JavaScript interface edits parameters and draws the Rust-generated meshes using WebGL. Deployment remains compatible with the existing static website; no Rust server is required.
 
@@ -20,14 +20,16 @@ The website now has `headphone-workshop.html`, linked from the IEM Designer's **
 
 The [Design Studio](DESIGN_STUDIO.md) now combines the workshop and acoustic designer in one shared project. Explicit driver/tube links synchronise an accepted 3D route's length and bore into one acoustic tube section. The standalone editors also remain available. A package preset does not imply that matching acoustic calibration exists.
 
+Automatic driver, connector/board-envelope placement, harness-space routing, undo, improved schematic arrangement and integral drilled channels are available in engine 0.23.0. See [usage and limits](AUTO_ARRANGE.md).
+
 ## Native capabilities still to port
 
 | Area | Current limitation / next implementation |
 | --- | --- |
-| Shell construction | Initial hollow body, faceplate and cut features implemented. Integral tube-wall unions, native nozzle machining, connector-specific seats, faceplate retention and exact post-cut wall checks remain pending. Surface generation has a native C++ parity fixture; this is not full native finished-shell parity. |
+| Shell construction | Initial hollow body, faceplate and cut features implemented. Integral drilled channels are implemented. Native nozzle machining, connector-specific seats, faceplate retention and exact post-cut wall checks remain pending. Surface generation has a native C++ parity fixture; this is not full native finished-shell parity. |
 | Fit / collision | Complete part triangles are checked against a closed connected shell surface; constructed-mode packages also require wall-offset/cap-plane clearance. Actual material allowances, tube-to-wall fit/sealing, remaining wall thickness and rear-vent geometry remain unverified. Error layouts stay editable; failed or unverified containment blocks STL export and affected linked acoustic calculations. |
 | Ear-fit | Port ear-profile schema, surface fitting and constraints. |
-| Acoustic integration | Shared project and explicit driver/tube links implemented in Design Studio. Stepped routes, physical damper placement, manifolds and 3D electrical wiring remain pending; matching measurement data must still be supplied. |
+| Acoustic integration | Shared project and explicit driver/tube links implemented in Design Studio. Stepped routes, physical damper placement, manifolds and net-aware 3D electrical wiring remain pending (harness-space routing is available); matching measurement data must still be supplied. |
 | Measurement evidence | Native file imports, sample/reseat tracking and release gates are not part of this geometry page. The website's existing physical-validation protocol still applies. |
 | Stereo workflow | Reflection of one assembly only; independently editable linked left/right projects are pending. |
 | Persistence | Native `.fmp` migration and compatibility fixtures are pending. JSON is the new web-only format. |
@@ -42,6 +44,7 @@ Even a closed, consistently wound mesh can self-intersect or fail fit/clearance 
 - `acoustic-engine/src/workshop.rs`: Rust mesh/STL types, bounded input validation, native swept-tube port, catalog-based transforms, metrics and exports.
 - `acoustic-engine/src/workshop/placement.rs`: placement diagnostics against represented geometry, with explicit missing-data coverage.
 - `acoustic-engine/src/workshop/containment.rs`: full-face shell/cavity containment at STL coordinate precision and rejection of unsupported shell surfaces.
+- `acoustic-engine/src/workshop/assembly.rs`: bounded placement search, optional connector/board envelopes, harness anchors, routing and clearance checks.
 - `acoustic-engine/src/workshop/solid.rs`: mesh distance field, bounded marching tetrahedra, hollowing/cuts, STL-precision cleanup and sampled cavity checks.
 - `acoustic-engine/src/lib.rs`: additive `workshop_*` WASM exports; acoustic simulation equations are unchanged.
 - `workshop-worker.js`: transactional shell/project state and asynchronous calculation.
@@ -63,7 +66,7 @@ cd ../..
 node --test tests/*.test.mjs
 ```
 
-The checked-in browser WASM uses wasm-bindgen 0.2.129, matching `Cargo.lock`. Geometry exports were added in engine 0.19.0, placement checking in 0.20.0, shell construction in 0.21.0, and shell containment/export blocking in 0.22.0. The browser wrapper and binary cache versions move together.
+The checked-in browser WASM uses wasm-bindgen 0.2.129, matching `Cargo.lock`. Geometry exports were added in engine 0.19.0, placement checking in 0.20.0, shell construction in 0.21.0, shell containment/export blocking in 0.22.0, and arrangement/integral drilled channels in 0.23.0. The browser wrapper and binary cache versions move together.
 
 For a local interface test without an account or database connection:
 

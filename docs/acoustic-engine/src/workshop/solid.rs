@@ -11,6 +11,9 @@ pub struct Construction {
     pub faceplate_depth_mm: f64,
     pub faceplate_gap_mm: f64,
     pub cut_sound_paths: bool,
+    /// Retain channel surrounds in the shell stock, then subtract their bores.
+    #[serde(default)]
+    pub drilled_channels: bool,
     pub connector: Option<Cut>,
 }
 #[derive(Clone, Deserialize, Serialize)]
@@ -531,6 +534,16 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
             return Err("Connector cut needs finite coordinates and sizes between 3× spacing and 50 mm. Cylinder X and Y must have equal diameter.".into());
         }
     }
+    if c.drilled_channels && !c.cut_sound_paths {
+        return Err("Drilled channels require sound-path cuts to be enabled.".into());
+    }
+    if c.drilled_channels
+        && p.drivers
+            .iter()
+            .any(|d| (d.outer_diameter_mm - d.inner_diameter_mm) / 2. + 1e-9 < 3. * c.resolution_mm)
+    {
+        return Err("Integral channel walls must be at least 3× mesh spacing. Increase the channel outside diameter or refine the grid.".into());
+    }
     if c.cut_sound_paths
         && p.drivers
             .iter()
@@ -548,6 +561,13 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
                 .collect()
         })
         .collect();
+    if c.drilled_channels
+        && paths.iter().zip(&p.drivers).any(|(path, driver)| {
+            source.signed(path.control_points[3]).abs() > driver.inner_diameter_mm / 2.
+        })
+    {
+        return Err("A drilled outlet does not reach the shell surface. Use Extend drilled outlets to shell, or move the endpoint to the intended outlet wall.".into());
+    }
     let mut body_values = Vec::with_capacity(grid.count());
     let mut cap_values = Vec::with_capacity(grid.count());
     let (mut cavity_samples, mut connector_samples) = (0usize, 0usize);
@@ -555,11 +575,22 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
     for q in grid.points() {
         let d = source.signed(q);
         let cavity = d + c.wall_mm;
-        if cavity < 0. && q[c.faceplate_axis] < plane {
-            cavity_samples += 1;
-        }
         let mut body = d.max(-cavity).max(q[c.faceplate_axis] - plane);
         let mut cap = d.max(plane + c.faceplate_gap_mm - q[c.faceplate_axis]);
+        if c.drilled_channels {
+            // Keep material around each route BEFORE removing the bore. This is
+            // part of the same shell field, clipped to the original stock.
+            for (i, route) in routes.iter().enumerate() {
+                let axis = norm(sub(route[1], route[0]));
+                let surround = route
+                    .windows(2)
+                    .map(|s| segment_distance(q, s[0], s[1]))
+                    .fold(f64::INFINITY, f64::min)
+                    - p.drivers[i].outer_diameter_mm / 2.;
+                let surround = surround.max(-dot(sub(q, route[0]), axis));
+                body = body.min(surround).max(d).max(q[c.faceplate_axis] - plane);
+            }
+        }
         if let Some(cut) = &c.connector {
             let hole = cut.distance(q);
             if hole < 0. && body.min(cap) < 0. {
@@ -582,8 +613,37 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
                 cap = cap.max(-hole);
             }
         }
-        body_values.push(if body.abs() <= 1e-9 { 0. } else { body });
-        cap_values.push(if cap.abs() <= 1e-9 { 0. } else { cap });
+        if cavity < 0. && q[c.faceplate_axis] < plane && body >= 0. {
+            cavity_samples += 1;
+        }
+        // At tangent grid crossings, differences below five parts per million
+        // of a cell otherwise produce zero-area float32 slivers after export.
+        body_values.push(
+            if body.abs()
+                <= if c.drilled_channels {
+                    c.resolution_mm * 1e-5
+                } else {
+                    1e-9
+                }
+            {
+                0.
+            } else {
+                body
+            },
+        );
+        cap_values.push(
+            if cap.abs()
+                <= if c.drilled_channels {
+                    c.resolution_mm * 1e-5
+                } else {
+                    1e-9
+                }
+            {
+                0.
+            } else {
+                cap
+            },
+        );
     }
     if cavity_samples == 0 {
         return Err("Wall setting leaves no resolved internal cavity; reduce wall thickness or enlarge the stock.".into());
@@ -601,6 +661,10 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
         }
     }
     let mut checks = vec![];
+    if c.drilled_channels {
+        add_check(&mut checks,"integral-channel-body",if containment::one_surface(&body) {"pass"} else {"error"},vec!["shell".into()],
+            "Drilled channel surrounds must join the shell body. Disconnected retained material blocks export; move channel ends into the outlet wall.".into());
+    }
     add_check(&mut checks,"shell-construction","unverified",vec!["shell".into(),"faceplate".into()],format!("Hollow body and faceplate generated at {:.3} mm grid spacing. Wall {:.2} mm is a requested offset, not a certified minimum after machining; inspect thin features and confirm with a finer grid.",c.resolution_mm,c.wall_mm));
     if c.connector.is_some() {
         add_check(
@@ -627,7 +691,11 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
                 &mut checks,
                 "sound-outlet",
                 if end.abs() > p.drivers[i].inner_diameter_mm / 2. {
-                    "warning"
+                    if c.drilled_channels {
+                        "error"
+                    } else {
+                        "warning"
+                    }
                 } else {
                     "unverified"
                 },
@@ -635,7 +703,7 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
                 if end.abs() > p.drivers[i].inner_diameter_mm / 2. {
                     "Sound bore does not reach the stock surface near its endpoint. Place the tube end just inside the intended outlet and inspect the opening; physical tubes must not protrude.".into()
                 } else {
-                    format!("Sound path cut removes {0} material samples. Confirm the outlet, bore continuity and tube seal; internal tubes remain separate parts.",bore_samples[i])
+                    format!("Sound path cut removes {} material samples. {} Confirm the outlet, bore continuity and inlet seal.",bore_samples[i],if c.drilled_channels {"Channel material is integral to the shell; no separate tube is exported."} else {"Internal tubes remain separate parts."})
                 },
             );
         }
@@ -659,6 +727,14 @@ pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<Result
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn integral_channel_is_closed() {
+        let p:Project=serde_json::from_str(r#"{"format":"hc-headphone-workshop","version":1,"name":"drilled","shell_scale":[1,1,1],"mirrored":false,"drivers":[{"id":"d","preset":13,"position_mm":[0,0,0],"rotation_deg":[0,0,0],"lead_mm":2,"bend_mm":[-7,-0.69,0],"end_mm":[-9.8,-0.69,0],"inner_diameter_mm":2,"outer_diameter_mm":5}],"construction":{"wall_mm":1.5,"resolution_mm":0.5,"faceplate_axis":2,"faceplate_depth_mm":2,"faceplate_gap_mm":0,"cut_sound_paths":true,"drilled_channels":true,"connector":null}}"#).unwrap();
+        let mut cat: Vec<Preset> =
+            serde_json::from_str(include_str!("../../../assets/workshop/drivers.json")).unwrap();
+        cat[13].size_mm = [20.; 3];
+        build(&p, &envelope(&cat[13])).unwrap();
+    }
     #[test]
     fn polygonizer_matches_native_cpp_fixture() {
         let expected: Mesh = serde_json::from_str(include_str!(

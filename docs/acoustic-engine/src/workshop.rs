@@ -2,9 +2,10 @@
 //! Swept tubes retain the native parallel-transport frames, taper and triangle order.
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+pub mod assembly;
+mod containment;
 mod placement;
 mod solid;
-mod containment;
 type V = [f64; 3];
 fn add(a: V, b: V) -> V {
     std::array::from_fn(|i| a[i] + b[i])
@@ -415,7 +416,7 @@ pub struct Driver {
     pub inner_diameter_mm: f64,
     pub outer_diameter_mm: f64,
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Project {
     pub format: String,
     pub version: u32,
@@ -425,6 +426,8 @@ pub struct Project {
     pub drivers: Vec<Driver>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub construction: Option<solid::Construction>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub assembly: Option<assembly::Assembly>,
 }
 #[derive(Serialize)]
 pub struct Part {
@@ -511,6 +514,9 @@ fn envelope(s: &Preset) -> Mesh {
     }
 }
 pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
+    build_inner(p, base, true)
+}
+fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, String> {
     base.validate()?;
     if p.format != "hc-headphone-workshop" || p.version != 1 {
         return Err(
@@ -558,6 +564,7 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
             || d.id == "shell"
             || d.id == "faceplate"
             || d.id.starts_with("path:")
+            || d.id.starts_with("assembly:")
             || d.id.len() > 100
             || !ids.insert(&d.id)
         {
@@ -633,15 +640,29 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
             mesh: route,
         });
     }
+    if let Some(a) = &p.assembly {
+        assembly::append(a, &mut parts)?;
+    }
     // Run before whole-assembly reflection, which preserves these distances and intersections.
     let mut placement_checks = placement::inspect_layout(p, &catalog, &parts, &paths, &info);
-    let construction = if p.construction.is_some() {
+    placement_checks.extend(assembly::inspect(p, &parts, &paths)?);
+    let construction = if p.construction.is_some() && make_solid {
         let result = solid::construct(&parts[0].mesh, p, &paths)?;
         placement_checks.extend(containment::inspect_parts(p, &parts, &info));
         parts[0].mesh = result.body;
-        parts[0].name = "Constructed hollow shell body".into();
+        parts[0].name = if p.construction.as_ref().unwrap().drilled_channels {
+            "Shell body with drilled channels"
+        } else {
+            "Constructed hollow shell body"
+        }
+        .into();
         info = inspect(&parts[0].mesh);
-        parts.push(Part { id: "faceplate".into(), name: "Separate faceplate".into(), kind: "faceplate".into(), mesh: result.faceplate });
+        parts.push(Part {
+            id: "faceplate".into(),
+            name: "Separate faceplate".into(),
+            kind: "faceplate".into(),
+            mesh: result.faceplate,
+        });
         placement_checks.retain(|c| c.code != "finished-shell");
         placement_checks.extend(result.checks);
         warnings.retain(|s| !s.starts_with("Layout preview:"));
@@ -651,16 +672,29 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         placement_checks.extend(containment::inspect_parts(p, &parts, &info));
         None
     };
-    let export_blockers: Vec<String> = placement_checks.iter()
-        .filter(|c| c.status == "error" || (c.status != "pass"
-            && matches!(c.code.as_str(), "package-shell" | "package-cavity" | "tube-shell")))
-        .map(|c| c.message.clone()).collect();
+    let export_blockers: Vec<String> = placement_checks
+        .iter()
+        .filter(|c| {
+            c.status == "error"
+                || (c.status != "pass"
+                    && matches!(
+                        c.code.as_str(),
+                        "package-shell" | "package-cavity" | "tube-shell" | "assembly-shell"
+                    ))
+        })
+        .map(|c| c.message.clone())
+        .collect();
     for check in &placement_checks {
         if check.status == "error" || check.status == "warning" {
             warnings.push(check.message.clone());
         }
-        if check.status == "error" || (check.status != "pass"
-            && matches!(check.code.as_str(), "package-shell" | "package-cavity" | "tube-shell")) {
+        if check.status == "error"
+            || (check.status != "pass"
+                && matches!(
+                    check.code.as_str(),
+                    "package-shell" | "package-cavity" | "tube-shell" | "assembly-shell"
+                ))
+        {
             for path in &mut paths {
                 if check
                     .part_ids
@@ -669,6 +703,16 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
                 {
                     path.placement_errors.push(check.message.clone());
                 }
+            }
+        }
+    }
+    if p.construction.as_ref().is_some_and(|c| c.drilled_channels) {
+        for part in &mut parts {
+            if part.kind == "path" {
+                part.kind = "channel".into();
+                part.name = part
+                    .name
+                    .replace("sound tube", "drilled channel guide (not a part)");
             }
         }
     }

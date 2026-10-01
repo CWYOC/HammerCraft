@@ -235,5 +235,40 @@
             circuit: { input, output, ground, nodes: [...used].map(id => ({ id })), components, filters: circuit.filters || [] } };
     }
 
-    window.HCCircuit = { endpointNode, wirePoints, createWire, pruneNodes, makeEditable, removeComponent, duplicateComponent, splitWire, compile };
+    // Arrange graphics only: never infer connectivity from positions.
+    function arrange(circuit) {
+        const roots = new Map(circuit.nodes.map(n => [n.id, n.id]));
+        const root = n => { while (roots.has(n) && roots.get(n) !== n) n = roots.get(n); return n; };
+        for (const wire of circuit.components.filter(c => c.kind === "wire")) {
+            const a = root(endpointNode(circuit, wire.endpointA, wire.nodeA));
+            const b = root(endpointNode(circuit, wire.endpointB, wire.nodeB));
+            if (roots.has(a) && roots.has(b)) roots.set(b, a);
+        }
+        const parts = circuit.components.filter(c => c.kind !== "wire");
+        const distance = new Map([[root(circuit.input), 0]]);
+        for (let pass = 0; pass < parts.length; pass++) for (const c of parts) {
+            const a = root(c.nodeA), b = root(c.nodeB);
+            if (a === root(circuit.ground) || b === root(circuit.ground)) continue;
+            if (distance.has(a) && (!distance.has(b) || distance.get(b) > distance.get(a) + 1)) distance.set(b, distance.get(a) + 1);
+            if (distance.has(b) && (!distance.has(a) || distance.get(a) > distance.get(b) + 1)) distance.set(a, distance.get(b) + 1);
+        }
+        const rank = c => Math.min(distance.get(root(c.nodeA)) ?? Infinity, distance.get(root(c.nodeB)) ?? Infinity);
+        const ordered = [...parts].sort((a,b) => rank(a)-rank(b));
+        ordered.forEach((c,i) => Object.assign(c, {x: 220 + (i % 4)*150, y: 120 + Math.floor(i/4)*140, rotationDeg: 0}));
+        const height = Math.max(360, 240 + Math.ceil(parts.length / 4)*140);
+        const input = circuit.nodes.find(n => n.id === circuit.input);
+        if (input) Object.assign(input, {x:80,y:120});
+        const ground = circuit.nodes.find(n => n.id === circuit.ground);
+        if (ground && ground !== input) Object.assign(ground, {x:800,y:height-40});
+        const output = circuit.nodes.find(n => n.id === circuit.output);
+        if (output && output !== input && output !== ground) Object.assign(output, {x:762,y:120});
+        circuit.nodes.filter(n => ![circuit.input,circuit.output,circuit.ground].includes(n.id)).forEach((n,i) => {
+            const owner = ordered.find(c => c.nodeA === n.id || c.nodeB === n.id);
+            if (owner && !n.connectPoint) Object.assign(n, {x:owner.x+(owner.nodeA===n.id?-48:48), y:owner.y});
+            else Object.assign(n, {x:140+(i%5)*140, y:200+Math.floor(i/5)*140});
+        });
+        for (const wire of circuit.components.filter(c => c.kind === "wire")) { wire.route = []; wire.routing = "orthogonal"; }
+    }
+
+    window.HCCircuit = { endpointNode, wirePoints, createWire, pruneNodes, makeEditable, removeComponent, duplicateComponent, splitWire, compile, arrange };
 })();

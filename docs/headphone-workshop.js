@@ -1,4 +1,4 @@
-import { createViewer } from "./workshop-viewer.js?v=3";
+import { createViewer } from "./workshop-viewer.js?v=5";
 const $ = (id) => document.getElementById(id);
 let project = {
     format: "hc-headphone-workshop",
@@ -17,6 +17,7 @@ let catalog = [],
     worker,
     workerFailed = false;
 const pending = new Map();
+let arrangeUndo;
 function tell(text, error = false) {
     $("status").textContent = text;
     $("status").classList.toggle("error", error);
@@ -24,9 +25,10 @@ function tell(text, error = false) {
 function setBusy(value) {
     busy = value;
     for (const el of document.querySelectorAll(
-        ".workshop-controls input,.workshop-controls select,.workshop-controls button,.project-bar input,.project-bar button,.exports button,.exports select,#placementChecks button",
+        ".workshop-controls input,.workshop-controls select,.workshop-controls button,.project-bar input,.project-bar button,.exports button,.exports select,#placementChecks button,.arrange-bar button",
     ))
         el.disabled = value;
+    $("undoArrange").disabled = value || !arrangeUndo;
     $("exportStl").disabled = value || !built || !!built.export_blockers?.length;
 }
 function rpc(action, data = {}) {
@@ -54,7 +56,7 @@ function option(value, label) {
     o.textContent = label;
     return o;
 }
-function newDriver(index = 0) {
+function newDriver(index = 0, construction) {
     return {
         id: crypto.randomUUID(),
         preset: 13,
@@ -64,7 +66,7 @@ function newDriver(index = 0) {
         bend_mm: [-3 + index * 3.5, 3, -2],
         lead_mm: 3,
         inner_diameter_mm: 1.6,
-        outer_diameter_mm: 2.4,
+        outer_diameter_mm: Math.max(2.4, 1.6 + (construction?.drilled_channels ? 6 * construction.resolution_mm : 0)),
     };
 }
 function draft() {
@@ -74,6 +76,7 @@ function draft() {
     p.mirrored = $("mirrored").checked;
     if ($("constructionEnabled").checked) {
         p.construction = {
+            drilled_channels: $("channelMode").value === "drilled",
             wall_mm: number("wallThickness"), resolution_mm: number("meshSpacing"),
             faceplate_axis: Number($("faceplateAxis").value), faceplate_depth_mm: number("faceplateDepth"),
             faceplate_gap_mm: number("faceplateGap"), cut_sound_paths: $("cutSoundPaths").checked,
@@ -85,6 +88,11 @@ function draft() {
             },
         };
     } else delete p.construction;
+    if ($("assemblyEnabled").checked) {
+        const body = prefix => ({size_mm:[0,1,2].map(i=>number(`${prefix}Size${i}`)),position_mm:[0,1,2].map(i=>number(`${prefix}Position${i}`)),rotation_deg:[0,1,2].map(i=>number(`${prefix}Rotation${i}`))});
+        p.assembly = {connector:$("pinEnabled").checked ? body("pin") : null, crossover:$("boardEnabled").checked ? body("board") : null,
+            clearance_mm:number("assemblyClearance"),cable_diameter_mm:number("cableDiameter"),cables:p.assembly?.cables || []};
+    } else delete p.assembly;
     const d = p.drivers.find((d) => d.id === selected);
     if (d) {
         d.preset = Number($("preset").value);
@@ -106,6 +114,7 @@ function showConstruction() {
     $("constructionEnabled").checked = !!c;
     $("constructionFields").hidden = !c;
     if (c) {
+        $("channelMode").value = c.drilled_channels ? "drilled" : "tube";
         $("wallThickness").value = c.wall_mm;
         $("meshSpacing").value = c.resolution_mm;
         $("faceplateAxis").value = c.faceplate_axis;
@@ -121,6 +130,17 @@ function showConstruction() {
     $("constructionStatus").textContent = info
         ? `Constructed body + separate faceplate · ${info.resolution_mm.toFixed(2)} mm grid · ${info.requested_wall_mm.toFixed(2)} mm requested wall · cavity estimate ${info.cavity_volume_estimate_mm3.toFixed(0)} mm³ · cap ${info.faceplate.triangles.toLocaleString()} triangles. Inspect the result before manufacture.`
         : "Stock layout mode: hollowing and cuts are disabled.";
+}
+function showAssembly() {
+    const a=project.assembly;
+    $("assemblyEnabled").checked=!!a; $("assemblyFields").hidden=!a;
+    if (!a) return;
+    $("assemblyClearance").value=a.clearance_mm; $("cableDiameter").value=a.cable_diameter_mm;
+    for (const [key,prefix] of [["connector","pin"],["crossover","board"]]) {
+        const b=a[key];$(prefix+"Enabled").checked=!!b;$(prefix+"Fields").hidden=!b;
+        if (b) for (const [field,suffix] of [["size_mm","Size"],["position_mm","Position"],["rotation_deg","Rotation"]]) b[field].forEach((v,i)=>$(prefix+suffix+i).value=v);
+    }
+    $("cableSummary").textContent=(a.cables||[]).map(c=>`${c.id}: ${c.points_mm.slice(1).reduce((sum,v,i)=>sum+Math.hypot(...v.map((x,j)=>x-c.points_mm[i][j])),0).toFixed(1)} mm`).join(" · ") || "No harness routes yet. Use Auto arrange assembly or Route cables.";
 }
 function showDriver() {
     const d = project.drivers.find((d) => d.id === selected);
@@ -203,6 +223,7 @@ function accept(result) {
     project.shell_scale.forEach((x, i) => ($(`scale${i}`).value = x));
     $("mirrored").checked = project.mirrored;
     showConstruction();
+    showAssembly();
     $("shellName").textContent = result.sourceName;
     $("driverSelect").replaceChildren(
         ...project.drivers.map((d, i) =>
@@ -233,12 +254,12 @@ function accept(result) {
     $("exportStatus").classList.toggle("error", blockers.length > 0);
     const previous = $("exportPart").value;
     $("exportPart").replaceChildren(
-        ...built.parts.map((p) => option(p.id, p.name)),
+        ...built.parts.filter(p => !["channel", "cable"].includes(p.kind)).map((p) => option(p.id, p.name)),
     );
     if (built.parts.some((p) => p.id === previous))
         $("exportPart").value = previous;
     const invalidParts = built.placement_checks.filter(c => c.status === "error"
-        || (c.status !== "pass" && ["package-shell", "package-cavity", "tube-shell"].includes(c.code)))
+        || (c.status !== "pass" && ["package-shell", "package-cavity", "tube-shell", "assembly-shell"].includes(c.code)))
         .flatMap(c => c.part_ids);
     viewer.setParts(built.parts, selected, !!built.construction, invalidParts);
     showDriver();
@@ -248,8 +269,14 @@ async function run(action, data, message = "Geometry updated.") {
     setBusy(true);
     tell("Calculating geometry in Rust… Shell construction may take several seconds.");
     try {
+        const undoable=["arrange", "route", "outlets"].includes(action);
+        const before=undoable ? (await rpc("save")).file : undefined;
         const result = await rpc(action, data);
-        if (result.built) accept(result);
+        if (undoable && result.built) arrangeUndo=before;
+        if (result.built) {
+            if (!["arrange", "route", "outlets"].includes(action)) arrangeUndo=undefined;
+            accept(result);
+        }
         const errors = result.built?.placement_checks?.filter(c => c.status === "error").length || 0;
         tell(errors ? `${message} ${errors} placement error${errors === 1 ? "" : "s"}; see Placement checks.` : message, errors > 0);
         return result;
@@ -299,7 +326,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=5", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=6", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {
@@ -323,7 +350,7 @@ async function start() {
     if (!response.ok) throw new Error("Driver catalog could not load.");
     catalog = await response.json();
     $("preset").replaceChildren(...catalog.map((s) => option(s.id, s.name)));
-    for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation"])
+    for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation", "pinSize", "pinPosition", "pinRotation", "boardSize", "boardPosition", "boardRotation"])
         for (let i = 0; i < 3; i++) {
             const label = document.createElement("label");
             label.textContent = ["X", "Y", "Z"][i];
@@ -334,12 +361,24 @@ async function start() {
             if (prefix === "connectorPosition") input.value = [8,0,0][i];
             if (prefix === "connectorSize") input.value = [3,3,8][i];
             if (prefix === "connectorRotation") input.value = [0,90,0][i];
+            const defaults={pinSize:[4,3,2],pinPosition:[-3,-4,1],pinRotation:[0,0,0],boardSize:[6,4,1.2],boardPosition:[2,-5,-2],boardRotation:[0,0,0]};
+            if (defaults[prefix]) input.value=defaults[prefix][i];
             input.setAttribute("aria-label", `${prefix} ${["X", "Y", "Z"][i]}`);
             label.append(input);
             $(`${prefix}Fields`).append(label);
         }
     project.drivers = [newDriver()];
     $("apply").onclick = guarded(apply);
+    $("assemblyEnabled").onchange=()=>$("assemblyFields").hidden=!$("assemblyEnabled").checked;
+    for (const prefix of ["pin","board"]) $(prefix+"Enabled").onchange=()=>$(prefix+"Fields").hidden=!$(prefix+"Enabled").checked;
+    $("channelMode").onchange=()=>{if ($("channelMode").value==="drilled") $("cutSoundPaths").checked=true;};
+    for (const [id,action] of [["autoArrange","arrange"],["routeCables","route"],["extendOutlets","outlets"]]) $(id).onclick=guarded(async()=>{
+        if(busy) return;
+        const p=draft();
+        const result=await run(action,{project:p}, action==="outlets" ? "Drilled outlets extended to the shell. Inspect the openings and channel walls." : action==="arrange" ? "Assembly arranged. Inspect planning interfaces and clearances below." : "Harness space routed. Electrical connections are unchanged.");
+        if(result) setBusy(false);
+    });
+    $("undoArrange").onclick=guarded(async()=>{if(arrangeUndo) await run("open",{file:arrangeUndo},"Previous layout restored.");});
     $("driverSelect").onchange = guarded(async () => {
         const next = $("driverSelect").value;
         const result = await apply();
@@ -356,9 +395,9 @@ async function start() {
         const p = draft();
         if (p.drivers.length >= 12)
             throw new Error("A maximum of 12 drivers is supported.");
-        const d = newDriver(p.drivers.length);
+        const d = newDriver(p.drivers.length, p.construction);
         p.drivers.push(d);
-        const result = await run("build", { project: p });
+        const result = await run(p.construction?.drilled_channels ? "outlets" : "build", { project: p });
         if (result) {
             selected = d.id;
             $("driverSelect").value = selected;
@@ -373,7 +412,7 @@ async function start() {
         d.id = crypto.randomUUID();
         d.position_mm[0] += 3;
         p.drivers.push(d);
-        const result = await run("build", { project: p });
+        const result = await run(p.construction?.drilled_channels ? "outlets" : "build", { project: p });
         if (result) {
             selected = d.id;
             $("driverSelect").value = selected;

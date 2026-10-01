@@ -170,3 +170,17 @@ test('a late simulation cannot overwrite a newer invalid circuit state', async (
     assert.equal(d.state.last, null);
     assert.match(d.document.getElementById('iemSimulationMessage').textContent, /Complete the signal path/);
 });
+
+test('automatic schematic arrangement separates parts and preserves nets, values, phase response and undo',()=>{
+    const c=wired();for(let i=0;i<8;i++)graph.duplicateComponent(c,c.components[0],`R${i+2}`);
+    c.components.filter(c=>c.kind!=='wire').forEach(c=>{c.x=300;c.y=120;});
+    const electrical=result=>plain({...result.circuit,components:result.circuit.components.map(({x,y,rotationDeg,...c})=>c)});
+    const before=electrical(graph.compile(c));const ids=c.components.map(c=>c.id);
+    graph.arrange(c);assert.deepEqual(electrical(graph.compile(c)),before);assert.deepEqual(c.components.map(c=>c.id),ids);
+    const parts=c.components.filter(c=>c.kind!=='wire');assert.equal(new Set(parts.map(c=>`${c.x},${c.y}`)).size,parts.length);
+    const once=plain(c);graph.arrange(c);assert.deepEqual(plain(c),once);
+    const d=designer(),driver=d.driver();driver.circuit=wired();d.state.drivers=[driver];
+    const response=[100,1000,10000].map(f=>d.passiveCircuitH(driver,f));const original=plain(driver.circuit);
+    d.mutateCircuit(driver,()=>graph.arrange(driver.circuit));assert.deepEqual([100,1000,10000].map(f=>d.passiveCircuitH(driver,f)),response);
+    d.undoCircuit(driver);assert.deepEqual(plain(driver.circuit),original);
+});

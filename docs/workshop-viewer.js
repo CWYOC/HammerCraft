@@ -93,7 +93,7 @@ export function createViewer(canvas) {
         ]) {
             if (
                 (m.kind === "shell" && !showShell) ||
-                (m.kind === "path" && !showPaths) ||
+                (["path", "channel", "cable"].includes(m.kind) && !showPaths) ||
                 (m.kind === "faceplate" && !showFaceplate)
             )
                 continue;
@@ -102,7 +102,11 @@ export function createViewer(canvas) {
                 invalidParts.has(m.id) ? [1, 0.18, 0.1, 1] : m.kind === "shell"
                     ? [0.72, 0.84, 0.8, constructed ? 1 : 0.16]
                     : m.kind === "faceplate" ? [0.76, 0.69, 0.53, 1]
-                    : m.kind === "path"
+                    : m.kind === "channel" ? [0.28, 0.74, 0.86, 0.35]
+                    : m.kind === "cable" ? [0.68, 0.36, 0.78, 1]
+                    : m.kind === "crossover" ? [0.24, 0.62, 0.39, 1]
+                    : m.kind === "connector" ? [0.85, 0.69, 0.25, 1]
+                    : ["path", "channel"].includes(m.kind)
                       ? isSelected
                           ? [1, 0.49, 0.19, 1]
                           : [0.7, 0.32, 0.12, 1]
@@ -110,9 +114,10 @@ export function createViewer(canvas) {
                         ? [0.48, 0.76, 0.84, 1]
                         : [0.42, 0.52, 0.56, 1];
             gl.uniform4fv(color, rgba);
-            const translucent = m.kind === "shell" && !constructed;
+            const translucent = (m.kind === "shell" && !constructed) || m.kind === "channel";
             gl.depthMask(!translucent);
             if (translucent) gl.disable(gl.DEPTH_TEST);
+            else gl.enable(gl.DEPTH_TEST);
             gl.bindBuffer(gl.ARRAY_BUFFER, m.buffer);
             gl.enableVertexAttribArray(point);
             gl.enableVertexAttribArray(normal);

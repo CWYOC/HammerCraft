@@ -1,0 +1,383 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.23.0",
+  "project": {
+    "format": "hc-headphone-workshop",
+    "version": 1,
+    "name": "Auto arranged drilled IEM",
+    "shell_scale": [
+      1,
+      1,
+      1
+    ],
+    "mirrored": false,
+    "drivers": [
+      {
+        "id": "d",
+        "preset": 13,
+        "position_mm": [
+          1.1407440900802612,
+          -1.700913906097412,
+          -1.3553814888000488
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          -90
+        ],
+        "end_mm": [
+          -3,
+          11.932619990733933,
+          -2.4466309995366964
+        ],
+        "bend_mm": [
+          -1.3437023639678958,
+          9.059206432001394,
+          -2.010131195242037
+        ],
+        "lead_mm": 3,
+        "inner_diameter_mm": 1.6,
+        "outer_diameter_mm": 3.4
+      }
+    ],
+    "construction": {
+      "wall_mm": 1.5,
+      "resolution_mm": 0.3,
+      "faceplate_axis": 2,
+      "faceplate_depth_mm": 2.5,
+      "faceplate_gap_mm": 0,
+      "cut_sound_paths": true,
+      "drilled_channels": true,
+      "connector": null
+    },
+    "assembly": {
+      "connector": {
+        "size_mm": [
+          4,
+          3,
+          2
+        ],
+        "position_mm": [
+          -2.8592559099197388,
+          -1.700913906097412,
+          4.644618511199951
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ]
+      },
+      "crossover": {
+        "size_mm": [
+          6,
+          4,
+          1.2
+        ],
+        "position_mm": [
+          1.1407440900802612,
+          -5.700913906097412,
+          0.6446185111999512
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          0
+        ]
+      },
+      "clearance_mm": 0.2,
+      "cable_diameter_mm": 0.6,
+      "cables": [
+        {
+          "id": "h1",
+          "from": "assembly:connector",
+          "to": "assembly:crossover",
+          "points_mm": [
+            [
+              -2.8592559099197388,
+              -3.750913906097412,
+              4.644618511199951
+            ],
+            [
+              2.1407440900802612,
+              -8.700913906097412,
+              1.6446185111999512
+            ],
+            [
+              1.1407440900802612,
+              -8.250913906097413,
+              0.6446185111999512
+            ]
+          ]
+        },
+        {
+          "id": "h2",
+          "from": "assembly:crossover",
+          "to": "d",
+          "points_mm": [
+            [
+              1.1407440900802612,
+              -3.1509139060974123,
+              0.6446185111999512
+            ],
+            [
+              -0.8592559099197388,
+              -2.700913906097412,
+              0.6446185111999512
+            ],
+            [
+              -0.8592559099197388,
+              -3.700913906097412,
+              -1.3553814888000488
+            ],
+            [
+              -0.8592559099197388,
+              -5.700913906097412,
+              -1.3553814888000488
+            ],
+            [
+              1.1407440900802615,
+              -4.825913906097412,
+              -1.3553814888000488
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "checks": [
+    {
+      "code": "shell-topology",
+      "status": "pass",
+      "part_ids": [
+        "shell"
+      ],
+      "message": "Shell edge topology and total orientation passed; self-intersections and individual solid components remain unchecked."
+    },
+    {
+      "code": "package-stock-bounds",
+      "status": "pass",
+      "part_ids": [
+        "d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: inside stock bounding box; the curved surface is checked separately."
+    },
+    {
+      "code": "part-dimensions",
+      "status": "pass",
+      "part_ids": [
+        "d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: catalog marks package and outlet as supplier-dimensioned; mounting allowances remain unverified."
+    },
+    {
+      "code": "outlet-adapter",
+      "status": "unverified",
+      "part_ids": [
+        "d",
+        "path:d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: 1.42 mm catalog outlet → 1.60 mm tube bore. Adapter, spout engagement and seal geometry are not defined."
+    },
+    {
+      "code": "tube-own-package",
+      "status": "pass",
+      "part_ids": [
+        "path:d",
+        "d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: route checked against driver 01. No penetration/contact detected in this check; physical outlet and assembly allowances remain unverified."
+    },
+    {
+      "code": "tube-bend",
+      "status": "unverified",
+      "part_ids": [
+        "path:d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: no local fold found in 257 bend samples. A material/process minimum bend radius has not been supplied."
+    },
+    {
+      "code": "tube-self-contact",
+      "status": "pass",
+      "part_ids": [
+        "path:d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: no nonlocal route contact detected; local bends are checked separately."
+    },
+    {
+      "code": "manufacturing-clearance",
+      "status": "unverified",
+      "part_ids": [],
+      "message": "No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."
+    },
+    {
+      "code": "physical-assembly",
+      "status": "unverified",
+      "part_ids": [],
+      "message": "Connector, crossover-board and harness envelopes are optional planning geometry. Exact pin assignments, solder joints, individual crossover parts, damper seats, adhesive and assembly access remain unverified."
+    },
+    {
+      "code": "assembly-clearance",
+      "status": "pass",
+      "part_ids": [
+        "d",
+        "assembly:connector"
+      ],
+      "message": "01 · Knowles RAF-32873-P183 / connector planning envelope: separating clearance 1.00 mm; requested 0.20 mm."
+    },
+    {
+      "code": "assembly-clearance",
+      "status": "pass",
+      "part_ids": [
+        "d",
+        "assembly:crossover"
+      ],
+      "message": "01 · Knowles RAF-32873-P183 / crossover planning envelope: separating clearance 1.00 mm; requested 0.20 mm."
+    },
+    {
+      "code": "assembly-clearance",
+      "status": "pass",
+      "part_ids": [
+        "assembly:connector",
+        "assembly:crossover"
+      ],
+      "message": "connector planning envelope / crossover planning envelope: separating clearance 1.00 mm; requested 0.20 mm."
+    },
+    {
+      "code": "assembly-sound-path",
+      "status": "pass",
+      "part_ids": [
+        "assembly:connector"
+      ],
+      "message": "connector planning envelope: passes sound-channel clearance."
+    },
+    {
+      "code": "assembly-sound-path",
+      "status": "pass",
+      "part_ids": [
+        "assembly:crossover"
+      ],
+      "message": "crossover planning envelope: passes sound-channel clearance."
+    },
+    {
+      "code": "cable-anchors",
+      "status": "pass",
+      "part_ids": [
+        "assembly:cable:h1"
+      ],
+      "message": "Harness h1: planning anchors match. Re-route cables after moving parts."
+    },
+    {
+      "code": "cable-clearance",
+      "status": "pass",
+      "part_ids": [
+        "assembly:cable:h1"
+      ],
+      "message": "Harness h1: passes package and sound-path clearance."
+    },
+    {
+      "code": "cable-anchors",
+      "status": "pass",
+      "part_ids": [
+        "assembly:cable:h2"
+      ],
+      "message": "Harness h2: planning anchors match. Re-route cables after moving parts."
+    },
+    {
+      "code": "cable-clearance",
+      "status": "pass",
+      "part_ids": [
+        "assembly:cable:h2"
+      ],
+      "message": "Harness h2: passes package and sound-path clearance."
+    },
+    {
+      "code": "cable-cable",
+      "status": "pass",
+      "part_ids": [
+        "assembly:cable:h2",
+        "assembly:cable:h1"
+      ],
+      "message": "Harnesses h2 / h1: pass separation."
+    },
+    {
+      "code": "assembly-interfaces",
+      "status": "unverified",
+      "part_ids": [],
+      "message": "Connector and crossover are editable bounding envelopes. Harnesses reserve insulated cable space, not electrical connections. Verify actual pin pitch, solder-pad positions, crossover component heights, bend radii and retention; schematic nets and polarity are unchanged."
+    },
+    {
+      "code": "package-cavity",
+      "status": "pass",
+      "part_ids": [
+        "d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: complete represented mesh stays inside the requested shell cavity; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."
+    },
+    {
+      "code": "tube-shell",
+      "status": "pass",
+      "part_ids": [
+        "path:d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183 sound tube: drilled centreline must remain inside stock, with the bore clear of external walls except at its outlet. Guide surrounds are clipped to the shell."
+    },
+    {
+      "code": "assembly-shell",
+      "status": "pass",
+      "part_ids": [
+        "assembly:connector"
+      ],
+      "message": "connector planning envelope: complete represented mesh stays inside the requested shell cavity; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."
+    },
+    {
+      "code": "assembly-shell",
+      "status": "pass",
+      "part_ids": [
+        "assembly:crossover"
+      ],
+      "message": "crossover planning envelope: complete represented mesh stays inside the requested shell cavity; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."
+    },
+    {
+      "code": "assembly-shell",
+      "status": "pass",
+      "part_ids": [
+        "assembly:cable:h1"
+      ],
+      "message": "Harness assembly:connector → assembly:crossover (space reservation): complete represented mesh stays inside the requested shell cavity; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."
+    },
+    {
+      "code": "assembly-shell",
+      "status": "pass",
+      "part_ids": [
+        "assembly:cable:h2"
+      ],
+      "message": "Harness assembly:crossover → d (space reservation): complete represented mesh stays inside the requested shell cavity; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."
+    },
+    {
+      "code": "integral-channel-body",
+      "status": "pass",
+      "part_ids": [
+        "shell"
+      ],
+      "message": "Drilled channel surrounds must join the shell body. Disconnected retained material blocks export; move channel ends into the outlet wall."
+    },
+    {
+      "code": "shell-construction",
+      "status": "unverified",
+      "part_ids": [
+        "shell",
+        "faceplate"
+      ],
+      "message": "Hollow body and faceplate generated at 0.300 mm grid spacing. Wall 1.50 mm is a requested offset, not a certified minimum after machining; inspect thin features and confirm with a finer grid."
+    },
+    {
+      "code": "sound-outlet",
+      "status": "unverified",
+      "part_ids": [
+        "path:d"
+      ],
+      "message": "Sound path cut removes 863 material samples. Channel material is integral to the shell; no separate tube is exported. Confirm the outlet, bore continuity and inlet seal."
+    }
+  ],
+  "export_blockers": []
+}

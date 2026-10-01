@@ -467,3 +467,5 @@ canvas:active {
 .download-file[hidden] {
     display: none;
 }
+
+.arrange-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0}.arrange-bar button{min-height:40px;padding:8px 14px;border:1px solid var(--admin-border);background:transparent;font:inherit;font-size:10px;cursor:pointer}.arrange-bar button:first-child{background:var(--admin-accent);color:white;border-color:var(--admin-accent)}.arrange-bar span{font-size:11px;color:var(--admin-muted)}.arrange-bar button:disabled{opacity:.45;cursor:default}

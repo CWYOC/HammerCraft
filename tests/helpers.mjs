@@ -8,6 +8,7 @@ export function dom() {
     const nodes = new Map();
     function element() {
         return { value: '', hidden: true, checked: true, disabled: false, dataset: {}, textContent: '', children: [],
+            setAttribute(key,value) { (this.attributes ||= {})[key]=String(value); }, getAttribute(key) { return this.attributes?.[key] ?? null; },
             addEventListener() {}, replaceChildren() { this.children = []; },
             appendChild(child) { this.children.push(child); },
             querySelectorAll() { return []; }, classList: { add() {}, remove() {} } };
