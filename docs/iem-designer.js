@@ -12,6 +12,46 @@
     // Catalog dampers use CGS acoustic ohms. The WASM API uses Pa·s/m³ (SI).
     const ACOUSTIC_CGS_TO_SI = 1e5;
 
+    // Provisional source-port fit to Sonion Academy Doc304 v001, p.12,
+    // using the library 2356 baseline and the published IEC 711 lumped load.
+    // Reproduction, assumptions and fit script: reports/2026-10-01-damper/README.md.
+    // Positive R/M/C and one parallel RLC branch; no SPL-curve smoothing.
+    const SONION_2356_SOURCE = {
+        type: "foster",
+        resistance_acoustic_ohm: 1.9221232355273241e8,
+        inertance_kg_per_m4: 0.2849366218816946e8 / (2 * Math.PI * 1000),
+        compliance_m3_per_pa: 1 / (8.385389383072047e8 * 2 * Math.PI * 1000),
+        branches: [{ resistance_acoustic_ohm: 7.154729133166603e8, resonance_hz: 4042.544342557556, q: 7.024052441025311 }],
+    };
+    const SONION_2356_MODEL = "sonion_2356_guide_v1";
+
+    function hasSonion2356Fixture(d) {
+        const identity = d.databaseManufacturer === "Sonion" && d.databaseModel === "2356";
+        const path = (d.measurementReferencePath || []).filter(e => e.element_type !== "coupler");
+        return Boolean(d.databaseDriverId && identity && !d.measurementReferenceOverride && d.measurement?.length
+            && /711|60318[- ]4/.test(d.measurementReferenceCoupler || "") && path.length === 2
+            && path.every((e, i) => e.element_type === "tube" && Number(e.length_mm) === [4.5, 11][i]
+                && Number(e.inner_diameter_mm) === [1.4, 1.9][i]));
+    }
+
+    function applySonion2356Model(d, guidePath = false) {
+        if (!hasSonion2356Fixture(d) || (guidePath && d.path.some(e => e.geometryBinding))) return false;
+        d.sourceModel = SONION_2356_MODEL;
+        d.sourceResistanceCgs = SONION_2356_SOURCE.resistance_acoustic_ohm / ACOUSTIC_CGS_TO_SI;
+        d.measurementReferenceLoad = { type: "iec711_lumped" };
+        d.measurementReferenceCompensation = true;
+        d.referenceValidationMode = false;
+        applyMeasurementReferenceLoadToUi(d);
+        if (guidePath) {
+            const tube = (length, diameter) => ({ type: "tube", length, diameter, loss: 0 });
+            // Exact position is absent from the guide: midpoint of its 2.5 mm
+            // section is an explicit assumption, 8.25 mm from the receiver.
+            d.path = [tube(7, 1.5), tube(1.25, 2.1), { type: "damper", value: 1500 }, tube(1.25, 2.1), tube(3, 2.5)];
+        }
+        markDesignDirty();
+        return true;
+    }
+
     const state = {
         products: [],
         drivers: [],
@@ -173,7 +213,7 @@
             if (reference.profile && !d.referenceProfileVersion) {
                 d.referenceProfileVersion = 1;
                 d.measurementReferenceCompensation = true;
-                if (!["custom_resistance", "resonant"].includes(d.sourceModel)) {
+                if (!["custom_resistance", "resonant", SONION_2356_MODEL].includes(d.sourceModel)) {
                     d.sourceModel = "estimated_resistance";
                     d.sourceReferenceDiameterMm = reference.profile.sourceBore;
                 }
@@ -192,6 +232,7 @@
             d.sourceReferenceDiameterMm = finitePositive(d.measurementReferencePath?.find(e => e.element_type === "tube")?.inner_diameter_mm)
                 || finitePositive(d.path.find(e => e.type === "tube" || e.type === "nozzle")?.diameter) || 2;
         }
+        if (d.sourceModel === SONION_2356_MODEL) d.sourceResistanceCgs = SONION_2356_SOURCE.resistance_acoustic_ohm / ACOUSTIC_CGS_TO_SI;
         if (d.sourceResistanceCgs == null || d.sourceModel === "estimated_resistance") {
             const area = Math.PI * (d.sourceReferenceDiameterMm * 0.001 / 2) ** 2;
             const rho = 1.2929 * 273.15 / 293.15;
@@ -585,8 +626,8 @@
         const select = $("iemAcousticLoadType");
         if (!load || !select) return false;
 
-        if (load.type === "generic_711_approx") {
-            select.value = "generic_711_approx";
+        if (["generic_711_approx", "iec711_lumped"].includes(load.type)) {
+            select.value = load.type;
             select.dispatchEvent(new Event("change", { bubbles: true }));
             return true;
         }
@@ -654,7 +695,7 @@
         const raw = setup?.path || original;
         const modelled = raw.map(measurementReferenceToDesign).filter(Boolean);
         const load = d.measurementReferenceLoad;
-        const couplerModelled = ["generic_711_approx", "anechoic", "radiation"].includes(load?.type) || (load?.type === "closed_cavity"
+        const couplerModelled = ["generic_711_approx", "iec711_lumped", "anechoic", "radiation"].includes(load?.type) || (load?.type === "closed_cavity"
             && Boolean(finitePositive(load.volume_mm3)) && Number.isFinite(Number(load.loss_resistance_acoustic_ohm ?? 0))
             && Number(load.loss_resistance_acoustic_ohm ?? 0) >= 0) || (load?.type === "cavity_with_leak"
             && Boolean(finitePositive(load.volume_mm3)) && Boolean(finitePositive(load.leak_resistance_acoustic_ohm)));
@@ -699,6 +740,7 @@
             <p class="iem-field-note">Enter the setup used to measure the baseline, in order from receiver to coupler. An empty list means explicit direct coupling. Changes are saved with this project; the library measurement is retained.</p>
             <div class="iem-driver-grid"><label>REFERENCE LOAD<select data-reference-load="${d.id}">
                 <option value="" ${!d.measurementReferenceLoad ? "selected" : ""}>Select a load</option>
+                <option value="iec711_lumped" ${d.measurementReferenceLoad?.type === "iec711_lumped" ? "selected" : ""}>711 with side cavities (lumped model)</option>
                 <option value="generic_711_approx" ${d.measurementReferenceLoad?.type === "generic_711_approx" ? "selected" : ""}>Simplified 711 (experimental)</option>
                 <option value="closed_cavity" ${d.measurementReferenceLoad?.type === "closed_cavity" ? "selected" : ""}>Closed cavity (volume estimate)</option>
             </select></label>${d.measurementReferenceLoad?.type === "closed_cavity" ? `<label>REFERENCE VOLUME mm³<input type="number" min="0.001" step="any" data-reference-volume="${d.id}" value="${esc(d.measurementReferenceLoad.volume_mm3)}"></label>` : ""}</div>
@@ -711,7 +753,7 @@
     }
 
     function editReference(d, edit) {
-        if (!d.measurementReferenceCompensation && !["custom_resistance", "resonant"].includes(d.sourceModel)) d.sourceModel = "estimated_resistance";
+        if (!d.measurementReferenceCompensation && !["custom_resistance", "resonant", SONION_2356_MODEL].includes(d.sourceModel)) d.sourceModel = "estimated_resistance";
         if (!d.measurementReferenceOverride) d.measurementReferenceOverride = {
             path: structuredClone(referenceInfo(d).raw.filter(e => e.element_type !== "coupler")),
             status: "USER REFERENCE", note: "User-entered reference setup. Predictions depend on the accuracy of these dimensions and the source/coupler models.",
@@ -800,7 +842,7 @@
                     measurement_reference_load: d.measurementReferenceCompensation
                         ? referenceLoadToRust(d.measurementReferenceLoad)
                         : null,
-                    acoustic_source: d.sourceModel === "ideal_pressure" ? { type: "ideal_pressure" } : d.sourceModel === "resonant" ? {
+                    acoustic_source: d.sourceModel === SONION_2356_MODEL ? structuredClone(SONION_2356_SOURCE) : d.sourceModel === "ideal_pressure" ? { type: "ideal_pressure" } : d.sourceModel === "resonant" ? {
                         type: "resonant", resistance_acoustic_ohm: d.sourceResistanceCgs * ACOUSTIC_CGS_TO_SI,
                         resonance_hz: d.sourceResonanceHz, q: d.sourceQ,
                     } : {
@@ -824,7 +866,7 @@
         if (!numeric($("iemTemperature").value) || Number($("iemTemperature").value) <= -273.15) errors.push("Enter a valid temperature above absolute zero.");
         if (!nonnegative($("iemHumidity").value) || Number($("iemHumidity").value) > 100) errors.push("Humidity must be between 0 and 100%.");
         const loadType = $("iemAcousticLoadType").value;
-        if (!["anechoic", "radiation", "closed_cavity", "cavity_with_leak", "generic_711_approx"].includes(loadType)) errors.push("Select a supported acoustic output load.");
+        if (!["anechoic", "radiation", "closed_cavity", "cavity_with_leak", "generic_711_approx", "iec711_lumped"].includes(loadType)) errors.push("Select a supported acoustic output load.");
         if (["closed_cavity", "cavity_with_leak"].includes(loadType) && !positive($("iemCouplerVolume").value)) errors.push("Coupler volume must be greater than zero.");
         if (loadType === "closed_cavity" && !nonnegative($("iemLoadLossResistance").value)) errors.push("Load resistance must be non-negative.");
         if (loadType === "cavity_with_leak" && !positive($("iemLeakResistance").value)) errors.push("Leak resistance must be greater than zero.");
@@ -835,8 +877,9 @@
             if (d.voltageMode === "common" && !positive(d.measurementVoltageV)) errors.push(`${d.name}: enter the baseline measurement voltage before using common input.`);
             const referenceError = databaseReferenceError(d);
             if (referenceError) errors.push(`${d.name}: acoustic prediction unavailable. ${referenceError} Add verified measurement-fixture data to the driver reference before simulating.`);
-            if (!["ideal_pressure", "estimated_resistance", "custom_resistance", "resonant"].includes(d.sourceModel)) errors.push(`${d.name}: select a valid source model.`);
+            if (!["ideal_pressure", "estimated_resistance", "custom_resistance", "resonant", SONION_2356_MODEL].includes(d.sourceModel)) errors.push(`${d.name}: select a valid source model.`);
             if (d.sourceModel !== "ideal_pressure" && !positive(d.sourceResistanceCgs)) errors.push(`${d.name}: source resistance must be greater than zero.`);
+            if (d.sourceModel === SONION_2356_MODEL && (!hasSonion2356Fixture(d) || d.measurementReferenceLoad?.type !== "iec711_lumped" || !d.measurementReferenceCompensation)) errors.push(`${d.name}: the 2356 example fit requires its original library reference tubing and the 711 lumped reference load. Restore that setup or choose another source model.`);
             if (d.sourceModel === "resonant" && (!positive(d.sourceResonanceHz) || !positive(d.sourceQ))) errors.push(`${d.name}: source resonance frequency and Q must be greater than zero.`);
             if (!positive(d.sourceReferenceDiameterMm)) errors.push(`${d.name}: source reference bore must be greater than zero.`);
             if (!positive(d.impedance)) errors.push(`${d.name}: impedance must be greater than zero.`);
@@ -996,7 +1039,7 @@
             }
         } catch (error) {
             if (revision !== state.calculationRevision) return;
-            if (state.drivers.some(d => d.sourceModel === "resonant" || [...d.path, ...(d.measurementReferenceCompensation ? referenceInfo(d).modelled : [])].some(e => e.type === "damper" && e.value > 0))) {
+            if (state.drivers.some(d => d.sourceModel === "resonant" || d.sourceModel === SONION_2356_MODEL || loadObj().type === "iec711_lumped" || d.measurementReferenceLoad?.type === "iec711_lumped" || [...d.path, ...(d.measurementReferenceCompensation ? referenceInfo(d).modelled : [])].some(e => e.type === "damper" && e.value > 0))) {
                 // The heuristic fallback only applies a tonal tilt. It cannot
                 // predict resistance interacting with resonances or position.
                 state.last = null;
@@ -1218,6 +1261,8 @@
         if (state.drivers.some(d => d.sourceModel === "estimated_resistance")) notes.push("Acoustic prediction uses an estimated source resistance, not a measured receiver model. Tube changes remain approximate.");
         if (state.drivers.some(d => d.sourceModel === "ideal_pressure")) notes.push("Ideal-pressure source selected: zero source impedance can exaggerate tube/coupler resonances.");
         if (state.drivers.some(d => d.sourceModel === "custom_resistance")) notes.push("Custom source resistance is frequency-independent; it does not describe the receiver's full acoustic impedance.");
+        if (state.drivers.some(d => d.sourceModel === SONION_2356_MODEL)) notes.push(sourceNote({ sourceModel: SONION_2356_MODEL }));
+        if (loadObj().type === "iec711_lumped") notes.push("711 lumped load includes both side cavities and losses. It represents a nominal equivalent circuit, not a calibrated individual coupler.");
         if (state.drivers.some(d => d.sourceModel === "resonant")) notes.push("Resonant source: one RLC mode, using user-set R, frequency and Q. Starting values are uncalibrated. Fit against undamped and damped measurements in the same fixture, then validate another damper value. This does not identify every receiver resonance.");
         if (state.drivers.some(d => d.path.some(e => e.type === "damper" && e.value > 0))) notes.push("Compare damping against ‘Undamped, same geometry’. The datasheet trace uses its original reference fixture, so it is not a before/after damper comparison. The undamped comparison keeps the current source, load, wiring, gain and polarity, and shares the damped trace's normalization. A constant-resistance source cannot predict changes to all peaks embedded in the measured baseline. Path order is receiver → coupler.");
         const inverted = state.drivers.filter(d => d.polarity < 0).map(d => d.name);
@@ -2443,6 +2488,7 @@
     // ---------------------------------------------------------------------
 
     function sourceNote(d) {
+        if (d.sourceModel === SONION_2356_MODEL) return "2356 example fit v1: passive source network fitted to the Sonion guide's damped/undamped curves over 100–8000 Hz, with a 711 load including side cavities. Assumes the 1500 Ω damper is 8.25 mm from the receiver. Other positions, resistances and frequencies are unvalidated predictions; independent measurements are still needed.";
         if (d.sourceModel === "resonant") return "One acoustic RLC mode: R sets dissipation, source frequency and Q set its mass/compliance. Fit all three to measurements with known dampers and geometry. Source frequency/Q are not the frequency/Q of the loaded SPL peak. Default values are uncalibrated.";
         if (d.sourceModel === "estimated_resistance") return `Source R estimated from a fixed ${d.sourceReferenceDiameterMm} mm source-model bore at 20°C; no measured receiver source impedance is available. The same source is used for the reference and design.`;
         if (d.sourceModel === "custom_resistance") return "Enter a frequency-independent acoustic source resistance. 1 CGS acoustic Ω = 100,000 Pa·s/m³.";
@@ -2455,7 +2501,7 @@
                 <div class="iem-panel-title"><div><span class="eyebrow">ACOUSTIC PATH</span><h3>Driver to nozzle.</h3></div></div>
                 ${referenceSummaryHtml(d)}
                 <div class="iem-driver-grid">
-                    <label>ACOUSTIC SOURCE<select data-f="sourceModel">${[["estimated_resistance", "Finite resistance estimate"], ["custom_resistance", "Custom resistance"], ["resonant", "Resonant source (RLC estimate)"], ["ideal_pressure", "Ideal pressure (diagnostic)"]].map(([value, label]) => `<option value="${value}" ${d.sourceModel === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+                    <label>ACOUSTIC SOURCE<select data-f="sourceModel">${[...(hasSonion2356Fixture(d) || d.sourceModel === SONION_2356_MODEL ? [[SONION_2356_MODEL, "Sonion 2356 · example fit v1"]] : []), ["estimated_resistance", "Finite resistance estimate"], ["custom_resistance", "Custom resistance"], ["resonant", "Resonant source (RLC estimate)"], ["ideal_pressure", "Ideal pressure (diagnostic)"]].map(([value, label]) => `<option value="${value}" ${d.sourceModel === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
                     <label>SOURCE R · CGS ACOUSTIC Ω<input data-f="sourceResistanceCgs" type="number" min="0.001" step="any" value="${Math.round(d.sourceResistanceCgs * 1000) / 1000}" ${["custom_resistance", "resonant"].includes(d.sourceModel) ? "" : "disabled"}></label>
                 </div>
                 <div class="iem-driver-grid iem-source-resonance" data-source-resonance ${d.sourceModel === "resonant" ? "" : "hidden"}>
@@ -2463,6 +2509,7 @@
                     <label>SOURCE Q<input data-f="sourceQ" type="number" min="0.001" step="any" value="${d.sourceQ}"></label>
                 </div>
                 <p class="iem-field-note" data-source-note>${esc(sourceNote(d))}</p>
+                ${hasSonion2356Fixture(d) ? `<div class="iem-path-toolbar"><button class="iem-mini" type="button" data-sonion-model="${d.id}">USE 2356 DAMPING MODEL</button><button class="iem-mini" type="button" data-sonion-guide="${d.id}" ${d.path.some(e => e.geometryBinding) ? "disabled" : ""}>USE GUIDE TUBING + 1500 Ω</button></div><p class="iem-field-note">The model button keeps your path. The guide button replaces it with 7 × 1.5 ID + 2.5 × 2.1 ID + 3 × 2.5 ID mm and a 1500 Ω damper at an assumed 8.25 mm. Both select the 711 lumped output load. Geometry-linked paths must be unlinked before replacing tubing. <a href="./reports/2026-10-01-damper/README.md" target="_blank" rel="noopener">Fit assumptions and results</a></p>` : ""}
                 <p class="iem-field-note">Path order: receiver → coupler. Damper position matters: use ↑ / ↓ to move it, or split a tube into sections and place the damper between them.</p>
                 <div class="iem-path-toolbar">
                     ${[["tube", "+ TUBE"], ["damper", "+ DAMPER"], ["chamber", "+ CHAMBER"], ["nozzle", "+ NOZZLE"]].map(item => `<button class="iem-mini" data-add-path="${d.id}:${item[0]}">${item[1]}</button>`).join("")}
@@ -2556,6 +2603,12 @@
     }
 
     function bindDriverEvents() {
+        for (const [attribute, guidePath] of [["sonionModel", false], ["sonionGuide", true]]) {
+            const selector = guidePath ? "[data-sonion-guide]" : "[data-sonion-model]";
+            document.querySelectorAll(selector).forEach(button => button.onclick = () => {
+                if (applySonion2356Model(find(button.dataset[attribute]), guidePath)) renderDrivers();
+            });
+        }
         document.querySelectorAll("[data-reference-field]").forEach(input => input.onchange = () => {
             const [id, index, field] = input.dataset.referenceField.split(":");
             const d = find(id);
@@ -2588,7 +2641,7 @@
         });
         document.querySelectorAll("[data-reference-load]").forEach(select => select.onchange = () => {
             const d = find(select.dataset.referenceLoad);
-            d.measurementReferenceLoad = select.value === "generic_711_approx" ? { type: select.value }
+            d.measurementReferenceLoad = ["generic_711_approx", "iec711_lumped"].includes(select.value) ? { type: select.value }
                 : select.value === "closed_cavity" ? { type: select.value, volume_mm3: 2000, loss_resistance_acoustic_ohm: 0 } : null;
             editReference(d, () => {}); renderDrivers();
         });
@@ -2611,6 +2664,7 @@
                     }
                     if (input.dataset.f === "name") refreshReverseDrivers();
                     if (input.dataset.f === "sourceModel") {
+                        if (d.sourceModel === SONION_2356_MODEL && applySonion2356Model(d)) { renderDrivers(); return; }
                         ensureDriverShape(d);
                         const resistance = card.querySelector('[data-f="sourceResistanceCgs"]');
                         resistance.disabled = !["custom_resistance", "resonant"].includes(d.sourceModel);
@@ -3559,6 +3613,11 @@
                 measured_impedance_phase: d.impedancePhaseMeasured === true && d.impedanceCurve.length > 1 && d.impedanceCurve.every(p => Number.isFinite(p.phase)),
                 reference_status: d.databaseDriverId ? referenceInfo(d).status : "USER BASELINE",
                 source_model: d.sourceModel,
+                ...(d.sourceModel === SONION_2356_MODEL ? { source_fit: {
+                    data: "Sonion Academy Doc304 v001 p12 damped and undamped magnitude curves",
+                    band_hz: [100, 8000], assumed_damper_distance_mm: 8.25,
+                    independently_validated: false,
+                } } : {}),
             })),
         };
     }

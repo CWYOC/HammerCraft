@@ -1,5 +1,6 @@
-// Measurement diagnostic, not a software pass/fail test or calibration fit.
-// node tests/diagnostics/sonion-2356-benchmark.mjs [output.json]
+// Published-curve diagnostic; optional --fitted uses the provisional guide fit.
+// Fit residuals are not independent measurement validation.
+// node tests/diagnostics/sonion-2356-benchmark.mjs [output.json] [--fitted]
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { designer } from '../designer-helper.mjs';
@@ -9,6 +10,7 @@ const readJson = relative => JSON.parse(fs.readFileSync(new URL(relative, import
 const example = readJson('../fixtures/sonion-2356-design-example.json');
 const library = readJson('../fixtures/driver-library.json');
 await init({ module_or_path: fs.readFileSync(new URL('../../docs/wasm/acoustic_engine_bg.wasm', import.meta.url)) });
+const fitted = process.argv.includes('--fitted');
 const simulate = request => JSON.parse(engine.simulate_json(JSON.stringify(request)));
 const d = designer(), driver = d.databaseDriverToDesign(library.find(row => row.model === '2356'));
 driver.id = 'sonion-2356-benchmark';
@@ -17,6 +19,7 @@ driver.circuit.output = 'in';
 d.state.drivers = [driver];
 d.document.getElementById('iemAcousticLoadType').value = 'generic_711_approx';
 d.document.getElementById('iemSplMode').value = 'absolute';
+if (fitted) assert.ok(d.applySonion2356Model(driver));
 d.context.window.HCAcousticEngine = { simulate: async request => simulate(request), version: async () => engine.engine_version() };
 
 function pathAt(position = null) {
@@ -94,7 +97,7 @@ const report = {
     source: example.source,
     provenance: example.provenance,
     engine: engine.engine_version(),
-    validation_status: 'Not calibrated to this example. Numerical errors below are diagnostics, not a pass certificate.',
+    validation_status: fitted ? 'FIT RESIDUALS: source fitted to these guide curves, not independently validated. Other damper positions are extrapolations.' : 'Legacy estimated-source diagnostic; not calibrated to this example.',
     configuration: {
         tubes_mm: example.tube_sections_mm,
         damper_cgs_ohm: example.damper_cgs_ohm,
@@ -102,11 +105,12 @@ const report = {
         drive_voltage_v: example.drive_voltage_v,
         source_model: driver.sourceModel,
         source_resistance_cgs_ohm: driver.sourceResistanceCgs,
-        output_load: 'generic_711_approx; main tube and microphone only',
+        output_load: fitted ? 'iec711_lumped; published side-branch network' : 'generic_711_approx; main tube and microphone only',
+        acoustic_source: d.rustRequest([1000]).drivers[0].acoustic_source,
         baseline: driver.measurementSource || 'Library Sonion 2356 datasheet magnitude',
         reference_path: driver.measurementReferencePath,
         gain_db: driver.gain,
-        normalization_or_fitting: 'None; absolute-level comparison uses the existing library baseline. Unknown drive level limits its interpretation.',
+        normalization_or_fitting: fitted ? 'Passive source parameters fitted jointly to damping change, undamped SPL and damped SPL at 8.25 mm; no gain fit or display smoothing. Unknown drive level limits absolute interpretation.' : 'None; absolute-level comparison uses the existing library baseline. Unknown drive level limits its interpretation.',
     },
     comparison_band_hz: example.comparison_band_hz,
     sample_count: frequencies.length,
@@ -116,5 +120,5 @@ const report = {
     scenarios,
 };
 const summary = { ...report, undamped: undefined, scenarios: scenarios.map(({ damped, ...rest }) => rest) };
-if (process.argv[2]) fs.writeFileSync(process.argv[2], JSON.stringify(report, null, 2) + '\n');
+if (process.argv[2] && !process.argv[2].startsWith('--')) fs.writeFileSync(process.argv[2], JSON.stringify(report, null, 2) + '\n');
 console.log(JSON.stringify(summary, null, 2));

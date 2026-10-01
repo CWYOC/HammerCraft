@@ -1,5 +1,7 @@
 # Sonion 2356 damping benchmark — 2026-09-26
 
+**2026-10-01 update:** An optional passive 2356 source fit and a 711 model with side cavities are now implemented. See the [new fit report, remaining errors and usage instructions](reports/2026-10-01-damper/README.md). The report below records the earlier model and remains useful as the before-change benchmark.
+
 **The new example confirms a physical-model mismatch. It is not fixed by the previous software corrections.** The current model is relatively close to the published undamped response but applies too much broad attenuation and too little attenuation at the receiver peaks when a damper is added. Matching the reference response is not evidence of correct damping: the design/reference transfer ratio is unity by construction when both setups are identical.
 
 ## Source and setup

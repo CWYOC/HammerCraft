@@ -115,6 +115,49 @@ pub enum AcousticSource {
         resonance_hz: f64,
         q: f64,
     },
+    // Passive Foster impedance: series R, M, C, followed by parallel RLC
+    // branches in series. Values describe the source port, not loaded SPL peaks.
+    Foster {
+        resistance_acoustic_ohm: f64,
+        inertance_kg_per_m4: f64,
+        compliance_m3_per_pa: f64,
+        branches: Vec<SourceResonance>,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SourceResonance {
+    pub resistance_acoustic_ohm: f64,
+    pub resonance_hz: f64,
+    pub q: f64,
+}
+
+impl AcousticSource {
+    pub fn validate(&self) -> Result<(), String> {
+        if let Self::Foster {
+            resistance_acoustic_ohm,
+            inertance_kg_per_m4,
+            compliance_m3_per_pa,
+            branches,
+        } = self
+        {
+            let nonnegative = |v: f64| v.is_finite() && v >= 0.0;
+            let positive = |v: f64| v.is_finite() && v > 0.0;
+            if !nonnegative(*resistance_acoustic_ohm)
+                || !nonnegative(*inertance_kg_per_m4)
+                || !positive(*compliance_m3_per_pa)
+                || branches.len() > 16
+                || branches.iter().any(|b| {
+                    !positive(b.resistance_acoustic_ohm)
+                        || !positive(b.resonance_hz)
+                        || !positive(b.q)
+                })
+            {
+                return Err("Invalid passive source network: require non-negative R/M, positive compliance and positive R/f/Q for at most 16 branches".into());
+            }
+        }
+        Ok(())
+    }
 }
 
 fn default_source_multiplier() -> f64 { 1.0 }
@@ -140,6 +183,8 @@ pub enum AcousticLoad {
         leak_resistance_acoustic_ohm: f64,
     },
     Generic711Approx,
+    #[serde(rename = "iec711_lumped")]
+    Iec711Lumped,
 }
 
 fn default_coupler_volume() -> f64 { 2000.0 }

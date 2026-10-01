@@ -1,0 +1,353 @@
+{
+  "version": 3,
+  "name": "",
+  "drivers": [
+    {
+      "id": "e938bd54-1d43-4cd6-a27b-e1ed80592dc7",
+      "name": "Sonion 2356",
+      "type": "ba",
+      "impedance": 41.5,
+      "sensitivity": 106.5,
+      "sensitivityRef": 1000,
+      "responseAbsolute": true,
+      "measurementVoltageV": 0.1,
+      "voltageMode": "common",
+      "gain": 0,
+      "polarity": 1,
+      "measurement": [
+        {
+          "frequency": 20,
+          "db": 109.8,
+          "phase": null
+        },
+        {
+          "frequency": 25,
+          "db": 110,
+          "phase": null
+        },
+        {
+          "frequency": 31.5,
+          "db": 110.2,
+          "phase": null
+        },
+        {
+          "frequency": 40,
+          "db": 110.3,
+          "phase": null
+        },
+        {
+          "frequency": 50,
+          "db": 110.3,
+          "phase": null
+        },
+        {
+          "frequency": 63,
+          "db": 110.2,
+          "phase": null
+        },
+        {
+          "frequency": 80,
+          "db": 110.1,
+          "phase": null
+        },
+        {
+          "frequency": 100,
+          "db": 110,
+          "phase": null
+        },
+        {
+          "frequency": 125,
+          "db": 109.8,
+          "phase": null
+        },
+        {
+          "frequency": 160,
+          "db": 109.5,
+          "phase": null
+        },
+        {
+          "frequency": 200,
+          "db": 109,
+          "phase": null
+        },
+        {
+          "frequency": 250,
+          "db": 108.4,
+          "phase": null
+        },
+        {
+          "frequency": 315,
+          "db": 107.8,
+          "phase": null
+        },
+        {
+          "frequency": 400,
+          "db": 107.1,
+          "phase": null
+        },
+        {
+          "frequency": 500,
+          "db": 106.5,
+          "phase": null
+        },
+        {
+          "frequency": 630,
+          "db": 106.1,
+          "phase": null
+        },
+        {
+          "frequency": 800,
+          "db": 106.1,
+          "phase": null
+        },
+        {
+          "frequency": 1000,
+          "db": 106.5,
+          "phase": null
+        },
+        {
+          "frequency": 1250,
+          "db": 108.2,
+          "phase": null
+        },
+        {
+          "frequency": 1600,
+          "db": 111.5,
+          "phase": null
+        },
+        {
+          "frequency": 2000,
+          "db": 115,
+          "phase": null
+        },
+        {
+          "frequency": 2250,
+          "db": 117,
+          "phase": null
+        },
+        {
+          "frequency": 2670,
+          "db": 118.5,
+          "phase": null
+        },
+        {
+          "frequency": 3150,
+          "db": 116,
+          "phase": null
+        },
+        {
+          "frequency": 3850,
+          "db": 112.5,
+          "phase": null
+        },
+        {
+          "frequency": 4500,
+          "db": 116,
+          "phase": null
+        },
+        {
+          "frequency": 4880,
+          "db": 120,
+          "phase": null
+        },
+        {
+          "frequency": 5500,
+          "db": 114,
+          "phase": null
+        },
+        {
+          "frequency": 6300,
+          "db": 105,
+          "phase": null
+        },
+        {
+          "frequency": 7060,
+          "db": 100.5,
+          "phase": null
+        },
+        {
+          "frequency": 8075,
+          "db": 106.5,
+          "phase": null
+        },
+        {
+          "frequency": 9000,
+          "db": 104,
+          "phase": null
+        },
+        {
+          "frequency": 10000,
+          "db": 101,
+          "phase": null
+        },
+        {
+          "frequency": 12000,
+          "db": 96,
+          "phase": null
+        },
+        {
+          "frequency": 14000,
+          "db": 92,
+          "phase": null
+        },
+        {
+          "frequency": 15500,
+          "db": 90,
+          "phase": null
+        },
+        {
+          "frequency": 18000,
+          "db": 88,
+          "phase": null
+        },
+        {
+          "frequency": 20000,
+          "db": 87,
+          "phase": null
+        }
+      ],
+      "impedanceCurve": [
+        {
+          "frequency": 500,
+          "ohm": 31.5,
+          "phase": null
+        },
+        {
+          "frequency": 1000,
+          "ohm": 41.5,
+          "phase": null
+        }
+      ],
+      "circuit": {
+        "input": "in",
+        "output": "in",
+        "ground": "gnd",
+        "nodes": [
+          {
+            "id": "in",
+            "label": "INPUT",
+            "x": 80,
+            "y": 120
+          },
+          {
+            "id": "gnd",
+            "label": "GND",
+            "x": 750,
+            "y": 300
+          }
+        ],
+        "components": [],
+        "filters": []
+      },
+      "path": [
+        {
+          "type": "tube",
+          "length": 7,
+          "diameter": 1.5,
+          "loss": 0
+        },
+        {
+          "type": "tube",
+          "length": 1.25,
+          "diameter": 2.1,
+          "loss": 0
+        },
+        {
+          "type": "damper",
+          "value": 1500
+        },
+        {
+          "type": "tube",
+          "length": 1.25,
+          "diameter": 2.1,
+          "loss": 0
+        },
+        {
+          "type": "tube",
+          "length": 3,
+          "diameter": 2.5,
+          "loss": 0
+        }
+      ],
+      "baselinePhaseMeasured": false,
+      "impedancePhaseMeasured": false,
+      "databaseDriverId": "Sonion-2356",
+      "databaseManufacturer": "Sonion",
+      "databaseModel": "2356",
+      "databaseMeasurementId": null,
+      "databaseSource": "Sonion 2356 Data Sheet 3230-3018235 Version 2",
+      "databaseSparseResponse": false,
+      "measurementReferencePath": [
+        {
+          "element_order": 1,
+          "element_type": "tube",
+          "length_mm": 4.5,
+          "inner_diameter_mm": 1.4,
+          "damper_ohm": null,
+          "volume_mm3": null,
+          "description": "First manufacturer measurement tube"
+        },
+        {
+          "element_order": 2,
+          "element_type": "tube",
+          "length_mm": 11,
+          "inner_diameter_mm": 1.9,
+          "damper_ohm": null,
+          "volume_mm3": null,
+          "description": "Second manufacturer measurement tube"
+        }
+      ],
+      "measurementReferenceCoupler": "IEC 711",
+      "measurementReferenceLoad": {
+        "type": "iec711_lumped"
+      },
+      "measurementReferenceCompensation": true,
+      "databaseImpedanceSource": "Sonion Typical Response Curve - Digitised - 2356",
+      "sourceModel": "sonion_2356_guide_v1",
+      "sourceResonanceHz": 3000,
+      "sourceQ": 2,
+      "sourceReferenceDiameterMm": 1.4,
+      "sourceResistanceCgs": 1922.1232355273241,
+      "referenceValidationMode": false
+    }
+  ],
+  "target": [],
+  "reverseBase": [],
+  "targetPeq": [],
+  "settings": {
+    "iemSplMode": "absolute",
+    "iemNormalizeFrequency": "1000",
+    "iemInputVoltage": "0.1",
+    "iemTemperature": "20",
+    "iemHumidity": "50",
+    "iemAcousticLoadType": "iec711_lumped",
+    "iemCouplerVolume": "2000",
+    "iemLoadLossResistance": "0",
+    "iemLeakResistance": "500000000",
+    "iemTargetProduct": "",
+    "iemShowTarget": false,
+    "iemShowIndividual": true,
+    "iemShowCombined": false,
+    "iemShowUndamped": true,
+    "iemShowValidationError": false,
+    "iemReverseMatchMode": "absolute",
+    "iemReverseNormalizeFrequency": "1000",
+    "iemReverseLengthMin": "3",
+    "iemReverseLengthMax": "20",
+    "iemReverseDiameterMin": "0.8",
+    "iemReverseDiameterMax": "3",
+    "iemReverseDampers": "330,680,1000,1500,2200",
+    "iemReverseCaps": "0,4.7,10,15,22,33,47",
+    "iemReverseResistors": "0,1,2.2,3.3,4.7,10",
+    "iemReverseGainRange": "8"
+  },
+  "reverseView": {
+    "min": 60,
+    "max": 100
+  },
+  "cadSettings": {
+    "wireRouting": "orthogonal",
+    "cadSymbolStandard": "iec",
+    "cadSnapToGrid": true
+  }
+}

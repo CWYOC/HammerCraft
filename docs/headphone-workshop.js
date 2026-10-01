@@ -335,7 +335,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=7", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=8", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {

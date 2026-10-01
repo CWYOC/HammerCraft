@@ -69,7 +69,7 @@ test('STL parser rejects truncated data, NaN coordinates, invalid units and inva
 test('worker rejects invalid edits/imports transactionally, saves current geometry and exports the chosen part',async()=>{
     const vm=await import('node:vm');const messages=[];
     const context=vm.createContext({engine,init:async()=>{},URL,Uint8Array,JSON,self:{postMessage:result=>messages.push(result)}});
-    const sourceCode=read('../docs/workshop-worker.js').toString().replace(/^import .*\n/,'').replace("new URL('./wasm/acoustic_engine_bg.wasm?v=0.24.0', import.meta.url)","'fixture.wasm'");
+    const sourceCode=read('../docs/workshop-worker.js').toString().replace(/^import .*\n/,'').replace("new URL('./wasm/acoustic_engine_bg.wasm?v=0.25.0', import.meta.url)","'fixture.wasm'");
     vm.runInContext(sourceCode,context);let id=0;
     const call=async(action,args={})=>{await context.self.onmessage({data:{id:++id,action,...args}});return messages.pop();};
     const p=project();p.shell_scale=[4,4,4];p.drivers=[{...driver(13),bend_mm:[-7,5,0],end_mm:[-3,11,-2.4],lead_mm:3}];const first=await call('import',{bytes:source,unit:1,name:'fixture',project:p});assert.equal(first.ok,true);

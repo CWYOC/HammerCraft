@@ -1,9 +1,64 @@
 use crate::models::{AcousticLoad, AcousticSource, Environment};
 use crate::tube::{
-    air_density, characteristic_impedance, speed_of_sound, tube_area, tube_matrix,
+    air_density, characteristic_impedance, speed_of_sound, tube_area, tube_matrix, AcousticMatrix,
 };
 use num_complex::Complex64;
 use std::f64::consts::PI;
+
+// IEC 60318-4 equivalent circuit: Gazzola et al., Forum Acusticum 2023,
+// DOI 10.61782/fa.2023.0485, Fig. 2 and Table 2. R1/R3/R5 are the added
+// losses in series with C1/C3/C5 described in section 4.2. These published
+// nominal values are not a calibration of an individual physical coupler.
+fn iec711_network(frequency_hz: f64) -> (AcousticMatrix, Complex64, Complex64) {
+    let w = 2.0 * PI * frequency_hz.max(1.0);
+    let compliance = |c: f64| Complex64::new(0.0, -1.0 / (w * c));
+    let series = |z| AcousticMatrix {
+        a: Complex64::new(1.0, 0.0),
+        b: z,
+        c: Complex64::new(0.0, 0.0),
+        d: Complex64::new(1.0, 0.0),
+    };
+    let shunt = |y| AcousticMatrix {
+        a: Complex64::new(1.0, 0.0),
+        b: Complex64::new(0.0, 0.0),
+        c: y,
+        d: Complex64::new(1.0, 0.0),
+    };
+    let y1 = 1.0 / (Complex64::new(4.22e5, 0.0) + compliance(0.7e-12))
+        + 1.0 / (Complex64::new(55.66e6, w * 9400.0) + compliance(2.34e-12));
+    let y2 = 1.0 / (Complex64::new(4.22e5, 0.0) + compliance(1.5e-12))
+        + 1.0 / (Complex64::new(27.99e6, w * 983.8) + compliance(2.73e-12));
+    let matrix = series(Complex64::new(0.0, w * 82.9))
+        .multiply(&shunt(y1))
+        .multiply(&series(Complex64::new(0.0, w * 130.3)))
+        .multiply(&shunt(y2))
+        .multiply(&series(Complex64::new(0.0, w * 133.4)));
+    let microphone = compliance(1.517e-12);
+    (matrix, Complex64::new(4.22e5, 0.0) + microphone, microphone)
+}
+
+fn foster_impedance(source: &AcousticSource, frequency_hz: f64) -> Complex64 {
+    let AcousticSource::Foster {
+        resistance_acoustic_ohm,
+        inertance_kg_per_m4,
+        compliance_m3_per_pa,
+        branches,
+    } = source
+    else {
+        unreachable!()
+    };
+    let f = frequency_hz.max(1.0);
+    let w = 2.0 * PI * f;
+    let mut z = Complex64::new(
+        *resistance_acoustic_ohm,
+        w * inertance_kg_per_m4 - 1.0 / (w * compliance_m3_per_pa),
+    );
+    for branch in branches {
+        let ratio = f / branch.resonance_hz;
+        z += branch.resistance_acoustic_ohm / Complex64::new(1.0, branch.q * (ratio - 1.0 / ratio));
+    }
+    z
+}
 
 // Generic 711 microphone termination values used by the COMSOL generic 711 model.
 const GENERIC_711_MIC_COMPLIANCE_M5_PER_N: f64 = 0.62e-13;
@@ -99,6 +154,11 @@ pub fn load_pressure_transfer(
     environment: &Environment,
 ) -> Complex64 {
     match load {
+        AcousticLoad::Iec711Lumped => {
+            let (matrix, terminal, microphone) = iec711_network(frequency_hz);
+            // Pressure across C5, excluding its series loss R5.
+            microphone / (matrix.a * terminal + matrix.b)
+        }
         AcousticLoad::Generic711Approx => {
             let matrix = generic_711_matrix(frequency_hz, environment);
             let zm = generic_711_microphone_impedance(frequency_hz);
@@ -120,6 +180,10 @@ pub fn load_impedance(
     environment: &Environment,
 ) -> Complex64 {
     match load {
+        AcousticLoad::Iec711Lumped => {
+            let (matrix, terminal, _) = iec711_network(frequency_hz);
+            (matrix.a * terminal + matrix.b) / (matrix.c * terminal + matrix.d)
+        }
         AcousticLoad::Anechoic => Complex64::new(
             characteristic_impedance(
                 output_diameter_mm,
@@ -181,6 +245,7 @@ pub fn source_impedance(
     environment: &Environment,
 ) -> Complex64 {
     match source {
+        AcousticSource::Foster { .. } => foster_impedance(source, 1000.0),
         AcousticSource::Resonant { resistance_acoustic_ohm, resonance_hz, q } => {
             resonant_source_impedance(*resistance_acoustic_ohm, *resonance_hz, *q, 1000.0)
         }
@@ -222,6 +287,7 @@ pub fn source_impedance_at_frequency(
     environment: &Environment,
 ) -> Complex64 {
     match source {
+        AcousticSource::Foster { .. } => foster_impedance(source, frequency_hz),
         AcousticSource::Resonant { resistance_acoustic_ohm, resonance_hz, q } => {
             resonant_source_impedance(*resistance_acoustic_ohm, *resonance_hz, *q, frequency_hz)
         }

@@ -22,7 +22,7 @@ pub fn start() {
 
 #[wasm_bindgen]
 pub fn engine_version() -> String {
-    "Hammer Craft Acoustic Engine 0.24.0".to_string()
+    "Hammer Craft Acoustic Engine 0.25.0".to_string()
 }
 
 #[wasm_bindgen]
@@ -44,6 +44,9 @@ pub fn calculate_tube_volume(length_mm: f64, diameter_mm: f64) -> f64 {
 pub fn simulate_json(request_json: &str) -> Result<String, JsValue> {
     let request: SimulationRequest = serde_json::from_str(request_json)
         .map_err(|e| JsValue::from_str(&format!("Invalid simulation request: {e}")))?;
+    for driver in &request.drivers {
+        driver.acoustic_source.validate().map_err(|e| JsValue::from_str(&e))?;
+    }
     let result = simulation::simulate(&request);
     serde_json::to_string(&result)
         .map_err(|e| JsValue::from_str(&format!("Unable to serialize simulation result: {e}")))
@@ -53,6 +56,9 @@ pub fn simulate_json(request_json: &str) -> Result<String, JsValue> {
 pub fn reverse_design_json(request_json: &str) -> Result<String, JsValue> {
     let request: ReverseDesignRequest = serde_json::from_str(request_json)
         .map_err(|e| JsValue::from_str(&format!("Invalid reverse-design request: {e}")))?;
+    for driver in &request.base_request.drivers {
+        driver.acoustic_source.validate().map_err(|e| JsValue::from_str(&e))?;
+    }
     let result = optimiser::reverse_design(&request);
     serde_json::to_string(&result)
         .map_err(|e| JsValue::from_str(&format!("Unable to serialize reverse-design result: {e}")))
