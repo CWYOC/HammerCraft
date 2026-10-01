@@ -1,0 +1,27 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.19.1",
+  "wasm_sha256": "817265c23f9ae5f4291af6d2d28dff76b121860334577b21e0109cbf637c2ce5",
+  "scope": "Synthetic diagnostic probes of missing checks; not physical validation and not an acceptance pass.",
+  "observations": [
+    {
+      "id": "route-through-package",
+      "build_accepted": true,
+      "samples_strictly_inside_unrelated_box_package": 319,
+      "sample_count": 1001,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet."
+      ],
+      "interpretation": "The second preset is a box at zero rotation; these samples penetrate the actual displayed package, not merely a conservative bounding box."
+    },
+    {
+      "id": "outlet-transition-not-described",
+      "build_accepted": true,
+      "catalog_outlet_diameter_mm": 4.460000000000001,
+      "tube_bore_mm": 1.6,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet."
+      ],
+      "interpretation": "A narrower tube can be valid with a designed transition. No adapter/sealing geometry or compatibility check is requested here."
+    }
+  ]
+}
