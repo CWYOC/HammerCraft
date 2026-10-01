@@ -1,5 +1,6 @@
 // Reproducible numerical audit of every supplied library driver.
 // node tests/diagnostics/all-driver-system-audit.mjs library.json result.json
+// Optional fourth argument: --passive-source (exercise each uncalibrated passive source network).
 // Optional: HC_AUDIT_WASM=/path/to/deployed.wasm
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -28,10 +29,11 @@ const finite = points => assert.ok(points.length && points.every(p => Number.isF
 const tube = (length = 12, diameter = 2) => ({ type: 'tube', length, diameter, loss: 0 });
 function setup(row) {
     const d = designer(), driver = d.databaseDriverToDesign(row);
-    driver.id = `${row.manufacturer}-${row.model}`;
+    driver.id = `${row.manufacturer}-${row.model}`.replace(/[^A-Za-z0-9_.-]/g, '-');
     driver.circuit.nodes = driver.circuit.nodes.filter(n => n.id !== 'drv');
     driver.circuit.output = 'in';
     d.state.drivers = [driver];
+    if (process.argv.includes('--passive-source')) d.usePassiveSource(driver);
     d.document.getElementById('iemAcousticLoadType').value = driver.measurementReferenceLoad?.type || 'anechoic';
     if (driver.measurementReferenceLoad?.volume_mm3) d.document.getElementById('iemCouplerVolume').value = String(driver.measurementReferenceLoad.volume_mm3);
     d.document.getElementById('iemSplMode').value = 'absolute';
@@ -59,7 +61,7 @@ for (const row of rows) {
         measured_fr_phase_points: row.fr.filter(p => Number.isFinite(p.phase_deg)).length,
         measured_impedance_phase_points: row.impedance_curve.filter(p => Number.isFinite(p.phase_deg)).length,
         reference_status: reference.status, reference_note: reference.note, reference_path: reference.modelled,
-        coupler: row.coupler, source_resistance_cgs_ohm: driver.sourceResistanceCgs,
+        coupler: row.coupler, source_model: driver.sourceModel, source_independently_validated: false, source_resistance_cgs_ohm: driver.sourceResistanceCgs,
         measurement_drive_voltage_v: row.drive_voltage_v ?? null,
         gain_correction_to_0_1v_db: row.drive_voltage_v > 0 ? 20 * Math.log10(.1 / row.drive_voltage_v) : null,
         checks, metrics: {}, sweep: {},
@@ -114,18 +116,25 @@ for (const row of rows) {
         assert.ok(error(normal, simulate(base()).combined) < 1e-8);
     });
     driver.path = [tube()];
-    await check('Five output loads and four source models', () => {
-        for (const load of [{ type: 'anechoic' }, { type: 'generic711_approx' }, { type: 'radiation' },
+    await check('Six output loads and five source models', () => {
+        for (const load of [{ type: 'anechoic' }, { type: 'generic711_approx' }, { type: 'iec711_lumped' }, { type: 'radiation' },
             { type: 'closed_cavity', volume_mm3: 2000, loss_resistance_acoustic_ohm: 0 },
             { type: 'cavity_with_leak', volume_mm3: 2000, leak_resistance_acoustic_ohm: 5e8 }]) {
             const request = base(); request.acoustic_load = load; finite(simulate(request).combined);
         }
-        for (const source of ['estimated_resistance', 'ideal_pressure', 'custom_resistance', 'resonant']) {
-            driver.sourceModel = source; finite(simulate(base()).combined);
+        const original = { model: driver.sourceModel, resistance: driver.sourceResistanceCgs, network: driver.sourceNetwork };
+        try {
+            for (const source of ['estimated_resistance', 'ideal_pressure', 'custom_resistance', 'resonant', 'passive_network']) {
+                if (source === 'passive_network') d.usePassiveSource(driver);
+                else driver.sourceModel = source;
+                finite(simulate(base()).combined);
+            }
+        } finally {
+            driver.sourceModel = original.model;
+            driver.sourceResistanceCgs = original.resistance;
+            driver.sourceNetwork = original.network;
         }
-        driver.sourceModel = 'estimated_resistance';
     });
-    driver.sourceModel = 'estimated_resistance';
     await check('Chamber and nozzle output remains finite', () => {
         driver.path = [tube(5, 1.5), { type: 'chamber', length: 3, diameter: 4 }, { type: 'nozzle', length: 4, diameter: 2 }];
         finite(simulate(base()).combined);

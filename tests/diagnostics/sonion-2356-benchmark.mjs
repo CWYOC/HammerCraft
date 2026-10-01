@@ -20,6 +20,7 @@ d.state.drivers = [driver];
 d.document.getElementById('iemAcousticLoadType').value = 'generic_711_approx';
 d.document.getElementById('iemSplMode').value = 'absolute';
 if (fitted) assert.ok(d.applySonion2356Model(driver));
+else driver.measurementReferenceLoad = { type: 'generic_711_approx' }; // Freeze the historical model for comparison.
 d.context.window.HCAcousticEngine = { simulate: async request => simulate(request), version: async () => engine.engine_version() };
 
 function pathAt(position = null) {

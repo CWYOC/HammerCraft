@@ -13,9 +13,10 @@ export function designer() {
         }, Chart: class { constructor(_canvas, config) { Object.assign(this, config); } destroy() {} update() {} },
     });
     vm.runInContext(read('docs/cad-circuit.js'), context);
+    vm.runInContext(read('docs/acoustic-source-models.js'), context);
     // Expose closure functions only in the test VM; production exports stay unchanged.
     vm.runInContext(read('docs/iem-designer.js').replace('window.HCIemDesigner = { init, populateTargetProducts };',
-        'window.test = { applySonion2356Model, hasSonion2356Fixture, pathHtml, applyCircuitPropertyPage, exportProject, importProject, prepareProject, applyGeometryLinks, physicalInputErrors, pathNode, validationSetup, databaseDriverToDesign, referenceInfo, databaseReferenceError, state, driver, draw, rustRequest, applyRevPhysical, calculate, ensureDriverShape, passiveCircuitH, renderCircuitSvg, addCadComponent, finishWireEndpoint, undoCircuit, redoCircuit, mutateCircuit, bindDriverEvents, saveProject, loadProject, newProject, fallback, parseFile, reverseRun, restoreProjectSettings, importDriverFile, renderLibrary, bind, loadTargetProduct, setReverseBase, rebuildReverseFromBase };'), context);
+        'window.test = { sourceBinding, usePassiveSource, importSourceProfile, sourceNetworkHtml, applySonion2356Model, hasSonion2356Fixture, pathHtml, applyCircuitPropertyPage, exportProject, importProject, prepareProject, applyGeometryLinks, physicalInputErrors, pathNode, validationSetup, databaseDriverToDesign, referenceInfo, databaseReferenceError, state, driver, draw, rustRequest, applyRevPhysical, calculate, ensureDriverShape, passiveCircuitH, renderCircuitSvg, addCadComponent, finishWireEndpoint, undoCircuit, redoCircuit, mutateCircuit, bindDriverEvents, saveProject, loadProject, newProject, fallback, parseFile, reverseRun, restoreProjectSettings, importDriverFile, renderLibrary, bind, loadTargetProduct, setReverseBase, rebuildReverseFromBase };'), context);
     context.window.test.restoreProjectSettings();
     return { ...context.window.test, document, context, storage };
 }

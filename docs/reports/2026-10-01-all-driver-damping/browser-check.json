@@ -1,0 +1,16 @@
+{
+  "fixture": "127.0.0.1:8765/design-studio.html",
+  "driver": "Knowles CI-22955-000",
+  "engine": "0.25.0",
+  "source": "passive_network",
+  "checks": {
+    "import_example": "PASS",
+    "activate_individual_source": "PASS",
+    "add_parallel_mode": "PASS",
+    "reject_zero_q": "PASS",
+    "retain_q_4_after_source_switch": "PASS",
+    "calculation": "PASS"
+  },
+  "browser_errors": [],
+  "scope": "Local fixture UI and numerical calculation only; no physical measurement or account-backed library verification."
+}

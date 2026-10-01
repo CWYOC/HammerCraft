@@ -1,0 +1,711 @@
+{
+  "version": 3,
+  "name": "Knowles CI · uncalibrated source example",
+  "drivers": [
+    {
+      "id": "ci-damping-preview",
+      "name": "Knowles CI-22955-000",
+      "type": "ba",
+      "impedance": 80,
+      "sensitivity": 112,
+      "sensitivityRef": 1000,
+      "responseAbsolute": true,
+      "measurementVoltageV": 0.1,
+      "voltageMode": "common",
+      "gain": 0,
+      "polarity": 1,
+      "measurement": [
+        {
+          "frequency": 20,
+          "db": 118.643,
+          "phase": null
+        },
+        {
+          "frequency": 22.431,
+          "db": 118.857,
+          "phase": null
+        },
+        {
+          "frequency": 25.158,
+          "db": 119.071,
+          "phase": null
+        },
+        {
+          "frequency": 28.217,
+          "db": 119.357,
+          "phase": null
+        },
+        {
+          "frequency": 31.647,
+          "db": 119.5,
+          "phase": null
+        },
+        {
+          "frequency": 35.494,
+          "db": 119.643,
+          "phase": null
+        },
+        {
+          "frequency": 39.809,
+          "db": 119.786,
+          "phase": null
+        },
+        {
+          "frequency": 44.648,
+          "db": 119.857,
+          "phase": null
+        },
+        {
+          "frequency": 50.076,
+          "db": 119.857,
+          "phase": null
+        },
+        {
+          "frequency": 56.163,
+          "db": 119.857,
+          "phase": null
+        },
+        {
+          "frequency": 62.991,
+          "db": 119.857,
+          "phase": null
+        },
+        {
+          "frequency": 70.648,
+          "db": 119.857,
+          "phase": null
+        },
+        {
+          "frequency": 79.237,
+          "db": 119.857,
+          "phase": null
+        },
+        {
+          "frequency": 88.869,
+          "db": 119.786,
+          "phase": null
+        },
+        {
+          "frequency": 99.673,
+          "db": 119.643,
+          "phase": null
+        },
+        {
+          "frequency": 111.79,
+          "db": 119.571,
+          "phase": null
+        },
+        {
+          "frequency": 125.379,
+          "db": 119.357,
+          "phase": null
+        },
+        {
+          "frequency": 140.621,
+          "db": 119.214,
+          "phase": null
+        },
+        {
+          "frequency": 157.716,
+          "db": 118.929,
+          "phase": null
+        },
+        {
+          "frequency": 176.889,
+          "db": 118.786,
+          "phase": null
+        },
+        {
+          "frequency": 198.393,
+          "db": 118.5,
+          "phase": null
+        },
+        {
+          "frequency": 222.51,
+          "db": 118.214,
+          "phase": null
+        },
+        {
+          "frequency": 249.56,
+          "db": 117.786,
+          "phase": null
+        },
+        {
+          "frequency": 279.898,
+          "db": 117.357,
+          "phase": null
+        },
+        {
+          "frequency": 313.924,
+          "db": 116.857,
+          "phase": null
+        },
+        {
+          "frequency": 352.087,
+          "db": 116.357,
+          "phase": null
+        },
+        {
+          "frequency": 394.888,
+          "db": 115.786,
+          "phase": null
+        },
+        {
+          "frequency": 442.893,
+          "db": 115.357,
+          "phase": null
+        },
+        {
+          "frequency": 496.734,
+          "db": 114.786,
+          "phase": null
+        },
+        {
+          "frequency": 557.12,
+          "db": 114.071,
+          "phase": null
+        },
+        {
+          "frequency": 624.846,
+          "db": 113.5,
+          "phase": null
+        },
+        {
+          "frequency": 700.806,
+          "db": 112.929,
+          "phase": null
+        },
+        {
+          "frequency": 786.001,
+          "db": 112.643,
+          "phase": null
+        },
+        {
+          "frequency": 881.551,
+          "db": 112.643,
+          "phase": null
+        },
+        {
+          "frequency": 1000,
+          "db": 112,
+          "phase": null
+        },
+        {
+          "frequency": 1108.912,
+          "db": 113.643,
+          "phase": null
+        },
+        {
+          "frequency": 1243.718,
+          "db": 114.571,
+          "phase": null
+        },
+        {
+          "frequency": 1394.912,
+          "db": 115.357,
+          "phase": null
+        },
+        {
+          "frequency": 1564.485,
+          "db": 116.214,
+          "phase": null
+        },
+        {
+          "frequency": 1754.673,
+          "db": 117.786,
+          "phase": null
+        },
+        {
+          "frequency": 1967.982,
+          "db": 120.214,
+          "phase": null
+        },
+        {
+          "frequency": 2207.221,
+          "db": 121.643,
+          "phase": null
+        },
+        {
+          "frequency": 2475.544,
+          "db": 118.5,
+          "phase": null
+        },
+        {
+          "frequency": 2776.485,
+          "db": 114.357,
+          "phase": null
+        },
+        {
+          "frequency": 3114.011,
+          "db": 111.071,
+          "phase": null
+        },
+        {
+          "frequency": 3492.568,
+          "db": 108.786,
+          "phase": null
+        },
+        {
+          "frequency": 3917.145,
+          "db": 107.786,
+          "phase": null
+        },
+        {
+          "frequency": 4393.337,
+          "db": 107.857,
+          "phase": null
+        },
+        {
+          "frequency": 4927.416,
+          "db": 110.357,
+          "phase": null
+        },
+        {
+          "frequency": 5526.422,
+          "db": 105.286,
+          "phase": null
+        },
+        {
+          "frequency": 6198.246,
+          "db": 97.643,
+          "phase": null
+        },
+        {
+          "frequency": 6951.741,
+          "db": 94.857,
+          "phase": null
+        },
+        {
+          "frequency": 7796.835,
+          "db": 89.5,
+          "phase": null
+        },
+        {
+          "frequency": 8744.664,
+          "db": 87.071,
+          "phase": null
+        },
+        {
+          "frequency": 9807.717,
+          "db": 91.214,
+          "phase": null
+        },
+        {
+          "frequency": 11000,
+          "db": 87,
+          "phase": null
+        }
+      ],
+      "impedanceCurve": [
+        {
+          "frequency": 20,
+          "ohm": 23.611,
+          "phase": null
+        },
+        {
+          "frequency": 22.577,
+          "ohm": 23.148,
+          "phase": null
+        },
+        {
+          "frequency": 25.485,
+          "ohm": 23.148,
+          "phase": null
+        },
+        {
+          "frequency": 28.769,
+          "ohm": 23.148,
+          "phase": null
+        },
+        {
+          "frequency": 32.476,
+          "ohm": 23.148,
+          "phase": null
+        },
+        {
+          "frequency": 36.66,
+          "ohm": 23.148,
+          "phase": null
+        },
+        {
+          "frequency": 41.383,
+          "ohm": 23.148,
+          "phase": null
+        },
+        {
+          "frequency": 46.714,
+          "ohm": 24.074,
+          "phase": null
+        },
+        {
+          "frequency": 52.733,
+          "ohm": 24.074,
+          "phase": null
+        },
+        {
+          "frequency": 59.527,
+          "ohm": 24.074,
+          "phase": null
+        },
+        {
+          "frequency": 67.196,
+          "ohm": 24.074,
+          "phase": null
+        },
+        {
+          "frequency": 75.854,
+          "ohm": 24.074,
+          "phase": null
+        },
+        {
+          "frequency": 85.627,
+          "ohm": 24.074,
+          "phase": null
+        },
+        {
+          "frequency": 96.659,
+          "ohm": 25,
+          "phase": null
+        },
+        {
+          "frequency": 109.112,
+          "ohm": 25,
+          "phase": null
+        },
+        {
+          "frequency": 123.17,
+          "ohm": 25.926,
+          "phase": null
+        },
+        {
+          "frequency": 139.039,
+          "ohm": 25.926,
+          "phase": null
+        },
+        {
+          "frequency": 156.952,
+          "ohm": 26.852,
+          "phase": null
+        },
+        {
+          "frequency": 177.173,
+          "ohm": 27.778,
+          "phase": null
+        },
+        {
+          "frequency": 200,
+          "ohm": 28.704,
+          "phase": null
+        },
+        {
+          "frequency": 225.768,
+          "ohm": 29.63,
+          "phase": null
+        },
+        {
+          "frequency": 254.855,
+          "ohm": 30.556,
+          "phase": null
+        },
+        {
+          "frequency": 287.69,
+          "ohm": 32.407,
+          "phase": null
+        },
+        {
+          "frequency": 324.755,
+          "ohm": 34.259,
+          "phase": null
+        },
+        {
+          "frequency": 366.596,
+          "ohm": 37.037,
+          "phase": null
+        },
+        {
+          "frequency": 413.828,
+          "ohm": 39.815,
+          "phase": null
+        },
+        {
+          "frequency": 467.144,
+          "ohm": 42.593,
+          "phase": null
+        },
+        {
+          "frequency": 527.33,
+          "ohm": 46.296,
+          "phase": null
+        },
+        {
+          "frequency": 595.27,
+          "ohm": 50.926,
+          "phase": null
+        },
+        {
+          "frequency": 671.964,
+          "ohm": 56.481,
+          "phase": null
+        },
+        {
+          "frequency": 758.538,
+          "ohm": 62.963,
+          "phase": null
+        },
+        {
+          "frequency": 856.266,
+          "ohm": 71.296,
+          "phase": null
+        },
+        {
+          "frequency": 1000,
+          "ohm": 80,
+          "phase": null
+        },
+        {
+          "frequency": 1091.119,
+          "ohm": 99.074,
+          "phase": null
+        },
+        {
+          "frequency": 1231.696,
+          "ohm": 121.296,
+          "phase": null
+        },
+        {
+          "frequency": 1390.386,
+          "ohm": 158.333,
+          "phase": null
+        },
+        {
+          "frequency": 1569.52,
+          "ohm": 177.778,
+          "phase": null
+        },
+        {
+          "frequency": 1771.734,
+          "ohm": 132.407,
+          "phase": null
+        },
+        {
+          "frequency": 2000,
+          "ohm": 61.111,
+          "phase": null
+        },
+        {
+          "frequency": 2257.676,
+          "ohm": 36.111,
+          "phase": null
+        },
+        {
+          "frequency": 2548.55,
+          "ohm": 40.741,
+          "phase": null
+        },
+        {
+          "frequency": 2876.9,
+          "ohm": 52.778,
+          "phase": null
+        },
+        {
+          "frequency": 3247.553,
+          "ohm": 66.667,
+          "phase": null
+        },
+        {
+          "frequency": 3665.961,
+          "ohm": 80.556,
+          "phase": null
+        },
+        {
+          "frequency": 4138.276,
+          "ohm": 97.222,
+          "phase": null
+        },
+        {
+          "frequency": 4671.443,
+          "ohm": 113.889,
+          "phase": null
+        },
+        {
+          "frequency": 5273.302,
+          "ohm": 108.333,
+          "phase": null
+        },
+        {
+          "frequency": 5952.703,
+          "ohm": 126.852,
+          "phase": null
+        },
+        {
+          "frequency": 6719.637,
+          "ohm": 137.963,
+          "phase": null
+        },
+        {
+          "frequency": 7585.38,
+          "ohm": 159.259,
+          "phase": null
+        },
+        {
+          "frequency": 8562.665,
+          "ohm": 179.63,
+          "phase": null
+        },
+        {
+          "frequency": 9665.86,
+          "ohm": 203.704,
+          "phase": null
+        },
+        {
+          "frequency": 10911.19,
+          "ohm": 216.667,
+          "phase": null
+        },
+        {
+          "frequency": 12316.964,
+          "ohm": 243.519,
+          "phase": null
+        },
+        {
+          "frequency": 13903.856,
+          "ohm": 269.444,
+          "phase": null
+        },
+        {
+          "frequency": 15695.199,
+          "ohm": 299.074,
+          "phase": null
+        },
+        {
+          "frequency": 17717.336,
+          "ohm": 327.315,
+          "phase": null
+        },
+        {
+          "frequency": 20000,
+          "ohm": 346.296,
+          "phase": null
+        }
+      ],
+      "circuit": {
+        "input": "in",
+        "output": "in",
+        "ground": "gnd",
+        "nodes": [
+          {
+            "id": "in",
+            "label": "INPUT",
+            "x": 80,
+            "y": 120
+          },
+          {
+            "id": "gnd",
+            "label": "GND",
+            "x": 750,
+            "y": 300
+          }
+        ],
+        "components": [],
+        "filters": []
+      },
+      "path": [
+        {
+          "type": "tube",
+          "length": 6,
+          "diameter": 2,
+          "loss": 0
+        },
+        {
+          "type": "damper",
+          "value": 1500
+        },
+        {
+          "type": "tube",
+          "length": 6,
+          "diameter": 2,
+          "loss": 0
+        }
+      ],
+      "baselinePhaseMeasured": false,
+      "impedancePhaseMeasured": false,
+      "databaseDriverId": "Knowles-CI-22955-000",
+      "databaseManufacturer": "Knowles",
+      "databaseModel": "CI-22955-000",
+      "databaseMeasurementId": null,
+      "databaseSource": "Knowles CI-22955-000 Product Data Sheet",
+      "databaseSparseResponse": false,
+      "measurementReferencePath": [
+        {
+          "element_order": 1,
+          "element_type": "other",
+          "length_mm": null,
+          "inner_diameter_mm": null,
+          "damper_ohm": null,
+          "volume_mm3": null,
+          "description": "Knowles DB2012 adapter"
+        },
+        {
+          "element_order": 2,
+          "element_type": "coupler",
+          "length_mm": null,
+          "inner_diameter_mm": null,
+          "damper_ohm": null,
+          "volume_mm3": null,
+          "description": "IEC60318-4 (711) coupler"
+        }
+      ],
+      "measurementReferenceCoupler": "IEC 60318-4 / 711",
+      "measurementReferenceLoad": {
+        "type": "iec711_lumped"
+      },
+      "measurementReferenceCompensation": true,
+      "databaseImpedanceSource": "Knowles CI-22955-000 Datasheet - Digitised",
+      "referenceProfileVersion": 1,
+      "sourceModel": "estimated_resistance",
+      "sourceReferenceDiameterMm": 2,
+      "sourceResonanceHz": 3000,
+      "sourceQ": 2,
+      "sourceResistanceCgs": 1319.2749251581856
+    }
+  ],
+  "target": [],
+  "reverseBase": [],
+  "targetPeq": [],
+  "settings": {
+    "iemSplMode": "absolute",
+    "iemNormalizeFrequency": "1000",
+    "iemInputVoltage": "0.1",
+    "iemTemperature": "20",
+    "iemHumidity": "50",
+    "iemAcousticLoadType": "iec711_lumped",
+    "iemCouplerVolume": "2000",
+    "iemLoadLossResistance": "0",
+    "iemLeakResistance": "500000000",
+    "iemTargetProduct": "",
+    "iemShowTarget": true,
+    "iemShowIndividual": true,
+    "iemShowCombined": true,
+    "iemShowUndamped": true,
+    "iemShowValidationError": false,
+    "iemReverseMatchMode": "absolute",
+    "iemReverseNormalizeFrequency": "1000",
+    "iemReverseLengthMin": "3",
+    "iemReverseLengthMax": "20",
+    "iemReverseDiameterMin": "0.8",
+    "iemReverseDiameterMax": "3",
+    "iemReverseDampers": "330,680,1000,1500,2200",
+    "iemReverseCaps": "0,4.7,10,15,22,33,47",
+    "iemReverseResistors": "0,1,2.2,3.3,4.7,10",
+    "iemReverseGainRange": "8"
+  },
+  "reverseView": {
+    "min": 60,
+    "max": 100
+  },
+  "cadSettings": {
+    "wireRouting": "orthogonal",
+    "cadSymbolStandard": "iec",
+    "cadSnapToGrid": true
+  }
+}

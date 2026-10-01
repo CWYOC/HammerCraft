@@ -1,5 +1,5 @@
 // Prepare reproducible prediction setups and blank measurement forms. Never creates measured points.
-// node tests/diagnostics/prepare-iem-validation.mjs output-directory
+// node tests/diagnostics/prepare-iem-validation.mjs output-directory [fitted-profile-directory]
 import fs from 'node:fs';
 import path from 'node:path';
 import { designer } from '../designer-helper.mjs';
@@ -10,6 +10,10 @@ if (fs.existsSync(output)) throw Error('Output already exists; use a new directo
 fs.mkdirSync(path.join(output, 'setups'), { recursive: true });
 fs.mkdirSync(path.join(output, 'measurement-templates'));
 const rows = JSON.parse(fs.readFileSync(new URL('../fixtures/driver-library.json', import.meta.url)));
+const profileDirectory = process.argv[3];
+const profiles = profileDirectory ? fs.readdirSync(profileDirectory).filter(name => name.endsWith('.source.json'))
+    .map(name => JSON.parse(fs.readFileSync(path.join(profileDirectory, name), 'utf8'))) : [];
+if (profileDirectory && !profiles.length) throw Error('No .source.json profiles found in the supplied directory.');
 const write = (name, data) => fs.writeFileSync(path.join(output, name), JSON.stringify(data, null, 2) + '\n');
 const tube = (length = 12, diameter = 2) => ({ type: 'tube', length, diameter, loss: 0 });
 const damper = value => ({ type: 'damper', value });
@@ -28,6 +32,9 @@ const variants = [
 ];
 const cases = [], inventory = [];
 for (const row of rows) {
+    const matchingProfiles = profiles.filter(p => p.binding?.manufacturer === row.manufacturer && p.binding?.model === row.model);
+    if (matchingProfiles.length > 1) throw Error(`Multiple fitted profiles supplied for ${row.manufacturer} ${row.model}. Choose one frozen model.`);
+    const fittedProfile = matchingProfiles[0];
     const slug = `${row.manufacturer}-${row.model}`.replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
     const configs = [...variants];
     if (row.model === '2356') configs.push(
@@ -46,6 +53,9 @@ for (const row of rows) {
             driver.circuit.components.push({ id: 'series', nodeA: 'in', nodeB: 'out', ...variant.component });
         }
         d.state.drivers = [driver];
+        if (d.hasSonion2356Fixture(driver)) d.applySonion2356Model(driver);
+        else d.usePassiveSource(driver);
+        if (fittedProfile) d.importSourceProfile(driver, fittedProfile);
         d.document.getElementById('iemInputVoltage').value = String(variant.inputVoltage || .1);
         d.document.getElementById('iemAcousticLoadType').value = driver.measurementReferenceLoad.type;
         d.document.getElementById('iemCouplerVolume').value = String(driver.measurementReferenceLoad.volume_mm3 || 2000);
@@ -63,7 +73,7 @@ for (const row of rows) {
         });
     }
     inventory.push({ driver: `${row.manufacturer} ${row.model}`, cases: configs.length, measurement_voltage_v: row.drive_voltage_v,
-        fixture: row.coupler, measured_fr_phase: false, physical_status: 'AWAITING_MEASUREMENTS',
+        fixture: row.coupler, measured_fr_phase: false, physical_status: 'AWAITING_MEASUREMENTS', source_status: fittedProfile ? 'IMPORTED_FIT_NOT_VALIDATED' : row.model === '2356' ? 'PUBLISHED_EXAMPLE_FIT_NOT_VALIDATED' : 'MANUAL_PASSIVE_ESTIMATE',
         additional_scope: row.model === 'EST65DA01' ? 'Only 1–8 kHz pilot; a characterized extended-frequency fixture and transformer conditions are still needed for its intended upper band.' : 'Pilot band only; low bass, upper treble and assembly validation remain separate.' });
 }
 write('manifest.json', { schema_version: 1, criteria: defaultCriteria, cases });

@@ -1,0 +1,106 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.25.0",
+  "interpretation": "Fits are not independently validated. Validation-role files are never read by this fitter.",
+  "results": [
+    {
+      "driver": "Sonion 2356",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "sonion-2356-reference",
+        "sonion-2356-damper-680",
+        "sonion-2356-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Knowles CI-22955-000",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "knowles-ci-22955-000-reference",
+        "knowles-ci-22955-000-damper-680",
+        "knowles-ci-22955-000-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Knowles RDI-34006-000",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "knowles-rdi-34006-000-reference",
+        "knowles-rdi-34006-000-damper-680",
+        "knowles-rdi-34006-000-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Sonion 28UAP01",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "sonion-28uap01-reference",
+        "sonion-28uap01-damper-680",
+        "sonion-28uap01-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Sonion 38D1XJ007Mi/8a",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "sonion-38d1xj007mi-8a-reference",
+        "sonion-38d1xj007mi-8a-damper-680",
+        "sonion-38d1xj007mi-8a-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Sonion EST65DA01",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "sonion-est65da01-reference",
+        "sonion-est65da01-damper-680",
+        "sonion-est65da01-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Sonion 17A003",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "sonion-17a003-reference",
+        "sonion-17a003-damper-680",
+        "sonion-17a003-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Sonion 33AJ007i/9",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "sonion-33aj007i-9-reference",
+        "sonion-33aj007i-9-damper-680",
+        "sonion-33aj007i-9-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Knowles HODVTEC-31618-000",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "knowles-hodvtec-31618-000-reference",
+        "knowles-hodvtec-31618-000-damper-680",
+        "knowles-hodvtec-31618-000-tube-6"
+      ],
+      "fit_cases": 3
+    },
+    {
+      "driver": "Knowles RAU-34832-B148",
+      "status": "AWAITING_MEASUREMENTS",
+      "missing_fit_cases": [
+        "knowles-rau-34832-b148-reference",
+        "knowles-rau-34832-b148-damper-680",
+        "knowles-rau-34832-b148-tube-6"
+      ],
+      "fit_cases": 3
+    }
+  ]
+}
