@@ -1,0 +1,99 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.19.1",
+  "wasm_sha256": "03443b2e39c927f18c1308950c24c52f416397cbe7ecfcebf5e92de83e7543b4",
+  "scope": "Synthetic diagnostic probes of missing checks; not physical validation and not an acceptance pass.",
+  "observations": [
+    {
+      "id": "route-through-package",
+      "build_accepted": true,
+      "samples_strictly_inside_unrelated_box_package": 319,
+      "sample_count": 1001,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet."
+      ],
+      "interpretation": "The second preset is a box at zero rotation; these samples penetrate the actual displayed package, not merely a conservative bounding box."
+    },
+    {
+      "id": "outlet-transition-not-described",
+      "build_accepted": true,
+      "catalog_outlet_diameter_mm": 4.460000000000001,
+      "tube_bore_mm": 1.6,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet."
+      ],
+      "interpretation": "A narrower tube can be valid with a designed transition. No adapter/sealing geometry or compatibility check is requested here."
+    },
+    {
+      "id": "globally-inverted-shell",
+      "build_accepted": true,
+      "signed_volume_mm3": -33064.33052728736,
+      "boundary_edges": 0,
+      "inconsistent_edges": 0,
+      "warnings": [
+        "Layout preview: shell cavities, connector cuts, ear-fit, wall thickness and manufacturing clearance are not evaluated in this port yet."
+      ],
+      "interpretation": "Consistent inward winding is not the same as a valid solid orientation. The signed volume is reported, but no specific orientation warning is generated."
+    },
+    {
+      "id": "assumed-phase-combined-response",
+      "input_errors": [],
+      "individual_level_db": 90,
+      "combined_level_db": 96.02059991327963,
+      "measured_phase_flags": [
+        false,
+        false
+      ],
+      "ui_notes": "Some baseline phase data is missing or its provenance is unknown. Missing phase is assumed zero; multi-driver interference is not physically validated. Ideal-pressure source selected: zero source impedance can exaggerate tube/coupler resonances.",
+      "interpretation": "Exploratory summation is allowed and the missing phase is warned about. Validation metadata correctly preserves the missing evidence; a design-release gate is still absent."
+    },
+    {
+      "id": "outside-measured-band",
+      "baseline_band_hz": [
+        100,
+        10000
+      ],
+      "requested_frequencies_hz": [
+        20,
+        100,
+        1000,
+        10000,
+        20000
+      ],
+      "response": [
+        {
+          "frequency_hz": 20,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 100,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 1000,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 10000,
+          "db": 90,
+          "phase_deg": 0
+        },
+        {
+          "frequency_hz": 20000,
+          "db": 90,
+          "phase_deg": 0
+        }
+      ],
+      "interpretation": "The baseline endpoints are held outside the recorded range and a full-band response is returned. This is a numerical extension, not measured evidence at 20 Hz or 20 kHz."
+    },
+    {
+      "id": "reverse-candidate-gain-realizability",
+      "applied_gain_db": 8,
+      "circuit_component_kinds": [],
+      "input_errors": [],
+      "interpretation": "The independent 8 dB gain parameter is accepted without a mapped amplifier or other hardware implementation. This does not establish that an all-passive assembly can realise the scored candidate."
+    }
+  ]
+}
