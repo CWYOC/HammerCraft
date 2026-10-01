@@ -65,17 +65,8 @@ function fixture() {
         inner_diameter_mm: 1.6,
         outer_diameter_mm: 2.4,
     };
-    const shell = JSON.parse(
-        engine.workshop_import_stl(
-            fs.readFileSync(
-                new URL(
-                    "../docs/assets/workshop/solid-shell.stl",
-                    import.meta.url,
-                ),
-            ),
-            1,
-        ),
-    );
+    // Circuit-link tests need a feasible envelope for every catalog outlet.
+    const shell = { vertices: [[-30,-30,-30],[30,-30,-30],[30,30,-30],[-30,30,-30],[-30,-30,30],[30,-30,30],[30,30,30],[-30,30,30]], triangles: [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[3,7,6],[3,6,2],[0,4,7],[0,7,3],[1,2,6],[1,6,5]] };
     const file = {
         format: "hc-workshop-file",
         version: 1,

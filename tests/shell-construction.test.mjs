@@ -11,7 +11,7 @@ const cube = {
 const construction = () => ({wall_mm:1.5,resolution_mm:0.5,faceplate_axis:2,faceplate_depth_mm:2.5,faceplate_gap_mm:0,cut_sound_paths:false,connector:null});
 const project = () => ({format:'hc-headphone-workshop',version:1,name:'Solid fixture',shell_scale:[1,1,1],mirrored:false,drivers:[],construction:construction()});
 const build = (p, stock=cube) => JSON.parse(engine.workshop_build_json(JSON.stringify(p),JSON.stringify(stock)));
-const driver = () => ({id:'a',preset:13,position_mm:[-2,0,0],rotation_deg:[0,0,0],lead_mm:2,bend_mm:[-8,0,0],end_mm:[-13,0,0],inner_diameter_mm:3,outer_diameter_mm:4});
+const driver = () => ({id:'a',preset:13,position_mm:[-2,0,0],rotation_deg:[0,0,0],lead_mm:2,bend_mm:[-8,0,0],end_mm:[-9.9,0,0],inner_diameter_mm:3,outer_diameter_mm:4});
 function inspect(mesh) {
     const edges=new Map();let volume=0;
     for(const [a,b,c] of mesh.triangles){
@@ -96,10 +96,10 @@ test('open and inward stock, unresolved features, invalid cuts and oversized gri
 
 test('cavity packing and non-intersecting openings are reported without silently moving the parts',()=>{
     const p=project();p.drivers=[driver()];
-    assert.equal(build(p).placement_checks.find(c=>c.code==='package-cavity').status,'unverified');
+    assert.equal(build(p).placement_checks.find(c=>c.code==='package-cavity').status,'pass');
     p.drivers[0].position_mm=[7,0,0];const before=structuredClone(p);const b=build(p);
     assert.equal(b.placement_checks.find(c=>c.code==='package-cavity').status,'error');
-    assert.ok(b.paths[0].placement_errors.some(m=>m.includes('cavity clearance')));assert.deepEqual(p,before);
+    assert.ok(b.paths[0].placement_errors.some(m=>m.includes('shell cavity')));assert.deepEqual(p,before);
     p.drivers=[];p.construction.connector={shape:'box',center_mm:[30,0,0],rotation_deg:[0,0,0],size_mm:[3,3,6]};
     assert.equal(build(p).placement_checks.find(c=>c.code==='connector-cut').status,'warning');
 });
@@ -116,12 +116,12 @@ test('all 18 package presets receive cavity checks and retain their source place
     for(let preset=0;preset<18;preset++) {
         const p=project();p.drivers=[{...driver(),preset,position_mm:[0,0,0]}];
         const before=structuredClone(p),b=build(p);
-        assert.equal(b.placement_checks.find(c=>c.code==='package-cavity').status,'unverified',`preset ${preset} fits cube cavity samples`);
+        assert.equal(b.placement_checks.find(c=>c.code==='package-cavity').status,'pass',`preset ${preset} fits cube cavity samples`);
         assert.deepEqual(p,before);
         p.drivers[0].position_mm=[10,0,0];
         const invalid=build(p);
         assert.equal(invalid.placement_checks.find(c=>c.code==='package-cavity').status,'error',`preset ${preset} detects wall penetration`);
-        assert.ok(invalid.paths[0].placement_errors.some(m=>m.includes('cavity clearance')));
+        assert.ok(invalid.paths[0].placement_errors.some(m=>m.includes('shell cavity')));
     }
 });
 

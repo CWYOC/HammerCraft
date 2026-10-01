@@ -1,5 +1,5 @@
-import init, * as engine from './wasm/acoustic_engine.js?v=0.21.0';
-const ready = init({ module_or_path: new URL('./wasm/acoustic_engine_bg.wasm?v=0.21.0', import.meta.url) });
+import init, * as engine from './wasm/acoustic_engine.js?v=0.22.0';
+const ready = init({ module_or_path: new URL('./wasm/acoustic_engine_bg.wasm?v=0.22.0', import.meta.url) });
 // Retain one accepted project. Failed imports/edits never replace it.
 let shell, project, built, sourceName = 'HeadphoneWorkshop starter';
 self.onmessage = async ({ data }) => {
@@ -23,6 +23,7 @@ self.onmessage = async ({ data }) => {
             if (!project) throw new Error('Load a shell first.');
             self.postMessage({ id, ok: true, file: { format: 'hc-workshop-file', version: 1, sourceName, project, shell } });
         } else if (action === 'export') {
+            if (built?.export_blockers?.length) throw new Error(`STL export blocked: ${built.export_blockers[0]} Fix the placement checks first. Project saving remains available.`);
             const part = built?.parts.find(p => p.id === data.part);
             if (!part) throw new Error('Select an existing part.');
             const bytes = engine.workshop_export_stl(JSON.stringify(part.mesh));

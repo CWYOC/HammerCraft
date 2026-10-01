@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 mod placement;
 mod solid;
+mod containment;
 type V = [f64; 3];
 fn add(a: V, b: V) -> V {
     std::array::from_fn(|i| a[i] + b[i])
@@ -448,6 +449,7 @@ pub struct Build {
     pub warnings: Vec<String>,
     pub placement_checks: Vec<placement::Check>,
     pub construction: Option<solid::ConstructionInfo>,
+    pub export_blockers: Vec<String>,
 }
 fn envelope(s: &Preset) -> Mesh {
     if s.cylindrical {
@@ -634,7 +636,8 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
     // Run before whole-assembly reflection, which preserves these distances and intersections.
     let mut placement_checks = placement::inspect_layout(p, &catalog, &parts, &paths, &info);
     let construction = if p.construction.is_some() {
-        let result = solid::construct(&parts[0].mesh, p, &paths, &parts)?;
+        let result = solid::construct(&parts[0].mesh, p, &paths)?;
+        placement_checks.extend(containment::inspect_parts(p, &parts, &info));
         parts[0].mesh = result.body;
         parts[0].name = "Constructed hollow shell body".into();
         info = inspect(&parts[0].mesh);
@@ -644,12 +647,20 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         warnings.retain(|s| !s.starts_with("Layout preview:"));
         warnings.push("Sampled shell construction: inspect all machined openings, remaining walls and assembly access before manufacture. No process qualification is implied.".into());
         Some(result.info)
-    } else { None };
+    } else {
+        placement_checks.extend(containment::inspect_parts(p, &parts, &info));
+        None
+    };
+    let export_blockers: Vec<String> = placement_checks.iter()
+        .filter(|c| c.status == "error" || (c.status != "pass"
+            && matches!(c.code.as_str(), "package-shell" | "package-cavity" | "tube-shell")))
+        .map(|c| c.message.clone()).collect();
     for check in &placement_checks {
         if check.status == "error" || check.status == "warning" {
             warnings.push(check.message.clone());
         }
-        if check.status == "error" {
+        if check.status == "error" || (check.status != "pass"
+            && matches!(check.code.as_str(), "package-shell" | "package-cavity" | "tube-shell")) {
             for path in &mut paths {
                 if check
                     .part_ids
@@ -684,6 +695,7 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         warnings,
         placement_checks,
         construction,
+        export_blockers,
     })
 }
 pub fn export_stl(m: &Mesh) -> Result<Vec<u8>, String> {

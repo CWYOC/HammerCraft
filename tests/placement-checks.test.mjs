@@ -6,7 +6,8 @@ import { createProject, connectTube, synchronize } from '../docs/design-project.
 import { designer } from './designer-helper.mjs';
 await init({ module_or_path: fs.readFileSync(new URL('../docs/wasm/acoustic_engine_bg.wasm', import.meta.url)) });
 const catalog = JSON.parse(fs.readFileSync(new URL('../docs/assets/workshop/drivers.json', import.meta.url)));
-const shell = JSON.parse(engine.workshop_import_stl(fs.readFileSync(new URL('../docs/assets/workshop/solid-shell.stl', import.meta.url)), 1));
+// Isolate component collision tests in a roomy closed envelope.
+const shell = { vertices: [[-30,-30,-30],[30,-30,-30],[30,30,-30],[-30,30,-30],[-30,-30,30],[30,-30,30],[30,30,30],[-30,30,30]], triangles: [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[3,7,6],[3,6,2],[0,4,7],[0,7,3],[1,2,6],[1,6,5]] };
 const project = drivers => ({ format:'hc-headphone-workshop', version:1, name:'Placement test', shell_scale:[2,2,2], mirrored:false, drivers });
 const build = (p, mesh=shell) => JSON.parse(engine.workshop_build_json(JSON.stringify(p), JSON.stringify(mesh)));
 const checks = (b, code) => b.placement_checks.filter(c => c.code === code);

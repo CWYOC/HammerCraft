@@ -46,7 +46,8 @@ export function createViewer(canvas) {
         showShell = true,
         showPaths = true,
         showFaceplate = true,
-        constructed = false;
+        constructed = false,
+        invalidParts = new Set();
     function draw() {
         const rect = canvas.getBoundingClientRect(),
             dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -98,7 +99,7 @@ export function createViewer(canvas) {
                 continue;
             const isSelected = m.id === selected || m.id === `path:${selected}`;
             const rgba =
-                m.kind === "shell"
+                invalidParts.has(m.id) ? [1, 0.18, 0.1, 1] : m.kind === "shell"
                     ? [0.72, 0.84, 0.8, constructed ? 1 : 0.16]
                     : m.kind === "faceplate" ? [0.76, 0.69, 0.53, 1]
                     : m.kind === "path"
@@ -121,8 +122,9 @@ export function createViewer(canvas) {
         }
         gl.depthMask(true);
     }
-    function setParts(parts, selectedId, isConstructed = false) {
+    function setParts(parts, selectedId, isConstructed = false, invalidIds = []) {
         constructed = isConstructed;
+        invalidParts = new Set(invalidIds);
         for (const m of meshes) gl.deleteBuffer(m.buffer);
         extent = 1;
         selected = selectedId;

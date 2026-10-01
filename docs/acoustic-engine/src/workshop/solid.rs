@@ -81,7 +81,7 @@ struct Node {
     children: Option<(usize, usize)>,
     faces: Vec<usize>,
 }
-struct DistanceMesh<'a> {
+pub(super) struct DistanceMesh<'a> {
     mesh: &'a Mesh,
     nodes: Vec<Node>,
 }
@@ -101,7 +101,7 @@ fn ray_bounds(p: V, d: V, b: [V; 2]) -> bool {
     hi >= lo
 }
 impl<'a> DistanceMesh<'a> {
-    fn new(mesh: &'a Mesh) -> Self {
+    pub(super) fn new(mesh: &'a Mesh) -> Self {
         let mut tree = Self {
             mesh,
             nodes: vec![],
@@ -210,7 +210,7 @@ impl<'a> DistanceMesh<'a> {
             }
         }
     }
-    fn signed(&self, p: V) -> f64 {
+    pub(super) fn signed(&self, p: V) -> f64 {
         let mut distance = f64::INFINITY;
         self.nearest(0, p, &mut distance);
         if distance < 1e-9 {
@@ -230,6 +230,44 @@ impl<'a> DistanceMesh<'a> {
         } else {
             distance
         }
+    }
+    /// Full triangle-to-surface clearance, not just vertex samples. Bounding
+    /// boxes only prune the search; leaf decisions use triangle geometry.
+    pub(super) fn near_triangle(&self, triangle: [V; 3], margin: f64) -> bool {
+        let bounds = [
+            std::array::from_fn(|i| triangle.iter().map(|p| p[i]).fold(f64::INFINITY, f64::min)),
+            std::array::from_fn(|i| {
+                triangle
+                    .iter()
+                    .map(|p| p[i])
+                    .fold(f64::NEG_INFINITY, f64::max)
+            }),
+        ];
+        self.near_node(0, triangle, bounds, margin)
+    }
+    fn near_node(&self, n: usize, t: [V; 3], b: [V; 2], margin: f64) -> bool {
+        let node = &self.nodes[n];
+        let gap: f64 = (0..3)
+            .map(|i| {
+                (b[0][i] - node.bounds[1][i])
+                    .max(node.bounds[0][i] - b[1][i])
+                    .max(0.)
+                    .powi(2)
+            })
+            .sum();
+        if gap > margin * margin {
+            return false;
+        }
+        if let Some((a, c)) = node.children {
+            return self.near_node(a, t, b, margin) || self.near_node(c, t, b, margin);
+        }
+        node.faces.iter().any(|&f| {
+            let s = self.mesh.triangles[f].map(|i| self.mesh.vertices[i]);
+            (0..3).any(|i| {
+                placement::segment_triangle(t[i], t[(i + 1) % 3], s[0], s[1], s[2]) <= margin
+                    || placement::segment_triangle(s[i], s[(i + 1) % 3], t[0], t[1], t[2]) <= margin
+            })
+        })
     }
 }
 struct Grid {
@@ -453,12 +491,7 @@ fn add_check(
     });
 }
 
-pub fn construct(
-    stock: &Mesh,
-    p: &Project,
-    paths: &[PathInfo],
-    parts: &[Part],
-) -> Result<ResultParts, String> {
+pub fn construct(stock: &Mesh, p: &Project, paths: &[PathInfo]) -> Result<ResultParts, String> {
     let c = p.construction.as_ref().unwrap();
     let si = inspect(stock);
     if si.boundary_edges + si.nonmanifold_edges + si.inconsistent_edges + si.degenerate_triangles
@@ -593,42 +626,19 @@ pub fn construct(
             add_check(
                 &mut checks,
                 "sound-outlet",
-                if end < p.drivers[i].inner_diameter_mm / 2. {
+                if end.abs() > p.drivers[i].inner_diameter_mm / 2. {
                     "warning"
                 } else {
                     "unverified"
                 },
                 vec![id],
-                if end < p.drivers[i].inner_diameter_mm / 2. {
-                    "Sound path end is not fully outside the stock. Extend it through the intended outlet and inspect the opening.".into()
+                if end.abs() > p.drivers[i].inner_diameter_mm / 2. {
+                    "Sound bore does not reach the stock surface near its endpoint. Place the tube end just inside the intended outlet and inspect the opening; physical tubes must not protrude.".into()
                 } else {
                     format!("Sound path cut removes {0} material samples. Confirm the outlet, bore continuity and tube seal; internal tubes remain separate parts.",bore_samples[i])
                 },
             );
         }
-    }
-    // Sample the represented package surface and centre against the requested inner offset.
-    // This catches obvious packing failures without claiming exact containment of a concave cavity.
-    for (driver_index, d) in p.drivers.iter().enumerate() {
-        let mesh = &parts.iter().find(|x| x.id == d.id).unwrap().mesh;
-        let clearance = mesh
-            .vertices
-            .iter()
-            .chain(std::iter::once(&d.position_mm))
-            .map(|&v| (-source.signed(v) - c.wall_mm).min(plane - v[c.faceplate_axis]))
-            .fold(f64::INFINITY, f64::min);
-        let violates = clearance < 0.;
-        add_check(
-            &mut checks,
-            "package-cavity",
-            if violates { "error" } else { "unverified" },
-            vec![d.id.clone()],
-            if violates {
-                format!("Driver {:02}: minimum sampled cavity clearance is {:.2} mm. Move the driver or revise the wall/faceplate cut.",driver_index+1,clearance)
-            } else {
-                format!("Driver {:02}: minimum sampled cavity clearance is {:.2} mm; complete surface clearance and post-cut wall thickness remain unverified.",driver_index+1,clearance)
-            },
-        );
     }
     Ok(ResultParts {
         body,

@@ -73,7 +73,7 @@ pub(super) fn point_triangle(p: V, a: V, b: V, c: V) -> f64 {
             .min(point_segment(p, c, a))
     }
 }
-fn segment_triangle(a: V, b: V, p: V, q: V, r: V) -> f64 {
+pub(super) fn segment_triangle(a: V, b: V, p: V, q: V, r: V) -> f64 {
     let n = norm(cross(sub(q, p), sub(r, p)));
     let den = dot(sub(b, a), n);
     if den.abs() > 1e-14 {
@@ -326,7 +326,7 @@ pub fn inspect_layout(
             if outside {
                 format!("{label}: package exceeds the shell's bounding box.")
             } else {
-                format!("{label}: inside stock bounds; finished cavity containment is unverified.")
+                format!("{label}: inside stock bounding box; the curved surface is checked separately.")
             },
         );
         push(
@@ -552,7 +552,7 @@ pub fn inspect_layout(
         }
     }
     for (code,message) in [
-        ("finished-shell","Finished cavities, tube-to-shell containment, remaining wall thickness and shell self-intersections are not evaluated."),
+        ("finished-shell","Outer containment is checked for represented parts. Enable shell construction to check package wall offset and faceplate clearance; remaining wall thickness and shell self-intersections are unverified."),
         ("manufacturing-clearance","No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."),
         ("physical-assembly","Damper seats, connectors, crossover components, insulated wires, adhesive regions and assembly access are not represented in 3D."),
     ] {push(&mut out,code,"unverified",&[],message.into());}

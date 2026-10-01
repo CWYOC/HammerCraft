@@ -1,4 +1,4 @@
-import { createViewer } from "./workshop-viewer.js?v=2";
+import { createViewer } from "./workshop-viewer.js?v=3";
 const $ = (id) => document.getElementById(id);
 let project = {
     format: "hc-headphone-workshop",
@@ -27,6 +27,7 @@ function setBusy(value) {
         ".workshop-controls input,.workshop-controls select,.workshop-controls button,.project-bar input,.project-bar button,.exports button,.exports select,#placementChecks button",
     ))
         el.disabled = value;
+    $("exportStl").disabled = value || !built || !!built.export_blockers?.length;
 }
 function rpc(action, data = {}) {
     return new Promise((resolve, reject) => {
@@ -57,10 +58,10 @@ function newDriver(index = 0) {
     return {
         id: crypto.randomUUID(),
         preset: 13,
-        position_mm: [index * 3.5, 0, 0],
+        position_mm: [3 + index * 3.5, -2, 0],
         rotation_deg: [0, 0, 0],
         end_mm: [-3, 11, -2.4],
-        bend_mm: [-7 + index * 3.5, 5, 0],
+        bend_mm: [-3 + index * 3.5, 3, -2],
         lead_mm: 3,
         inner_diameter_mm: 1.6,
         outer_diameter_mm: 2.4,
@@ -225,13 +226,21 @@ function accept(result) {
         }),
     );
     showPlacementChecks();
+    const blockers = built.export_blockers || [];
+    $("exportStatus").textContent = blockers.length
+        ? `STL export blocked by ${blockers.length} placement or containment check${blockers.length === 1 ? "" : "s"}. Parts must stay inside the shell, including tube outer walls. Fix the listed checks; you can still save this editable project.`
+        : "Represented parts passed shell containment checks. STL previews are available; manufacturing qualification is separate.";
+    $("exportStatus").classList.toggle("error", blockers.length > 0);
     const previous = $("exportPart").value;
     $("exportPart").replaceChildren(
         ...built.parts.map((p) => option(p.id, p.name)),
     );
     if (built.parts.some((p) => p.id === previous))
         $("exportPart").value = previous;
-    viewer.setParts(built.parts, selected, !!built.construction);
+    const invalidParts = built.placement_checks.filter(c => c.status === "error"
+        || (c.status !== "pass" && ["package-shell", "package-cavity", "tube-shell"].includes(c.code)))
+        .flatMap(c => c.part_ids);
+    viewer.setParts(built.parts, selected, !!built.construction, invalidParts);
     showDriver();
 }
 async function run(action, data, message = "Geometry updated.") {
@@ -290,7 +299,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=4", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=5", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {

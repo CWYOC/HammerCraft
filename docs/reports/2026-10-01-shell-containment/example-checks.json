@@ -1,0 +1,117 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.22.0",
+  "checks": [
+    {
+      "code": "shell-topology",
+      "status": "pass",
+      "part_ids": [
+        "shell"
+      ],
+      "message": "Shell edge topology and total orientation passed; self-intersections and individual solid components remain unchecked."
+    },
+    {
+      "code": "package-stock-bounds",
+      "status": "pass",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: inside stock bounding box; the curved surface is checked separately."
+    },
+    {
+      "code": "part-dimensions",
+      "status": "pass",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: catalog marks package and outlet as supplier-dimensioned; mounting allowances remain unverified."
+    },
+    {
+      "code": "outlet-adapter",
+      "status": "unverified",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d",
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: 1.42 mm catalog outlet → 1.60 mm tube bore. Adapter, spout engagement and seal geometry are not defined."
+    },
+    {
+      "code": "tube-own-package",
+      "status": "pass",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d",
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: route checked against driver 01. No penetration/contact detected in this check; physical outlet and assembly allowances remain unverified."
+    },
+    {
+      "code": "tube-bend",
+      "status": "unverified",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: no local fold found in 257 bend samples. A material/process minimum bend radius has not been supplied."
+    },
+    {
+      "code": "tube-self-contact",
+      "status": "pass",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: no nonlocal route contact detected; local bends are checked separately."
+    },
+    {
+      "code": "manufacturing-clearance",
+      "status": "unverified",
+      "part_ids": [],
+      "message": "No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."
+    },
+    {
+      "code": "physical-assembly",
+      "status": "unverified",
+      "part_ids": [],
+      "message": "Damper seats, connectors, crossover components, insulated wires, adhesive regions and assembly access are not represented in 3D."
+    },
+    {
+      "code": "package-cavity",
+      "status": "pass",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: complete represented mesh stays inside the requested shell cavity; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."
+    },
+    {
+      "code": "tube-shell",
+      "status": "pass",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183 sound tube: complete represented mesh stays inside the curved shell envelope; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."
+    },
+    {
+      "code": "shell-construction",
+      "status": "unverified",
+      "part_ids": [
+        "shell",
+        "faceplate"
+      ],
+      "message": "Hollow body and faceplate generated at 0.500 mm grid spacing. Wall 1.50 mm is a requested offset, not a certified minimum after machining; inspect thin features and confirm with a finer grid."
+    },
+    {
+      "code": "connector-cut",
+      "status": "unverified",
+      "part_ids": [
+        "shell"
+      ],
+      "message": "Connector opening cuts the represented solid. Verify the exact connector drawing, retention, remaining wall and assembly access."
+    },
+    {
+      "code": "sound-outlet",
+      "status": "warning",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "Sound bore does not reach the stock surface near its endpoint. Place the tube end just inside the intended outlet and inspect the opening; physical tubes must not protrude."
+    }
+  ],
+  "export_blockers": []
+}
