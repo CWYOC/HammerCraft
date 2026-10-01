@@ -153,6 +153,24 @@
 
     function compile(circuit) {
         const errors = [], warnings = [];
+        for (const key of ["nodes", "components"]) {
+            const ids = new Set();
+            if (!Array.isArray(circuit[key])) {
+                errors.push(`Invalid circuit ${key}.`);
+                continue;
+            }
+            for (const item of circuit[key]) {
+                if (!item || typeof item.id !== "string" || !item.id.trim() || ids.has(item.id)) {
+                    errors.push(`Circuit ${key} must have unique, non-empty IDs.`);
+                    break;
+                }
+                ids.add(item.id);
+            }
+        }
+        // Ambiguous identities cannot safely resolve wire ownership or nets.
+        if (errors.length) return { errors, warnings, activeComponents: [],
+            circuit: { input: circuit.input, output: circuit.output, ground: circuit.ground, nodes: [], components: [], filters: [] } };
+        const numeric = value => (typeof value === "number" || (typeof value === "string" && value.trim() !== "")) && Number.isFinite(Number(value));
         for (const port of ["input", "output", "ground"]) {
             if (!circuit[port] || !circuit.nodes.some(n => n.id === circuit[port])) {
                 errors.push(`The circuit is missing its ${port} terminal.`);
@@ -182,7 +200,7 @@
                 errors.push(`${component.label || "Component"}: unsupported component type.`); continue;
             }
             if (!["wire", "low_pass"].includes(component.kind) && !component.bypassed &&
-                (!Number.isFinite(Number(component.value)) || Number(component.value) < 0 ||
+                (!numeric(component.value) || Number(component.value) < 0 ||
                 (component.kind !== "resistor" && Number(component.value) === 0))) {
                 errors.push(`${component.label || "Component"}: enter a valid ${component.kind} value.`); continue;
             }

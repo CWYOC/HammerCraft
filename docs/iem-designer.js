@@ -3,6 +3,9 @@
 
     const $ = id => document.getElementById(id);
     const num = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+    const numeric = value => (typeof value === "number" || (typeof value === "string" && value.trim() !== "")) && Number.isFinite(Number(value));
+    // Keep empty edits distinguishable from an intentional numeric zero.
+    const inputNumber = value => value.trim() === "" ? "" : Number(value);
     const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
     const uid = () => crypto.randomUUID ? crypto.randomUUID() : `id-${Date.now()}-${Math.random()}`;
     const snap = value => Math.round(value / 20) * 20;
@@ -101,6 +104,13 @@
 
     function ensureDriverShape(d) {
         if (!d || typeof d !== "object" || Array.isArray(d)) throw new Error("Invalid saved driver.");
+        for (const [label, records] of [["path", d.path], ["circuit", Array.isArray(d.circuit) ? d.circuit : d.circuit?.nodes],
+            ["circuit components", d.circuit?.components], ["filters", d.circuit?.filters]]) {
+            if (Array.isArray(records) && records.some(item => !item || typeof item !== "object" || Array.isArray(item)
+                || (["path", "filters"].includes(label) && typeof item.type !== "string"))) {
+                throw new Error(`Invalid saved ${label} record.`);
+            }
+        }
         if (!d.id) d.id = uid();
         if (!d.name) d.name = "New Driver";
         if (!d.type) d.type = "ba";
@@ -542,29 +552,30 @@
         if (element.type === "tube") return { type: "tube", length_mm: element.length, diameter_mm: element.diameter, loss_factor: element.loss || 0 };
         if (element.type === "damper") return { type: "damper", resistance_acoustic_ohm: element.value * ACOUSTIC_CGS_TO_SI };
         if (element.type === "chamber") return { type: "expansion_chamber", length_mm: element.length, diameter_mm: element.diameter };
-        return { type: "nozzle", length_mm: element.length, diameter_mm: element.diameter };
+        if (element.type === "nozzle") return { type: "nozzle", length_mm: element.length, diameter_mm: element.diameter };
+        throw new Error(`Unsupported acoustic section: ${element.type}.`);
     }
 
     function finitePositive(value) {
         const n = Number(value);
-        return Number.isFinite(n) && n > 0 ? n : null;
+        return numeric(value) && n > 0 ? n : null;
     }
 
     function measurementReferenceToRust(element) {
         if (element.element_type === "tube") {
             const length = finitePositive(element.length_mm);
             const diameter = finitePositive(element.inner_diameter_mm);
-            return length && diameter ? { type: "tube", length_mm: length, diameter_mm: diameter, loss_factor: 0 } : null;
+            return length && diameter >= 0.1 ? { type: "tube", length_mm: length, diameter_mm: diameter, loss_factor: 0 } : null;
         }
         if (element.element_type === "damper") {
             const resistance = Number(element.damper_ohm);
-            return element.damper_ohm !== null && element.damper_ohm !== "" && Number.isFinite(resistance) && resistance >= 0
+            return numeric(element.damper_ohm) && resistance >= 0
                 ? { type: "damper", resistance_acoustic_ohm: resistance * ACOUSTIC_CGS_TO_SI } : null;
         }
         if (element.element_type === "chamber") {
             const length = finitePositive(element.length_mm);
             const diameter = finitePositive(element.inner_diameter_mm);
-            return length && diameter ? { type: "expansion_chamber", length_mm: length, diameter_mm: diameter } : null;
+            return length && diameter >= 0.1 ? { type: "expansion_chamber", length_mm: length, diameter_mm: diameter } : null;
         }
         return null;
     }
@@ -806,7 +817,6 @@
 
     function physicalInputErrors() {
         const errors = [];
-        const numeric = value => value !== "" && value !== null && value !== undefined && Number.isFinite(Number(value));
         const positive = value => numeric(value) && Number(value) > 0;
         const nonnegative = value => numeric(value) && Number(value) >= 0;
         if (!state.drivers.length) errors.push("Add a driver path before calculating.");
@@ -814,6 +824,7 @@
         if (!numeric($("iemTemperature").value) || Number($("iemTemperature").value) <= -273.15) errors.push("Enter a valid temperature above absolute zero.");
         if (!nonnegative($("iemHumidity").value) || Number($("iemHumidity").value) > 100) errors.push("Humidity must be between 0 and 100%.");
         const loadType = $("iemAcousticLoadType").value;
+        if (!["anechoic", "radiation", "closed_cavity", "cavity_with_leak", "generic_711_approx"].includes(loadType)) errors.push("Select a supported acoustic output load.");
         if (["closed_cavity", "cavity_with_leak"].includes(loadType) && !positive($("iemCouplerVolume").value)) errors.push("Coupler volume must be greater than zero.");
         if (loadType === "closed_cavity" && !nonnegative($("iemLoadLossResistance").value)) errors.push("Load resistance must be non-negative.");
         if (loadType === "cavity_with_leak" && !positive($("iemLeakResistance").value)) errors.push("Leak resistance must be greater than zero.");
@@ -833,19 +844,27 @@
             if (!numeric(d.sensitivity) || !numeric(d.gain)) errors.push(`${d.name}: sensitivity and gain must be finite numbers.`);
             for (const [i, element] of d.path.entries()) {
                 const label = `${d.name}: ${element.type} ${i + 1}`;
+                if (!["tube", "damper", "chamber", "nozzle"].includes(element.type)) {
+                    errors.push(`${label}: unsupported acoustic section.`);
+                    continue;
+                }
                 if (element.type === "damper") {
                     if (!nonnegative(element.value)) errors.push(`${label} resistance must be non-negative.`);
                 } else {
                     if (!positive(element.length)) errors.push(`${label} length must be greater than zero.`);
-                    if (!positive(element.diameter)) errors.push(`${label} diameter must be greater than zero.`);
+                    if (!numeric(element.diameter) || Number(element.diameter) < 0.1) errors.push(`${label} diameter must be at least 0.1 mm (model minimum).`);
                     if (!nonnegative(element.loss ?? 0)) errors.push(`${label} loss must be non-negative.`);
                 }
             }
             const filters = [...d.circuit.filters, ...d.circuit.components.filter(c => c.kind === "low_pass" && !c.bypassed)];
             for (const filter of filters) {
+                if (!["high_pass", "low_pass"].includes(filter.type ?? filter.kind)) {
+                    errors.push(`${d.name}: unsupported filter type.`);
+                    continue;
+                }
                 const frequency = filter.frequency ?? (filter.kind === "low_pass" ? 400 : undefined);
-                if (!positive(frequency) || Number(frequency) >= 96000 || !positive(filter.q ?? 0.707)) {
-                    errors.push(`${d.name}: filters need a positive Q and a cutoff between 0 and 96,000 Hz.`);
+                if (!positive(frequency) || Number(frequency) >= 96000 || !numeric(filter.q ?? 0.707) || Number(filter.q ?? 0.707) < 0.05) {
+                    errors.push(`${d.name}: filters need Q at least 0.05 and a cutoff between 0 and 96,000 Hz.`);
                 }
             }
         }
@@ -2382,7 +2401,7 @@
             mutateCircuit(d, () => {
                 body.querySelectorAll("[data-filter-property]").forEach(input => {
                     const key = input.dataset.filterProperty;
-                    filter[key] = key === "type" ? input.value : num(input.value, filter[key] || 0);
+                    filter[key] = key === "type" ? input.value : inputNumber(input.value);
                 });
                 if (filter.type !== "peq") delete filter.gain;
                 else if (!Number.isFinite(filter.gain)) filter.gain = 0;
@@ -2399,7 +2418,7 @@
             body.querySelectorAll("[data-property-field]").forEach(input => {
                 const key = input.dataset.propertyField;
                 if (key === "bypassed") component[key] = input.checked;
-                else if (key === "value" || key === "frequency" || key === "q") component[key] = num(input.value, component[key]);
+                else if (key === "value" || key === "frequency" || key === "q") component[key] = inputNumber(input.value);
                 else if (key === "rotationDeg") component[key] = input.value === "auto" ? null : normalizeRotation45(input.value);
                 else component[key] = input.value;
             });
@@ -2508,7 +2527,7 @@
         node.querySelectorAll(`[data-${property}-field]`).forEach(input => {
             const field = input.dataset[property + "Field"];
             if (element.geometryBinding && ["length", "diameter"].includes(field)) return;
-            element[field] = num(input.value);
+            element[field] = inputNumber(input.value);
         });
         if (property === "path") {
             let distance = 0;
@@ -2527,7 +2546,7 @@
         else if (key === "measurementVoltageV") d[key] = input.value === "" ? null : Number(input.value);
         else if (key === "polarity") d.polarity = input.type === "checkbox" ? (input.checked ? -1 : 1) : num(input.value, 1);
         else if (key === "responseAbsolute") d.responseAbsolute = input.value === "absolute";
-        else d[key] = num(input.value, d[key]);
+        else d[key] = inputNumber(input.value);
     }
 
     function markDesignDirty() {
@@ -2722,7 +2741,8 @@
         document.querySelectorAll("[data-filter-node]").forEach(node => node.oninput = () => {
             const [id, index] = node.dataset.filterNode.split(":");
             const filter = find(id).circuit.filters[+index];
-            node.querySelectorAll("[data-filter-field]").forEach(input => filter[input.dataset.filterField] = num(input.value));
+            node.querySelectorAll("[data-filter-field]").forEach(input => filter[input.dataset.filterField] = inputNumber(input.value));
+            markDesignDirty();
         });
 
         document.querySelectorAll("[data-use-reference-path]").forEach(button => button.onclick = async () => {
@@ -3376,9 +3396,9 @@
         // The optimiser replaces the selected driver's circuit with each candidate.
         const errors = [...physicalInputErrors(), ...state.drivers.flatMap((d, index) => index === driverIndex ? [] :
             window.HCCircuit.compile(d.circuit).errors.map(message => `${d.name}: ${message}`))];
-        for (const [name, minId, maxId] of [["Tube length", "iemReverseLengthMin", "iemReverseLengthMax"], ["Tube diameter", "iemReverseDiameterMin", "iemReverseDiameterMax"]]) {
+        for (const [name, minId, maxId, floor] of [["Tube length", "iemReverseLengthMin", "iemReverseLengthMax", 0.5], ["Tube diameter", "iemReverseDiameterMin", "iemReverseDiameterMax", 0.3]]) {
             const min = Number($(minId).value), max = Number($(maxId).value);
-            if (!(Number.isFinite(min) && Number.isFinite(max) && min > 0 && max >= min)) errors.push(`${name}: use a positive minimum and a maximum at least as large.`);
+            if (!(Number.isFinite(min) && Number.isFinite(max) && min >= floor && max >= min)) errors.push(`${name}: use a minimum of at least ${floor} mm (search limit) and a maximum at least as large.`);
         }
         for (const [name, id] of [["Dampers", "iemReverseDampers"], ["Capacitors", "iemReverseCaps"], ["Resistors", "iemReverseResistors"]]) {
             const values = listNums($(id).value);

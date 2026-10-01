@@ -269,7 +269,9 @@ pub fn swept_tube(p: &Tube) -> Result<Mesh, String> {
             },
         ),
     ] {
-        if !o.is_finite() || !i.is_finite() || i < 0.05 || o > 10. || o - i < 0.05 {
+        // Decimal diameters can round a boundary wall just below 0.05 mm.
+        // This tolerance covers arithmetic roundoff, not manufacturing allowance.
+        if !o.is_finite() || !i.is_finite() || i < 0.05 || o > 10. || o - i < 0.05 - 1e-12 {
             return Err("Tube radii require a bore ≥0.1 mm and wall ≥0.05 mm.".into());
         }
     }

@@ -22,7 +22,7 @@ pub fn start() {
 
 #[wasm_bindgen]
 pub fn engine_version() -> String {
-    "Hammer Craft Acoustic Engine 0.19.0".to_string()
+    "Hammer Craft Acoustic Engine 0.19.1".to_string()
 }
 
 #[wasm_bindgen]

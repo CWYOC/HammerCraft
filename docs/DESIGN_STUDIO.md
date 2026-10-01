@@ -58,3 +58,5 @@ Reference-unity checks replace the current acoustic path, so linked routes must 
 Run `node --test tests/*.test.mjs`. For a loopback-only interface preview without account access, run `node tests/diagnostics/serve-workshop-preview.mjs` and open `http://127.0.0.1:8765/design-studio.html`. The test server injects an auth fixture only into the local preview; production pages retain admin authentication.
 
 See the [integration report](reports/2026-09-30-design-studio/report.md) and [geometry port status](HEADPHONE_WORKSHOP_PORT.md).
+
+See the [design-rule audit](reports/2026-10-01-design-rules/report.md) for enforced limits, confirmed fixes, native-rule differences and manufacturing checks still missing.

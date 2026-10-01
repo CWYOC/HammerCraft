@@ -219,7 +219,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=1", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=2", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {

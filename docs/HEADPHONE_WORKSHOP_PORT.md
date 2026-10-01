@@ -93,3 +93,5 @@ c++ -std=c++20 -O2 \
 The public Rust API rejects malformed/zero-length or excessively tessellated paths rather than silently repairing them. For valid native inputs, the three fixtures require identical triangle indexing and maximum vertex error below `1e-10 mm`. This checks code-port equivalence, not physical acoustics.
 
 See [the implementation test report](reports/2026-09-30-workshop-port/report.md).
+
+See the [design-rule audit](reports/2026-10-01-design-rules/report.md) for enforced limits, confirmed fixes, native-rule differences and manufacturing checks still missing.
