@@ -42,7 +42,7 @@ Reference-unity checks replace the current acoustic path, so linked routes must 
 - A 3D route represents **one constant-bore acoustic tube section**. Other tubes, dampers, chambers and nozzles are preserved in the acoustic project but are not yet positioned or drawn along that route. Stepped bores and shared multi-driver acoustic manifolds need a richer route model.
 - Geometry package selection is explicitly linked to acoustic identity by the user. The studio cannot infer matching calibration from an STL shape or package dimensions.
 - Circuit wire graphics describe electrical connections. Physical wire routing and component placement inside the shell are not implemented.
-- The shell remains unmachined stock. Tube solids are not subtracted as channels. Boolean machining, exact clearance, wall thickness, fit and manufacturing checks remain pending.
+- Optional **Construct hollow shell** creates a sampled hollow body and separate faceplate, subtracts sound bores through shell material, and supports a rectangular/cylindrical connector cut. These settings persist in the shared project. Internal tubes remain separate parts. Integral tube walls, exact clearance, post-cut wall thickness, ear-fit and manufacturing qualification remain pending. See the [construction report](reports/2026-10-01-shell-construction/report.md).
 - Existing acoustic-model and physical-validation limits still apply. Software integration tests are not IEC 711 measurement validation, and no new physical measurements were collected.
 - The shared file is limited to 64 MB on import, with up to 12 geometry drivers. Browser downloads must complete before closing the page; a persistent download link is provided. Native `.fmp` and manufacturing packages remain unsupported.
 

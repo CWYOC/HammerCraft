@@ -44,7 +44,9 @@ export function createViewer(canvas) {
         extent = 20,
         selected,
         showShell = true,
-        showPaths = true;
+        showPaths = true,
+        showFaceplate = true,
+        constructed = false;
     function draw() {
         const rect = canvas.getBoundingClientRect(),
             dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -90,13 +92,15 @@ export function createViewer(canvas) {
         ]) {
             if (
                 (m.kind === "shell" && !showShell) ||
-                (m.kind === "path" && !showPaths)
+                (m.kind === "path" && !showPaths) ||
+                (m.kind === "faceplate" && !showFaceplate)
             )
                 continue;
             const isSelected = m.id === selected || m.id === `path:${selected}`;
             const rgba =
                 m.kind === "shell"
-                    ? [0.72, 0.84, 0.8, 0.16]
+                    ? [0.72, 0.84, 0.8, constructed ? 1 : 0.16]
+                    : m.kind === "faceplate" ? [0.76, 0.69, 0.53, 1]
                     : m.kind === "path"
                       ? isSelected
                           ? [1, 0.49, 0.19, 1]
@@ -105,8 +109,9 @@ export function createViewer(canvas) {
                         ? [0.48, 0.76, 0.84, 1]
                         : [0.42, 0.52, 0.56, 1];
             gl.uniform4fv(color, rgba);
-            gl.depthMask(m.kind !== "shell");
-            if (m.kind === "shell") gl.disable(gl.DEPTH_TEST);
+            const translucent = m.kind === "shell" && !constructed;
+            gl.depthMask(!translucent);
+            if (translucent) gl.disable(gl.DEPTH_TEST);
             gl.bindBuffer(gl.ARRAY_BUFFER, m.buffer);
             gl.enableVertexAttribArray(point);
             gl.enableVertexAttribArray(normal);
@@ -116,7 +121,8 @@ export function createViewer(canvas) {
         }
         gl.depthMask(true);
     }
-    function setParts(parts, selectedId) {
+    function setParts(parts, selectedId, isConstructed = false) {
+        constructed = isConstructed;
         for (const m of meshes) gl.deleteBuffer(m.buffer);
         extent = 1;
         selected = selectedId;
@@ -214,9 +220,10 @@ export function createViewer(canvas) {
             selected = id;
             draw();
         },
-        visibility(shell, paths) {
+        visibility(shell, paths, faceplate = true) {
             showShell = shell;
             showPaths = paths;
+            showFaceplate = faceplate;
             draw();
         },
         reset() {

@@ -1,5 +1,5 @@
-import init, * as engine from './wasm/acoustic_engine.js?v=0.20.0';
-const ready = init({ module_or_path: new URL('./wasm/acoustic_engine_bg.wasm?v=0.20.0', import.meta.url) });
+import init, * as engine from './wasm/acoustic_engine.js?v=0.21.0';
+const ready = init({ module_or_path: new URL('./wasm/acoustic_engine_bg.wasm?v=0.21.0', import.meta.url) });
 // Retain one accepted project. Failed imports/edits never replace it.
 let shell, project, built, sourceName = 'HeadphoneWorkshop starter';
 self.onmessage = async ({ data }) => {

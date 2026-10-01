@@ -1,0 +1,141 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.21.0",
+  "construction": {
+    "resolution_mm": 0.5,
+    "requested_wall_mm": 1.5,
+    "faceplate_plane_mm": 9.855381488800049,
+    "grid_points": 138600,
+    "cavity_volume_estimate_mm3": 2218.2799191548133,
+    "body": {
+      "size_mm": [
+        19.659786224365234,
+        25.330758094787598,
+        22.161235809326172
+      ],
+      "triangles": 90832,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "inconsistent_edges": 0,
+      "degenerate_triangles": 0,
+      "signed_volume_mm3": 1700.254651483784
+    },
+    "faceplate": {
+      "size_mm": [
+        13.986357688903809,
+        12.203381299972534,
+        2.4929637908935547
+      ],
+      "triangles": 9992,
+      "boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "inconsistent_edges": 0,
+      "degenerate_triangles": 0,
+      "signed_volume_mm3": 150.51060811927775
+    }
+  },
+  "checks": [
+    {
+      "code": "shell-topology",
+      "status": "pass",
+      "part_ids": [
+        "shell"
+      ],
+      "message": "Shell edge topology and total orientation passed; self-intersections and individual solid components remain unchecked."
+    },
+    {
+      "code": "package-stock-bounds",
+      "status": "pass",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: inside stock bounds; finished cavity containment is unverified."
+    },
+    {
+      "code": "part-dimensions",
+      "status": "pass",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: catalog marks package and outlet as supplier-dimensioned; mounting allowances remain unverified."
+    },
+    {
+      "code": "outlet-adapter",
+      "status": "unverified",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d",
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: 1.42 mm catalog outlet → 1.60 mm tube bore. Adapter, spout engagement and seal geometry are not defined."
+    },
+    {
+      "code": "tube-own-package",
+      "status": "pass",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d",
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: route checked against driver 01. No penetration/contact detected in this check; physical outlet and assembly allowances remain unverified."
+    },
+    {
+      "code": "tube-bend",
+      "status": "unverified",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: no local fold found in 257 bend samples. A material/process minimum bend radius has not been supplied."
+    },
+    {
+      "code": "tube-self-contact",
+      "status": "pass",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "01 · Knowles RAF-32873-P183: no nonlocal route contact detected; local bends are checked separately."
+    },
+    {
+      "code": "manufacturing-clearance",
+      "status": "unverified",
+      "part_ids": [],
+      "message": "No qualified material/process clearance profile is defined. Numerical geometry limits are not manufacturing allowances."
+    },
+    {
+      "code": "physical-assembly",
+      "status": "unverified",
+      "part_ids": [],
+      "message": "Damper seats, connectors, crossover components, insulated wires, adhesive regions and assembly access are not represented in 3D."
+    },
+    {
+      "code": "shell-construction",
+      "status": "unverified",
+      "part_ids": [
+        "shell",
+        "faceplate"
+      ],
+      "message": "Hollow body and faceplate generated at 0.500 mm grid spacing. Wall 1.50 mm is a requested offset, not a certified minimum after machining; inspect thin features and confirm with a finer grid."
+    },
+    {
+      "code": "connector-cut",
+      "status": "unverified",
+      "part_ids": [
+        "shell"
+      ],
+      "message": "Connector opening cuts the represented solid. Verify the exact connector drawing, retention, remaining wall and assembly access."
+    },
+    {
+      "code": "sound-outlet",
+      "status": "unverified",
+      "part_ids": [
+        "path:8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "Sound path cut removes 133 material samples. Confirm the outlet, bore continuity and tube seal; internal tubes remain separate parts."
+    },
+    {
+      "code": "package-cavity",
+      "status": "unverified",
+      "part_ids": [
+        "8416ed5b-be83-445b-8a18-0d0ed0e1df7d"
+      ],
+      "message": "Driver 01: minimum sampled cavity clearance is 0.61 mm; complete surface clearance and post-cut wall thickness remain unverified."
+    }
+  ]
+}

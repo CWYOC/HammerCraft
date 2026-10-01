@@ -58,7 +58,7 @@ fn segment_distance(a: V, b: V, c: V, d: V) -> (f64, f64, f64) {
     }
     (length(sub(add(a, mul(u, s)), add(c, mul(v, t)))), s, t)
 }
-fn point_triangle(p: V, a: V, b: V, c: V) -> f64 {
+pub(super) fn point_triangle(p: V, a: V, b: V, c: V) -> f64 {
     let n = norm(cross(sub(b, a), sub(c, a)));
     let q = sub(p, mul(n, dot(sub(p, a), n)));
     if length(n) > 0.

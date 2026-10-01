@@ -157,6 +157,19 @@ p {
     border: 1px solid var(--line);
     align-self: start;
 }
+@media (min-width: 761px) {
+    .workshop-controls {
+        position: sticky;
+        top: calc(var(--admin-header-height, 80px) + 10px);
+        max-height: calc(100vh - var(--admin-header-height, 80px) - 25px);
+        overflow-y: auto;
+    }
+    .workshop-controls .apply {
+        position: sticky;
+        bottom: 0;
+        z-index: 1;
+    }
+}
 .workshop-controls section {
     padding: 18px;
     border-bottom: 1px solid var(--line);

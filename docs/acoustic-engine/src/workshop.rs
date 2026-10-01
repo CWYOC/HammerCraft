@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 mod placement;
+mod solid;
 type V = [f64; 3];
 fn add(a: V, b: V) -> V {
     std::array::from_fn(|i| a[i] + b[i])
@@ -57,10 +58,10 @@ impl Mesh {
     fn validate(&self) -> Result<(), String> {
         if self.vertices.is_empty()
             || self.triangles.is_empty()
-            || self.vertices.len() > 300000
-            || self.triangles.len() > 100000
+            || self.vertices.len() > 900000
+            || self.triangles.len() > 300000
         {
-            return Err("Mesh must contain 1–100,000 triangles.".into());
+            return Err("Mesh must contain 1–300,000 triangles.".into());
         }
         if self.vertices.iter().any(|&v| !valid(v))
             || self
@@ -133,8 +134,8 @@ pub fn import_stl(bytes: &[u8], unit_mm: f64) -> Result<Mesh, String> {
     };
     let mut points = Vec::new();
     if bytes.len() >= 84 && 84 + count * 50 == bytes.len() {
-        if count == 0 || count > 100000 {
-            return Err("STL must contain 1–100,000 triangles.".into());
+        if count == 0 || count > 300000 {
+            return Err("STL must contain 1–300,000 triangles.".into());
         }
         for t in 0..count {
             for j in 0..3 {
@@ -186,8 +187,8 @@ pub fn import_stl(bytes: &[u8], unit_mm: f64) -> Result<Mesh, String> {
                 "outer" | "endloop" if facet => {}
                 _ => return Err("Invalid ASCII STL structure.".into()),
             }
-            if points.len() > 300000 {
-                return Err("STL exceeds 100,000 triangles.".into());
+            if points.len() > 900000 {
+                return Err("STL exceeds 300,000 triangles.".into());
             }
         }
         if !solid || !ended || facet || points.is_empty() {
@@ -421,6 +422,8 @@ pub struct Project {
     pub shell_scale: V,
     pub mirrored: bool,
     pub drivers: Vec<Driver>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub construction: Option<solid::Construction>,
 }
 #[derive(Serialize)]
 pub struct Part {
@@ -444,6 +447,7 @@ pub struct Build {
     pub shell: MeshInfo,
     pub warnings: Vec<String>,
     pub placement_checks: Vec<placement::Check>,
+    pub construction: Option<solid::ConstructionInfo>,
 }
 fn envelope(s: &Preset) -> Mesh {
     if s.cylindrical {
@@ -550,6 +554,7 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
     for (driver_index, d) in p.drivers.iter().enumerate() {
         if d.id.is_empty()
             || d.id == "shell"
+            || d.id == "faceplate"
             || d.id.starts_with("path:")
             || d.id.len() > 100
             || !ids.insert(&d.id)
@@ -627,7 +632,19 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         });
     }
     // Run before whole-assembly reflection, which preserves these distances and intersections.
-    let placement_checks = placement::inspect_layout(p, &catalog, &parts, &paths, &info);
+    let mut placement_checks = placement::inspect_layout(p, &catalog, &parts, &paths, &info);
+    let construction = if p.construction.is_some() {
+        let result = solid::construct(&parts[0].mesh, p, &paths, &parts)?;
+        parts[0].mesh = result.body;
+        parts[0].name = "Constructed hollow shell body".into();
+        info = inspect(&parts[0].mesh);
+        parts.push(Part { id: "faceplate".into(), name: "Separate faceplate".into(), kind: "faceplate".into(), mesh: result.faceplate });
+        placement_checks.retain(|c| c.code != "finished-shell");
+        placement_checks.extend(result.checks);
+        warnings.retain(|s| !s.starts_with("Layout preview:"));
+        warnings.push("Sampled shell construction: inspect all machined openings, remaining walls and assembly access before manufacture. No process qualification is implied.".into());
+        Some(result.info)
+    } else { None };
     for check in &placement_checks {
         if check.status == "error" || check.status == "warning" {
             warnings.push(check.message.clone());
@@ -666,6 +683,7 @@ pub fn build(p: &Project, base: &Mesh) -> Result<Build, String> {
         shell: info,
         warnings,
         placement_checks,
+        construction,
     })
 }
 pub fn export_stl(m: &Mesh) -> Result<Vec<u8>, String> {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Headphone Workshop | Hammer Craft</title>
-<link rel="icon" href="assets/favicon-32.png"><link rel="stylesheet" href="admin.css?v=64"><link rel="stylesheet" href="headphone-workshop.css?v=2">
+<link rel="icon" href="assets/favicon-32.png"><link rel="stylesheet" href="admin.css?v=64"><link rel="stylesheet" href="headphone-workshop.css?v=3">
 <link rel="stylesheet" href="design-embedded.css?v=1">
 <script src="design-bridge.js?v=2"></script>
 </head>
@@ -26,7 +26,21 @@
 <label>STL SOURCE UNITS<select id="importUnits"><option value="1">Millimetres</option><option value="10">Centimetres</option><option value="1000">Metres</option><option value="25.4">Inches</option></select></label><input id="shellFile" type="file" accept=".stl" hidden>
 <div class="triple"><label>SCALE X<input id="scale0" type="number" min="0.25" max="4" step="0.05" value="1"></label><label>SCALE Y<input id="scale1" type="number" min="0.25" max="4" step="0.05" value="1"></label><label>SCALE Z<input id="scale2" type="number" min="0.25" max="4" step="0.05" value="1"></label></div>
 <label class="check"><input id="mirrored" type="checkbox"> MIRROR ASSEMBLY ON X</label>
-<p class="hint">Imports are centred at the origin. Shell scaling leaves driver positions in millimetres. The stock is solid; cavities are not cut in this preview.</p></section>
+<p class="hint">Imports are centred at the origin. Shell scaling leaves driver positions in millimetres. Enable shell construction below to hollow the stock and cut openings.</p>
+<label class="check"><input id="constructionEnabled" type="checkbox"> CONSTRUCT HOLLOW SHELL</label>
+<div id="constructionFields" hidden>
+<div class="double"><label>WALL OFFSET · mm<input id="wallThickness" type="number" min="0.6" max="5" step="0.1" value="1.5"></label><label>MESH SPACING · mm<input id="meshSpacing" type="number" min="0.2" max="1" step="0.05" value="0.5"></label></div>
+<label>FACEPLATE CUT AXIS<select id="faceplateAxis"><option value="0">Positive X</option><option value="1">Positive Y</option><option value="2" selected>Positive Z</option></select></label>
+<div class="double"><label>CAP DEPTH · mm<input id="faceplateDepth" type="number" min="0.6" step="0.1" value="2.5"></label><label>SEAM GAP · mm<input id="faceplateGap" type="number" min="0" max="1" step="0.05" value="0"></label></div>
+<label class="check"><input id="cutSoundPaths" type="checkbox" checked> CUT SOUND PATHS THROUGH SHELL</label>
+<p class="hint">Wall, cap depth and bores must be at least 3× mesh spacing. Channels cut the shell material; internal tubes remain separate parts. Grid spacing is an approximation, not a printer tolerance. Hide the faceplate to inspect the cavity.</p>
+<label>CONNECTOR OPENING<select id="connectorShape"><option value="none">None</option><option value="box">Rectangular cut</option><option value="cylinder">Round cut</option></select></label>
+<div id="connectorFields" hidden>
+<span class="group-label">CUT CENTRE · mm</span><div class="triple" id="connectorPositionFields"></div>
+<span class="group-label">CUT SIZE · mm (X / Y / Z)</span><div class="triple" id="connectorSizeFields"></div>
+<span class="group-label">CUT ROTATION · degrees</span><div class="triple" id="connectorRotationFields"></div>
+<p class="hint">Round cut: X and Y are equal diameters; Z is depth along its local axis. Enter the actual connector opening dimensions and assembly allowance.</p>
+</div></div></section>
 <section><div class="section-title"><span>02 / DRIVERS</span><button id="addDriver" type="button">+ ADD</button></div>
 <label>SELECT DRIVER<select id="driverSelect"></select></label><div id="driverFields">
 <label>PACKAGE PRESET<select id="preset"></select></label><p id="driverNote" class="hint"></p>
@@ -44,14 +58,14 @@
 </aside>
 <div class="workshop-main">
 <div class="viewport"><canvas id="viewport" aria-label="Interactive 3D IEM assembly. Drag to orbit and scroll to zoom." tabindex="0"></canvas>
-<div class="view-toolbar"><span>ASSEMBLY / mm</span><button id="resetView" type="button">RESET VIEW</button><label><input id="showShell" type="checkbox" checked> SHELL</label><label><input id="showPaths" type="checkbox" checked> PATHS</label></div>
-<div class="view-help">DRAG TO ORBIT · SCROLL TO ZOOM · ARROW KEYS TO ROTATE</div><div class="view-legend"><i class="shell-dot"></i> STOCK <i class="driver-dot"></i> PACKAGES <i class="path-dot"></i> SOUND TUBES</div>
+<div class="view-toolbar"><span>ASSEMBLY / mm</span><button id="resetView" type="button">RESET VIEW</button><label><input id="showShell" type="checkbox" checked> SHELL</label><label><input id="showFaceplate" type="checkbox" checked> CAP</label><label><input id="showPaths" type="checkbox" checked> PATHS</label></div>
+<div class="view-help">DRAG TO ORBIT · SCROLL TO ZOOM · ARROW KEYS TO ROTATE</div><div class="view-legend"><i class="shell-dot"></i> SHELL <i class="driver-dot"></i> PACKAGES <i class="path-dot"></i> SOUND TUBES</div>
 </div>
 <div class="metrics"><article><span>SHELL ENVELOPE</span><strong id="shellSize">—</strong></article><article><span>DRIVERS</span><strong id="driverCount">—</strong></article><article><span>SELECTED PATH LENGTH</span><strong id="pathLength">—</strong></article><article><span>SELECTED BORE VOLUME</span><strong id="pathVolume">—</strong></article></div>
-<section class="verification"><div class="section-title"><span>04 / PLACEMENT CHECKS</span><span id="placementStatus" class="pending" role="status" aria-live="polite">CHECKS PENDING</span></div><p id="meshStatus"></p><ul id="placementChecks"></ul><details><summary>Other geometry notes</summary><ul id="warnings"></ul></details><p class="hint">Checks update when you apply a layout. Errors identify invalid represented geometry; warnings identify possible contact. Unverified items need additional geometry or part/process data. Sound paths remain independent tubes, with no shell machining or shared-junction model. Preview exports do not certify manufacturing or acoustic performance.</p></section>
-<section class="exports"><div class="section-title"><span>05 / EXPORT</span></div><div class="row"><label>GEOMETRY PART<select id="exportPart"></select></label><button id="exportStl" type="button">EXPORT STL · mm</button><button id="exportPaths" type="button">EXPORT PATH DIMENSIONS</button></div><p class="hint">Exported shell = unmachined stock. Driver shapes = package envelopes. Save the project to retain your shell, placements and routes. Native .fmp, 3MF, ear-fit and manufacturing packages are not supported yet. <a href="HEADPHONE_WORKSHOP_PORT.md">Port status</a></p></section>
+<section class="verification"><div class="section-title"><span>04 / PLACEMENT CHECKS</span><span id="placementStatus" class="pending" role="status" aria-live="polite">CHECKS PENDING</span></div><p id="meshStatus"></p><p id="constructionStatus" class="hint"></p><ul id="placementChecks"></ul><details><summary>Other geometry notes</summary><ul id="warnings"></ul></details><p class="hint">Checks update when you apply a layout. Errors identify invalid represented geometry; warnings identify possible contact. Unverified items need additional geometry or part/process data. Shell construction uses a sampled solid; remaining walls and bores need resolution checks. A shared acoustic junction model is not implemented. Preview exports do not certify manufacturing or acoustic performance.</p></section>
+<section class="exports"><div class="section-title"><span>05 / EXPORT</span></div><div class="row"><label>GEOMETRY PART<select id="exportPart"></select></label><button id="exportStl" type="button">EXPORT STL · mm</button><button id="exportPaths" type="button">EXPORT PATH DIMENSIONS</button></div><p class="hint">With construction enabled, export the hollow shell body and faceplate separately; otherwise export is unmachined stock. Driver shapes are package envelopes. Save the project to retain the original stock and all construction settings. Native .fmp, 3MF, ear-fit and manufacturing packages are not supported yet. <a href="HEADPHONE_WORKSHOP_PORT.md">Port status</a></p></section>
 </div>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=3"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=4"></script>
 </body></html>

@@ -1,4 +1,4 @@
-import { createViewer } from "./workshop-viewer.js?v=1";
+import { createViewer } from "./workshop-viewer.js?v=2";
 const $ = (id) => document.getElementById(id);
 let project = {
     format: "hc-headphone-workshop",
@@ -71,6 +71,19 @@ function draft() {
     p.name = $("projectName").value;
     p.shell_scale = [0, 1, 2].map((i) => number(`scale${i}`));
     p.mirrored = $("mirrored").checked;
+    if ($("constructionEnabled").checked) {
+        p.construction = {
+            wall_mm: number("wallThickness"), resolution_mm: number("meshSpacing"),
+            faceplate_axis: Number($("faceplateAxis").value), faceplate_depth_mm: number("faceplateDepth"),
+            faceplate_gap_mm: number("faceplateGap"), cut_sound_paths: $("cutSoundPaths").checked,
+            connector: $("connectorShape").value === "none" ? null : {
+                shape: $("connectorShape").value,
+                center_mm: [0,1,2].map(i => number(`connectorPosition${i}`)),
+                size_mm: [0,1,2].map(i => number(`connectorSize${i}`)),
+                rotation_deg: [0,1,2].map(i => number(`connectorRotation${i}`)),
+            },
+        };
+    } else delete p.construction;
     const d = p.drivers.find((d) => d.id === selected);
     if (d) {
         d.preset = Number($("preset").value);
@@ -86,6 +99,27 @@ function draft() {
         d.outer_diameter_mm = number("outerDiameter");
     }
     return p;
+}
+function showConstruction() {
+    const c = project.construction;
+    $("constructionEnabled").checked = !!c;
+    $("constructionFields").hidden = !c;
+    if (c) {
+        $("wallThickness").value = c.wall_mm;
+        $("meshSpacing").value = c.resolution_mm;
+        $("faceplateAxis").value = c.faceplate_axis;
+        $("faceplateDepth").value = c.faceplate_depth_mm;
+        $("faceplateGap").value = c.faceplate_gap_mm;
+        $("cutSoundPaths").checked = c.cut_sound_paths;
+        $("connectorShape").value = c.connector?.shape || "none";
+        if (c.connector) for (const [field,prefix] of [["center_mm","connectorPosition"],["size_mm","connectorSize"],["rotation_deg","connectorRotation"]])
+            c.connector[field].forEach((value,i) => $(`${prefix}${i}`).value = value);
+    }
+    $("connectorFields").hidden = $("connectorShape").value === "none";
+    const info = built?.construction;
+    $("constructionStatus").textContent = info
+        ? `Constructed body + separate faceplate · ${info.resolution_mm.toFixed(2)} mm grid · ${info.requested_wall_mm.toFixed(2)} mm requested wall · cavity estimate ${info.cavity_volume_estimate_mm3.toFixed(0)} mm³ · cap ${info.faceplate.triangles.toLocaleString()} triangles. Inspect the result before manufacture.`
+        : "Stock layout mode: hollowing and cuts are disabled.";
 }
 function showDriver() {
     const d = project.drivers.find((d) => d.id === selected);
@@ -167,6 +201,7 @@ function accept(result) {
     $("projectName").value = project.name;
     project.shell_scale.forEach((x, i) => ($(`scale${i}`).value = x));
     $("mirrored").checked = project.mirrored;
+    showConstruction();
     $("shellName").textContent = result.sourceName;
     $("driverSelect").replaceChildren(
         ...project.drivers.map((d, i) =>
@@ -196,13 +231,13 @@ function accept(result) {
     );
     if (built.parts.some((p) => p.id === previous))
         $("exportPart").value = previous;
-    viewer.setParts(built.parts, selected);
+    viewer.setParts(built.parts, selected, !!built.construction);
     showDriver();
 }
 async function run(action, data, message = "Geometry updated.") {
     if (busy) return;
     setBusy(true);
-    tell("Calculating geometry in Rust…");
+    tell("Calculating geometry in Rust… Shell construction may take several seconds.");
     try {
         const result = await rpc(action, data);
         if (result.built) accept(result);
@@ -255,7 +290,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=3", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=4", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {
@@ -279,7 +314,7 @@ async function start() {
     if (!response.ok) throw new Error("Driver catalog could not load.");
     catalog = await response.json();
     $("preset").replaceChildren(...catalog.map((s) => option(s.id, s.name)));
-    for (const prefix of ["position", "rotation", "bend", "end"])
+    for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation"])
         for (let i = 0; i < 3; i++) {
             const label = document.createElement("label");
             label.textContent = ["X", "Y", "Z"][i];
@@ -287,6 +322,9 @@ async function start() {
             input.type = "number";
             input.step = prefix === "rotation" ? "1" : "0.1";
             input.id = `${prefix}${i}`;
+            if (prefix === "connectorPosition") input.value = [8,0,0][i];
+            if (prefix === "connectorSize") input.value = [3,3,8][i];
+            if (prefix === "connectorRotation") input.value = [0,90,0][i];
             input.setAttribute("aria-label", `${prefix} ${["X", "Y", "Z"][i]}`);
             label.append(input);
             $(`${prefix}Fields`).append(label);
@@ -303,6 +341,8 @@ async function start() {
         } else $("driverSelect").value = selected || "";
     });
     $("preset").onchange = showPreset;
+    $("constructionEnabled").onchange = () => $("constructionFields").hidden = !$("constructionEnabled").checked;
+    $("connectorShape").onchange = () => $("connectorFields").hidden = $("connectorShape").value === "none";
     $("addDriver").onclick = guarded(async () => {
         const p = draft();
         if (p.drivers.length >= 12)
@@ -337,9 +377,9 @@ async function start() {
         return run("build", { project: p });
     });
     $("resetView").onclick = () => viewer.reset();
-    for (const id of ["showShell", "showPaths"])
+    for (const id of ["showShell", "showPaths", "showFaceplate"])
         $(id).onchange = () =>
-            viewer.visibility($("showShell").checked, $("showPaths").checked);
+            viewer.visibility($("showShell").checked, $("showPaths").checked, $("showFaceplate").checked);
     $("saveProject").onclick = guarded(async () => {
         if (!(await apply())) return;
         const result = await run("save", {}, "Project file ready to download.");
@@ -409,6 +449,7 @@ async function start() {
                     units: "mm",
                     note: "Geometric dimensions only. Assign measured driver data in the acoustic designer. No frequency response or physical validation is implied.",
                     placement_checks: built.placement_checks,
+                    construction: built.construction,
                     paths: built.paths.map((path) => ({
                         ...path,
                         inner_diameter_mm: project.drivers.find(
