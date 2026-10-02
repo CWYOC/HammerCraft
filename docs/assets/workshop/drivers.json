@@ -1,21 +1,534 @@
 [
-{"id":0,"name":"9 mm Dynamic Reference","technology":"Dynamic moving-coil","size_mm":[9,3.2,9],"cylindrical":true,"supplier_dimensioned":false,"supplier_interface_dimensioned":false,"note":"Only the 9 mm class is published. The modeled depth is a planning envelope; verify the supplier drawing, rear volume, vent, terminals, and magnet clearance.","source_url":"https://www.64audio.com/products/nio","outlet_mm":[0,-1.65,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":2.3,"dedicated_drive":false,"rear_vent_required":true},
-{"id":1,"name":"10 mm Dynamic Reference","technology":"Dynamic moving-coil","size_mm":[10,3.2,10],"cylindrical":true,"supplier_dimensioned":false,"supplier_interface_dimensioned":false,"note":"Only the 10 mm class is published. The modeled depth is a planning envelope; verify the supplier drawing, back volume, venting, and diaphragm clearance.","source_url":"https://moondroplab.com/en-products/jiu","outlet_mm":[0,-1.65,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":2.5,"dedicated_drive":false,"rear_vent_required":true},
-{"id":2,"name":"Knowles RAB-32257","technology":"Single balanced armature","size_mm":[5.15,2.96,2.5799999999999996],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":false,"note":"Route the port into a sealed acoustic path and tune from the current model response, impedance, damping, and coupler data.","source_url":"https://www.knowles.com/docs/default-source/default-document-library/rab-datasheet.pdf?Status=Master&sfvrsn=9e1a77b1_0","outlet_mm":[-3.025,0,0],"outlet_axis":[-1,0,0],"outlet_diameter_mm":1.2,"dedicated_drive":false,"rear_vent_required":true},
-{"id":3,"name":"Knowles WBFK-23990","technology":"Single balanced armature","size_mm":[5,2.73,1.9300000000000002],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":true,"note":"Give the tweeter a short, sealed path that expands gradually toward the nozzle. Validate polarity through the crossover.","source_url":"https://www.knowles.com/docs/default-source/model-downloads/wbfk-23990-000.pdf?Status=Master&sfvrsn=2b2475b1_0","outlet_mm":[-2.75,0,0],"outlet_axis":[-1,0,0],"outlet_diameter_mm":1,"dedicated_drive":false,"rear_vent_required":false},
-{"id":4,"name":"Knowles TWFK-30017","technology":"Dual balanced armature","size_mm":[5,2.73,3.8600000000000003],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":false,"note":"The package contains two elements and one sound port. A real design needs the supplier transfer functions and an electrical crossover model.","source_url":"https://www.knowles.com/docs/default-source/default-document-library/tw-datasheet.pdf?Status=Master&sfvrsn=521a77b1_0","outlet_mm":[0,-1.415,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":1.2,"dedicated_drive":false,"rear_vent_required":false},
-{"id":5,"name":"14.2 mm Planar Reference","technology":"Planar magnetic","size_mm":[14.200000000000001,1.5,14.200000000000001],"cylindrical":true,"supplier_dimensioned":false,"supplier_interface_dimensioned":false,"note":"The published diameter is exact for the cited IEM; depth is a planning envelope. Reserve room for its acoustic chamber and verify the actual transducer drawing.","source_url":"https://blog.64audio.com/solo-planar-magnetic-in-ear-monitors/","outlet_mm":[0,-0.8,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":3,"dedicated_drive":false,"rear_vent_required":true},
-{"id":6,"name":"USound Adap UT-P2019","technology":"Piezoelectric MEMS","size_mm":[6.7,4.7,1.58],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":true,"note":"This capacitive MEMS unit requires the specified high-voltage drive electronics, back-port clearance, and the current supplier integration guidance.","source_url":"https://www.usound.com/wp-content/uploads/2020/01/2001_Adap-UT-P-2019-Datasheet.pdf","outlet_mm":[0,0,0.79],"outlet_axis":[0,0,1],"outlet_diameter_mm":1.4,"dedicated_drive":true,"rear_vent_required":true},
-{"id":7,"name":"Knowles CI-22955","technology":"Single balanced armature","size_mm":[9.469999999999999,7.18,4.1000000000000005],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":false,"note":"Allow substantial shell volume and vibration isolation. Use the exact port option, impedance, damping, and model-specific response in crossover work.","source_url":"https://www.knowles.com/docs/default-source/default-document-library/receiver-datasheet-ci-22955-000-1efdd1a731dff6ddbb37cff0000940c19.pdf?Status=Master&sfvrsn=0","outlet_mm":[0,-3.64,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":1.6,"dedicated_drive":false,"rear_vent_required":true},
-{"id":8,"name":"Knowles RAU-34832","technology":"Single balanced armature","size_mm":[5.1000000000000005,2.8,2],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":false,"note":"Designed for high-frequency extension. Use a measured crossover, verify polarity, and preserve a short gradually expanding acoustic path.","source_url":"https://www.knowles.com/docs/default-source/model-downloads/receiver-datasheet-rau-34832-b148.pdf?Status=Master&sfvrsn=713c73b1_4","outlet_mm":[0,-1.45,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":0.95,"dedicated_drive":false,"rear_vent_required":false},
-{"id":9,"name":"Sonion 4100","technology":"Flat-motion balanced armature","size_mm":[5,2.7,0.98],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":false,"note":"Use the exact ordered variant and supplier drawing. Deep-fit packaging still needs safe nozzle geometry, wiring clearance, and measured acoustic loading.","source_url":"https://www.sonion.com/products/receivers/","outlet_mm":[0,-1.4,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":1,"dedicated_drive":false,"rear_vent_required":true},
-{"id":10,"name":"xMEMS Cowell","technology":"All-silicon piezoMEMS","size_mm":[6,3.2,1.15],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":true,"note":"Follow the current xMEMS drive-amplifier, bias, sealing, and acoustic-volume requirements; this is not a drop-in moving-coil replacement.","source_url":"https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2150_v1.3.pdf?v=1729709821","outlet_mm":[0.3033,0,0.575],"outlet_axis":[0,0,1],"outlet_diameter_mm":1.859,"dedicated_drive":true,"rear_vent_required":true},
-{"id":11,"name":"xMEMS Muir","technology":"All-silicon piezoMEMS","size_mm":[5,3.2,1.15],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":true,"note":"Use the specified drive electronics and a measured crossover. Keep the acoustic outlet clear and verify the current integration drawing.","source_url":"https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2200_v1.0.pdf?v=1729709840","outlet_mm":[-0.565,0.135,0.575],"outlet_axis":[0,0,1],"outlet_diameter_mm":2.13,"dedicated_drive":true,"rear_vent_required":true},
-{"id":12,"name":"Knowles RAD-33518","technology":"Single balanced armature","size_mm":[5,2.73,1.9300000000000002],"cylindrical":false,"supplier_dimensioned":false,"supplier_interface_dimensioned":false,"note":"The submitted listing identifies the exact model but does not include its controlled outline drawing. The built-in body uses the matching slim Knowles-class planning envelope; replace X/Y/Z from the ordered-part drawing or caliper inspection before manufacture.","source_url":"https://www.knowles.com/applications/ear-solutions/premium-sound","outlet_mm":[0,-1.415,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":1,"dedicated_drive":false,"rear_vent_required":false},
-{"id":13,"name":"Knowles RAF-32873-P183","technology":"Single balanced armature","size_mm":[5.15,2.96,2.5799999999999996],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":true,"note":"The package model uses the documented RA-family body envelope; its acoustic interface retains the submitted RAF drawing's 6.90 mm overall length and 1.42 mm spout diameter as integration metadata.","source_url":"https://www.knowles.com/docs/default-source/default-document-library/datasheet11e31a731dff6ddbb37cff0000940c19.pdf","outlet_mm":[-3.4499999999999997,0,0],"outlet_axis":[-1,0,0],"outlet_diameter_mm":1.42,"dedicated_drive":false,"rear_vent_required":false},
-{"id":14,"name":"Knowles ED-29689","technology":"Single balanced armature","size_mm":[6.32,4.31,2.97],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":false,"note":"Use the ordered 12C port drawing and keep the outlet clear. The shell fitter reserves the complete published outer package before routing P08 and the electrical harness.","source_url":"https://www.knowles.com/series/dpt-ba-receivers/subdpt-hearing-instruments-receivers/series-ed-fed","outlet_mm":[0,-2.205,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":1.4,"dedicated_drive":false,"rear_vent_required":false},
-{"id":15,"name":"Knowles SR-32453-000","technology":"Single balanced armature","size_mm":[6.4,3.9899999999999998,6.4],"cylindrical":true,"supplier_dimensioned":true,"supplier_interface_dimensioned":true,"note":"Reserve the complete 6.40 mm cylindrical package and couple its 4.46 mm face aperture into a broad sealed transition rather than a narrow generic BA tube.","source_url":"https://www.knowles.com/docs/default-source/default-document-library/datasheet-sr.pdf?Status=Master&sfvrsn=741a77b1_0","outlet_mm":[0,-1.9949999999999999,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":4.460000000000001,"dedicated_drive":false,"rear_vent_required":false},
-{"id":16,"name":"5.0 mm Marketplace Planar Treble","technology":"Planar magnetic","size_mm":[5,2.8,1.8],"cylindrical":false,"supplier_dimensioned":false,"supplier_interface_dimensioned":false,"note":"Only the 5.0 mm class is visible in the submitted marketplace listing. Width, depth, outlet, terminals, polarity, and magnetic keepout remain provisional and are editable in Configure IEM Driver Units.","source_url":"https://www.alibaba.com/trade/search?SearchText=5mm+planar+treble+speaker","outlet_mm":[0,-1.5,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":1.1,"dedicated_drive":false,"rear_vent_required":true},
-{"id":17,"name":"5.7 mm Marketplace Planar Treble","technology":"Planar magnetic","size_mm":[5.7,3,1.9],"cylindrical":false,"supplier_dimensioned":false,"supplier_interface_dimensioned":false,"note":"Only the 5.7 mm class is visible in the submitted marketplace listing. Width, depth, outlet, terminals, polarity, and magnetic keepout remain provisional and are editable in Configure IEM Driver Units.","source_url":"https://www.alibaba.com/trade/search?SearchText=5.7mm+planar+treble+speaker","outlet_mm":[0,-1.6,0],"outlet_axis":[0,-1,0],"outlet_diameter_mm":1.15,"dedicated_drive":false,"rear_vent_required":true},
-{"id":18,"name":"Sonion 2356","technology":"Single balanced armature","size_mm":[8.54,4.29,2.96],"cylindrical":false,"supplier_dimensioned":true,"supplier_interface_dimensioned":true,"note":"Archived Sonion 2356 drawing, version 2 (2008). Full conservative envelope includes case, 1.60 mm spout and maximum 0.64 mm rear terminal projection. Case alone is 6.30 \u00d7 4.29 \u00d7 2.96 mm. Tube starts 0.05 mm beyond the spout tip for numerical separation; verify the sealed sleeve fit. The rear vent must remain clear. Nominal dimensions do not include supplier tolerances or solder allowance.","source_url":"https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf","outlet_mm":[-4.32,0,-0.33],"outlet_axis":[-1,0,0],"outlet_diameter_mm":1.4,"dedicated_drive":false,"rear_vent_required":true}
+  {
+    "id": 0,
+    "name": "9 mm Dynamic Reference",
+    "technology": "Dynamic moving-coil",
+    "size_mm": [
+      9,
+      3.2,
+      9
+    ],
+    "cylindrical": true,
+    "supplier_dimensioned": false,
+    "supplier_interface_dimensioned": false,
+    "note": "Finished-earphone manufacturer publishes a driver diameter class, not a controlled transducer outline. Modeled thickness and interfaces are estimates. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://www.64audio.com/products/nio",
+    "outlet_mm": [
+      0,
+      -1.65,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 2.3,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 1,
+    "name": "10 mm Dynamic Reference",
+    "technology": "Dynamic moving-coil",
+    "size_mm": [
+      10,
+      3.2,
+      10
+    ],
+    "cylindrical": true,
+    "supplier_dimensioned": false,
+    "supplier_interface_dimensioned": false,
+    "note": "Finished-earphone manufacturer publishes a driver diameter class, not a controlled transducer outline. Modeled thickness and interfaces are estimates. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://moondroplab.com/en-products/jiu",
+    "outlet_mm": [
+      0,
+      -1.65,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 2.5,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 2,
+    "name": "Knowles RAB-32257",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      5.15,
+      2.96,
+      2.58
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "RAB-32257-000 overview publishes the 5.15 × 2.96 × 2.58 mm can. Full ordered-port and terminal projections are not reserved by this can-only model. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/rab-datasheet.pdf?Status=Master&sfvrsn=9e1a77b1_0",
+    "outlet_mm": [
+      -3.025,
+      0,
+      0
+    ],
+    "outlet_axis": [
+      -1,
+      0,
+      0
+    ],
+    "outlet_diameter_mm": 1.2,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 3,
+    "name": "Knowles WBFK-23990",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      5,
+      2.73,
+      1.93
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "WBFK-23990-000 revision F: 5.00 × 2.73 × 1.93 mm body. The drawing also specifies solder buildup; the installed solder envelope is not modeled. 12N tubeless port. The inherited circular routing inlet is an adapter placeholder, not a verified projecting spout.",
+    "source_url": "https://www.knowles.com/docs/default-source/model-downloads/wbfk-23990-000.pdf?Status=Master&sfvrsn=2b2475b1_0",
+    "outlet_mm": [
+      -2.75,
+      0,
+      0
+    ],
+    "outlet_axis": [
+      -1,
+      0,
+      0
+    ],
+    "outlet_diameter_mm": 1,
+    "dedicated_drive": false,
+    "rear_vent_required": false
+  },
+  {
+    "id": 4,
+    "name": "Knowles TWFK-30017",
+    "technology": "Dual balanced armature",
+    "size_mm": [
+      5,
+      2.73,
+      3.86
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "TWFK-30017-000 nominal dual BA package: 5.00 × 2.73 × 3.86 mm. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/tw-datasheet.pdf?Status=Master&sfvrsn=521a77b1_0",
+    "outlet_mm": [
+      0,
+      -1.415,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 1.2,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 5,
+    "name": "14.2 mm Planar Reference",
+    "technology": "Planar magnetic",
+    "size_mm": [
+      14.2,
+      1.5,
+      14.2
+    ],
+    "cylindrical": true,
+    "supplier_dimensioned": false,
+    "supplier_interface_dimensioned": false,
+    "note": "Finished-earphone manufacturer publishes a driver diameter class, not a controlled transducer outline. Modeled thickness and interfaces are estimates. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://blog.64audio.com/solo-planar-magnetic-in-ear-monitors/",
+    "outlet_mm": [
+      0,
+      -0.8,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 3,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 6,
+    "name": "USound Adap UT-P2019",
+    "technology": "Piezoelectric MEMS",
+    "size_mm": [
+      6.7,
+      4.7,
+      1.58
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "Exact manufacturer nominal package dimensions. Display uses a simplified body with interface markers; tolerance, solder and carrier thickness need separate allowance. Three front cover slots. 1.40 mm is the central slot width, not the diameter of a circular sound port; the existing tube inlet is a planning transition.",
+    "source_url": "https://www.usound.com/wp-content/uploads/2020/01/2001_Adap-UT-P-2019-Datasheet.pdf",
+    "outlet_mm": [
+      0,
+      0,
+      0.79
+    ],
+    "outlet_axis": [
+      0,
+      0,
+      1
+    ],
+    "outlet_diameter_mm": 1.4,
+    "dedicated_drive": true,
+    "rear_vent_required": true
+  },
+  {
+    "id": 7,
+    "name": "Knowles CI-22955",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      9.47,
+      7.18,
+      4.1
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "CI-22955-000 overview gives the 9.47 × 7.18 × 4.10 mm package. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/receiver-datasheet-ci-22955-000-1efdd1a731dff6ddbb37cff0000940c19.pdf?Status=Master&sfvrsn=0",
+    "outlet_mm": [
+      0,
+      -3.64,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 1.6,
+    "dedicated_drive": false,
+    "rear_vent_required": false
+  },
+  {
+    "id": 8,
+    "name": "Knowles RAU-34832",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      5.1,
+      2.8,
+      2
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "RAU-34832-B148 nominal body: 5.10 × 2.80 × 2.00 mm. Manufacturer identifies the 12S port. Its full local geometry has not been transferred; the inherited routing inlet remains provisional.",
+    "source_url": "https://www.knowles.com/docs/default-source/model-downloads/receiver-datasheet-rau-34832-b148.pdf?Status=Master&sfvrsn=713c73b1_4",
+    "outlet_mm": [
+      0,
+      -1.45,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 0.95,
+    "dedicated_drive": false,
+    "rear_vent_required": false
+  },
+  {
+    "id": 9,
+    "name": "Sonion 4100",
+    "technology": "Flat-motion balanced armature",
+    "size_mm": [
+      5,
+      2.7,
+      0.98
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "Sonion application note lists the 4100 family as 5.00 × 2.70 × 0.98 mm; this is not an exact ordered variant. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/america.sonion.com/22fbf1adb725928d7344843240d16269.pdf",
+    "outlet_mm": [
+      0,
+      -1.4,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 1,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 10,
+    "name": "xMEMS Cowell",
+    "technology": "All-silicon piezoMEMS",
+    "size_mm": [
+      6,
+      3.2,
+      1.15
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "Exact manufacturer nominal package dimensions. Display uses a simplified body with interface markers; tolerance, solder and carrier thickness need separate allowance. 15 × 0.48 mm top holes; 1.859 mm equivalent-area diameter is a routing approximation, not one round physical port.",
+    "source_url": "https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2150_v1.3.pdf?v=1729709821",
+    "outlet_mm": [
+      0.3033,
+      0,
+      0.575
+    ],
+    "outlet_axis": [
+      0,
+      0,
+      1
+    ],
+    "outlet_diameter_mm": 1.859,
+    "dedicated_drive": true,
+    "rear_vent_required": true
+  },
+  {
+    "id": 11,
+    "name": "xMEMS Muir",
+    "technology": "All-silicon piezoMEMS",
+    "size_mm": [
+      5,
+      3.2,
+      1.15
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "Exact manufacturer nominal package dimensions. Display uses a simplified body with interface markers; tolerance, solder and carrier thickness need separate allowance. 11 × 0.55 mm top holes in Figure 5.1 (4 / 3 / 4 rows); 1.824 mm equivalent-area diameter. The inherited tube position remains a planning adapter centre.",
+    "source_url": "https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2200_v1.0.pdf?v=1729709840",
+    "outlet_mm": [
+      -0.565,
+      0.135,
+      0.575
+    ],
+    "outlet_axis": [
+      0,
+      0,
+      1
+    ],
+    "outlet_diameter_mm": 1.824144,
+    "dedicated_drive": true,
+    "rear_vent_required": true
+  },
+  {
+    "id": 12,
+    "name": "Knowles RAD-33518",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      5,
+      2.73,
+      1.93
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": false,
+    "supplier_interface_dimensioned": false,
+    "note": "RAD-33518 identity is known, but no controlled outline was located. The 5.00 × 2.73 × 1.93 mm body is a slim-BA planning estimate. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://www.knowles.com/applications/ear-solutions/premium-sound",
+    "outlet_mm": [
+      0,
+      -1.415,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 1,
+    "dedicated_drive": false,
+    "rear_vent_required": false
+  },
+  {
+    "id": 13,
+    "name": "Knowles RAF-32873-P183",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      5.15,
+      2.96,
+      2.58
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "Existing 5.15 × 2.96 × 2.58 mm can and P183 routing inlet are retained. Public RAF-32873-000 overview does not verify all P183 projections. P183 inlet from the existing project evidence; full 6.90 mm spouted assembly is not represented by the can-only collision envelope.",
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/datasheet11e31a731dff6ddbb37cff0000940c19.pdf",
+    "outlet_mm": [
+      -3.4499999999999997,
+      0,
+      0
+    ],
+    "outlet_axis": [
+      -1,
+      0,
+      0
+    ],
+    "outlet_diameter_mm": 1.42,
+    "dedicated_drive": false,
+    "rear_vent_required": false
+  },
+  {
+    "id": 14,
+    "name": "Knowles ED-29689",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      6.32,
+      4.31,
+      2.97
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": false,
+    "note": "Retains the existing conservative 6.32 × 4.31 × 2.97 mm family envelope; the exact ED-29689-000 drawing is linked for ordered-part confirmation. 12C port is specified. The existing face-centre inlet is a planning approximation.",
+    "source_url": "https://www.knowles.com/docs/default-source/model-downloads/ed-29689-000.pdf?Status=Master&sfvrsn=216775b1_1",
+    "outlet_mm": [
+      0,
+      -2.205,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 1.4,
+    "dedicated_drive": false,
+    "rear_vent_required": false
+  },
+  {
+    "id": 15,
+    "name": "Knowles SR-32453-000",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      6.4,
+      3.99,
+      6.4
+    ],
+    "cylindrical": true,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": true,
+    "note": "SR-32453-000 nominal cylindrical package: 6.40 mm diameter × 3.99 mm depth. 4.46 mm front face aperture; requires a broad sealed adapter.",
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/datasheet-sr.pdf?Status=Master&sfvrsn=741a77b1_0",
+    "outlet_mm": [
+      0,
+      -1.9949999999999999,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 4.460000000000001,
+    "dedicated_drive": false,
+    "rear_vent_required": false
+  },
+  {
+    "id": 16,
+    "name": "5.0 mm Marketplace Planar Treble",
+    "technology": "Planar magnetic",
+    "size_mm": [
+      5,
+      2.8,
+      1.8
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": false,
+    "supplier_interface_dimensioned": false,
+    "note": "Marketplace size class only. No controlled manufacturer drawing was found. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://www.alibaba.com/trade/search?SearchText=5mm+planar+treble+speaker",
+    "outlet_mm": [
+      0,
+      -1.5,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 1.1,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 17,
+    "name": "5.7 mm Marketplace Planar Treble",
+    "technology": "Planar magnetic",
+    "size_mm": [
+      5.7,
+      3,
+      1.9
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": false,
+    "supplier_interface_dimensioned": false,
+    "note": "Marketplace size class only. No controlled manufacturer drawing was found. Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+    "source_url": "https://www.alibaba.com/trade/search?SearchText=5.7mm+planar+treble+speaker",
+    "outlet_mm": [
+      0,
+      -1.6,
+      0
+    ],
+    "outlet_axis": [
+      0,
+      -1,
+      0
+    ],
+    "outlet_diameter_mm": 1.15,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  },
+  {
+    "id": 18,
+    "name": "Sonion 2356",
+    "technology": "Single balanced armature",
+    "size_mm": [
+      8.54,
+      4.29,
+      2.96
+    ],
+    "cylindrical": false,
+    "supplier_dimensioned": true,
+    "supplier_interface_dimensioned": true,
+    "note": "Sonion 2356: 6.30 × 4.29 × 2.96 mm case, 1.60 mm spout and 0.64 mm terminal projection; 8.54 mm full length reserved. 1.40 mm OD spout, tip at local X −4.27 mm, Z −0.33 mm; route begins 0.05 mm beyond the tip.",
+    "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
+    "outlet_mm": [
+      -4.32,
+      0,
+      -0.33
+    ],
+    "outlet_axis": [
+      -1,
+      0,
+      0
+    ],
+    "outlet_diameter_mm": 1.4,
+    "dedicated_drive": false,
+    "rear_vent_required": true
+  }
 ]

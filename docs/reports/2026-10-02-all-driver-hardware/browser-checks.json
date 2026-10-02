@@ -1,0 +1,121 @@
+{
+  "driver_panels": [
+    {
+      "name": "9 mm Dynamic Reference",
+      "details": "Planning model. Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Still needed: Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements."
+    },
+    {
+      "name": "10 mm Dynamic Reference",
+      "details": "Planning model. Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Still needed: Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements."
+    },
+    {
+      "name": "Knowles RAB-32257",
+      "details": "Nominal package / incomplete interface. End-face harness approach remains provisional. Do not mistake the inherited tube start for a measured spout tip.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions. RAB-32257 needs rear acoustic volume.",
+      "missing": "Still needed: Controlled port option, spout projection, pad centres, solder allowance and polarity."
+    },
+    {
+      "name": "Knowles WBFK-23990",
+      "details": "Drawing / incomplete interface. The polarity convention is verified from the exact drawing; the harness endpoint is still a grouped planning anchor.",
+      "connection": "Terminal 2 is electrical positive relative to terminal 1. Positive-going voltage at 2 decreases outlet pressure. Keep the electrical pin label separate from acoustic phase; the simulator polarity setting is unchanged. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Port-to-tube adapter, full installed solder envelope and independently checked local pad coordinates."
+    },
+    {
+      "name": "Knowles TWFK-30017",
+      "details": "Dual package / incomplete interface. One grouped harness reservation represents the package. Internal wiring and electrical crossover remain unverified.",
+      "connection": "Two internal BA elements share a sound outlet. Use the ordered terminal/internal-network drawing; do not invent four independent terminals or duplicate the package into two drivers. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions. The Knowles selection guide identifies TWFK-30017-000 as vented.",
+      "missing": "Still needed: Ordered terminal map, vent location, full port shape and solder envelope."
+    },
+    {
+      "name": "14.2 mm Planar Reference",
+      "details": "Planning model. Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Still needed: Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements."
+    },
+    {
+      "name": "USound Adap UT-P2019",
+      "details": "Drawing / carrier required. Harness approaches the documented rear contact face. Its central group anchor is a space reservation, not a measured pad centre. Display marks only the dimensioned central front slot and back vent; the two outer slots and membrane are not modeled.",
+      "connection": "Use the positive BE and negative TE contacts. Adap needs biased piezo drive (datasheet reference: 15 V DC with AC drive); a passive cable/crossover is insufficient. Mounting: Support only the supplier-defined front/back contact zones. Keep the 0.80 mm back port open and avoid bending the package.",
+      "missing": "Still needed: Host carrier, front/rear seal, individual solder joints, amplifier placement and electrical netlist."
+    },
+    {
+      "name": "Knowles CI-22955",
+      "details": "Nominal package / incomplete interface. Nominal package dimensions are retained; the terminal approach and tube start still require the ordered drawing.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions. CI-22955-000 is unvented in the Knowles selection guide; do not add a fictitious rear vent.",
+      "missing": "Still needed: Controlled port coordinates, complete terminal outline and polarity."
+    },
+    {
+      "name": "Knowles RAU-34832",
+      "details": "Nominal package / incomplete interface. RAU is a passive receiver, unlike the piezoMEMS presets. Exact terminal coordinates remain unverified.",
+      "connection": "Passive BA supertweeter; Knowles states that no transformer or high-voltage amplifier is required. Verify the actual solder-pad polarity and crossover. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Controlled port coordinates, pad map and full installed envelope."
+    },
+    {
+      "name": "Sonion 4100",
+      "details": "Family dimensions / variant missing. Family dimensions only. Both the sound inlet and terminal approach remain planning geometry.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Exact 4100 variant and its controlled outlet, terminal, vent and polarity drawing."
+    },
+    {
+      "name": "xMEMS Cowell",
+      "details": "Drawing / carrier required. Harness approaches the documented rear contact face. Its central group anchor is a space reservation, not a measured pad centre. Dark display markers indicate front openings and rear vents, not drilled CAD bores.",
+      "connection": "Connect T to the positive and B to the negative output of the compatible xMEMS piezo amplifier. SM lands are mechanical. A passive BA crossover cannot supply the required drive/bias. Mounting: SMT carrier and solder enclosure ring, with a host-PCB opening exposing all two rear vents. The carrier and seal are not generated by auto arrange.",
+      "missing": "Still needed: Host carrier, front/rear seal, individual solder joints, amplifier placement and electrical netlist."
+    },
+    {
+      "name": "xMEMS Muir",
+      "details": "Drawing / carrier required. Harness approaches the documented rear contact face. Its central group anchor is a space reservation, not a measured pad centre. Dark display markers indicate front openings and rear vents, not drilled CAD bores.",
+      "connection": "Connect T to the positive and B to the negative output of the compatible xMEMS piezo amplifier. SM lands are mechanical. A passive BA crossover cannot supply the required drive/bias. Mounting: SMT carrier and solder enclosure ring, with a host-PCB opening exposing all six rear vents. The carrier and seal are not generated by auto arrange.",
+      "missing": "Still needed: Host carrier, front/rear seal, individual solder joints, amplifier placement and electrical netlist."
+    },
+    {
+      "name": "Knowles RAD-33518",
+      "details": "Exact outline unavailable. No substitution of WBFK or RAF pad geometry is made for RAD-33518.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Exact ordered-part outline, outlet, pad coordinates, polarity and mounting details are missing."
+    },
+    {
+      "name": "Knowles RAF-32873-P183",
+      "details": "Family terminal side / variant incomplete. RAF-family side terminal orientation is documented. Exact pad centres and numbering for P183 are not verified; this is a side-face harness reservation, not an exact solder endpoint.",
+      "connection": "RAF-family side terminals are documented. Confirm the P183 pad numbering and phase convention from the ordered drawing. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Controlled P183 outline including spout, exact side-pad centres and installed solder allowance."
+    },
+    {
+      "name": "Knowles ED-29689",
+      "details": "Drawing located / interface pending. Exact ED-29689-000 drawing found; family geometry and provisional terminal approach remain explicitly identified.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Transfer of controlled outline, terminal positions, polarity and port geometry."
+    },
+    {
+      "name": "Knowles SR-32453-000",
+      "details": "Cylindrical package / incomplete terminals. Cylindrical body and front aperture are retained; rear pad centres are not inferred from a generic BA.",
+      "connection": "Use the rear P/N marks and exact ordered pad drawing. Electrical polarity and measured acoustic phase must be checked independently. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Exact pad centres, installed solder allowance, carrier and broad outlet adapter."
+    },
+    {
+      "name": "5.0 mm Marketplace Planar Treble",
+      "details": "Planning model. Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Still needed: Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements."
+    },
+    {
+      "name": "5.7 mm Marketplace Planar Treble",
+      "details": "Planning model. Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "connection": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets. Mounting: Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Still needed: Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements."
+    },
+    {
+      "name": "Sonion 2356",
+      "details": "Drawing / terminal region. Rear terminal strip and central vent are shown on page 1. Harness reserves a group approach to that strip, not individual pad centres. Keep the central vent clear. Page 2 states positive voltage at the marked negative terminal raises outlet pressure; do not silently equate printed polarity with acoustic phase.",
+      "connection": "Positive voltage at the marked negative terminal increases outlet pressure. Retain the manufacturer label and explicitly choose acoustic phase in the circuit. Mounting: Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Still needed: Individual pad centres, solder volume, vent clearance, boot and engagement/seal geometry."
+    }
+  ],
+  "coverage_rows": 19,
+  "muir_connection": "T is pin 3; B is pin 2; SM1/SM4 are mechanical. Connect T to the positive and B to the negative output of the compatible xMEMS piezo amplifier. SM lands have no electrical connection. A passive BA crossover cannot supply the required drive/bias. Mounting: SMT carrier and solder enclosure ring, with a host-PCB opening exposing all six rear vents. The carrier and seal are not generated by auto arrange.",
+  "console": []
+}

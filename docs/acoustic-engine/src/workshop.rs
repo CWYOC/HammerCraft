@@ -656,7 +656,7 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
             kind: "driver".into(),
             mesh,
             display_mesh: hardware::driver_display(d),
-            contact_mesh: None,
+            contact_mesh: hardware::driver_contacts(d),
         });
         parts.push(Part {
             id: format!("path:{}", d.id),

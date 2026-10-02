@@ -213,7 +213,10 @@ function showPreset() {
         `${s.size_mm.map((x) => x.toFixed(2)).join(" × ")} mm · ${s.supplier_dimensioned ? "Supplier package dimensions" : "Planning package dimensions"}. ${s.note}`;
     $("driverSource").href=s.source_url;
     const i=hardware.driver_interfaces.find(i=>i.preset_id===s.id);
-    $("driverInterface").textContent=i ? i.note : "Exact terminal coordinates and pin numbering are not verified for this preset. The harness uses a provisional approach anchor; confirm the ordered-part drawing before wiring.";
+    $("driverInterface").textContent=i ? `${i.status}. ${i.note}` : "Exact terminal coordinates and pin numbering are not verified for this preset. The harness uses a provisional approach anchor; confirm the ordered-part drawing before wiring.";
+    $("driverConnection").textContent=i ? `${i.wiring} Mounting: ${i.mount}` : "";
+    $("driverMissing").textContent=i ? `Still needed: ${i.missing}` : "";
+    $("driverSource").href=i?.source_url || s.source_url;
 }
 function showHardware() {
     const model=hardware.connectors.find(m=>m.id===$("pinModel").value);
@@ -374,7 +377,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=10", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=11", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {
@@ -394,10 +397,10 @@ async function start() {
         pending.clear();
         tell("Geometry worker failed to load. Reload to retry.", true);
     };
-    const response = await fetch("./assets/workshop/drivers.json");
+    const response = await fetch("./assets/workshop/drivers.json?v=2");
     if (!response.ok) throw new Error("Driver catalog could not load.");
     catalog = await response.json();
-    const hardwareResponse=await fetch("./assets/workshop/hardware.json?v=1");
+    const hardwareResponse=await fetch("./assets/workshop/hardware.json?v=2");
     if(!hardwareResponse.ok) throw new Error("Hardware catalog could not load.");
     hardware=await hardwareResponse.json();
     $("pinModel").append(...hardware.connectors.map(m=>option(m.id,m.name)));
@@ -405,6 +408,13 @@ async function start() {
         const p=document.createElement("p"),a=document.createElement("a");
         a.href=g.source_url;a.target="_blank";a.rel="noopener noreferrer";a.textContent=g.title;
         p.append(a,document.createTextNode(` — ${g.text}`));return p;
+    }));
+    $("driverCoverage").replaceChildren(...catalog.map(s=>{
+        const i=hardware.driver_interfaces.find(i=>i.preset_id===s.id), row=document.createElement("tr");
+        for(const text of [s.name, s.size_mm.map(v=>v.toFixed(2)).join(" × "), i?.status || "Not reviewed", i?.missing || "Exact part drawing"]){
+            const cell=document.createElement("td");cell.textContent=text;row.append(cell);
+        }
+        return row;
     }));
     $("preset").replaceChildren(...catalog.map((s) => option(s.id, s.name)));
     for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation", "pinSize", "pinPosition", "pinRotation", "boardSize", "boardPosition", "boardRotation", "faceplateNormal", "nozzleOrigin", "nozzleNormal"])

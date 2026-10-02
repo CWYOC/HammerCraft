@@ -347,6 +347,10 @@ pub fn inspect_layout(
             },
         );
         push(&mut out,"outlet-adapter","unverified",&[&d.id,&path_id],format!("{label}: {:.2} mm catalog outlet → {:.2} mm tube bore. Adapter, spout engagement and seal geometry are not defined.",s.outlet_diameter_mm,d.inner_diameter_mm));
+        if let Some(interface) = hardware::interface(d.preset) {
+            push(&mut out,"driver-connections","unverified",&[&d.id],format!("{label}: {} Harness: {}. Missing: {}",interface.wiring,interface.confidence,interface.missing));
+            push(&mut out,"driver-mount","unverified",&[&d.id],format!("{label}: {}",interface.mount));
+        }
         if s.rear_vent_required {
             push(&mut out,"rear-vent","unverified",&[&d.id],format!("{label}: rear vent requires a defined air region, clearance and back volume; these are not modeled."));
         }

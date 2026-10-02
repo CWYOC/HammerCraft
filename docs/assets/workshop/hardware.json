@@ -1,10 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "checked_on": "2026-10-02",
   "connectors": [
     {
       "id": "aec-ij-001g-pom",
-      "name": "AEC IJ-001G-POM \u00b7 two-pin socket",
+      "name": "AEC IJ-001G-POM · two-pin socket",
       "size_mm": [
         4.9,
         3,
@@ -13,15 +13,15 @@
       "shape": "stepped two-pin socket",
       "source_url": "https://cdn.prod.website-files.com/58b76f3a4d7bd33133263ab3/68a563e8c97c68e7195e78be_IJ-001G-POM%20DRAWING%20_%2020250820.pdf",
       "source_page": 1,
-      "revision": "B \u00b7 2025-08-18",
+      "revision": "B · 2025-08-18",
       "pin_pitch_mm": 1.8,
       "contact_bore_mm": 0.7,
       "terminal_diameter_mm": 0.6,
-      "note": "Manufacturer nominal outline: 4.90 \u00d7 3.00 mm face; 4.80 mm insulator length; 7.40 \u00b10.05 mm overall including solder tails. The drawing shows 0.70 mm contact bores, not a guaranteed mating pin gauge. Verify the matching plug; do not assume every 0.78 mm cable fits. Rounded corners and contact spring internals are simplified. Mounting pocket is a conservative rectangle, not a supplier retention design.",
+      "note": "Manufacturer nominal outline: 4.90 × 3.00 mm face; 4.80 mm insulator length; 7.40 ±0.05 mm overall including solder tails. The drawing shows 0.70 mm contact bores, not a guaranteed mating pin gauge. Verify the matching plug; do not assume every 0.78 mm cable fits. Rounded corners and contact spring internals are simplified. Mounting pocket is a conservative rectangle, not a supplier retention design.",
       "wiring": "Two isolated solder tails, 1.80 mm apart. Assign input + and return to the chosen cable orientation explicitly; this drawing does not specify an audio polarity convention.",
       "terminals": [
         {
-          "label": "A \u00b7 polarity unassigned",
+          "label": "A · polarity unassigned",
           "position_mm": [
             -0.9,
             0,
@@ -29,7 +29,7 @@
           ]
         },
         {
-          "label": "B \u00b7 polarity unassigned",
+          "label": "B · polarity unassigned",
           "position_mm": [
             0.9,
             0,
@@ -132,7 +132,7 @@
     },
     {
       "id": "aec-mx-1004",
-      "name": "AEC MX-1004GT-SA0025 \u00b7 MMCX edgecard socket",
+      "name": "AEC MX-1004GT-SA0025 · MMCX edgecard socket",
       "size_mm": [
         3.51,
         4.5,
@@ -143,7 +143,7 @@
       "source_page": 1,
       "revision": "Drawing dated 2007-09-18",
       "terminal_diameter_mm": 0.7,
-      "note": "Manufacturer dimensions: 3.51 \u00d7 4.50 \u00d7 7.50 mm overall; rear contact length 3.00 mm, central tail diameter 0.70 mm. This is the specific edgecard model, not a universal IEM MMCX housing. The asymmetrical shell profile, retention spring and ground tabs remain conservatively enveloped.",
+      "note": "Manufacturer dimensions: 3.51 × 4.50 × 7.50 mm overall; rear contact length 3.00 mm, central tail diameter 0.70 mm. This is the specific edgecard model, not a universal IEM MMCX housing. The asymmetrical shell profile, retention spring and ground tabs remain conservatively enveloped.",
       "wiring": "Central contact is isolated from the outer shell. Map signal and return to those two conductors according to your schematic; RF impedance is not the driver impedance. Edgecard soldering and ground-tab lands need the ordered-part drawing.",
       "terminals": [],
       "pieces": []
@@ -151,7 +151,1156 @@
   ],
   "driver_interfaces": [
     {
+      "preset_id": 0,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Planning model",
+      "source_url": "https://www.64audio.com/products/nio",
+      "source_pages": [],
+      "body_basis": "Finished-earphone manufacturer publishes a driver diameter class, not a controlled transducer outline. Modeled thickness and interfaces are estimates.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        1.6,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements.",
+      "note": "Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 1,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Planning model",
+      "source_url": "https://moondroplab.com/en-products/jiu",
+      "source_pages": [],
+      "body_basis": "Finished-earphone manufacturer publishes a driver diameter class, not a controlled transducer outline. Modeled thickness and interfaces are estimates.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        1.6,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements.",
+      "note": "Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 2,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Nominal package / incomplete interface",
+      "source_url": "https://www.knowles.com/docs/default-source/default-document-library/rab-datasheet.pdf?Status=Master&sfvrsn=9e1a77b1_0",
+      "source_pages": [
+        2
+      ],
+      "body_basis": "RAB-32257-000 overview publishes the 5.15 × 2.96 × 2.58 mm can. Full ordered-port and terminal projections are not reserved by this can-only model.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        2.575,
+        0,
+        0
+      ],
+      "terminal_axis": [
+        1,
+        0,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions. RAB-32257 needs rear acoustic volume.",
+      "missing": "Controlled port option, spout projection, pad centres, solder allowance and polarity.",
+      "note": "End-face harness approach remains provisional. Do not mistake the inherited tube start for a measured spout tip.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 3,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Drawing / incomplete interface",
+      "source_url": "https://www.knowles.com/docs/default-source/model-downloads/wbfk-23990-000.pdf?Status=Master&sfvrsn=2b2475b1_0",
+      "source_pages": [
+        1,
+        2
+      ],
+      "body_basis": "WBFK-23990-000 revision F: 5.00 × 2.73 × 1.93 mm body. The drawing also specifies solder buildup; the installed solder envelope is not modeled.",
+      "outlet_basis": "12N tubeless port. The inherited circular routing inlet is an adapter placeholder, not a verified projecting spout.",
+      "terminal_group_mm": [
+        2.5,
+        0,
+        0
+      ],
+      "terminal_axis": [
+        1,
+        0,
+        0
+      ],
+      "terminals": [
+        {
+          "label": "2",
+          "role": "positive"
+        },
+        {
+          "label": "1",
+          "role": "negative"
+        }
+      ],
+      "wiring": "Terminal 2 is electrical positive relative to terminal 1. Positive-going voltage at 2 decreases outlet pressure. Keep the electrical pin label separate from acoustic phase; the simulator polarity setting is unchanged.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Port-to-tube adapter, full installed solder envelope and independently checked local pad coordinates.",
+      "note": "The polarity convention is verified from the exact drawing; the harness endpoint is still a grouped planning anchor.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 4,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Dual package / incomplete interface",
+      "source_url": "https://www.knowles.com/docs/default-source/default-document-library/tw-datasheet.pdf?Status=Master&sfvrsn=521a77b1_0",
+      "source_pages": [
+        2
+      ],
+      "body_basis": "TWFK-30017-000 nominal dual BA package: 5.00 × 2.73 × 3.86 mm.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        1.365,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Two internal BA elements share a sound outlet. Use the ordered terminal/internal-network drawing; do not invent four independent terminals or duplicate the package into two drivers.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions. The Knowles selection guide identifies TWFK-30017-000 as vented.",
+      "missing": "Ordered terminal map, vent location, full port shape and solder envelope.",
+      "note": "One grouped harness reservation represents the package. Internal wiring and electrical crossover remain unverified.",
+      "pieces": [],
+      "contact_pieces": [],
+      "additional_sources": [
+        "https://www.knowles.com/docs/default-source/default-document-library/ba-selection-guide-pro-audio-v031223.pdf"
+      ]
+    },
+    {
+      "preset_id": 5,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Planning model",
+      "source_url": "https://blog.64audio.com/solo-planar-magnetic-in-ear-monitors/",
+      "source_pages": [],
+      "body_basis": "Finished-earphone manufacturer publishes a driver diameter class, not a controlled transducer outline. Modeled thickness and interfaces are estimates.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        0.75,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements.",
+      "note": "Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 6,
+      "checked_on": "2026-10-02",
+      "confidence": "drawing-terminal-face",
+      "status": "Drawing / carrier required",
+      "source_url": "https://www.usound.com/wp-content/uploads/2020/01/2001_Adap-UT-P-2019-Datasheet.pdf",
+      "source_pages": [
+        4,
+        12,
+        13
+      ],
+      "body_basis": "Exact manufacturer nominal package dimensions. Display uses a simplified body with interface markers; tolerance, solder and carrier thickness need separate allowance.",
+      "outlet_basis": "Three front cover slots. 1.40 mm is the central slot width, not the diameter of a circular sound port; the existing tube inlet is a planning transition.",
+      "terminal_group_mm": [
+        0,
+        0,
+        -0.79
+      ],
+      "terminal_axis": [
+        0,
+        0,
+        -1
+      ],
+      "terminals": [
+        {
+          "label": "BE / +",
+          "role": "positive"
+        },
+        {
+          "label": "TE / −",
+          "role": "negative"
+        }
+      ],
+      "wiring": "Use the positive BE and negative TE contacts. Adap needs biased piezo drive (datasheet reference: 15 V DC with AC drive); a passive cable/crossover is insufficient.",
+      "mount": "Support only the supplier-defined front/back contact zones. Keep the 0.80 mm back port open and avoid bending the package.",
+      "missing": "Host carrier, front/rear seal, individual solder joints, amplifier placement and electrical netlist.",
+      "note": "Harness approaches the documented rear contact face. Its central group anchor is a space reservation, not a measured pad centre. Display marks only the dimensioned central front slot and back vent; the two outer slots and membrane are not modeled.",
+      "pieces": [
+        {
+          "shape": "box",
+          "size_mm": [
+            6.7,
+            4.7,
+            1.54
+          ],
+          "position_mm": [
+            0,
+            0,
+            0
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "contact_pieces": [
+        {
+          "shape": "box",
+          "size_mm": [
+            1.4,
+            2.78,
+            0.02
+          ],
+          "position_mm": [
+            0,
+            0,
+            0.78
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.8,
+            0.8,
+            0.02
+          ],
+          "position_mm": [
+            1.3,
+            0,
+            -0.78
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "preset_id": 7,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Nominal package / incomplete interface",
+      "source_url": "https://www.knowles.com/docs/default-source/default-document-library/receiver-datasheet-ci-22955-000-1efdd1a731dff6ddbb37cff0000940c19.pdf?Status=Master&sfvrsn=0",
+      "source_pages": [
+        1
+      ],
+      "body_basis": "CI-22955-000 overview gives the 9.47 × 7.18 × 4.10 mm package.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        3.59,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions. CI-22955-000 is unvented in the Knowles selection guide; do not add a fictitious rear vent.",
+      "missing": "Controlled port coordinates, complete terminal outline and polarity.",
+      "note": "Nominal package dimensions are retained; the terminal approach and tube start still require the ordered drawing.",
+      "pieces": [],
+      "contact_pieces": [],
+      "additional_sources": [
+        "https://www.knowles.com/docs/default-source/default-document-library/ba-selection-guide-pro-audio-v031223.pdf"
+      ]
+    },
+    {
+      "preset_id": 8,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Nominal package / incomplete interface",
+      "source_url": "https://www.knowles.com/docs/default-source/model-downloads/receiver-datasheet-rau-34832-b148.pdf?Status=Master&sfvrsn=713c73b1_4",
+      "source_pages": [
+        2
+      ],
+      "body_basis": "RAU-34832-B148 nominal body: 5.10 × 2.80 × 2.00 mm.",
+      "outlet_basis": "Manufacturer identifies the 12S port. Its full local geometry has not been transferred; the inherited routing inlet remains provisional.",
+      "terminal_group_mm": [
+        0,
+        1.4,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Passive BA supertweeter; Knowles states that no transformer or high-voltage amplifier is required. Verify the actual solder-pad polarity and crossover.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Controlled port coordinates, pad map and full installed envelope.",
+      "note": "RAU is a passive receiver, unlike the piezoMEMS presets. Exact terminal coordinates remain unverified.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 9,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Family dimensions / variant missing",
+      "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/america.sonion.com/22fbf1adb725928d7344843240d16269.pdf",
+      "source_pages": [
+        2,
+        7
+      ],
+      "body_basis": "Sonion application note lists the 4100 family as 5.00 × 2.70 × 0.98 mm; this is not an exact ordered variant.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        1.35,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Exact 4100 variant and its controlled outlet, terminal, vent and polarity drawing.",
+      "note": "Family dimensions only. Both the sound inlet and terminal approach remain planning geometry.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 10,
+      "checked_on": "2026-10-02",
+      "confidence": "drawing-terminal-face",
+      "status": "Drawing / carrier required",
+      "source_url": "https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2150_v1.3.pdf?v=1729709821",
+      "source_pages": [
+        12,
+        13,
+        14,
+        17
+      ],
+      "body_basis": "Exact manufacturer nominal package dimensions. Display uses a simplified body with interface markers; tolerance, solder and carrier thickness need separate allowance.",
+      "outlet_basis": "15 × 0.48 mm top holes; 1.859 mm equivalent-area diameter is a routing approximation, not one round physical port.",
+      "terminal_group_mm": [
+        0,
+        0,
+        -0.575
+      ],
+      "terminal_axis": [
+        0,
+        0,
+        -1
+      ],
+      "terminals": [
+        {
+          "label": "T / pin 2",
+          "role": "positive"
+        },
+        {
+          "label": "B / pin 1",
+          "role": "negative"
+        },
+        {
+          "label": "SM3 / SM4 / enclosure ring",
+          "role": "mechanical; no electrical connection"
+        }
+      ],
+      "wiring": "T is pin 2; B is pin 1; SM3/SM4 are mechanical. Connect T to the positive and B to the negative output of the compatible xMEMS piezo amplifier. SM lands have no electrical connection. A passive BA crossover cannot supply the required drive/bias.",
+      "mount": "SMT carrier and solder enclosure ring, with a host-PCB opening exposing all two rear vents. The carrier and seal are not generated by auto arrange.",
+      "missing": "Host carrier, front/rear seal, individual solder joints, amplifier placement and electrical netlist.",
+      "note": "Harness approaches the documented rear contact face. Its central group anchor is a space reservation, not a measured pad centre. Dark display markers indicate front openings and rear vents, not drilled CAD bores.",
+      "pieces": [
+        {
+          "shape": "box",
+          "size_mm": [
+            6,
+            3.2,
+            1.1099999999999999
+          ],
+          "position_mm": [
+            0,
+            0,
+            0
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "contact_pieces": [
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            -0.96,
+            -0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            -0.31999999999999984,
+            -0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            0.3200000000000003,
+            -0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            0.96,
+            -0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            1.5999999999999996,
+            -0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            -0.96,
+            0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            -0.31999999999999984,
+            0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            0.3200000000000003,
+            0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            0.96,
+            0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            1.5999999999999996,
+            0.64,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            -1.31,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            -0.6699999999999999,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            -0.03000000000000025,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            0.6099999999999999,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.48,
+            0.48,
+            0.02
+          ],
+          "position_mm": [
+            1.25,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            -0.99,
+            -0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            -0.84,
+            0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "front_aperture_count": 15,
+      "front_aperture_diameter_mm": 0.48,
+      "rear_vent_count": 2
+    },
+    {
+      "preset_id": 11,
+      "checked_on": "2026-10-02",
+      "confidence": "drawing-terminal-face",
+      "status": "Drawing / carrier required",
+      "source_url": "https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2200_v1.0.pdf?v=1729709840",
+      "source_pages": [
+        15,
+        16,
+        17
+      ],
+      "body_basis": "Exact manufacturer nominal package dimensions. Display uses a simplified body with interface markers; tolerance, solder and carrier thickness need separate allowance.",
+      "outlet_basis": "11 × 0.55 mm top holes in Figure 5.1 (4 / 3 / 4 rows); 1.824 mm equivalent-area diameter. The inherited tube position remains a planning adapter centre.",
+      "terminal_group_mm": [
+        0,
+        0,
+        -0.575
+      ],
+      "terminal_axis": [
+        0,
+        0,
+        -1
+      ],
+      "terminals": [
+        {
+          "label": "T / pin 3",
+          "role": "positive"
+        },
+        {
+          "label": "B / pin 2",
+          "role": "negative"
+        },
+        {
+          "label": "SM1 / SM4 / enclosure ring",
+          "role": "mechanical; no electrical connection"
+        }
+      ],
+      "wiring": "T is pin 3; B is pin 2; SM1/SM4 are mechanical. Connect T to the positive and B to the negative output of the compatible xMEMS piezo amplifier. SM lands have no electrical connection. A passive BA crossover cannot supply the required drive/bias.",
+      "mount": "SMT carrier and solder enclosure ring, with a host-PCB opening exposing all six rear vents. The carrier and seal are not generated by auto arrange.",
+      "missing": "Host carrier, front/rear seal, individual solder joints, amplifier placement and electrical netlist.",
+      "note": "Harness approaches the documented rear contact face. Its central group anchor is a space reservation, not a measured pad centre. Dark display markers indicate front openings and rear vents, not drilled CAD bores.",
+      "pieces": [
+        {
+          "shape": "box",
+          "size_mm": [
+            5,
+            3.2,
+            1.1099999999999999
+          ],
+          "position_mm": [
+            0,
+            0,
+            0
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "contact_pieces": [
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            -1.32,
+            -0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            -0.5700000000000001,
+            -0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            0.17999999999999972,
+            -0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            0.9299999999999997,
+            -0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            -1.32,
+            0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            -0.5700000000000001,
+            0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            0.17999999999999972,
+            0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            0.9299999999999997,
+            0.655,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            -0.94,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            -0.18999999999999995,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.55,
+            0.55,
+            0.02
+          ],
+          "position_mm": [
+            0.56,
+            0,
+            0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            -0.34,
+            -0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            0.08,
+            -0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            0.5,
+            -0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            -0.49,
+            0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            -0.07,
+            0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.3,
+            0.3,
+            0.02
+          ],
+          "position_mm": [
+            0.35,
+            0.4,
+            -0.565
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "front_aperture_count": 11,
+      "front_aperture_diameter_mm": 0.55,
+      "rear_vent_count": 6
+    },
+    {
+      "preset_id": 12,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Exact outline unavailable",
+      "source_url": "https://www.knowles.com/applications/ear-solutions/premium-sound",
+      "source_pages": [],
+      "body_basis": "RAD-33518 identity is known, but no controlled outline was located. The 5.00 × 2.73 × 1.93 mm body is a slim-BA planning estimate.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        1.365,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Exact ordered-part outline, outlet, pad coordinates, polarity and mounting details are missing.",
+      "note": "No substitution of WBFK or RAF pad geometry is made for RAD-33518.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
       "preset_id": 13,
+      "checked_on": "2026-10-02",
+      "confidence": "family-side-only",
+      "status": "Family terminal side / variant incomplete",
+      "source_url": "https://investor.knowles.com/news/news-details/2017/Knowles-Launches-New-RAF-Series-Balanced-Armature-Drivers-Delivering-Premium-Sound-in-a-New-Design-01-03-2017/default.aspx",
+      "source_pages": [],
+      "body_basis": "Existing 5.15 × 2.96 × 2.58 mm can and P183 routing inlet are retained. Public RAF-32873-000 overview does not verify all P183 projections.",
+      "outlet_basis": "P183 inlet from the existing project evidence; full 6.90 mm spouted assembly is not represented by the can-only collision envelope.",
       "terminal_group_mm": [
         0,
         1.48,
@@ -162,12 +1311,139 @@
         1,
         0
       ],
-      "confidence": "family-side-only",
-      "source_url": "https://investor.knowles.com/news/news-details/2017/Knowles-Launches-New-RAF-Series-Balanced-Armature-Drivers-Delivering-Premium-Sound-in-a-New-Design-01-03-2017/default.aspx",
-      "note": "RAF-family side terminal orientation is documented. Exact pad centres and numbering for P183 are not verified; this is a side-face harness reservation, not an exact solder endpoint."
+      "terminals": [],
+      "wiring": "RAF-family side terminals are documented. Confirm the P183 pad numbering and phase convention from the ordered drawing.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Controlled P183 outline including spout, exact side-pad centres and installed solder allowance.",
+      "note": "RAF-family side terminal orientation is documented. Exact pad centres and numbering for P183 are not verified; this is a side-face harness reservation, not an exact solder endpoint.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 14,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Drawing located / interface pending",
+      "source_url": "https://www.knowles.com/docs/default-source/model-downloads/ed-29689-000.pdf?Status=Master&sfvrsn=216775b1_1",
+      "source_pages": [
+        1,
+        2
+      ],
+      "body_basis": "Retains the existing conservative 6.32 × 4.31 × 2.97 mm family envelope; the exact ED-29689-000 drawing is linked for ordered-part confirmation.",
+      "outlet_basis": "12C port is specified. The existing face-centre inlet is a planning approximation.",
+      "terminal_group_mm": [
+        0,
+        2.155,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Transfer of controlled outline, terminal positions, polarity and port geometry.",
+      "note": "Exact ED-29689-000 drawing found; family geometry and provisional terminal approach remain explicitly identified.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 15,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Cylindrical package / incomplete terminals",
+      "source_url": "https://www.knowles.com/docs/default-source/default-document-library/datasheet-sr.pdf?Status=Master&sfvrsn=741a77b1_0",
+      "source_pages": [
+        1
+      ],
+      "body_basis": "SR-32453-000 nominal cylindrical package: 6.40 mm diameter × 3.99 mm depth.",
+      "outlet_basis": "4.46 mm front face aperture; requires a broad sealed adapter.",
+      "terminal_group_mm": [
+        0,
+        1.9949999999999999,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the rear P/N marks and exact ordered pad drawing. Electrical polarity and measured acoustic phase must be checked independently.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Exact pad centres, installed solder allowance, carrier and broad outlet adapter.",
+      "note": "Cylindrical body and front aperture are retained; rear pad centres are not inferred from a generic BA.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 16,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Planning model",
+      "source_url": "https://www.alibaba.com/trade/search?SearchText=5mm+planar+treble+speaker",
+      "source_pages": [],
+      "body_basis": "Marketplace size class only. No controlled manufacturer drawing was found.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        1.4,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements.",
+      "note": "Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "pieces": [],
+      "contact_pieces": []
+    },
+    {
+      "preset_id": 17,
+      "checked_on": "2026-10-02",
+      "confidence": "planning-anchor",
+      "status": "Planning model",
+      "source_url": "https://www.alibaba.com/trade/search?SearchText=5.7mm+planar+treble+speaker",
+      "source_pages": [],
+      "body_basis": "Marketplace size class only. No controlled manufacturer drawing was found.",
+      "outlet_basis": "Existing routing port is provisional; the physical outlet and adapter must be checked against the ordered drawing.",
+      "terminal_group_mm": [
+        0,
+        1.5,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "terminals": [],
+      "wiring": "Use the ordered driver pinout for signal and return. The 3D harness reserves space for a conductor pair; it does not assign electrical nets.",
+      "mount": "Support the frame, preserve front and rear diaphragm clearance, and provide the specified rear volume. Exact support and vent geometry require the ordered-part drawing.",
+      "missing": "Manufacturer and exact transducer part number, full outline, terminals, polarity, outlet and rear-volume requirements.",
+      "note": "Planning model: do not infer solder pads or wiring polarity from this placeholder.",
+      "pieces": [],
+      "contact_pieces": []
     },
     {
       "preset_id": 18,
+      "checked_on": "2026-10-02",
+      "confidence": "drawing-terminal-region",
+      "status": "Drawing / terminal region",
+      "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
+      "source_pages": [
+        1,
+        2
+      ],
+      "body_basis": "Sonion 2356: 6.30 × 4.29 × 2.96 mm case, 1.60 mm spout and 0.64 mm terminal projection; 8.54 mm full length reserved.",
+      "outlet_basis": "1.40 mm OD spout, tip at local X −4.27 mm, Z −0.33 mm; route begins 0.05 mm beyond the tip.",
       "terminal_group_mm": [
         4.27,
         0,
@@ -178,9 +1454,68 @@
         0,
         0
       ],
-      "confidence": "drawing-terminal-region",
-      "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
-      "note": "Rear terminal strip and central vent are shown on page 1. Harness reserves a group approach to that strip, not individual pad centres. Keep the central vent clear. Page 2 states positive voltage at the marked negative terminal raises outlet pressure; do not silently equate printed polarity with acoustic phase."
+      "terminals": [],
+      "wiring": "Positive voltage at the marked negative terminal increases outlet pressure. Retain the manufacturer label and explicitly choose acoustic phase in the circuit.",
+      "mount": "Compliant support on the can; keep the sound opening, vent and solder access clear. Boot, adhesive and strain relief still need dimensions.",
+      "missing": "Individual pad centres, solder volume, vent clearance, boot and engagement/seal geometry.",
+      "note": "Rear terminal strip and central vent are shown on page 1. Harness reserves a group approach to that strip, not individual pad centres. Keep the central vent clear. Page 2 states positive voltage at the marked negative terminal raises outlet pressure; do not silently equate printed polarity with acoustic phase.",
+      "pieces": [
+        {
+          "shape": "box",
+          "size_mm": [
+            6.3,
+            4.29,
+            2.96
+          ],
+          "position_mm": [
+            0.48,
+            0,
+            0
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            1.4,
+            1.4,
+            1.6
+          ],
+          "position_mm": [
+            -3.47,
+            0,
+            -0.33
+          ],
+          "rotation_deg": [
+            0,
+            90,
+            0
+          ]
+        },
+        {
+          "shape": "box",
+          "size_mm": [
+            0.64,
+            4,
+            1.2
+          ],
+          "position_mm": [
+            3.95,
+            0,
+            0.15
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "contact_pieces": []
     }
   ],
   "guidance": [
@@ -197,7 +1532,7 @@
     {
       "title": "Sonion 2356 acoustic interface",
       "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
-      "text": "The archived manufacturer drawing identifies a 6.30 \u00d7 4.29 \u00d7 2.96 mm case, 1.60 mm projecting spout with 1.40 mm outside diameter, and up to 0.64 mm rear terminal projection. Reserve the full 8.54 mm length. Do not obstruct the rear vent; tube ID must accommodate the spout plus the chosen fit allowance."
+      "text": "The archived manufacturer drawing identifies a 6.30 × 4.29 × 2.96 mm case, 1.60 mm projecting spout with 1.40 mm outside diameter, and up to 0.64 mm rear terminal projection. Reserve the full 8.54 mm length. Do not obstruct the rear vent; tube ID must accommodate the spout plus the chosen fit allowance."
     }
   ]
 }

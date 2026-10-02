@@ -19,6 +19,14 @@ pub(super) struct Interface {
     pub preset_id: usize,
     pub terminal_group_mm: V,
     pub terminal_axis: V,
+    pub confidence: String,
+    pub wiring: String,
+    pub mount: String,
+    pub missing: String,
+    #[serde(default)]
+    pieces: Vec<Piece>,
+    #[serde(default)]
+    contact_pieces: Vec<Piece>,
 }
 #[derive(Deserialize)]
 struct Library {
@@ -188,31 +196,8 @@ pub(super) fn connector_contacts(b: &assembly::Package) -> Option<Mesh> {
     )
 }
 pub(super) fn driver_display(d: &Driver) -> Option<Mesh> {
-    if d.preset != 18 {
-        return None;
-    }
-    pieces(
-        vec![
-            Piece {
-                shape: "box".into(),
-                size_mm: [6.3, 4.29, 2.96],
-                position_mm: [0.48, 0., 0.],
-                rotation_deg: [0.; 3],
-            },
-            Piece {
-                shape: "cylinder".into(),
-                size_mm: [1.4, 1.4, 1.6],
-                position_mm: [-3.47, 0., -0.33],
-                rotation_deg: [0., 90., 0.],
-            },
-            Piece {
-                shape: "box".into(),
-                size_mm: [0.64, 4., 1.2],
-                position_mm: [3.95, 0., 0.15],
-                rotation_deg: [0.; 3],
-            },
-        ],
-        d.position_mm,
-        d.rotation_deg,
-    )
+    pieces(interface(d.preset)?.pieces, d.position_mm, d.rotation_deg)
+}
+pub(super) fn driver_contacts(d: &Driver) -> Option<Mesh> {
+    pieces(interface(d.preset)?.contact_pieces, d.position_mm, d.rotation_deg)
 }

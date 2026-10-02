@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-02",
+  "engine": "0.28.0",
+  "driver_count": 19,
+  "node_wasm": {
+    "tests": 343,
+    "pass": 343,
+    "fail": 0
+  },
+  "native_rust": {
+    "tests": 7,
+    "pass": 7,
+    "fail": 0
+  },
+  "new_tests": 22,
+  "browser": {
+    "driver_panels": 19,
+    "coverage_rows": 19,
+    "console_errors": 0
+  },
+  "sha256": {
+    "wasm": "88e461e4c4faae39c3a9761998d01782392b94fb7e15f5e747517ea186c0d499",
+    "driver_catalog": "e21dc8bb90a2d41124e8a234635ce87e86fa2133720e433b482fc8e34d6ce5cd",
+    "hardware_catalog": "4758e000d6b3a9e7f1ea48ad4a95028f6f1f290595957f8277fbec8a17f79df9"
+  },
+  "scope": "Software geometry, catalog consistency, routing, pose/mirror transforms and UI. Does not qualify pin-level wiring, carrier/adapter geometry, physical acoustic performance, or manufacturing."
+}

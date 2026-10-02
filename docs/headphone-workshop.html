@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Headphone Workshop | Hammer Craft</title>
-<link rel="icon" href="assets/favicon-32.png"><link rel="stylesheet" href="admin.css?v=64"><link rel="stylesheet" href="headphone-workshop.css?v=4">
+<link rel="icon" href="assets/favicon-32.png"><link rel="stylesheet" href="admin.css?v=64"><link rel="stylesheet" href="headphone-workshop.css?v=5">
 <link rel="stylesheet" href="design-embedded.css?v=1">
 <script src="design-bridge.js?v=2"></script>
 </head>
@@ -50,7 +50,7 @@
 </div></div></section>
 <section><div class="section-title"><span>02 / DRIVERS</span><button id="addDriver" type="button">+ ADD</button></div>
 <label>SELECT DRIVER<select id="driverSelect"></select></label><div id="driverFields">
-<label>PACKAGE PRESET<select id="preset"></select></label><p id="driverNote" class="hint"></p><p id="driverInterface" class="hint"></p><a id="driverSource" target="_blank" rel="noopener noreferrer">MANUFACTURER / SOURCE DRAWING</a>
+<label>PACKAGE PRESET<select id="preset"></select></label><p id="driverNote" class="hint"></p><p id="driverInterface" class="hint"></p><p id="driverConnection" class="hint"></p><p id="driverMissing" class="hint"></p><a id="driverSource" target="_blank" rel="noopener noreferrer">MANUFACTURER / SOURCE DRAWING</a>
 <span class="group-label">POSITION · mm</span><div class="triple" id="positionFields"></div>
 <span class="group-label">ROTATION · degrees (X → Y → Z)</span><div class="triple" id="rotationFields"></div>
 <div class="row"><button id="duplicateDriver" type="button">DUPLICATE</button><button id="removeDriver" type="button">REMOVE</button></div>
@@ -85,7 +85,7 @@
 <p class="hint">Local +Z is the cable mating direction; solder tails point inward. Seating finds a flat area, keeps the full connector inside, and synchronizes its opening when shell construction is enabled. Inspect the chosen face. Seating clears old harness routes; use Route cables after moving parts. Curved walls need a designed flat mounting pad.</p></div>
 <label class="check"><input id="boardEnabled" type="checkbox" checked> CROSSOVER BOARD ENVELOPE</label>
 <div id="boardFields"><span class="group-label">BOARD + COMPONENTS SIZE · mm</span><div class="triple" id="boardSizeFields"></div><span class="group-label">POSITION · mm</span><div class="triple" id="boardPositionFields"></div><span class="group-label">ROTATION · degrees</span><div class="triple" id="boardRotationFields"></div></div>
-<p class="hint">Catalog dimensions are nominal; include supplier tolerance, solder and mounting allowance. Custom and board dimensions remain provisional. 3D detail is simplified; clearance and STL use the complete conservative envelope. Harness endpoints use documented terminal regions where available; exact solder joints and electrical nets remain in the circuit design.</p>
+<p class="hint">Catalog dimensions are nominal; include supplier tolerance, solder and mounting allowance. Custom and board dimensions remain provisional. 3D detail is simplified; clearance and STL use the represented envelope. Can-only presets still need their spout and solder geometry. Harness endpoints use documented terminal regions where available; exact solder joints and electrical nets remain in the circuit design.</p>
 <details><summary>PART DRAWINGS &amp; CONNECTION GUIDE</summary><div id="hardwareGuide" class="hint"></div></details>
 <p id="cableSummary" class="hint"></p></div>
 </section><button class="apply" id="apply" type="button">APPLY CHANGES</button>
@@ -96,10 +96,11 @@
 <div class="view-help">DRAG TO ORBIT · SCROLL TO ZOOM · ARROW KEYS TO ROTATE</div><div class="view-legend"><i class="shell-dot"></i> SHELL <i class="driver-dot"></i> PACKAGES <i class="path-dot"></i> TUBES · CYAN: DRILLED GUIDE · PURPLE: HARNESS · GREEN: BOARD</div>
 </div>
 <div class="metrics"><article><span>SHELL ENVELOPE</span><strong id="shellSize">—</strong></article><article><span>DRIVERS</span><strong id="driverCount">—</strong></article><article><span>SELECTED PATH LENGTH</span><strong id="pathLength">—</strong></article><article><span>SELECTED BORE VOLUME</span><strong id="pathVolume">—</strong></article></div>
+<section class="verification"><details><summary>ALL DRIVER DATA COVERAGE</summary><p class="hint">All presets have a source and connection review. Nominal dimensions and interface markers do not validate a complete assembly. Missing items stay visible in the placement checks.</p><div class="driver-coverage"><table><thead><tr><th>Driver</th><th>Envelope (mm)</th><th>Evidence</th><th>Still needed</th></tr></thead><tbody id="driverCoverage"></tbody></table></div></details></section>
 <section class="verification"><div class="section-title"><span>05 / PLACEMENT CHECKS</span><span id="placementStatus" class="pending" role="status" aria-live="polite">CHECKS PENDING</span></div><p id="meshStatus"></p><p id="constructionStatus" class="hint"></p><ul id="placementChecks"></ul><details><summary>Other geometry notes</summary><ul id="warnings"></ul></details><p class="hint">Checks update when you apply a layout. Errors identify invalid represented geometry; warnings identify possible contact. Unverified items need additional geometry or part/process data. Shell construction uses a sampled solid; remaining walls and bores need resolution checks. Red parts have placement errors. STL export requires all represented parts to pass containment against the curved shell; tube outer walls are included. A shared acoustic junction model is not implemented. Preview exports do not certify manufacturing or acoustic performance.</p></section>
 <section class="exports"><p id="exportStatus" role="status" aria-live="polite"></p><div class="section-title"><span>06 / EXPORT</span></div><div class="row"><label>GEOMETRY PART<select id="exportPart"></select></label><button id="exportStl" type="button">EXPORT STL · mm</button><button id="exportPaths" type="button">EXPORT PATH DIMENSIONS</button></div><p class="hint">With construction enabled, export the hollow shell body and faceplate separately; otherwise export is unmachined stock. Driver shapes are package envelopes. Save the project to retain the original stock and all construction settings. Native .fmp, 3MF, ear-fit and manufacturing packages are not supported yet. <a href="HEADPHONE_WORKSHOP_PORT.md">Port status</a></p></section>
 </div>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=12"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=13"></script>
 </body></html>

@@ -469,3 +469,8 @@ canvas:active {
 }
 
 .arrange-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:14px 0}.arrange-bar button{min-height:40px;padding:8px 14px;border:1px solid var(--admin-border);background:transparent;font:inherit;font-size:10px;cursor:pointer}.arrange-bar button:first-child{background:var(--admin-accent);color:white;border-color:var(--admin-accent)}.arrange-bar span{font-size:11px;color:var(--admin-muted)}.arrange-bar button:disabled{opacity:.45;cursor:default}
+.driver-coverage { overflow-x: auto; margin-top: 1rem; }
+.driver-coverage table { border-collapse: collapse; width: 100%; font-size: .75rem; line-height: 1.5; }
+.driver-coverage th, .driver-coverage td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line, #d6d2cc); padding: .65rem; }
+.driver-coverage th { font-size: .65rem; letter-spacing: .08em; }
+.driver-coverage td:first-child { min-width: 10rem; }
