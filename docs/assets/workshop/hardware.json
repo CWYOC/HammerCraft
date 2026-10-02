@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "checked_on": "2026-10-02",
+  "connectors": [
+    {
+      "id": "aec-ij-001g-pom",
+      "name": "AEC IJ-001G-POM \u00b7 two-pin socket",
+      "size_mm": [
+        4.9,
+        3,
+        7.4
+      ],
+      "shape": "stepped two-pin socket",
+      "source_url": "https://cdn.prod.website-files.com/58b76f3a4d7bd33133263ab3/68a563e8c97c68e7195e78be_IJ-001G-POM%20DRAWING%20_%2020250820.pdf",
+      "source_page": 1,
+      "revision": "B \u00b7 2025-08-18",
+      "pin_pitch_mm": 1.8,
+      "contact_bore_mm": 0.7,
+      "terminal_diameter_mm": 0.6,
+      "note": "Manufacturer nominal outline: 4.90 \u00d7 3.00 mm face; 4.80 mm insulator length; 7.40 \u00b10.05 mm overall including solder tails. The drawing shows 0.70 mm contact bores, not a guaranteed mating pin gauge. Verify the matching plug; do not assume every 0.78 mm cable fits. Rounded corners and contact spring internals are simplified. Mounting pocket is a conservative rectangle, not a supplier retention design.",
+      "wiring": "Two isolated solder tails, 1.80 mm apart. Assign input + and return to the chosen cable orientation explicitly; this drawing does not specify an audio polarity convention.",
+      "terminals": [
+        {
+          "label": "A \u00b7 polarity unassigned",
+          "position_mm": [
+            -0.9,
+            0,
+            -3.7
+          ]
+        },
+        {
+          "label": "B \u00b7 polarity unassigned",
+          "position_mm": [
+            0.9,
+            0,
+            -3.7
+          ]
+        }
+      ],
+      "pieces": [
+        {
+          "shape": "two_pin_face",
+          "size_mm": [
+            4.9,
+            3,
+            1.2
+          ],
+          "position_mm": [
+            0,
+            0,
+            3.1
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "box",
+          "size_mm": [
+            3.7,
+            1.8,
+            1.2
+          ],
+          "position_mm": [
+            0,
+            0,
+            1.9
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "box",
+          "size_mm": [
+            4.9,
+            3,
+            2.4
+          ],
+          "position_mm": [
+            0,
+            0,
+            0.1
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.6,
+            0.6,
+            2.6
+          ],
+          "position_mm": [
+            -0.9,
+            0,
+            -2.4
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "shape": "cylinder",
+          "size_mm": [
+            0.6,
+            0.6,
+            2.6
+          ],
+          "position_mm": [
+            0.9,
+            0,
+            -2.4
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aec-mx-1004",
+      "name": "AEC MX-1004GT-SA0025 \u00b7 MMCX edgecard socket",
+      "size_mm": [
+        3.51,
+        4.5,
+        7.5
+      ],
+      "shape": "MMCX edgecard jack envelope",
+      "source_url": "https://cdn.prod.website-files.com/58b76f3a4d7bd33133263ab3/5bb584a81db3678d2c14de44_MX-1004.pdf",
+      "source_page": 1,
+      "revision": "Drawing dated 2007-09-18",
+      "terminal_diameter_mm": 0.7,
+      "note": "Manufacturer dimensions: 3.51 \u00d7 4.50 \u00d7 7.50 mm overall; rear contact length 3.00 mm, central tail diameter 0.70 mm. This is the specific edgecard model, not a universal IEM MMCX housing. The asymmetrical shell profile, retention spring and ground tabs remain conservatively enveloped.",
+      "wiring": "Central contact is isolated from the outer shell. Map signal and return to those two conductors according to your schematic; RF impedance is not the driver impedance. Edgecard soldering and ground-tab lands need the ordered-part drawing.",
+      "terminals": [],
+      "pieces": []
+    }
+  ],
+  "driver_interfaces": [
+    {
+      "preset_id": 13,
+      "terminal_group_mm": [
+        0,
+        1.48,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "confidence": "family-side-only",
+      "source_url": "https://investor.knowles.com/news/news-details/2017/Knowles-Launches-New-RAF-Series-Balanced-Armature-Drivers-Delivering-Premium-Sound-in-a-New-Design-01-03-2017/default.aspx",
+      "note": "RAF-family side terminal orientation is documented. Exact pad centres and numbering for P183 are not verified; this is a side-face harness reservation, not an exact solder endpoint."
+    },
+    {
+      "preset_id": 18,
+      "terminal_group_mm": [
+        4.27,
+        0,
+        0.15
+      ],
+      "terminal_axis": [
+        1,
+        0,
+        0
+      ],
+      "confidence": "drawing-terminal-region",
+      "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
+      "note": "Rear terminal strip and central vent are shown on page 1. Harness reserves a group approach to that strip, not individual pad centres. Keep the central vent clear. Page 2 states positive voltage at the marked negative terminal raises outlet pressure; do not silently equate printed polarity with acoustic phase."
+    }
+  ],
+  "guidance": [
+    {
+      "title": "Balanced-armature soldering",
+      "source_url": "https://www.knowles.com/docs/default-source/default-document-library/an-13-issue02.pdf?sfvrsn=4",
+      "text": "Knowles AN-13 specifies heat sinking and a temperature-controlled iron, recommends 1 s normal contact (3 s maximum) and 10 s cooling between joints. It suggests 30 AWG stranded hook-up wire or thinner. Insulated outside diameter must be entered separately; AWG is not cable diameter."
+    },
+    {
+      "title": "Connection structure",
+      "source_url": "https://www.knowles.com/products/audio/balanced-armature-speakers",
+      "text": "Input signal/return feed the crossover branches; each branch terminates at its driver pair. Driver series/parallel wiring and polarity are schematic decisions. A 3D harness reserves space for both conductors but does not define or override electrical nets. Multi-element receivers and MEMS need their model-specific pinout and drive circuit."
+    },
+    {
+      "title": "Sonion 2356 acoustic interface",
+      "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
+      "text": "The archived manufacturer drawing identifies a 6.30 \u00d7 4.29 \u00d7 2.96 mm case, 1.60 mm projecting spout with 1.40 mm outside diameter, and up to 0.64 mm rear terminal projection. Reserve the full 8.54 mm length. Do not obstruct the rear vent; tube ID must accommodate the spout plus the chosen fit allowance."
+    }
+  ]
+}

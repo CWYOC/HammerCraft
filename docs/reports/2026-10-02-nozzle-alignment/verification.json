@@ -1,0 +1,38 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.26.0",
+  "wasm_sha256": "bc7cabe84aa13c9ed756bb8d1393f9c6483eebc64a0d11369d40400a938c9f1c",
+  "example_outlets": 2,
+  "outlet_plane": {
+    "origin_mm": [
+      -4.2651150227235375,
+      11.799774285435277,
+      -1.5884874487499825
+    ],
+    "normal": [
+      -0.07847162200937609,
+      0.9637814495209569,
+      0.2548872733160701
+    ],
+    "lead_mm": 4
+  },
+  "terminal_rim_errors": [
+    {
+      "part": "path:d",
+      "max_terminal_plane_error_mm": 1.033895191682177e-15
+    },
+    {
+      "part": "path:b",
+      "max_terminal_plane_error_mm": 9.71445146547012e-16
+    }
+  ],
+  "export_blockers": [],
+  "node_tests": 307,
+  "native_tests": 7,
+  "browser": {
+    "fixture": "Local preview",
+    "align_two_outlets": "PASS",
+    "face_on_view": "PASS",
+    "undo_reapply": "PASS",
+    "console_errors": []
+  }
+}

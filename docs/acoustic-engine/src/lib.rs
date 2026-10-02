@@ -22,7 +22,7 @@ pub fn start() {
 
 #[wasm_bindgen]
 pub fn engine_version() -> String {
-    "Hammer Craft Acoustic Engine 0.25.0".to_string()
+    "Hammer Craft Acoustic Engine 0.27.0".to_string()
 }
 
 #[wasm_bindgen]
@@ -81,6 +81,22 @@ pub fn workshop_build_json(project: &str, shell: &str) -> Result<String, JsValue
 }
 
 #[wasm_bindgen]
+pub fn workshop_seat_connector_json(project: &str, shell: &str, detect: bool, allowance: f64) -> Result<String, JsValue> {
+    let project=serde_json::from_str(project).map_err(|e|JsValue::from_str(&format!("Invalid project: {e}")))?;
+    let shell=serde_json::from_str(shell).map_err(|e|JsValue::from_str(&format!("Invalid shell: {e}")))?;
+    let result=workshop::mounting::seat(project,&shell,detect,allowance).map_err(|e|JsValue::from_str(&e))?;
+    serde_json::to_string(&result).map_err(|e|JsValue::from_str(&e.to_string()))
+}
+
+#[wasm_bindgen]
+pub fn workshop_align_nozzle_json(project: &str, shell: &str, driver_id: &str) -> Result<String, JsValue> {
+    let project = serde_json::from_str(project).map_err(|e| JsValue::from_str(&format!("Invalid project: {e}")))?;
+    let shell = serde_json::from_str(shell).map_err(|e| JsValue::from_str(&format!("Invalid shell: {e}")))?;
+    let result = workshop::nozzle::align(project,&shell,driver_id).map_err(|e| JsValue::from_str(&e))?;
+    serde_json::to_string(&result).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+#[wasm_bindgen]
 pub fn workshop_outlets_json(project: &str, shell: &str) -> Result<String, JsValue> {
     let project = serde_json::from_str(project).map_err(|e| JsValue::from_str(&format!("Invalid project: {e}")))?;
     let shell = serde_json::from_str(shell).map_err(|e| JsValue::from_str(&format!("Invalid shell: {e}")))?;
@@ -89,10 +105,10 @@ pub fn workshop_outlets_json(project: &str, shell: &str) -> Result<String, JsVal
 }
 
 #[wasm_bindgen]
-pub fn workshop_arrange_json(project: &str, shell: &str, cables_only: bool) -> Result<String, JsValue> {
+pub fn workshop_arrange_json(project: &str, shell: &str, cables_only: bool, mount_allowance: Option<f64>) -> Result<String, JsValue> {
     let project = serde_json::from_str(project).map_err(|e| JsValue::from_str(&format!("Invalid project: {e}")))?;
     let shell = serde_json::from_str(shell).map_err(|e| JsValue::from_str(&format!("Invalid shell: {e}")))?;
-    let result = if cables_only {workshop::assembly::reroute(project,&shell)} else {workshop::assembly::arrange(project,&shell)}
+    let result = if cables_only {workshop::assembly::reroute(project,&shell)} else {workshop::assembly::arrange(project,&shell,mount_allowance.unwrap_or(0.1))}
         .map_err(|e| JsValue::from_str(&e))?;
     serde_json::to_string(&result).map_err(|e| JsValue::from_str(&e.to_string()))
 }

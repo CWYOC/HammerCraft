@@ -91,7 +91,8 @@ pub(super) fn inspect_parts(
             checks.push(placement::Check{code:"tube-shell".into(),status:status.into(),part_ids:vec![part.id.clone()],message:format!("{}: drilled centreline must remain inside stock, with the bore clear of external walls except at its outlet. Guide surrounds are clipped to the shell.",part.name)});
             continue;
         }
-        let cavity = if part.kind != "path" {
+        let mounted = part.kind=="connector" && p.connector_mount.is_some();
+        let cavity = if part.kind != "path" && !mounted {
             p.construction.as_ref()
         } else {
             None
@@ -118,7 +119,31 @@ pub(super) fn inspect_parts(
             .mesh
             .vertices
             .iter()
-            .map(|v| v.map(|x| (x as f32) as f64))
+            .map(|v| {
+                let point = v.map(|x| (x as f32) as f64);
+                if mounted {
+                    let plane=p.connector_mount.as_ref().unwrap().plane();
+                    if let Some(tree)=&tree {
+                        if plane.signed(point).abs()<=nozzle::SURFACE_TOLERANCE && plane.on_surface(tree,point) {
+                            return sub(point,mul(plane.normal,0.001));
+                        }
+                    }
+                }
+                // A declared, verified nozzle permits contact only at the final
+                // annulus. Inset that annulus for the containment predicate; the
+                // actual rendered/exported tube remains exactly flush.
+                if part.kind == "path" {
+                    if let (Some(nozzle), Some(tree)) = (&p.nozzle, &tree) {
+                        let driver = p.drivers.iter().find(|d| part.id == format!("path:{}",d.id)).unwrap();
+                        if nozzle.signed(point).abs() <= nozzle::SURFACE_TOLERANCE
+                            && length(sub(point,driver.end_mm)) <= driver.outer_diameter_mm/2. + nozzle::SURFACE_TOLERANCE
+                            && nozzle.on_surface(tree,point) {
+                            return sub(point,mul(norm(nozzle.normal),0.001));
+                        }
+                    }
+                }
+                point
+            })
             .collect();
         let (status, detail) = if let Some(tree) = &tree {
             let outside = vertices.iter().any(|&v| {
@@ -135,7 +160,9 @@ pub(super) fn inspect_parts(
             {
                 ("error", format!("a face crosses or approaches the {region} too closely. All corners being inside is insufficient on a curved or concave shell."))
             } else {
-                ("pass", format!("complete represented mesh stays inside the {region}; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate."))
+                ("pass", if part.kind == "path" && p.nozzle.is_some() {
+                    "Tube stays inside the shell with only its verified outlet annulus flush on the nozzle face. Manufacturing allowance is separate.".into()
+                } else { format!("complete represented mesh stays inside the {region}; numerical separation exceeds 0.00001 mm. Manufacturing allowance is separate.") })
             }
         } else {
             ("unverified", "containment cannot be established: use a closed, outward-wound shell with one connected surface. Repair the shell before exporting parts.".into())

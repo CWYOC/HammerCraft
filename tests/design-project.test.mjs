@@ -423,7 +423,7 @@ test("reverse candidate button preserves the managed-tube warning instead of rep
     );
 });
 
-test("all 18 geometry presets feed the same Rust acoustic request as manual dimensions", () => {
+test("all catalog geometry presets feed the same Rust acoustic request as manual dimensions", () => {
     const { app, project } = fixture();
     const simulate = () =>
         JSON.parse(
@@ -434,7 +434,7 @@ test("all 18 geometry presets feed the same Rust acoustic request as manual dime
             ),
         ).combined;
     const baseline = simulate();
-    for (let preset = 0; preset < 18; preset++) {
+    for (const {id:preset} of JSON.parse(fs.readFileSync(new URL('../docs/assets/workshop/drivers.json',import.meta.url)))) {
         const p = plain(project);
         const g = p.geometry.project.drivers[0];
         g.preset = preset;

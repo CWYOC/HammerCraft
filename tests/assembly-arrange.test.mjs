@@ -30,7 +30,9 @@ test('native shell arranges driver, connector, board and contained harnesses; de
 test('routing preserves placed parts and stale cable anchors block export after a move',()=>{
  const p=project();p.assembly=assembly();const a=arrange(p),r=arrange(a,cube(),true);
  assert.deepEqual(r.drivers,a.drivers);assert.deepEqual(r.assembly.connector,a.assembly.connector);
- r.assembly.connector.position_mm[0]+=.8;const bad=build(r);assert.ok(bad.export_blockers.length);assert.ok(bad.placement_checks.some(c=>c.code==='cable-anchors'&&c.status==='error'));
+ assert.ok(r.connector_mount,'Auto arrange seats an initially unlocked connector on the shell');
+ const normal=r.connector_mount.normal,lateral=normal.map(Math.abs).indexOf(Math.min(...normal.map(Math.abs)));
+ r.assembly.connector.position_mm[lateral]+=.8;const bad=build(r);assert.ok(bad.export_blockers.length);assert.ok(bad.placement_checks.some(c=>c.code==='cable-anchors'&&c.status==='error'));
 });
 test('oversize or malformed arrangement fails without mutating the input',()=>{
  const p=project();p.assembly=assembly();p.assembly.crossover.size_mm=[30,30,30];const before=structuredClone(p);

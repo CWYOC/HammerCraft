@@ -1,0 +1,349 @@
+[
+  {
+    "preset": 0,
+    "name": "9 mm Dynamic Reference",
+    "size_mm": [
+      9,
+      3.2,
+      9
+    ],
+    "shape": "cylinder envelope",
+    "existing_supplier_dimensioned_label": false,
+    "source_url": "https://www.64audio.com/products/nio",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 1,
+    "name": "10 mm Dynamic Reference",
+    "size_mm": [
+      10,
+      3.2,
+      10
+    ],
+    "shape": "cylinder envelope",
+    "existing_supplier_dimensioned_label": false,
+    "source_url": "https://moondroplab.com/en-products/jiu",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 2,
+    "name": "Knowles RAB-32257",
+    "size_mm": [
+      5.15,
+      2.96,
+      2.5799999999999996
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/rab-datasheet.pdf?Status=Master&sfvrsn=9e1a77b1_0",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 3,
+    "name": "Knowles WBFK-23990",
+    "size_mm": [
+      5,
+      2.73,
+      1.9300000000000002
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/docs/default-source/model-downloads/wbfk-23990-000.pdf?Status=Master&sfvrsn=2b2475b1_0",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 4,
+    "name": "Knowles TWFK-30017",
+    "size_mm": [
+      5,
+      2.73,
+      3.8600000000000003
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/tw-datasheet.pdf?Status=Master&sfvrsn=521a77b1_0",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 5,
+    "name": "14.2 mm Planar Reference",
+    "size_mm": [
+      14.200000000000001,
+      1.5,
+      14.200000000000001
+    ],
+    "shape": "cylinder envelope",
+    "existing_supplier_dimensioned_label": false,
+    "source_url": "https://blog.64audio.com/solo-planar-magnetic-in-ear-monitors/",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 6,
+    "name": "USound Adap UT-P2019",
+    "size_mm": [
+      6.7,
+      4.7,
+      1.58
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.usound.com/wp-content/uploads/2020/01/2001_Adap-UT-P-2019-Datasheet.pdf",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 7,
+    "name": "Knowles CI-22955",
+    "size_mm": [
+      9.469999999999999,
+      7.18,
+      4.1000000000000005
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/receiver-datasheet-ci-22955-000-1efdd1a731dff6ddbb37cff0000940c19.pdf?Status=Master&sfvrsn=0",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 8,
+    "name": "Knowles RAU-34832",
+    "size_mm": [
+      5.1000000000000005,
+      2.8,
+      2
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/docs/default-source/model-downloads/receiver-datasheet-rau-34832-b148.pdf?Status=Master&sfvrsn=713c73b1_4",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 9,
+    "name": "Sonion 4100",
+    "size_mm": [
+      5,
+      2.7,
+      0.98
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.sonion.com/products/receivers/",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 10,
+    "name": "xMEMS Cowell",
+    "size_mm": [
+      6,
+      3.2,
+      1.15
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2150_v1.3.pdf?v=1729709821",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 11,
+    "name": "xMEMS Muir",
+    "size_mm": [
+      5,
+      3.2,
+      1.15
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://cdn.shopify.com/s/files/1/0563/7151/1348/files/XMEMS_DATASHEET_XSC-2200_v1.0.pdf?v=1729709840",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 12,
+    "name": "Knowles RAD-33518",
+    "size_mm": [
+      5,
+      2.73,
+      1.9300000000000002
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": false,
+    "source_url": "https://www.knowles.com/applications/ear-solutions/premium-sound",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 13,
+    "name": "Knowles RAF-32873-P183",
+    "size_mm": [
+      5.15,
+      2.96,
+      2.5799999999999996
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/datasheet11e31a731dff6ddbb37cff0000940c19.pdf",
+    "research_this_update": "Manufacturer RAF-family terminal-side guidance checked; exact P183 pad centres unverified",
+    "terminal_region": {
+      "preset_id": 13,
+      "terminal_group_mm": [
+        0,
+        1.48,
+        0
+      ],
+      "terminal_axis": [
+        0,
+        1,
+        0
+      ],
+      "confidence": "family-side-only",
+      "source_url": "https://investor.knowles.com/news/news-details/2017/Knowles-Launches-New-RAF-Series-Balanced-Armature-Drivers-Delivering-Premium-Sound-in-a-New-Design-01-03-2017/default.aspx",
+      "note": "RAF-family side terminal orientation is documented. Exact pad centres and numbering for P183 are not verified; this is a side-face harness reservation, not an exact solder endpoint."
+    }
+  },
+  {
+    "preset": 14,
+    "name": "Knowles ED-29689",
+    "size_mm": [
+      6.32,
+      4.31,
+      2.97
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/series/dpt-ba-receivers/subdpt-hearing-instruments-receivers/series-ed-fed",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 15,
+    "name": "Knowles SR-32453-000",
+    "size_mm": [
+      6.4,
+      3.9899999999999998,
+      6.4
+    ],
+    "shape": "cylinder envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://www.knowles.com/docs/default-source/default-document-library/datasheet-sr.pdf?Status=Master&sfvrsn=741a77b1_0",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 16,
+    "name": "5.0 mm Marketplace Planar Treble",
+    "size_mm": [
+      5,
+      2.8,
+      1.8
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": false,
+    "source_url": "https://www.alibaba.com/trade/search?SearchText=5mm+planar+treble+speaker",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 17,
+    "name": "5.7 mm Marketplace Planar Treble",
+    "size_mm": [
+      5.7,
+      3,
+      1.9
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": false,
+    "source_url": "https://www.alibaba.com/trade/search?SearchText=5.7mm+planar+treble+speaker",
+    "research_this_update": "Existing catalog data retained; drawing not reaudited in this update",
+    "terminal_region": {
+      "confidence": "provisional",
+      "note": "Exact solder terminals unavailable in the built-in model."
+    }
+  },
+  {
+    "preset": 18,
+    "name": "Sonion 2356",
+    "size_mm": [
+      8.54,
+      4.29,
+      2.96
+    ],
+    "shape": "rectangular envelope",
+    "existing_supplier_dimensioned_label": true,
+    "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
+    "research_this_update": "Manufacturer outline inspected",
+    "terminal_region": {
+      "preset_id": 18,
+      "terminal_group_mm": [
+        4.27,
+        0,
+        0.15
+      ],
+      "terminal_axis": [
+        1,
+        0,
+        0
+      ],
+      "confidence": "drawing-terminal-region",
+      "source_url": "https://datasheet.datasheetarchive.com/originals/crawler/sonion.com/0c95de506dd88ba6e190dee502fc81fb.pdf",
+      "note": "Rear terminal strip and central vent are shown on page 1. Harness reserves a group approach to that strip, not individual pad centres. Keep the central vent clear. Page 2 states positive voltage at the marked negative terminal raises outlet pressure; do not silently equate printed polarity with acoustic phase."
+    }
+  }
+]

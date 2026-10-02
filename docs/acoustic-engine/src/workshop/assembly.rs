@@ -9,6 +9,8 @@ pub struct Package {
     pub size_mm: V,
     pub position_mm: V,
     pub rotation_deg: V,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
 }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -50,6 +52,12 @@ fn validate(a: &Assembly) -> Result<(), String> {
         );
     }
     for b in [&a.connector, &a.crossover].into_iter().flatten() {
+        if let Some(id)=&b.model {
+            let model=hardware::connector(id).ok_or("Unknown hardware model. Choose a catalog socket or Custom envelope.")?;
+            if length(sub(b.size_mm,model.size_mm))>1e-7 {
+                return Err("Catalog connector dimensions were changed. Select Custom envelope to edit its size.".into());
+            }
+        }
         if !valid(b.position_mm)
             || !valid(b.rotation_deg)
             || b.size_mm
@@ -157,6 +165,8 @@ pub(super) fn append(a: &Assembly, parts: &mut Vec<Part>) -> Result<(), String> 
                 name: format!("{kind} planning envelope"),
                 kind: kind.into(),
                 mesh: box_mesh(b),
+                display_mesh: if kind=="connector" {hardware::connector_display(b)} else {None},
+                contact_mesh: if kind=="connector" {hardware::connector_contacts(b)} else {None},
             });
         }
     }
@@ -166,6 +176,8 @@ pub(super) fn append(a: &Assembly, parts: &mut Vec<Part>) -> Result<(), String> 
             name: format!("Harness {} → {} (space reservation)", c.from, c.to),
             kind: "cable".into(),
             mesh: cable_mesh(&c.points_mm, a.cable_diameter_mm / 2.),
+            display_mesh: None,
+            contact_mesh: None,
         });
     }
     Ok(())
@@ -206,7 +218,10 @@ fn port(p: &Project, id: &str, other: &str) -> Option<V> {
         let cat: Vec<Preset> =
             serde_json::from_str(include_str!("../../../assets/workshop/drivers.json")).ok()?;
         let s = cat.iter().find(|s| s.id == d.preset)?;
-        // A provisional rear terminal anchor; the exact solder-pad drawing is not available.
+        if let Some(interface)=hardware::interface(d.preset) {
+            return Some(add(d.position_mm,rotate(add(interface.terminal_group_mm,mul(interface.terminal_axis,stand)),d.rotation_deg)));
+        }
+        // Provisional for catalog entries without an independently documented terminal region.
         let axis = s.outlet_axis;
         let reach = (0..3)
             .map(|i| axis[i].abs() * s.size_mm[i] / 2.)
@@ -222,6 +237,9 @@ fn port(p: &Project, id: &str, other: &str) -> Option<V> {
         "assembly:crossover" => a.crossover.as_ref()?,
         _ => return None,
     };
+    if id=="assembly:connector" && (p.connector_mount.is_some() || b.model.is_some()) {
+        return Some(add(b.position_mm,rotate([0.,0.,-b.size_mm[2]/2.-stand],b.rotation_deg)));
+    }
     let (x, y) = if id == "assembly:crossover" && other != "assembly:connector" {
         let i = p.drivers.iter().position(|d| d.id == other)?;
         let pitch = a.cable_diameter_mm + 2. * a.clearance_mm;
@@ -344,7 +362,12 @@ pub(super) fn inspect(
             ));
         }
     }
-    out.push(placement::Check{code:"assembly-interfaces".into(),status:"unverified".into(),part_ids:vec![],message:"Connector and crossover are editable bounding envelopes. Harnesses reserve insulated cable space, not electrical connections. Verify actual pin pitch, solder-pad positions, crossover component heights, bend radii and retention; schematic nets and polarity are unchanged.".into()});
+    out.push(placement::Check{code:"assembly-interfaces".into(),status:"unverified".into(),part_ids:vec![],message:"Catalog sockets use manufacturer nominal envelopes; custom parts remain user dimensions. Harnesses approach documented terminal regions where available and provisional anchors otherwise. They reserve a conductor pair, not electrical nets or individual solder joints. Verify pad numbering, crossover component heights, cable insulation, bend radius and retention; schematic polarity is unchanged.".into()});
+    if let Some(b)=&a.connector {
+        if let Some(model)=b.model.as_deref().and_then(hardware::connector) {
+            out.push(placement::Check{code:"connector-dimensions".into(),status:"pass".into(),part_ids:vec!["assembly:connector".into()],message:format!("{}: manufacturer nominal dimensions loaded; full body and solder-tail envelope reserved. Supplier tolerances and fit allowance are separate.",model.name)});
+        }
+    }
     Ok(out)
 }
 
@@ -391,9 +414,20 @@ fn layout_ok(b: &Build) -> bool {
 }
 
 /// Deterministic, bounded greedy search. No dimensions or electrical IDs change.
-pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
+pub fn arrange(mut p: Project, base: &Mesh, mount_allowance: f64) -> Result<Project, String> {
     // Validate the complete input (including construction settings) before search.
     build(&p, base)?;
+    if p.connector_mount.is_none() && p.assembly.as_ref().is_some_and(|a|a.connector.is_some()) {
+        // These parts will move during packing. Their old poses must not force
+        // the fixed socket onto an inferior face or trap its harness anchor.
+        let drivers=std::mem::take(&mut p.drivers);
+        let a=p.assembly.as_mut().unwrap();
+        let board=a.crossover.take();
+        a.cables.clear();
+        p=mounting::seat(p,base,true,mount_allowance)?;
+        p.drivers=drivers;
+        p.assembly.as_mut().unwrap().crossover=board;
+    }
     let mut stock = base.clone();
     for v in &mut stock.vertices {
         for i in 0..3 {
@@ -448,7 +482,7 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
     if let Some(a) = &mut equipment {
         a.cables.clear();
         p.assembly = Some(Assembly {
-            connector: None,
+            connector: if p.connector_mount.is_some() {a.connector.clone()} else {None},
             crossover: None,
             clearance_mm: a.clearance_mm,
             cable_diameter_mm: a.cable_diameter_mm,
@@ -507,7 +541,9 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
                 n.position_mm = pos;
                 n.rotation_deg = rot;
                 let next = add(start, mul(axis, n.lead_mm));
-                n.bend_mm = add(next, mul(sub(n.end_mm, next), 0.6));
+                n.bend_mm = p.nozzle.as_ref().map_or_else(
+                    || add(next, mul(sub(n.end_mm, next), 0.6)),
+                    |nozzle| nozzle.bend(n.end_mm));
                 p.drivers.push(n.clone());
                 let b = build_inner(&p, base, false);
                 let ok = b
@@ -538,6 +574,9 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
         ];
         for (key, item) in equipment {
             let Some(mut item) = item else { continue };
+            if key=="connector" && p.connector_mount.is_some() {
+                a.connector=Some(item); p.assembly=Some(a.clone()); continue;
+            }
             let mut candidates = points.clone();
             candidates.push(item.position_mm);
             // Connector prefers a wall-adjacent interior position; board prefers its saved pose.
@@ -601,6 +640,7 @@ pub fn arrange(mut p: Project, base: &Mesh) -> Result<Project, String> {
 /// Extend the saved final route direction to the first outward stock crossing.
 /// The cutter's rounded cap opens the wall; the centre stays just inside stock.
 pub fn extend_outlets(mut p: Project, base: &Mesh) -> Result<Project, String> {
+    if p.nozzle.is_some() { return nozzle::align(p,base,""); }
     if !p.construction.as_ref().is_some_and(|c| c.drilled_channels) {
         return Err("Select drilled channels with shell construction enabled first.".into());
     }

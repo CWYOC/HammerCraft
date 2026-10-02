@@ -50,7 +50,7 @@
 </div></div></section>
 <section><div class="section-title"><span>02 / DRIVERS</span><button id="addDriver" type="button">+ ADD</button></div>
 <label>SELECT DRIVER<select id="driverSelect"></select></label><div id="driverFields">
-<label>PACKAGE PRESET<select id="preset"></select></label><p id="driverNote" class="hint"></p>
+<label>PACKAGE PRESET<select id="preset"></select></label><p id="driverNote" class="hint"></p><p id="driverInterface" class="hint"></p><a id="driverSource" target="_blank" rel="noopener noreferrer">MANUFACTURER / SOURCE DRAWING</a>
 <span class="group-label">POSITION · mm</span><div class="triple" id="positionFields"></div>
 <span class="group-label">ROTATION · degrees (X → Y → Z)</span><div class="triple" id="rotationFields"></div>
 <div class="row"><button id="duplicateDriver" type="button">DUPLICATE</button><button id="removeDriver" type="button">REMOVE</button></div>
@@ -61,17 +61,32 @@
 <span class="group-label">BEND CONTROL · mm</span><div class="triple" id="bendFields"></div>
 <span class="group-label">PATH END · mm</span><div class="triple" id="endFields"></div>
 <div class="double"><label>BORE Ø · mm<input id="innerDiameter" type="number" min="0.1" max="19.9" step="0.1"></label><label>OUTER Ø · mm<input id="outerDiameter" type="number" min="0.2" max="20" step="0.1"></label></div>
+<button id="alignNozzle" type="button">DETECT NOZZLE &amp; ALIGN ALL OUTLETS</button>
+<button id="viewNozzle" type="button" disabled>VIEW NOZZLE FACE</button>
+<label class="check"><input id="nozzleEnabled" type="checkbox"> KEEP ALL OUTLETS FLUSH WITH NOZZLE</label>
+<p class="hint">Aim the selected tube toward the nozzle, then Detect. All outlet faces share that flat surface, with separate bore positions. The final bend is adjusted so each tube exits perpendicular to that surface. Apply changes keeps this alignment; Undo arrange restores the previous layout.</p>
+<div id="nozzleFields" hidden><span class="group-label">NOZZLE SURFACE POINT · mm</span><div class="triple" id="nozzleOriginFields"></div>
+<span class="group-label">OUTWARD NORMAL · X / Y / Z</span><div class="triple" id="nozzleNormalFields"></div>
+<label>EXIT TANGENT LEAD · mm<input id="nozzleLead" type="number" min="0.1" max="50" step="0.1" value="3"></label>
+<p class="hint">Shared settings for every tube and drilled bore, in unmirrored assembly coordinates. Detection uses the selected route direction; inspect that it found the nozzle, not another shell face. Overlapping outlets or footprints outside the face are rejected. Scaling or changing the shell may require detecting the surface again.</p></div>
+<p id="nozzleStatus" class="hint" role="status"></p>
 </section>
 <section><div class="section-title"><span>04 / ELECTRONICS &amp; CABLING</span></div>
 <label class="check"><input id="assemblyEnabled" type="checkbox"> INCLUDE ASSEMBLY PLANNING</label>
-<p class="hint">Auto arrange packs the enabled envelopes and routes insulated harness space. Enter actual hardware dimensions. These planning routes do not assign pins or change schematic connections.</p>
+<p class="hint">Auto arrange seats the connector on a flat shell surface, packs the other enabled parts, and routes insulated harness space. These planning routes do not assign pins or change schematic connections.</p>
 <div id="assemblyFields" hidden>
 <div class="double"><label>PART CLEARANCE · mm<input id="assemblyClearance" type="number" min="0.1" max="2" step="0.1" value="0.2"></label><label>HARNESS OUTSIDE Ø · mm<input id="cableDiameter" type="number" min="0.2" max="2" step="0.1" value="0.6"></label></div>
 <label class="check"><input id="pinEnabled" type="checkbox" checked> PIN CONNECTOR ENVELOPE</label>
-<div id="pinFields"><span class="group-label">CONNECTOR SIZE · mm</span><div class="triple" id="pinSizeFields"></div><span class="group-label">POSITION · mm</span><div class="triple" id="pinPositionFields"></div><span class="group-label">ROTATION · degrees</span><div class="triple" id="pinRotationFields"></div></div>
+<div id="pinFields"><label>CONNECTOR MODEL<select id="pinModel"><option value="">Custom envelope · verify dimensions</option></select></label><p id="pinNote" class="hint"></p><a id="pinSource" hidden target="_blank" rel="noopener noreferrer">MANUFACTURER DRAWING</a><details><summary>SOCKET DIMENSIONS &amp; WIRING</summary><p id="pinDetails" class="hint"></p></details>
+<span class="group-label">CONNECTOR SIZE · mm</span><div class="triple" id="pinSizeFields"></div><span class="group-label">POSITION · mm</span><div class="triple" id="pinPositionFields"></div><span class="group-label">ROTATION · degrees</span><div class="triple" id="pinRotationFields"></div>
+<label>OPENING ALLOWANCE PER SIDE · mm<input id="pinAllowance" type="number" min="0.01" max="1" step="0.01" value="0.1"></label>
+<button id="seatConnector" type="button">SEAT CONNECTOR ON SHELL SURFACE</button><button id="viewConnector" type="button" disabled>VIEW CONNECTOR FACE</button>
+<label class="check"><input id="pinMounted" type="checkbox"> KEEP CONNECTOR ON SHELL SURFACE</label><p id="pinMountStatus" class="hint" role="status"></p>
+<p class="hint">Local +Z is the cable mating direction; solder tails point inward. Seating finds a flat area, keeps the full connector inside, and synchronizes its opening when shell construction is enabled. Inspect the chosen face. Seating clears old harness routes; use Route cables after moving parts. Curved walls need a designed flat mounting pad.</p></div>
 <label class="check"><input id="boardEnabled" type="checkbox" checked> CROSSOVER BOARD ENVELOPE</label>
 <div id="boardFields"><span class="group-label">BOARD + COMPONENTS SIZE · mm</span><div class="triple" id="boardSizeFields"></div><span class="group-label">POSITION · mm</span><div class="triple" id="boardPositionFields"></div><span class="group-label">ROTATION · degrees</span><div class="triple" id="boardRotationFields"></div></div>
-<p class="hint">Default dimensions are provisional. Include pins, solder and component heights in the envelopes. Connector mounting opening stays under Shell; match it manually to the chosen hardware. Cables end at provisional rear/board anchors; verify solder-pad positions and bend radii.</p>
+<p class="hint">Catalog dimensions are nominal; include supplier tolerance, solder and mounting allowance. Custom and board dimensions remain provisional. 3D detail is simplified; clearance and STL use the complete conservative envelope. Harness endpoints use documented terminal regions where available; exact solder joints and electrical nets remain in the circuit design.</p>
+<details><summary>PART DRAWINGS &amp; CONNECTION GUIDE</summary><div id="hardwareGuide" class="hint"></div></details>
 <p id="cableSummary" class="hint"></p></div>
 </section><button class="apply" id="apply" type="button">APPLY CHANGES</button>
 </aside>
@@ -86,5 +101,5 @@
 </div>
 </div>
 </main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=10"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><script src="auth.js?v=40"></script><script type="module" src="headphone-workshop.js?v=12"></script>
 </body></html>

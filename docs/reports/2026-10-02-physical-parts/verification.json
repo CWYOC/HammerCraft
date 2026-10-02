@@ -1,0 +1,41 @@
+{
+  "engine": "Hammer Craft Acoustic Engine 0.27.0",
+  "wasm_sha256": "5946128db885e50dfb39307124af5912393c513915ddcfe34a172b7b9c1e15e5",
+  "geometry_catalog_count": 19,
+  "connector_catalog_count": 2,
+  "examples": [
+    {
+      "name": "surface-mounted-example.hcworkshop.json",
+      "export_blockers": [],
+      "face_vertices": 4,
+      "maximum_plane_residual_mm": 1.1102230246251565e-15,
+      "cables": 1
+    },
+    {
+      "name": "hollow-shell-example.hcworkshop.json",
+      "export_blockers": [],
+      "face_vertices": 4,
+      "maximum_plane_residual_mm": 1.1102230246251565e-15,
+      "cables": 1
+    }
+  ],
+  "scope": "Software geometry and workflow verification; no new measured acoustic calibration or manufacturing qualification.",
+  "node_wasm_tests": {
+    "passed": 321,
+    "failed": 0
+  },
+  "native_rust_tests": {
+    "passed": 7,
+    "failed": 0
+  },
+  "browser": {
+    "automatic_surface_seating": "pass",
+    "Sonion_2356_and_AEC_socket": "pass",
+    "nozzle_and_connector_locks_together": "pass",
+    "routed_harnesses": 1,
+    "placement_errors": 0,
+    "placement_warnings": 0,
+    "unverified_interfaces_and_process_checks": 7,
+    "console_warnings_errors": []
+  }
+}

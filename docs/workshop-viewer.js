@@ -106,6 +106,7 @@ export function createViewer(canvas) {
                     : m.kind === "cable" ? [0.68, 0.36, 0.78, 1]
                     : m.kind === "crossover" ? [0.24, 0.62, 0.39, 1]
                     : m.kind === "connector" ? [0.85, 0.69, 0.25, 1]
+                    : m.kind === "contact" ? [0.08, 0.07, 0.05, 1]
                     : ["path", "channel"].includes(m.kind)
                       ? isSelected
                           ? [1, 0.49, 0.19, 1]
@@ -133,10 +134,11 @@ export function createViewer(canvas) {
         for (const m of meshes) gl.deleteBuffer(m.buffer);
         extent = 1;
         selected = selectedId;
-        meshes = parts.map((p) => {
+        meshes = parts.flatMap(p=>p.contact_mesh ? [p,{id:p.id,kind:"contact",mesh:p.contact_mesh}] : [p]).map((p) => {
+            const mesh=p.display_mesh || p.mesh;
             const data = [];
-            for (const t of p.mesh.triangles) {
-                const [a, b, c] = t.map((i) => p.mesh.vertices[i]);
+            for (const t of mesh.triangles) {
+                const [a, b, c] = t.map((i) => mesh.vertices[i]);
                 const u = b.map((v, i) => v - a[i]),
                     v = c.map((v, i) => v - a[i]);
                 const n = [
@@ -237,6 +239,14 @@ export function createViewer(canvas) {
             yaw = -0.5;
             pitch = 0.35;
             zoom = 1;
+            draw();
+        },
+        viewNormal(normal) {
+            const length=Math.hypot(...normal);
+            if (!Number.isFinite(length) || length===0) return;
+            const n=normal.map(v=>v/length);
+            yaw=Math.atan2(-n[0],n[2]);
+            pitch=Math.asin(Math.max(-1,Math.min(1,n[1])));
             draw();
         },
     };

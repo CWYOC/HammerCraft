@@ -1,4 +1,4 @@
-import { createViewer } from "./workshop-viewer.js?v=5";
+import { createViewer } from "./workshop-viewer.js?v=7";
 const $ = (id) => document.getElementById(id);
 let project = {
     format: "hc-headphone-workshop",
@@ -8,7 +8,7 @@ let project = {
     mirrored: false,
     drivers: [],
 };
-let catalog = [],
+let catalog = [], hardware,
     selected,
     built,
     viewer,
@@ -29,6 +29,9 @@ function setBusy(value) {
     ))
         el.disabled = value;
     $("undoArrange").disabled = value || !arrangeUndo;
+    $("viewNozzle").disabled = value || !project.nozzle;
+    $("viewConnector").disabled = value || !project.connector_mount;
+    for(let i=0;i<3;i++) if($("pinSize"+i)) $("pinSize"+i).disabled=value || !!$("pinModel").value;
     $("exportStl").disabled = value || !built || !!built.export_blockers?.length;
 }
 function rpc(action, data = {}) {
@@ -96,7 +99,15 @@ function draft() {
         const body = prefix => ({size_mm:[0,1,2].map(i=>number(`${prefix}Size${i}`)),position_mm:[0,1,2].map(i=>number(`${prefix}Position${i}`)),rotation_deg:[0,1,2].map(i=>number(`${prefix}Rotation${i}`))});
         p.assembly = {connector:$("pinEnabled").checked ? body("pin") : null, crossover:$("boardEnabled").checked ? body("board") : null,
             clearance_mm:number("assemblyClearance"),cable_diameter_mm:number("cableDiameter"),cables:p.assembly?.cables || []};
+        if(p.assembly.connector && $("pinModel").value) p.assembly.connector.model=$("pinModel").value;
     } else delete p.assembly;
+    if(!$("pinMounted").checked || !p.assembly?.connector) delete p.connector_mount;
+    else if(p.connector_mount) p.connector_mount.fit_clearance_mm=number("pinAllowance");
+    if ($("nozzleEnabled").checked) p.nozzle = {
+        origin_mm: [0,1,2].map(i=>number(`nozzleOrigin${i}`)),
+        normal: [0,1,2].map(i=>number(`nozzleNormal${i}`)), lead_mm:number("nozzleLead"),
+    };
+    else delete p.nozzle;
     const d = p.drivers.find((d) => d.id === selected);
     if (d) {
         d.preset = Number($("preset").value);
@@ -143,12 +154,18 @@ function showConstruction() {
 function showAssembly() {
     const a=project.assembly;
     $("assemblyEnabled").checked=!!a; $("assemblyFields").hidden=!a;
+    $("pinMounted").checked=!!project.connector_mount;
+    $("viewConnector").disabled=busy || !project.connector_mount;
+    if(project.connector_mount) $("pinAllowance").value=project.connector_mount.fit_clearance_mm;
+    $("pinMountStatus").textContent=project.connector_mount ? "Socket mating face is flush with the saved shell surface. Its opening follows Apply changes. Inspect the face, then Route cables." : "Connector is free to move. Seat it to establish a mounting surface.";
     if (!a) return;
     $("assemblyClearance").value=a.clearance_mm; $("cableDiameter").value=a.cable_diameter_mm;
     for (const [key,prefix] of [["connector","pin"],["crossover","board"]]) {
         const b=a[key];$(prefix+"Enabled").checked=!!b;$(prefix+"Fields").hidden=!b;
         if (b) for (const [field,suffix] of [["size_mm","Size"],["position_mm","Position"],["rotation_deg","Rotation"]]) b[field].forEach((v,i)=>$(prefix+suffix+i).value=v);
     }
+    $("pinModel").value=a.connector?.model || "";
+    showHardware();
     $("cableSummary").textContent=(a.cables||[]).map(c=>`${c.id}: ${c.points_mm.slice(1).reduce((sum,v,i)=>sum+Math.hypot(...v.map((x,j)=>x-c.points_mm[i][j])),0).toFixed(1)} mm`).join(" · ") || "No harness routes yet. Use Auto arrange assembly or Route cables.";
 }
 function showDriver() {
@@ -177,12 +194,34 @@ function showDriver() {
         ? `${path.bore_volume_mm3.toFixed(2)} mm³`
         : "—";
     viewer?.select(selected);
+    $("nozzleEnabled").checked=!!project.nozzle;
+    $("viewNozzle").disabled=busy || !project.nozzle;
+    $("nozzleFields").hidden=!project.nozzle;
+    if (project.nozzle) {
+        for (const [key,prefix] of [["origin_mm","nozzleOrigin"],["normal","nozzleNormal"]])
+            project.nozzle[key].forEach((v,i)=>$(prefix+i).value=v);
+        $("nozzleLead").value=project.nozzle.lead_mm;
+    }
+    $("nozzleStatus").textContent=project.nozzle
+        ? `${project.drivers.length} outlet${project.drivers.length===1?"":"s"} aligned to the shared nozzle face. Separate bore positions are retained; only the terminal faces may touch the shell.`
+        : "Outlets are positioned independently. Detect the nozzle to align their end faces.";
 }
 function showPreset() {
     const s = catalog.find((s) => s.id === Number($("preset").value));
     if (!s) return;
     $("driverNote").textContent =
         `${s.size_mm.map((x) => x.toFixed(2)).join(" × ")} mm · ${s.supplier_dimensioned ? "Supplier package dimensions" : "Planning package dimensions"}. ${s.note}`;
+    $("driverSource").href=s.source_url;
+    const i=hardware.driver_interfaces.find(i=>i.preset_id===s.id);
+    $("driverInterface").textContent=i ? i.note : "Exact terminal coordinates and pin numbering are not verified for this preset. The harness uses a provisional approach anchor; confirm the ordered-part drawing before wiring.";
+}
+function showHardware() {
+    const model=hardware.connectors.find(m=>m.id===$("pinModel").value);
+    $("pinNote").textContent=model ? `${model.size_mm.map(v=>v.toFixed(2)).join(" × ")} mm including solder tails · Manufacturer nominal dimensions. ${model.shape}.` : "Custom rectangular envelope. Enter the complete body, pins and solder allowance from your socket drawing. +Z is the mating face.";
+    $("pinDetails").textContent=model ? `${model.note} ${model.wiring}` : "Confirm the ordered-part drawing, pin assignments and assembly allowance before manufacture.";
+    $("pinSource").hidden=!model;
+    if(model) $("pinSource").href=model.source_url;
+    for(let i=0;i<3;i++) $("pinSize"+i).disabled=busy || !!model;
 }
 function showPlacementChecks() {
     const checks = built.placement_checks || [];
@@ -278,12 +317,12 @@ async function run(action, data, message = "Geometry updated.") {
     setBusy(true);
     tell("Calculating geometry in Rust… Shell construction may take several seconds.");
     try {
-        const undoable=["arrange", "route", "outlets"].includes(action);
+        const undoable=["arrange", "route", "outlets", "nozzle", "mount"].includes(action);
         const before=undoable ? (await rpc("save")).file : undefined;
         const result = await rpc(action, data);
         if (undoable && result.built) arrangeUndo=before;
         if (result.built) {
-            if (!["arrange", "route", "outlets"].includes(action)) arrangeUndo=undefined;
+            if (!undoable) arrangeUndo=undefined;
             accept(result);
         }
         const errors = result.built?.placement_checks?.filter(c => c.status === "error").length || 0;
@@ -335,7 +374,7 @@ async function start() {
     const auth = await window.HCAuth.requireAdmin();
     if (!auth) return;
     viewer = createViewer($("viewport"));
-    worker = new Worker(new URL("./workshop-worker.js?v=8", import.meta.url), {
+    worker = new Worker(new URL("./workshop-worker.js?v=10", import.meta.url), {
         type: "module",
     });
     worker.onmessage = ({ data }) => {
@@ -358,8 +397,17 @@ async function start() {
     const response = await fetch("./assets/workshop/drivers.json");
     if (!response.ok) throw new Error("Driver catalog could not load.");
     catalog = await response.json();
+    const hardwareResponse=await fetch("./assets/workshop/hardware.json?v=1");
+    if(!hardwareResponse.ok) throw new Error("Hardware catalog could not load.");
+    hardware=await hardwareResponse.json();
+    $("pinModel").append(...hardware.connectors.map(m=>option(m.id,m.name)));
+    $("hardwareGuide").replaceChildren(...hardware.guidance.map(g=>{
+        const p=document.createElement("p"),a=document.createElement("a");
+        a.href=g.source_url;a.target="_blank";a.rel="noopener noreferrer";a.textContent=g.title;
+        p.append(a,document.createTextNode(` — ${g.text}`));return p;
+    }));
     $("preset").replaceChildren(...catalog.map((s) => option(s.id, s.name)));
-    for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation", "pinSize", "pinPosition", "pinRotation", "boardSize", "boardPosition", "boardRotation", "faceplateNormal"])
+    for (const prefix of ["position", "rotation", "bend", "end", "connectorPosition", "connectorSize", "connectorRotation", "pinSize", "pinPosition", "pinRotation", "boardSize", "boardPosition", "boardRotation", "faceplateNormal", "nozzleOrigin", "nozzleNormal"])
         for (let i = 0; i < 3; i++) {
             const label = document.createElement("label");
             label.textContent = ["X", "Y", "Z"][i];
@@ -370,7 +418,7 @@ async function start() {
             if (prefix === "connectorPosition") input.value = [8,0,0][i];
             if (prefix === "connectorSize") input.value = [3,3,8][i];
             if (prefix === "connectorRotation") input.value = [0,90,0][i];
-            const defaults={faceplateNormal:[0,0,1],pinSize:[4,3,2],pinPosition:[-3,-4,1],pinRotation:[0,0,0],boardSize:[6,4,1.2],boardPosition:[2,-5,-2],boardRotation:[0,0,0]};
+            const defaults={nozzleOrigin:[0,0,0],nozzleNormal:[0,1,0],faceplateNormal:[0,0,1],pinSize:[4,3,2],pinPosition:[-3,-4,1],pinRotation:[0,0,0],boardSize:[6,4,1.2],boardPosition:[2,-5,-2],boardRotation:[0,0,0]};
             if (defaults[prefix]) input.value=defaults[prefix][i];
             input.setAttribute("aria-label", `${prefix} ${["X", "Y", "Z"][i]}`);
             label.append(input);
@@ -378,6 +426,17 @@ async function start() {
         }
     project.drivers = [newDriver()];
     $("apply").onclick = guarded(apply);
+    $("pinModel").onchange=()=>{
+        const model=hardware.connectors.find(m=>m.id===$("pinModel").value);
+        if(model) model.size_mm.forEach((v,i)=>$("pinSize"+i).value=v);
+        $("pinMounted").checked=false;showHardware();
+    };
+    $("pinMounted").onchange=()=>{if($("pinMounted").checked && !project.connector_mount){$("pinMounted").checked=false;$("pinMountStatus").textContent="Use Seat connector first to detect and verify a mounting surface.";}};
+    $("seatConnector").onclick=guarded(()=>run("mount",{project:draft(),allowance:number("pinAllowance")},"Connector face seated on the shell. Opening synchronized; old harness routes cleared. Inspect the selected face, then Route cables."));
+    $("viewConnector").onclick=()=>{if(project.connector_mount) viewer.viewNormal(project.connector_mount.normal.map((v,i)=>project.mirrored && i===0 ? -v : v));};
+    $("nozzleEnabled").onchange=()=>$("nozzleFields").hidden=!$("nozzleEnabled").checked;
+    $("alignNozzle").onclick=guarded(()=>run("nozzle",{project:draft(),driverId:selected},"All tube outlets aligned flush with the detected nozzle surface. Inspect the chosen face and bore spacing."));
+    $("viewNozzle").onclick=()=>{ if(project.nozzle) viewer.viewNormal(project.nozzle.normal.map((v,i)=>project.mirrored && i===0 ? -v : v)); };
     $("faceplateAxis").onchange = () => $("faceplateNormal").hidden = $("faceplateAxis").value !== "normal";
     $("detectFaceplate").onclick = guarded(async () => {
         $("faceplateAxis").value = "auto";
@@ -390,7 +449,7 @@ async function start() {
     for (const [id,action] of [["autoArrange","arrange"],["routeCables","route"],["extendOutlets","outlets"]]) $(id).onclick=guarded(async()=>{
         if(busy) return;
         const p=draft();
-        const result=await run(action,{project:p}, action==="outlets" ? "Drilled outlets extended to the shell. Inspect the openings and channel walls." : action==="arrange" ? "Assembly arranged. Inspect planning interfaces and clearances below." : "Harness space routed. Electrical connections are unchanged.");
+        const result=await run(action,{project:p,allowance:action==="arrange" && p.assembly?.connector ? number("pinAllowance") : undefined}, action==="outlets" ? "Drilled outlets extended to the shell. Inspect the openings and channel walls." : action==="arrange" ? `Assembly arranged${p.assembly?.connector ? " with the connector on the shell surface" : ""}. Inspect interfaces and clearances below.` : "Harness space routed. Electrical connections are unchanged.");
         if(result) setBusy(false);
     });
     $("undoArrange").onclick=guarded(async()=>{if(arrangeUndo) await run("open",{file:arrangeUndo},"Previous layout restored.");});

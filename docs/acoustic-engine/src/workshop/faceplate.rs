@@ -38,7 +38,7 @@ impl Plane {
 
 /// Find a dominant connected planar patch, independent of STL orientation.
 /// Area (not triangle count) prevents finely tessellated nozzles winning.
-fn detect(stock: &Mesh) -> Result<Plane, String> {
+pub(super) fn detect(stock: &Mesh) -> Result<Plane, String> {
     let mut adjacent = vec![vec![]; stock.vertices.len()];
     let faces: Vec<_> = stock
         .triangles

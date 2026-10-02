@@ -64,15 +64,16 @@ test('ambiguous faces, unknown mode and invalid custom normals fail explicitly',
   const p=project();Object.assign(p.construction,patch);assert.throws(()=>build(p,cube));
  }
 });
-test('auto arrange and cable routing keep physical parts behind a tilted cap',()=>{
+test('auto arrange seats the connector while keeping drivers, board and cabling behind a tilted cap',()=>{
  const stock=cube;
  const p=project();Object.assign(p.construction,{faceplate_mode:'normal',faceplate_normal:[-1,-2,1],faceplate_depth_mm:6});
  p.drivers=[{id:'d',preset:13,position_mm:[0,0,0],rotation_deg:[0,0,0],lead_mm:2,bend_mm:[-6,-.69,0],end_mm:[-8,-.69,0],inner_diameter_mm:2,outer_diameter_mm:3}];
- p.assembly={connector:{size_mm:[3,2,1.5],position_mm:[-6,-6,5],rotation_deg:[0,0,0]},crossover:{size_mm:[5,3,1.2],position_mm:[-5,-5,5],rotation_deg:[0,0,0]},clearance_mm:.2,cable_diameter_mm:.6,cables:[]};
+ p.assembly={connector:{size_mm:[3,2,4.5],position_mm:[-6,-6,5],rotation_deg:[0,0,0]},crossover:{size_mm:[5,3,1.2],position_mm:[-5,-5,5],rotation_deg:[0,0,0]},clearance_mm:.2,cable_diameter_mm:.6,cables:[]};
  const a=JSON.parse(engine.workshop_arrange_json(JSON.stringify(p),JSON.stringify(stock),false));
  const b=build(a,stock);assert.deepEqual(b.export_blockers,[]);assert.equal(a.assembly.cables.length,2);
  const n=b.construction.faceplate_normal,cut=b.construction.faceplate_plane_mm;
- for(const part of b.parts.filter(p=>['driver','connector','crossover','cable'].includes(p.kind)))for(const v of part.mesh.vertices)assert.ok(dot(n,v)<cut-1e-5,part.id);
+ for(const part of b.parts.filter(p=>['driver','crossover','cable'].includes(p.kind)))for(const v of part.mesh.vertices)assert.ok(dot(n,v)<cut-1e-5,part.id);
+ assert.ok(a.connector_mount);assert.equal(b.placement_checks.find(c=>c.code==='assembly-shell'&&c.part_ids.includes('assembly:connector')).status,'pass');
  const rerouted=JSON.parse(engine.workshop_arrange_json(JSON.stringify(a),JSON.stringify(stock),true));assert.deepEqual(build(rerouted,stock).export_blockers,[]);
 });
 test('failed auto detection retains the accepted worker project and cap; successful mode survives save/reopen',async()=>{
@@ -89,6 +90,9 @@ test('failed auto detection retains the accepted worker project and cap; success
 test('native drilled assembly can be rearranged beneath the corrected detected cap',()=>{
  const p=JSON.parse(fs.readFileSync(new URL('../docs/reports/2026-10-01-auto-arrange/example-parameters.json',import.meta.url))).project;
  p.construction.faceplate_mode='auto';
+ // The old 2 mm placeholder can be buried inside a cavity, but cannot reach
+ // through this 2.5 mm cap. Use a sufficiently deep synthetic socket fixture.
+ p.assembly.connector.size_mm[2]=4;
  const previous=build(p);assert.ok(previous.export_blockers.some(s=>s.includes('crossover')),'old arrangement intersects the corrected cap');
  const a=JSON.parse(engine.workshop_arrange_json(JSON.stringify(p),JSON.stringify(native),false));
  const b=build(a);assert.deepEqual(b.export_blockers,[]);assert.equal(a.assembly.cables.length,2);

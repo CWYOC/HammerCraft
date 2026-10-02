@@ -95,10 +95,42 @@ export function start() {
 /**
  * @param {string} project
  * @param {string} shell
- * @param {boolean} cables_only
+ * @param {string} driver_id
  * @returns {string}
  */
-export function workshop_arrange_json(project, shell, cables_only) {
+export function workshop_align_nozzle_json(project, shell, driver_id) {
+    let deferred5_0;
+    let deferred5_1;
+    try {
+        const ptr0 = passStringToWasm0(project, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(shell, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passStringToWasm0(driver_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ret = wasm.workshop_align_nozzle_json(ptr0, len0, ptr1, len1, ptr2, len2);
+        var ptr4 = ret[0];
+        var len4 = ret[1];
+        if (ret[3]) {
+            ptr4 = 0; len4 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred5_0 = ptr4;
+        deferred5_1 = len4;
+        return getStringFromWasm0(ptr4, len4);
+    } finally {
+        wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
+    }
+}
+
+/**
+ * @param {string} project
+ * @param {string} shell
+ * @param {boolean} cables_only
+ * @param {number | null} [mount_allowance]
+ * @returns {string}
+ */
+export function workshop_arrange_json(project, shell, cables_only, mount_allowance) {
     let deferred4_0;
     let deferred4_1;
     try {
@@ -106,7 +138,7 @@ export function workshop_arrange_json(project, shell, cables_only) {
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(shell, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.workshop_arrange_json(ptr0, len0, ptr1, len1, cables_only);
+        const ret = wasm.workshop_arrange_json(ptr0, len0, ptr1, len1, cables_only, !isLikeNone(mount_allowance), isLikeNone(mount_allowance) ? 0 : mount_allowance);
         var ptr3 = ret[0];
         var len3 = ret[1];
         if (ret[3]) {
@@ -220,6 +252,36 @@ export function workshop_outlets_json(project, shell) {
 }
 
 /**
+ * @param {string} project
+ * @param {string} shell
+ * @param {boolean} detect
+ * @param {number} allowance
+ * @returns {string}
+ */
+export function workshop_seat_connector_json(project, shell, detect, allowance) {
+    let deferred4_0;
+    let deferred4_1;
+    try {
+        const ptr0 = passStringToWasm0(project, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(shell, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.workshop_seat_connector_json(ptr0, len0, ptr1, len1, detect, allowance);
+        var ptr3 = ret[0];
+        var len3 = ret[1];
+        if (ret[3]) {
+            ptr3 = 0; len3 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred4_0 = ptr3;
+        deferred4_1 = len3;
+        return getStringFromWasm0(ptr3, len3);
+    } finally {
+        wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+    }
+}
+
+/**
  * @param {string} tube
  * @returns {string}
  */
@@ -312,6 +374,10 @@ function getUint8ArrayMemory0() {
         cachedUint8ArrayMemory0 = new Uint8Array(wasm.memory.buffer);
     }
     return cachedUint8ArrayMemory0;
+}
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
 }
 
 function passArray8ToWasm0(arg, malloc) {

@@ -5,6 +5,9 @@ use std::collections::{HashMap, HashSet};
 pub mod assembly;
 mod containment;
 mod faceplate;
+pub mod nozzle;
+pub mod mounting;
+mod hardware;
 mod placement;
 mod solid;
 type V = [f64; 3];
@@ -429,6 +432,10 @@ pub struct Project {
     pub construction: Option<solid::Construction>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub assembly: Option<assembly::Assembly>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub nozzle: Option<nozzle::OutletPlane>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub connector_mount: Option<mounting::Mount>,
 }
 #[derive(Serialize)]
 pub struct Part {
@@ -436,6 +443,10 @@ pub struct Part {
     pub name: String,
     pub kind: String,
     pub mesh: Mesh,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub display_mesh: Option<Mesh>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contact_mesh: Option<Mesh>,
 }
 #[derive(Serialize)]
 pub struct PathInfo {
@@ -539,6 +550,10 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
         }
     }
     shell.validate()?;
+    if let Some(nozzle) = &p.nozzle {
+        nozzle.validate(&shell, &p.drivers, p.construction.as_ref().is_some_and(|c| c.drilled_channels))?;
+    }
+    if let Some(mount) = &p.connector_mount { mount.validate(p, &shell)?; }
     let cap_plane = p
         .construction
         .as_ref()
@@ -559,6 +574,8 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
         name: "Unmachined shell stock".into(),
         kind: "shell".into(),
         mesh: shell,
+        display_mesh: None,
+        contact_mesh: None,
     }];
     let mut paths = vec![];
     let mut ids = HashSet::new();
@@ -638,12 +655,16 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
             name: format!("{:02} · {}", driver_index + 1, s.name),
             kind: "driver".into(),
             mesh,
+            display_mesh: hardware::driver_display(d),
+            contact_mesh: None,
         });
         parts.push(Part {
             id: format!("path:{}", d.id),
             name: format!("{:02} · {} sound tube", driver_index + 1, s.name),
             kind: "path".into(),
             mesh: route,
+            display_mesh: None,
+            contact_mesh: None,
         });
     }
     if let Some(a) = &p.assembly {
@@ -668,6 +689,8 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
             name: "Separate faceplate".into(),
             kind: "faceplate".into(),
             mesh: result.faceplate,
+            display_mesh: None,
+            contact_mesh: None,
         });
         placement_checks.retain(|c| c.code != "finished-shell");
         placement_checks.extend(result.checks);
@@ -727,6 +750,10 @@ fn build_inner(p: &Project, base: &Mesh, make_solid: bool) -> Result<Build, Stri
             c.faceplate_normal[0] = -c.faceplate_normal[0];
         }
         for part in &mut parts {
+            for display in [&mut part.display_mesh,&mut part.contact_mesh].into_iter().flatten() {
+                for v in &mut display.vertices { v[0] = -v[0]; }
+                for t in &mut display.triangles { t.swap(1,2); }
+            }
             for v in &mut part.mesh.vertices {
                 v[0] = -v[0];
             }

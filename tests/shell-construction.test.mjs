@@ -112,8 +112,8 @@ test('real starter stock hollows successfully and refinement preserves the mater
     assert.ok(Math.abs(volume(a)-volume(b))/volume(b)<.03);
 });
 
-test('all 18 package presets receive cavity checks and retain their source placement',()=>{
-    for(let preset=0;preset<18;preset++) {
+test('all catalog package presets receive cavity checks and retain their source placement',()=>{
+    for(const {id:preset} of JSON.parse(fs.readFileSync(new URL('../docs/assets/workshop/drivers.json',import.meta.url)))) {
         const p=project();p.drivers=[{...driver(),preset,position_mm:[0,0,0]}];
         const before=structuredClone(p),b=build(p);
         assert.equal(b.placement_checks.find(c=>c.code==='package-cavity').status,'pass',`preset ${preset} fits cube cavity samples`);
