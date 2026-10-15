@@ -1,0 +1,550 @@
+Build a general-purpose engineering design and simulation platform that combines the parametric CAD capabilities of Autodesk Fusion with the multiphysics simulation capabilities of COMSOL. Do not make the software specific to IEMs, headphones, or acoustics. It must be a general engineering platform capable of supporting mechanical, acoustic, thermal, fluid, electrical, electromagnetic, and coupled multiphysics problems.
+
+The main principle is that the entire program must operate around one shared parametric engineering model. CAD geometry, materials, assemblies, electronics, physics, meshes, studies, simulation results, optimization, AI tools, and manufacturing tools must all reference the same project model.
+
+The main workflow should be:
+
+Project → Design → Materials → Physics → Mesh → Study → Solve → Analyze → Optimize → Manufacture
+
+Create five main workspaces:
+
+1. Design
+2. Simulate
+3. Analyze
+4. Optimize
+5. Manufacture
+
+The interface should have a professional engineering-software layout. Use a model/project tree on the left, a large interactive 3D viewport in the center, a context-sensitive properties panel on the right, a toolbar at the top, and a timeline/results area at the bottom.
+
+Do not simply create a visual mock-up. Features must have functional underlying logic. Do not add buttons that do nothing.
+
+PROJECT SYSTEM
+
+Create a project system containing CAD models, components, assemblies, materials, global parameters, circuits, physics definitions, meshes, studies, solutions, optimization studies, manufacturing setups, imported measurements, and project versions.
+
+Support save, autosave, undo, redo, duplicate, versioning, project recovery, and import/export.
+
+PARAMETER AND UNIT SYSTEM
+
+Build a global parametric system.
+
+Allow parameters such as:
+
+wall = 1.2 mm
+holeDiameter = 0.8 mm
+length = 20 mm
+voltage = 5 V
+
+Allow equations such as:
+
+outerDiameter = innerDiameter + 2 * wall
+
+Changing a parameter must regenerate dependent geometry and mark affected meshes, simulations, and results as outdated.
+
+Build a dimensional unit engine supporting SI and commonly used engineering units.
+
+The equation system must detect dimensionally invalid calculations.
+
+CAD SYSTEM
+
+Build a parametric CAD environment.
+
+Provide sketching tools for lines, arcs, circles, ellipses, rectangles, polygons, slots, splines, points, construction geometry, projection, offset, trim, extend, mirror, and pattern.
+
+Provide sketch constraints including horizontal, vertical, parallel, perpendicular, tangent, coincident, concentric, equal, symmetric, and fixed.
+
+Provide dimensional constraints for distance, length, radius, diameter, and angle.
+
+Clearly indicate whether sketches are under-constrained, fully constrained, or over-constrained.
+
+Provide 3D operations including extrude, revolve, sweep, loft, hole, thread, fillet, chamfer, shell, draft, rib, split, combine, thicken, offset face, move face, and replace face.
+
+Support Boolean union, subtract, and intersect.
+
+Support surface modelling including extruded surfaces, revolved surfaces, sweep surfaces, loft surfaces, patches, trim, extend, stitch, unstitch, and offset.
+
+Maintain a parametric feature/history tree.
+
+Editing an earlier feature must regenerate downstream geometry.
+
+Also support direct modelling of imported geometry.
+
+Support STEP, IGES, STL, OBJ, 3MF, and DXF where practical.
+
+ASSEMBLIES
+
+Allow multiple components inside an assembly.
+
+Support rigid, revolute, slider, cylindrical, planar, and ball joints.
+
+Provide alignment, positioning, interference detection, clearance analysis, exploded views, section views, mass calculation, volume calculation, and centre-of-gravity calculation.
+
+MATERIAL SYSTEM
+
+Create a central material database.
+
+Materials should support mechanical properties including density, Young’s modulus, Poisson’s ratio, yield strength, ultimate strength, and damping.
+
+Support thermal conductivity, heat capacity, and thermal expansion.
+
+Support electrical conductivity, resistivity, and permittivity.
+
+Support magnetic permeability, B-H curves, coercivity, and remanence.
+
+Support acoustic density, speed of sound, viscosity, and acoustic loss.
+
+Allow custom materials.
+
+Allow properties to vary with temperature, frequency, pressure, or strain where appropriate.
+
+PHYSICS SYSTEM
+
+Create a modular physics architecture.
+
+Physics modules should eventually include:
+
+Structural mechanics
+Contact mechanics
+Vibration
+Pressure acoustics
+Thermoviscous acoustics
+Acoustic-structure interaction
+Laminar CFD
+Turbulent CFD
+Compressible flow
+Heat transfer in solids
+Heat transfer in fluids
+Electrical currents
+Electrostatics
+Electrical circuits
+Magnetic fields
+Electromagnetic forces
+
+The user should be able to select bodies, faces, edges, or points and assign physical properties and boundary conditions.
+
+STRUCTURAL MECHANICS
+
+Support forces, pressure, gravity, torque, fixed constraints, prescribed displacement, springs, bearings, contact, thermal expansion, and other common mechanical boundary conditions.
+
+Calculate stress, strain, displacement, reaction forces, principal stress, Von Mises stress, and safety factor.
+
+Support static structural analysis.
+
+VIBRATION
+
+Support eigenfrequency analysis, mode shapes, harmonic response, mechanical frequency response, damping, and mechanical impedance.
+
+ACOUSTICS
+
+Support pressure acoustics, sound sources, acoustic radiation, reflection, absorption, acoustic impedance, porous materials, open boundaries, and microphone/probe locations.
+
+Calculate SPL, pressure, phase, particle velocity, acoustic intensity, acoustic power, and acoustic impedance.
+
+Support frequency sweeps.
+
+THERMOVISCOUS ACOUSTICS
+
+Support viscous and thermal boundary-layer effects for narrow channels, micro-acoustic devices, microphones, MEMS, small vents, and similar systems.
+
+Allow thermoviscous regions to be coupled to normal pressure-acoustic regions so the entire acoustic domain does not require an expensive thermoviscous solution.
+
+CFD
+
+Support internal and external fluid flow.
+
+Initially support laminar incompressible flow, then expand to turbulent and compressible flow.
+
+Support inlet, outlet, pressure, velocity, mass-flow, wall, symmetry, and open-boundary conditions.
+
+Calculate pressure, velocity, flow rate, vorticity, and streamlines.
+
+THERMAL
+
+Support conduction, convection, radiation, internal heat generation, Joule heating, thermal contact, and ambient conditions.
+
+Calculate temperature, temperature gradients, heat flux, and thermal resistance.
+
+ELECTROMAGNETICS
+
+Support permanent magnets, coils, currents, magnetic materials, magnetic fields, Lorentz forces, inductance, and electromagnetic torque.
+
+Calculate B-field, H-field, magnetic flux, current density, force, torque, and inductance.
+
+ELECTRONICS
+
+Create a schematic editor.
+
+Support resistors, capacitors, inductors, voltage sources, current sources, diodes, LEDs, switches, transformers, operational amplifiers, transistors, MOSFETs, motors, speakers, sensors, and ground.
+
+Support custom components.
+
+Provide DC, AC, transient, frequency-response, and impedance analysis.
+
+Allow electrical components to connect to physical simulation components.
+
+MULTIPHYSICS
+
+Build a generic coupling architecture.
+
+Examples include:
+
+Electrical → Thermal
+Electromagnetic → Structural
+Structural → Acoustic
+Fluid → Structural
+Thermal → Structural
+Electrical → Electromagnetic → Structural → Acoustic
+
+Support one-way and, where possible, two-way coupling.
+
+Do not hard-code the architecture around one specific type of product.
+
+MESH ENGINE
+
+Create automatic, local, adaptive, and manual meshing systems.
+
+Automatic mesh presets should include Draft, Normal, Fine, Very Fine, and Extreme.
+
+Allow local mesh refinement on bodies, faces, edges, and points.
+
+Advanced settings should expose element size, minimum size, maximum size, growth rate, curvature refinement, boundary layers, element order, and element type.
+
+Make meshing physics-aware.
+
+For example, acoustic simulations should detect when the mesh cannot resolve the highest requested frequency.
+
+CFD should recognize boundary-layer requirements.
+
+Structural simulations should identify regions with large stress gradients.
+
+Implement mesh-convergence checking.
+
+SOLVER SYSTEM
+
+Design a modular solver architecture capable of supporting:
+
+Static
+Steady-state
+Frequency domain
+Transient
+Eigenfrequency
+Harmonic
+Nonlinear
+Parameter sweep
+Optimization
+
+Do not force all simulations through full FEM.
+
+The architecture should support FEM, BEM, analytical models, lumped models, reduced-order models, and hybrid simulations.
+
+Allow combinations such as:
+
+Circuit → lumped model → analytical model → FEM region.
+
+RESULTS SYSTEM
+
+Use the same 3D viewport for result visualization.
+
+Support field visualization for stress, strain, displacement, temperature, pressure, velocity, acoustic pressure, magnetic field, current density, heat flux, and other solved quantities.
+
+Provide selectable legends and ranges.
+
+Allow deformation scaling.
+
+Provide section planes and slices through the model.
+
+Support vectors, fluid streamlines, magnetic flux lines, heat-flow vectors, acoustic intensity, and particle-velocity visualization.
+
+GRAPHING
+
+Provide general engineering graphs including XY plots, frequency plots, time plots, position plots, parameter sweeps, phase, impedance, and polar plots.
+
+Allow multiple simulations and measurements to be overlaid.
+
+PROBES
+
+Allow users to place virtual probes anywhere in a simulation.
+
+Provide pressure, temperature, voltage, stress, displacement, velocity, SPL, magnetic-field, and other relevant probe types.
+
+Probe data should be graphable and exportable.
+
+ANIMATION
+
+Allow frequency-domain fields, vibration modes, transient simulations, fluid flow, deformation, acoustic fields, and other results to be animated.
+
+PARAMETER SWEEPS
+
+Allow any exposed project parameter to be swept across a range.
+
+Run all configurations and compare results.
+
+Support multiple parameter sweeps and design-of-experiment workflows later.
+
+OPTIMIZATION
+
+Create an optimization system where the user defines design variables, bounds, objectives, and constraints.
+
+Example variables:
+
+wall thickness = 1–3 mm
+hole diameter = 0.5–2 mm
+length = 10–50 mm
+
+Example objectives:
+
+Minimize weight
+Minimize stress
+Minimize temperature
+Maximize airflow
+Maximize efficiency
+Match a target response
+
+Example constraints:
+
+Stress < 100 MPa
+Temperature < 80 °C
+Mass < 100 g
+Wall thickness > 1 mm
+
+The optimizer should automatically modify parameters, regenerate the model, mesh it, solve it, evaluate the result, and continue searching.
+
+SENSITIVITY ANALYSIS
+
+Create tools to determine how strongly each design parameter affects a selected result.
+
+Show parameter importance and correlations.
+
+GENERATIVE DESIGN
+
+Allow the user to define preserved geometry, loads, materials, manufacturing constraints, safety requirements, and optimization objectives.
+
+Generate alternative geometry candidates.
+
+Generated designs should remain editable or be converted into editable CAD wherever practical.
+
+MEASUREMENT IMPORT
+
+Allow experimental data to be imported.
+
+Support frequency response, impedance, force, displacement, temperature, pressure, flow, and other generic XY datasets.
+
+Allow measured results to be plotted against simulations.
+
+Calculate simulation-to-measurement error.
+
+MODEL CALIBRATION
+
+Create a future calibration system capable of modifying uncertain model parameters to improve agreement with real measurements.
+
+AI ENGINEERING ASSISTANT
+
+Build the AI system around access to structured project information rather than treating it as an isolated chatbot.
+
+The AI should be able to understand:
+
+Geometry
+Components
+Assemblies
+Parameters
+Materials
+Circuits
+Physics
+Boundary conditions
+Meshes
+Studies
+Solver errors
+Simulation results
+Measurements
+Manufacturing constraints
+
+The AI should be able to identify incorrectly configured simulations and explain failures.
+
+It should be able to propose simulation setups from natural-language engineering requests.
+
+For example:
+
+“Check whether this bracket survives a 500 N vertical load.”
+
+The AI should identify the likely study, required constraints, loads, materials, outputs, and mesh requirements, then present the proposed setup for approval.
+
+The AI should analyze simulation results and identify likely problems.
+
+For example:
+
+“Why is stress high here?”
+
+The AI should inspect the relevant geometry and simulation data and explain the likely cause.
+
+Allow the AI to propose CAD parameter modifications.
+
+Never silently apply major engineering changes. Present proposed changes and predicted effects to the user before applying them.
+
+MANUFACTURING
+
+Create a manufacturing workspace connected to the same CAD model.
+
+Support additive manufacturing first.
+
+Support FDM, resin, SLS, and metal additive manufacturing.
+
+Provide design-for-manufacturing checks for minimum wall thickness, minimum hole size, overhangs, unsupported geometry, enclosed cavities, trapped resin or powder, drainage, clearance, tolerances, and printer capability.
+
+Allow printer and material profiles.
+
+Provide tolerance compensation.
+
+Later add CNC/CAM functionality including stock, tools, drilling, pocketing, contouring, 3D machining, toolpath simulation, collision detection, and G-code generation.
+
+TOLERANCES
+
+Allow CAD dimensions to contain manufacturing tolerances.
+
+Support symmetric and asymmetric tolerances.
+
+Use tolerance data for assembly clearance and interference analysis.
+
+SPECIALIZED WORKSPACES
+
+Keep the underlying program general-purpose.
+
+Allow specialized engineering applications to be built as layers above the general engine.
+
+Possible specialized workspaces include:
+
+General Mechanical
+Acoustics
+Headphones/IEMs
+Loudspeakers
+Microphones
+Motors
+Electronics Cooling
+Fluid Systems
+MEMS
+3D Printing
+
+These should mainly provide specialized components, templates, boundary conditions, reports, and workflows while continuing to use the same underlying CAD and physics engines.
+
+SOFTWARE ARCHITECTURE
+
+Keep major systems modular.
+
+Use approximately this architecture:
+
+Application UI
+↓
+Project Engine
+↓
+Parameter and Unit Engine
+↓
+CAD Kernel + Material Engine
+↓
+Physics Model
+↓
+Meshing
+↓
+Solver Interfaces
+↓
+Multiphysics Coupling
+↓
+Result Engine
+↓
+Visualization
+↓
+Optimization / AI
+↓
+Manufacturing
+
+Do not tightly couple the UI to individual solvers.
+
+Do not tightly couple CAD code to acoustic, thermal, structural, or electromagnetic equations.
+
+Use stable object IDs and references between systems.
+
+A physics boundary condition should reference a geometric entity rather than being permanently embedded into a generated mesh.
+
+Geometry regeneration should attempt to preserve material, physics, and boundary assignments.
+
+COMPUTATION ARCHITECTURE
+
+Separate heavy calculations from the user interface.
+
+Use a job system with states such as:
+
+Queued
+Preparing
+Meshing
+Solving
+Post-processing
+Completed
+Failed
+Cancelled
+
+Users should be able to continue working while calculations run.
+
+Design the computation layer so calculations can eventually run locally or on remote/cloud compute.
+
+Support CPU parallelization and GPU acceleration where suitable.
+
+PLUGIN AND SCRIPTING ARCHITECTURE
+
+Design an extension system from the beginning.
+
+Future extensions should be able to provide:
+
+New physics
+New solvers
+New materials
+New CAD tools
+New optimization algorithms
+New result visualizations
+New manufacturing methods
+New file formats
+
+Provide a scripting/API layer later, preferably supporting Python.
+
+DEVELOPMENT STRATEGY
+
+Do not attempt to implement every physics solver from scratch immediately.
+
+Build the platform in stages.
+
+Phase 1 should establish the project model, units, parameters, viewport, CAD foundation, materials, meshing architecture, study architecture, basic solver integration, results system, and graphing.
+
+Phase 2 should improve CAD and add assemblies, circuits, acoustics, structural mechanics, thermal simulation, measurement import, and parameter sweeps.
+
+Phase 3 should introduce stronger multiphysics capabilities, CFD, electromagnetics, adaptive meshing, nonlinear analysis, and distributed computation.
+
+Phase 4 should introduce advanced optimization, AI engineering assistance, generative design, sensitivity analysis, and model calibration.
+
+Phase 5 should expand manufacturing, CAM, tolerance analysis, and specialized engineering applications.
+
+IMPORTANT DEVELOPMENT RULES
+
+Do not fake engineering calculations simply to make the UI appear functional.
+
+If a solver is not implemented, clearly mark that capability as unavailable or experimental rather than returning fabricated engineering results.
+
+Keep numerical solver code separate from UI code.
+
+Use validated numerical libraries and established open-source solvers where appropriate instead of unnecessarily rewriting mature numerical algorithms.
+
+Every simulation result must retain information about the geometry version, material definitions, mesh, boundary conditions, solver settings, and study that produced it.
+
+If any upstream input changes, clearly mark old results as outdated.
+
+Use deterministic, testable engineering calculations wherever possible.
+
+Include automated numerical tests using known analytical solutions or established benchmark cases.
+
+Maintain dimensional consistency throughout the entire application.
+
+Prioritize correctness, numerical stability, traceability, and reproducibility over visual appearance.
+
+Do not remove existing working features while implementing new ones unless necessary. Refactor existing systems instead of repeatedly rebuilding the entire application.
+
+When implementing a large feature, first inspect the existing project structure and determine which existing systems can be reused.
+
+Implement features incrementally and keep the application runnable after each major change.
+
+The final goal is a unified engineering environment where the user can design a physical object, assign materials and physics, simulate its real-world behaviour, compare it with measurements, optimize the design, modify the CAD model, and prepare it for manufacturing without moving between separate programs.

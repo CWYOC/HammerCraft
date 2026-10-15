@@ -1,0 +1,91 @@
+{
+  "sourceRevision": 138,
+  "projectFile": "/Users/bearcheung/Downloads/Thermal_block-rust-structural.hcengineering.json",
+  "projectBytes": 32860279,
+  "retainedVersions": 14,
+  "retainedStructuralResults": 2,
+  "nodes": 1311,
+  "tetrahedra": 4639,
+  "youngModulus": 70000000000,
+  "poissonRatio": 0.33,
+  "density": 2700,
+  "gravity": [
+    0,
+    0,
+    -9.81
+  ],
+  "boundaries": [
+    {
+      "tag": 7,
+      "type": "fixed"
+    },
+    {
+      "tag": 10,
+      "type": "force",
+      "values": [
+        0,
+        0,
+        -10
+      ]
+    }
+  ],
+  "transport": "Production ComputeWorker against native Rust HTTP service",
+  "states": [
+    "Preparing",
+    "Completed"
+  ],
+  "elapsedMs": 338,
+  "solver": {
+    "absoluteTolerance": 1e-12,
+    "element": "VectorTetP1",
+    "id": "hc-structural-fem-1",
+    "library": "HammerCraft Rust",
+    "linearSolver": "Jacobi CG",
+    "maxIterations": 10000,
+    "relativeTolerance": 1e-10,
+    "version": "0.1.0"
+  },
+  "iterations": 417,
+  "residual": 3.928033474961041e-15,
+  "strainEnergy": 0.000006684862351872963,
+  "maxDisplacement": 0.0000013494593772707222,
+  "maxVonMises": 1651162.6368140022,
+  "balance": {
+    "appliedForce": [
+      0,
+      0,
+      -10.261079108519217
+    ],
+    "appliedMoment": [
+      0.00009170483609819953,
+      0.20175359227819728,
+      0
+    ],
+    "origin": [
+      0.019829102912808393,
+      0.012508937050205289,
+      0.005145284572955316
+    ],
+    "reactionForce": [
+      6.787637119032297e-11,
+      9.243839721451153e-11,
+      10.261079108504966
+    ],
+    "reactionMoment": [
+      -0.00009170483624732157,
+      -0.20175359227866482,
+      -3.0204432704961093e-12
+    ]
+  },
+  "maxAbsoluteDifferenceFromPython": {
+    "displacements": 5.52688998083431e-20,
+    "reactions": 9.691136781952991e-13,
+    "strains": 1.0876368910866206e-16,
+    "stresses": 0.000014621800801251084,
+    "principal": 0.000017669923636276508,
+    "vonMises": 0.00000505880598211661
+  },
+  "importsMarkedUnverified": true,
+  "csvRows": 1311,
+  "browserVerification": "Blocked by browser URL protocol security policy; no new UI claim or screenshot."
+}

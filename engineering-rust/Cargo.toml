@@ -1,0 +1,18 @@
+[workspace]
+members = ["crates/core", "crates/web", "crates/server"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["float_roundtrip"] }
+engineering-core = { path = "crates/core" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

@@ -1,0 +1,89 @@
+name: Engineering Studio checks
+
+on:
+  pull_request:
+    paths:
+      - "engineering-rust/**"
+      - "tools/engineering-rust/**"
+      - "tests/engineering-rust.test.mjs"
+      - "tests/engineering-rust-structural.test.mjs"
+      - "tests/fixtures/engineering-rust/**"
+      - "docs/engineering/**"
+      - "docs/engineering-studio.*"
+      - "tests/engineering.test.mjs"
+      - "tests/engineering-cad.test.mjs"
+      - "tests/engineering-sweep.test.mjs"
+      - "tests/engineering-convergence.test.mjs"
+      - "tests/engineering-measurement.test.mjs"
+      - "tests/engineering-convection.test.mjs"
+      - "tests/engineering-sketch.test.mjs"
+      - "tests/engineering-operations.test.mjs"
+      - "tests/engineering-constraints.test.mjs"
+      - "tests/engineering-edges.test.mjs"
+      - "tests/engineering-materials.test.mjs"
+      - "tests/engineering-volume-mesh.test.mjs"
+      - "tests/engineering-fem.test.mjs"
+      - "tests/engineering-structural.test.mjs"
+      - "tests/engineering-modal.test.mjs"
+      - "tests/engineering-harmonic.test.mjs"
+      - "tools/engineering-cad/**"
+      - "tools/engineering-compute/**"
+      - ".github/workflows/engineering-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "engineering-rust/**"
+      - "tools/engineering-rust/**"
+      - "tests/engineering-rust.test.mjs"
+      - "tests/engineering-rust-structural.test.mjs"
+      - "tests/fixtures/engineering-rust/**"
+      - "docs/engineering/**"
+      - "docs/engineering-studio.*"
+      - "tests/engineering.test.mjs"
+      - "tests/engineering-cad.test.mjs"
+      - "tests/engineering-sweep.test.mjs"
+      - "tests/engineering-convergence.test.mjs"
+      - "tests/engineering-measurement.test.mjs"
+      - "tests/engineering-convection.test.mjs"
+      - "tests/engineering-sketch.test.mjs"
+      - "tests/engineering-operations.test.mjs"
+      - "tests/engineering-constraints.test.mjs"
+      - "tests/engineering-edges.test.mjs"
+      - "tests/engineering-materials.test.mjs"
+      - "tests/engineering-volume-mesh.test.mjs"
+      - "tests/engineering-fem.test.mjs"
+      - "tests/engineering-structural.test.mjs"
+      - "tests/engineering-modal.test.mjs"
+      - "tests/engineering-harmonic.test.mjs"
+      - "tools/engineering-cad/**"
+      - "tools/engineering-compute/**"
+      - ".github/workflows/engineering-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  numerical-and-project-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update && sudo apt-get install -y libglu1-mesa
+      - run: python -m pip install -r tools/engineering-compute/requirements.txt
+      - uses: dtolnay/rust-toolchain@1.99.0
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+      - run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
+      - run: tools/engineering-rust/build.sh
+      - run: cargo fmt --manifest-path engineering-rust/Cargo.toml --all --check
+      - run: cargo test --manifest-path engineering-rust/Cargo.toml --workspace --locked
+      - run: cargo clippy --manifest-path engineering-rust/Cargo.toml --workspace --all-targets --locked -- -D warnings
+      - run: python -m unittest discover -s tools/engineering-compute -p 'test_*.py'
+      - run: node --test tests/engineering.test.mjs tests/engineering-cad.test.mjs tests/engineering-sweep.test.mjs tests/engineering-convergence.test.mjs tests/engineering-measurement.test.mjs tests/engineering-convection.test.mjs tests/engineering-sketch.test.mjs tests/engineering-operations.test.mjs tests/engineering-constraints.test.mjs tests/engineering-edges.test.mjs tests/engineering-materials.test.mjs tests/engineering-volume-mesh.test.mjs tests/engineering-fem.test.mjs tests/engineering-structural.test.mjs tests/engineering-modal.test.mjs tests/engineering-harmonic.test.mjs tests/engineering-rust.test.mjs tests/engineering-rust-structural.test.mjs

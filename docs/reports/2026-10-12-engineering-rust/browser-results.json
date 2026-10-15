@@ -1,0 +1,91 @@
+{
+  "sourceRevision": 138,
+  "bytes": 29753226,
+  "versions": 14,
+  "electrical": [
+    {
+      "id": "e923b1d0-1794-432b-a27b-dee035398acb",
+      "sourceRevision": 130,
+      "current": true,
+      "nodes": 1311,
+      "tetrahedra": 4639,
+      "joulePower": 0.21185960461984538,
+      "inputPower": 0.21185960461984496,
+      "terminals": [
+        {
+          "tag": 7,
+          "kind": "voltage",
+          "meanVoltage": 0,
+          "inwardCurrent": -211.85960461103903,
+          "inputPower": 0
+        },
+        {
+          "tag": 10,
+          "kind": "voltage",
+          "meanVoltage": 0.001,
+          "inwardCurrent": 211.859604619845,
+          "inputPower": 0.21185960461984496
+        }
+      ],
+      "currentBalance": 8.805955076240934e-9,
+      "powerBalance": -4.163336342344337e-16,
+      "residual": 4.400676187254136e-12,
+      "solver": {
+        "id": "hc-electric-fem-1",
+        "library": "HammerCraft Rust",
+        "version": "0.1.0",
+        "linearSolver": "Jacobi CG",
+        "element": "TetP1",
+        "relativeTolerance": 1e-10,
+        "absoluteTolerance": 1e-12,
+        "maxIterations": 5000
+      }
+    },
+    {
+      "id": "5140513f-a08f-43f9-891f-1eefd2318279",
+      "sourceRevision": 135,
+      "current": false,
+      "nodes": 1311,
+      "tetrahedra": 4639,
+      "joulePower": 0.000004768985022845293,
+      "inputPower": 0.000004768985022845293,
+      "terminals": [
+        {
+          "tag": 7,
+          "kind": "voltage",
+          "meanVoltage": 0,
+          "inwardCurrent": -0.9999999999972269,
+          "inputPower": 0
+        },
+        {
+          "tag": 10,
+          "kind": "current",
+          "meanVoltage": 0.000004768985022845293,
+          "inwardCurrent": 1,
+          "inputPower": 0.000004768985022845293
+        }
+      ],
+      "currentBalance": 2.773115070908716e-12,
+      "powerBalance": 0,
+      "residual": 1.274531468983233e-13,
+      "solver": {
+        "id": "hc-electric-fem-1",
+        "library": "HammerCraft Rust",
+        "version": "0.1.0",
+        "linearSolver": "Jacobi CG",
+        "element": "TetP1",
+        "relativeTolerance": 1e-10,
+        "absoluteTolerance": 1e-12,
+        "maxIterations": 5000
+      }
+    }
+  ],
+  "blockSolver": {
+    "relativeTolerance": 1e-10,
+    "maxIterations": 6000,
+    "implementation": "HammerCraft Rust",
+    "version": "0.1.0"
+  },
+  "harmonicResults": 2,
+  "importsMarkedUnverified": true
+}

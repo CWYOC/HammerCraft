@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Hammer Craft Engineering Studio — parametric CAD, thermal studies, mesh checks, parameter sweeps and measurement comparisons."
+    />
+    <title>Engineering Studio | Hammer Craft</title>
+    <link rel="icon" href="assets/favicon-32.png" />
+    <link rel="stylesheet" href="engineering-studio.css?v=20" />
+  </head>
+  <body>
+    <header class="masthead">
+      <a class="brand" href="index.html"
+        ><span class="brand-mark">H</span> HAMMER CRAFT</a
+      >
+      <span class="product-name"
+        >ENGINEERING STUDIO <span class="tag">CAD + SIMULATION</span></span
+      >
+      <a class="back-link" href="design-studio.html">IEM Design Studio ↗</a>
+    </header>
+    <div class="project-bar">
+      <label class="project-name"
+        >PROJECT
+        <input
+          id="projectName"
+          value="Thermal block"
+          maxlength="160"
+          aria-label="Project name"
+      /></label>
+      <div class="file-tools" aria-label="Project actions">
+        <button id="saveProject">Export project</button
+        ><button id="openProject">Open</button
+        ><button
+          id="importSTEP"
+          title="Replace the model with one validated STEP solid; undo is available"
+        >
+          Import STEP</button
+        ><button id="duplicateProject">Duplicate</button>
+        <span class="divider"></span><button id="undo" disabled>Undo</button
+        ><button id="redo" disabled>Redo</button>
+        <button id="recoverProject" disabled>Recover previous save</button>
+        <button id="cancelImport" hidden>Cancel import</button>
+      </div>
+      <a id="downloadLink" class="download-link" hidden
+        >Download prepared file</a
+      >
+      <span id="saveState" class="save-state">Loading…</span>
+    </div>
+    <nav class="workspaces" aria-label="Engineering workspaces">
+      <button data-workspace="Design" aria-current="page">
+        <span>01</span> Design
+      </button>
+      <button data-workspace="Simulate"><span>02</span> Simulate</button>
+      <button data-workspace="Analyze"><span>03</span> Analyze</button>
+      <button data-workspace="Optimize"><span>04</span> Optimize</button>
+      <button data-workspace="Manufacture"><span>05</span> Manufacture</button>
+      <div class="study-tools">
+        <button id="generateMesh">Generate mesh</button
+        ><button class="primary" id="solve">▶ Solve thermal</button
+        ><button id="cancelJob" disabled>Cancel</button>
+      </div>
+    </nav>
+    <div id="notice" class="notice" role="status" aria-live="polite">
+      Loading Engineering Studio…
+    </div>
+    <main class="studio" id="studio" inert>
+      <aside class="model-tree" aria-label="Model tree">
+        <div class="panel-heading">
+          PROJECT MODEL <span id="revision">r0</span>
+        </div>
+        <div class="tree-root">▧ <span id="treeName">Thermal block</span></div>
+        <button data-node="parameters" class="active">
+          <span>ƒ</span> Parameters <small id="parameterCount">3</small>
+        </button>
+        <button data-node="body">
+          <span>◇</span> <b id="bodyLabel">Parametric block</b>
+        </button>
+        <button data-node="sketch"><span>⌑</span> Sketch &amp; solid</button>
+        <button data-node="operations"><span>⊞</span> Solid operations <small id="operationCount">0</small></button>
+        <button data-node="holes">
+          <span>⊖</span> Hole features <small id="holeCount">0</small>
+        </button>
+        <button data-node="material"><span>▨</span> Material</button>
+        <div class="tree-section">SIMULATION</div>
+        <button data-node="physics"><span>↔</span> Thermal boundaries</button>
+        <button data-node="electricStudy"><span>ϟ</span> DC conduction</button>
+        <button data-node="electricResults"><span>◒</span> Electrical results</button>
+        <button data-node="harmonicStudy"><span>∿</span> Harmonic study</button>
+        <button data-node="harmonicResults"><span>◒</span> Frequency response</button>
+        <button data-node="modalStudy"><span>∿</span> Eigenfrequency study</button>
+        <button data-node="modalResults"><span>◒</span> Natural modes</button>
+        <button data-node="structuralStudy"><span>⊥</span> Static structural</button>
+        <button data-node="structuralResults"><span>◒</span> Structural results</button>
+        <button data-node="femStudy"><span>♨</span> CAD thermal study</button>
+        <button data-node="femResults"><span>◒</span> CAD thermal results</button>
+        <button data-node="volumeMesh"><span>⬡</span> Tetrahedral mesh</button>
+        <button data-node="mesh"><span>▦</span> Volume mesh</button>
+        <button data-node="convergence"><span>≋</span> Mesh convergence <small id="convergenceCount">0</small></button>
+        <button data-node="study"><span>▷</span> Steady-state study</button>
+        <button data-node="results">
+          <span>◒</span> Solutions <small id="resultCount">0</small>
+        </button>
+        <button data-node="measurements"><span>⌁</span> Measurements <small id="measurementCount">0</small></button>
+        <div class="tree-section">PROJECT VERSIONS</div>
+        <label class="compact-label"
+          >Version name<input
+            id="versionName"
+            placeholder="Design iteration"
+            maxlength="160"
+        /></label>
+        <button id="checkpoint" class="subtle">＋ Save named version</button>
+        <div id="versions"></div>
+        <div class="scope-card">
+          <span class="tag">CURRENT CAPABILITY</span>
+          <p>
+            Sketch extrude &amp; revolve.<br />Line &amp; circle constraints.<br>Union, subtract &amp; intersect. Fillets &amp; chamfers.<br />CAD block &amp; through-holes.<br />STEP import &amp; export.<br />Uncut-block
+            thermal studies, sweeps &amp; mesh checks.<br />Material library & property curves.<br />Gmsh tetrahedral volume meshing.<br />
+            CAD thermal FEM &amp; heat-flux fields.<br />
+            Static elastic stress &amp; deformation.
+          Undamped eigenfrequencies &amp; mode animation. Harmonic sweeps, damping &amp; impedance. Rust DC conduction &amp; Joule heat.<br />Measurement comparisons.
+          </p>
+          <a href="ENGINEERING_STUDIO.md" target="_blank" rel="noopener"
+            >Methods &amp; limitations ↗</a
+          >
+        </div>
+      </aside>
+      <section class="viewport-panel" aria-label="Engineering model and design comparisons">
+        <div id="sweepComparison" class="sweep-comparison" aria-label="Parameter sweep results" hidden></div>
+        <div id="convergenceComparison" class="sweep-comparison convergence-comparison" aria-label="Mesh-convergence results" hidden></div>
+        <div id="measurementComparison" class="sweep-comparison measurement-comparison" aria-label="Measurement comparison" hidden></div>
+        <div id="sketchPreview" class="sketch-preview" hidden></div>
+        <div class="viewport-toolbar">
+          <div>
+            <span class="eyebrow" id="viewportMode">DESIGN / SOLID</span>
+            <h1 id="viewportTitle">Parametric block</h1>
+          </div>
+          <div>
+            <button id="toggleSketch" hidden>View 3D solid</button>
+            <label class="mesh-toggle"
+              ><input type="checkbox" id="showMesh" /> Mesh</label
+            ><button id="resetView">Fit view</button>
+          </div>
+        </div>
+        <div class="model-metrics" id="modelMetrics"></div>
+        <canvas
+          id="viewport"
+          tabindex="0"
+          aria-label="Interactive 3D engineering solid. Drag to orbit, scroll to zoom. Uncut block faces can be selected. Arrow keys rotate, plus and minus zoom, zero resets."
+        ></canvas>
+        <div id="resultBanner" class="result-banner" hidden></div>
+        <div id="legend" class="legend" hidden>
+          <span id="legendTitle">TEMPERATURE / °C</span>
+          <div class="color-ramp"></div>
+          <div class="legend-values">
+            <span id="legendMin"></span><span id="legendMax"></span>
+          </div>
+        </div>
+        <div class="viewport-caption">
+          <span id="selectionLabel"
+            >X · length &nbsp; Y · width &nbsp; Z · height</span
+          ><span>DRAG TO ORBIT · SCROLL TO ZOOM</span>
+        </div>
+      </section>
+      <aside class="properties" aria-label="Context properties">
+        <div class="panel-heading" id="propertiesHeading">PARAMETERS</div>
+        <div id="propertiesBody"></div>
+      </aside>
+      <section class="bottom-panel" aria-label="Results and job history">
+        <div class="bottom-heading">
+          <span id="bottomTitle">FEATURE HISTORY</span
+          ><span id="jobState">Idle</span>
+        </div>
+        <div id="bottomContent"></div>
+      </section>
+    </main>
+    <footer class="statusbar">
+      <span id="jobDetail">Rust + CAD/physics adapters · SI internally</span
+      ><a href="admin.html">Admin ↗</a><span>Engineering Studio · v1.18 · Rust structural</span>
+    </footer>
+    <input type="file" id="stepFile" accept=".step,.stp" hidden />
+    <input type="file" id="measurementFile" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden />
+    <input
+      type="file"
+      id="projectFile"
+      accept=".json,.hcengineering.json"
+      hidden
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="auth.js?v=40"></script>
+    <script type="module" src="engineering/studio.mjs?v=20"></script>
+  </body>
+</html>

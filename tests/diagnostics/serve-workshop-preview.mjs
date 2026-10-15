@@ -11,7 +11,7 @@ const server=http.createServer(async(req,res)=>{try{
     const file=path.resolve(root,`.${pathname==='/'?'/headphone-workshop.html':pathname}`);
     if(!file.startsWith(root)){res.writeHead(403).end();return;}
     let data=await fs.readFile(file);
-    if(['/headphone-workshop.html','/iem-designer.html','/design-studio.html','/'].includes(pathname)) {
+    if(['/headphone-workshop.html','/iem-designer.html','/design-studio.html','/engineering-studio.html','/'].includes(pathname)) {
         const fixture=data.toString().replace(/<script\s+src="(?:https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2|supabase-client\.js|auth\.js\?v=40)"\s*><\/script>/g,'');
         data=Buffer.from(fixture.replace('</head>','<script>window.HCAuth={requireAdmin:async()=>({user:{},isAdmin:true})};</script></head>').replace('WEB PREVIEW · 01','LOCAL UI TEST · 01'));
     }

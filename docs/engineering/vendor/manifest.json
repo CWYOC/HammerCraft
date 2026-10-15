@@ -1,0 +1,13 @@
+{
+  "replicad": "1.1.0",
+  "opencascadeBuild": "replicad-opencascadejs@1.1.0",
+  "planegcs": "@salusoft89/planegcs@1.3.0",
+  "sha256": {
+    "replicad.mjs": "2a3fa8a9c1aa271e057015e9525964fd0be4e36cb1b6705fed2c67a5dc318755",
+    "replicad_single.mjs": "018e57538fcb773f0124eae60aee4de693d3aae01c55b2b883a874911ab121c3",
+    "replicad_single.wasm": "4c9f22e9f3828dca6f3c95405934cdbe624e593c35266f47f392ab337478dbde",
+    "planegcs-wrapper.mjs": "4d486613acc7c7f28a90dac79d91faeeb58e5cc1b9c39f9d6b70581b87927582",
+    "planegcs.mjs": "d541e52942d9480438ea44f2ca05bb07dcc216e99da29d7aa31d3cc60ad6ef81",
+    "planegcs.wasm": "af9d1874fc895726bd267703a698a86c82d35b7415a02fe5184ebf65ddbc04af"
+  }
+}
