@@ -1,0 +1,84 @@
+{
+  "name": "Thermal block",
+  "revision": 145,
+  "features": [
+    {
+      "type": "extrude",
+      "name": "Plate extrusion"
+    },
+    {
+      "type": "fillet",
+      "name": "Rounded plate corners"
+    },
+    {
+      "type": "chamfer",
+      "name": "Top rim bevel"
+    },
+    {
+      "type": "step-part",
+      "name": "sphere.step",
+      "placement": {
+        "translation": [
+          "0 mm",
+          "0 mm",
+          "0 mm"
+        ],
+        "rotation": [
+          "0 deg",
+          "0 deg",
+          "0 deg"
+        ]
+      },
+      "fileName": "sphere.step"
+    },
+    {
+      "type": "step-part",
+      "name": "cone.step",
+      "placement": {
+        "translation": [
+          "70 mm",
+          "0 mm",
+          "0 mm"
+        ],
+        "rotation": [
+          "0 deg",
+          "25 deg",
+          "0 deg"
+        ]
+      },
+      "fileName": "cone.step"
+    },
+    {
+      "type": "step-part",
+      "name": "hc-native-torus.step",
+      "placement": {
+        "translation": [
+          "0 mm",
+          "60 mm",
+          "0 mm"
+        ],
+        "rotation": [
+          "0 deg",
+          "0 deg",
+          "0 deg"
+        ]
+      },
+      "fileName": "hc-native-torus.step",
+      "stepAsset": {
+        "sha256": "43f871c80285e47a290a9d0eb07b85ea5ad34e09864ada440f861ee59ea3dd10",
+        "bytes": 2004143
+      }
+    },
+    {
+      "type": "linear-pattern",
+      "name": "Linear pattern",
+      "count": 2,
+      "spacing": [
+        "120.85335 mm",
+        "0 mm",
+        "0 mm"
+      ]
+    }
+  ],
+  "versionCount": 16
+}

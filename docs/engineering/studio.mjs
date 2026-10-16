@@ -1,3 +1,5 @@
+import {PART_OPERATIONS,ADVANCED_FEATURES,appendSTEP,addTransform,usesNativeCAD} from './part-features.mjs';
+import { uploadSTEP } from "./native-cad.mjs";
 import {renderElectricEditor} from './electric-fem-editor.mjs';
 import {electricRequest,electricCSV,electricVTK} from './electric-fem-data.mjs';
 import {electricDisplay} from './electric-fem-view.mjs';
@@ -48,7 +50,7 @@ import { openProjectStore } from "./storage.mjs";
 import { cadFingerprint } from "./cad-model.mjs";
 import { CadClient } from "./cad-client.mjs";
 import { CadImport, stepSource } from "./cad-import.mjs";
-import { MAX_STEP_BYTES, MAX_PROJECT_BYTES } from "./step-input.mjs";
+import { MAX_INLINE_STEP_BYTES, MAX_PROJECT_BYTES, validateSTEPFileSize } from "./step-input.mjs";
 import { createSweep } from "./sweep.mjs";
 import { resolveSweep, sweepSource, sweepCSV, siExpression, SWEEP_OBJECTIVES } from "./sweep-data.mjs";
 import { renderSweepComparison, drawSweepPlot } from "./sweep-view.mjs";
@@ -131,6 +133,7 @@ const measurementSolutions = () => measurementSolutionIds === null ? (result() ?
   : measurementSolutionIds.map((id) => project().results.find((r) => r.id === id)).filter(Boolean);
 const cadClient = new CadClient();
 const cadImport = new CadImport();
+let stepUploadController = null;
 let editGeneration = 0,
   importGeneration = 0;
 let cadState = { key: null, artifact: null, status: "idle", error: "" };
@@ -320,7 +323,7 @@ async function acceptCADImport(source, guard, commit) {
   $("importSTEP").disabled = true;
   $("cancelImport").hidden = false;
   message(
-    "Validating the CAD file in a local worker. Your current model remains available.",
+    usesNativeCAD(source) ? "Validating the uploaded STEP with the local CAD service. Your current model remains available." : "Validating the CAD file in a local worker. Your current model remains available.",
   );
   try {
     await cadImport.run(source, guard, commit);
@@ -391,21 +394,22 @@ async function exportCAD(format) {
     );
   download(filename, blob, format === "step" ? "model/step" : "model/stl");
   message(
-    `${format.toUpperCase()} prepared from the current CAD solid in millimetres.`,
+    usesNativeCAD(project().source) && format==='step' ? 'STEP prepared from the current native CAD model with declared units.' : `${format.toUpperCase()} prepared from the current CAD solid in millimetres.`,
   );
 }
 function cadStatus(panel) {
   const artifact = currentCAD();
   pair(
     panel,
-    "CAD solid",
+    "CAD model",
     artifact
-      ? "Validated · Open CASCADE"
+      ? `Validated · ${artifact.kernel}`
       : cadState.status === "failed"
         ? "Regeneration failed"
         : "Regenerating…",
   );
   if (artifact) {
+    pair(panel, "Bodies", String(artifact.solidCount||1));
     pair(panel, "Volume", `${number(artifact.volume * 1e9, 7)} mm³`);
     for (const entry of artifact.constrainedSketches || []) {
       const sketch = project().source.sketches?.find(sk => sk.id === entry.id);
@@ -439,11 +443,12 @@ function syncStudyControls() {
     const modal=id==='solveModal'||id==='solve'&&viewingModal(),modalIssue=modal?modalReadiness():'';
     const structural=id==='solveStructural'||id==='solve'&&viewingStructural(),structuralIssue=structural?structuralReadiness():'';
     const fem=id==='solveFem'||id==='solve'&&viewingFem(),femIssue=fem?femReadiness():'';
+    const multiBody=(currentCAD()?.solidCount||1)>1;
     const volume = id === 'generateVolumeMesh' || id === 'generateMesh' && (viewingVolumeMesh()||viewingFem()||viewingStructural()||viewingModal()||viewingHarmonic()||viewingElectric());
-    $(id).disabled = !!jobs.active || !!volumeMeshPreparing || (electric ? !!electricIssue : harmonic ? !!harmonicIssue : modal ? !!modalIssue : structural ? !!structuralIssue : fem ? !!femIssue : volume ? !currentCAD() : !!issue);
-    $(id).title = electric ? electricIssue || 'Solve DC conduction in Rust.' : harmonic ? harmonicIssue || 'Solve harmonic response.' : modal ? modalIssue || 'Solve natural modes.' : structural ? structuralIssue || 'Solve static structural FEM.' : fem ? femIssue || 'Solve the CAD thermal study on a compatible tetrahedral mesh.' : volume ? 'Generate a CAD tetrahedral mesh with the local Gmsh service.' : issue;
+    $(id).disabled = !!jobs.active || !!volumeMeshPreparing || (electric ? !!electricIssue : harmonic ? !!harmonicIssue : modal ? !!modalIssue : structural ? !!structuralIssue : fem ? !!femIssue : volume ? !currentCAD() || multiBody : !!issue);
+    $(id).title = electric ? electricIssue || 'Solve DC conduction in Rust.' : harmonic ? harmonicIssue || 'Solve harmonic response.' : modal ? modalIssue || 'Solve natural modes.' : structural ? structuralIssue || 'Solve static structural FEM.' : fem ? femIssue || 'Solve the CAD thermal study on a compatible tetrahedral mesh.' : volume ? (multiBody ? 'FEM needs one solid. Suppress parts or join touching parts with Union.' : 'Generate a CAD tetrahedral mesh with the local Gmsh service.') : issue;
   }
-  if($('cadMeshWait'))$('cadMeshWait').hidden=!!currentCAD();
+  if($('cadMeshWait')){const multiple=(currentCAD()?.solidCount||1)>1;$('cadMeshWait').hidden=!!currentCAD()&&!multiple;$('cadMeshWait').textContent=multiple?'FEM needs one solid. Suppress separate parts or join touching parts with Union.':'Wait for a valid CAD solid before meshing.';}
 }
 function renderTree() {
   $("solve").textContent=viewingElectric()?"▶ Solve electrical":viewingHarmonic()?"▶ Solve harmonic":viewingModal()?"▶ Solve modes":viewingStructural()?"▶ Solve structural":"▶ Solve thermal";
@@ -484,7 +489,7 @@ function renderTree() {
               `Restored “${v.name}”. Undo can return to the previous design.`,
             );
           };
-          if (v.source.features[0].type === "imported-step")
+          if (v.source.features.some(f=>["imported-step","step-part"].includes(f.type)&&!f.suppressed))
             await acceptCADImport(v.source, unchangedProject(), restore);
           else restore();
         }),
@@ -546,7 +551,7 @@ function renderProperties() {
     if (model.material.densityAt) note(panel, densityDescription(model.material));
     for (const format of ["step", "stl"]) {
       const b = button(
-        `Export ${format.toUpperCase()} · millimetres`,
+        `Export ${format.toUpperCase()} · ${format==='step'&&usesNativeCAD(project().source)?'declared units':'millimetres'}`,
         () => exportCAD(format),
         "primary full",
       );
@@ -580,13 +585,13 @@ function renderProperties() {
       panel.append(element("h2", "Imported STEP solid"));
       note(
         panel,
-        "The original STEP data is embedded in this project. Its coordinates and units are preserved; the viewer fits the camera around its bounds.",
+        feature.stepAsset ? "This STEP source is stored by the local compute service. Project exports contain its reference; keep the original STEP file to reopen the project on another computer. Import the same file to restore a missing source. Large sources support STEP part Booleans, positioning, patterns, export and single-body FEM meshing." : "The original STEP data is embedded in this project. Its coordinates and units are preserved; the viewer fits the camera around its bounds.",
       );
       pair(panel, "Source file", feature.fileName);
       pair(
         panel,
         "STEP data",
-        `${number(new TextEncoder().encode(feature.stepText).length / 1024)} KiB`,
+        `${number((feature.stepAsset?.bytes ?? new TextEncoder().encode(feature.stepText).length) / 1024)} KiB`,
       );
       cadStatus(panel);
       const size = displayedSize(model),
@@ -606,11 +611,11 @@ function renderProperties() {
           );
       note(
         panel,
-        "Material density determines mass. Imported material metadata, colors, assemblies and editable source features are not imported. Edit the assigned material in Material.",
+        "Material density determines mass. Imported material metadata, colors and editable source histories are not imported. All bodies use the assigned project material. Edit the assigned material in Material.",
       );
       note(
         panel,
-        "Add sketch-based union, subtract or intersect features in Solid operations. Use CAD thermal study to solve on a tetrahedral mesh. Face-level direct edits remain unavailable.",
+        feature.stepAsset ? "Displayed bounds conservatively enclose the CAD surfaces. Generate a tetrahedral mesh in Simulate to use this solid in FEM studies. Use Solid operations to position parts, apply STEP Boolean tools or create a linear pattern." : "Add sketch-based union, subtract or intersect features in Solid operations. Use CAD thermal study to solve on a tetrahedral mesh. Face-level direct edits remain unavailable.",
         "callout",
       );
       panel.append(
@@ -666,7 +671,7 @@ function renderProperties() {
     pair(panel, "Feature ID", feature.id);
     note(
       panel,
-      "Add union, subtract and intersect features in Solid operations, or cylindrical cuts in Hole features. Create a different base in Sketch & solid, or replace it with Import STEP. Multiple independent bodies and direct face editing remain unavailable.",
+      "Add union, subtract and intersect features in Solid operations, or cylindrical cuts in Hole features. Create a different base in Sketch & solid, or replace it with Import STEP. Import additional STEP parts or create linear patterns in Solid operations. Face-level direct editing remains unavailable.",
       "callout",
     );
     return;
@@ -694,7 +699,7 @@ function renderProperties() {
   if (node === 'volumeMesh') {
     const record=volumeMeshRecord();
     renderVolumeMeshEditor(panel,model,{
-      service:volumeMeshService,size:displayedSize(model),cadReady:!!currentCAD(),busy:!!jobs.active||!!volumeMeshPreparing,
+      service:volumeMeshService,size:displayedSize(model),cadReady:!!currentCAD(),cadIssue:(currentCAD()?.solidCount||1)>1?'FEM needs one solid. Suppress separate parts or join touching parts with Union.':'',busy:!!jobs.active||!!volumeMeshPreparing,
       checkService:async()=>{try{const health=await computeHealth();volumeMeshService=`Ready · Gmsh ${health.mesher}`;message('Local mesher is ready.');}catch(error){volumeMeshService='Offline';message(error.message,true);}if(!draft)renderProperties();},
       records:project().volumeMeshes,record,stats:record?volumeMeshInfo(record):null,current:record&&isCurrent(project(),record),cut:volumeMeshCut,
       generate:startVolumeMesh,selectRecord:id=>{if(!flushDraft())return;selectedVolumeMeshId=id;renderProperties();renderViewport();},
@@ -1055,8 +1060,17 @@ function renderResults(panel) {
   );
 }
 function renderOperations(panel, model) {
+  const native=usesNativeCAD(model.source);
   panel.append(element("h2", "Solid operation history"));
-  note(panel, "Build on the current body with sketch tools and edge treatments. Every enabled stage must remain one closed solid.");
+  note(panel, "Import STEP files as separate parts or Boolean tools. Position each imported part, or move and pattern the entire model. Up to 64 closed bodies and 24 downstream features. Separate bodies retain overlaps; displayed volume and mass sum their volumes.");
+  const parts=element('div',undefined,'operation-controls');
+  parts.append(button('Add STEP parts',()=>{if(stepUploadController||cadImport.active)throw Error('Finish or cancel the current STEP import first.');if(!flushDraft())return;$('stepImportMode').value='add';$('stepFile').click();}));
+  for(const [type,label] of [['transform','Move / rotate model'],['linear-pattern','Linear pattern']]){
+    const b=button(label,()=>{if(!flushDraft())return;update(source=>{selectedOperationId=addTransform(source,type,currentCAD().bounds);});render();});
+    b.disabled=!currentCAD()||model.source.features.length>=25;parts.append(b);
+  }
+  panel.append(parts);
+  if(native)note(panel,'Large STEP models support part Booleans, move/rotate and linear patterns. Add sketch and edge features before the first large STEP import.','callout');
   const editEdges = (feature,kind) => {
     disposeEdgeEditor = renderEdgeEditor(panel,model.source,feature,kind,{element,field,button,note,form,markDraft,
       getSource:()=>project().source,currentArtifact:currentCAD,
@@ -1076,11 +1090,11 @@ function renderOperations(panel, model) {
     update((s) => { selectedOperationId = addSketchOperation(s, combine.value, bounds); });
     sketchMode = false; selectedFace = null; render();
   }, "primary full");
-  add.disabled = !currentCAD() || model.source.features.length >= 25;
+  add.disabled = native || !currentCAD() || model.source.features.length >= 25;
   addSection.append(add); note(addSection, "Starts from the current solid bounds; no face attachment. Up to 24 operations, including eight block holes.");
   panel.append(addSection);
   const treatments=element('div',undefined,'operation-controls');
-  for(const kind of EDGE_KINDS){const b=button(`New ${kind}`,()=>{if(!flushDraft())return;newEdgeKind=kind;sketchMode=false;render();});b.disabled=!currentCAD()||model.source.features.length>=25;treatments.append(b);}
+  for(const kind of EDGE_KINDS){const b=button(`New ${kind}`,()=>{if(!flushDraft())return;newEdgeKind=kind;sketchMode=false;render();});b.disabled=native||!currentCAD()||model.source.features.length>=25;treatments.append(b);}
   panel.append(treatments);
   const operations = model.source.features.slice(1);
   let selected = operations.find((f) => f.id === selectedOperationId) || operations.at(-1);
@@ -1103,6 +1117,8 @@ function renderOperations(panel, model) {
     if (selected.type === "through-hole") {
       note(panel, "This existing cylindrical cut uses the base block dimensions. Its position in this history determines which earlier additions it cuts.");
       panel.append(button("Edit hole dimensions", () => navigate("Design", "holes"), "full"));
+    } else if(ADVANCED_FEATURES.includes(selected.type)) {
+      renderPartFeature(panel,selected);cadStatus(panel);
     } else if(EDGE_KINDS.includes(selected.type)) {
       editEdges(selected,selected.type);cadStatus(panel);
     } else {
@@ -1112,6 +1128,33 @@ function renderOperations(panel, model) {
     }
   } else note(panel, "No downstream operations yet. Add a sketch tool or edge treatment above.");
   if (!selected || selected.type === "through-hole") cadStatus(panel);
+}
+function renderPartFeature(panel,feature){
+  panel.append(element('h3',feature.type==='step-part'?'Imported part placement':feature.type==='transform'?'Move / rotate entire model':'Repeat entire model'));
+  const f=form(panel,()=>update(source=>{
+    const target=source.features.find(v=>v.id===feature.id);target.name=name.value;
+    if(feature.type==='linear-pattern'){target.count=Number(count.value);target.spacing=spacing.map(v=>v.value);}
+    else {target.placement={translation:translation.map(v=>v.value),rotation:rotation.map(v=>v.value)};if(combine)target.operation=combine.value;}
+  }),'Apply CAD feature');
+  const name=field(f.el,'FEATURE NAME',feature.name);
+  let count,spacing,translation,rotation,combine;
+  if(feature.type==='linear-pattern'){
+    count=field(f.el,'INSTANCES (INCLUDING ORIGINAL)',feature.count,'number');count.min=2;count.max=20;
+    spacing=feature.spacing.map((v,i)=>field(f.el,`SPACING ${'XYZ'[i]}`,v));
+    note(f.el,'Spacing is measured between instances. Copies remain separate bodies; overlapping copies are not fused.');
+  }else{
+    if(feature.type==='step-part'){pair(f.el,'Source file',feature.fileName);combine=select(f.el,'COMBINE PART',PART_OPERATIONS,feature.operation);}
+    translation=feature.placement.translation.map((v,i)=>field(f.el,`MOVE ${'XYZ'[i]}`,v));
+    rotation=feature.placement.rotation.map((v,i)=>field(f.el,`ROTATE ${'XYZ'[i]}`,v));
+    note(f.el,'Rotate about the world origin in X, Y, Z order, then translate. Lengths and angles accept parameter expressions, mm and deg.');
+  }
+  f.finish();
+  if(feature.type==='step-part'){
+    const duplicate=button('Duplicate STEP part',()=>{
+      if(!flushDraft())return;
+      update(source=>{const copy=clone(source.features.find(v=>v.id===feature.id));copy.id=crypto.randomUUID();copy.name=`${copy.name.slice(0,150)} copy`;copy.operation='add';copy.suppressed=false;copy.placement.translation[0]=`(${copy.placement.translation[0]}) + 20 mm`;source.features.push(copy);selectedOperationId=copy.id;});render();
+    });duplicate.disabled=project().source.features.length>=25;panel.append(duplicate);
+  }
 }
 function renderSketchEditor(panel, model, featureId = model.source.features[0].id) {
   const base = model.source.features.find((f) => f.id === featureId), featureIndex = model.source.features.indexOf(base);
@@ -1541,6 +1584,7 @@ function renderViewport() {
     : `${workspace.toUpperCase()} / SOLID`;
   $("viewportTitle").textContent = inputPreview ? inputPreview.title : r
     ? "Steady-state temperature"
+    : (currentCAD()?.solidCount||1)>1 ? `${currentCAD().solidCount} solid bodies`
     : model.operations.some((op) => !op.suppressed) ? (model.imported ? "Modified STEP solid" : "Parametric feature solid")
     : model.imported
       ? "Imported STEP solid"
@@ -1555,7 +1599,7 @@ function renderViewport() {
       ]
     : [
         [
-          "Dimensions",
+          usesNativeCAD(model.source) ? "CAD bounds" : "Dimensions",
           measuredSize
             ? `${size.map((v) => number(v * 1000, 4)).join(" × ")} mm`
             : "Awaiting CAD solid",
@@ -1600,8 +1644,9 @@ function renderViewport() {
       );
     else
       warnings.push(
-        model.imported
-          ? "Imported solid validated. Add parametric geometry edits in Solid operations; generate a tetrahedral mesh in Simulate. Use CAD thermal study for a finite-element solution."
+        (currentCAD().solidCount||1)>1 ? "Multi-part CAD validated. Position parts in Solid operations. FEM needs one solid: suppress separate parts or join touching parts with Union."
+        : model.imported
+          ? (usesNativeCAD(model.source) ? "Imported solid validated by the local CAD service. Generate a tetrahedral mesh in Simulate or export the model in Manufacture." : "Imported solid validated. Add parametric geometry edits in Solid operations; generate a tetrahedral mesh in Simulate. Use CAD thermal study for a finite-element solution.")
           : model.sketchBased ? "Sketch solid validated. Generate a tetrahedral mesh, then assign surfaces in CAD thermal study."
           : "CAD solid validated. Use CAD thermal study with a tetrahedral mesh for this geometry.",
       );
@@ -2072,7 +2117,7 @@ function renderBottom() {
       .source.features.slice(1)
       .map((f) => [
         f.name,
-        f.suppressed ? "Suppressed" : f.type === "through-hole" ? `${"XYZ"[f.axis]} through-hole` : EDGE_KINDS.includes(f.type) ? `${f.type} · ${f.size}` : `${f.operation} · ${f.type}`,
+        f.suppressed ? "Suppressed" : f.type === "through-hole" ? `${"XYZ"[f.axis]} through-hole` : EDGE_KINDS.includes(f.type) ? `${f.type} · ${f.size}` : f.type==='step-part'?`${f.operation} · ${f.fileName}`:f.type==='transform'?'Move / rotate':f.type==='linear-pattern'?`${f.count} instances`: `${f.operation} · ${f.type}`,
       ]),
     ...(project().electricResults.length ? [["DC conduction", `${project().electricResults.length} saved solutions`]] : []),
     ...(project().harmonicResults.length ? [["Harmonic response", `${project().harmonicResults.length} saved sweeps`]] : []),
@@ -2115,18 +2160,24 @@ async function startVolumeMesh(){
   if(!project().source.meshes.some(m=>m.type==='gmsh-tetra')) {activeForm?.requestSubmit();if(!project().source.meshes.some(m=>m.type==='gmsh-tetra'))return;}
   if(jobs.active||volumeMeshPreparing)throw Error('Wait for the current job or cancel it.');
   const artifact=currentCAD();if(!artifact)throw Error('Wait for the current CAD solid to regenerate.');
+  if((artifact.solidCount||1)!==1)throw Error('FEM meshing currently needs one solid body. Suppress separate parts or join touching parts with Union before meshing.');
   const snapshot=clone(project()),model=validateSource(snapshot.source),settings=resolveVolumeMesh(model.source.meshes.find(m=>m.type==='gmsh-tetra'),model.values,model.source.features[0].bodyId).settings;
   const token={};volumeMeshPreparing=token;$('jobState').textContent='Preparing';$('cancelJob').disabled=false;syncStudyControls();
   message('Preparing the exact CAD snapshot for local volume meshing…');
   try{
     const health=await computeHealth();volumeMeshService=`Ready · Gmsh ${health.mesher}`;
     if(volumeMeshPreparing!==token)return;
-    const {blob}=await cadClient.request('export',{format:'step',fingerprint:artifact.fingerprint,name:snapshot.name});
-    const step=await blob.text();
-    const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(step))),b=>b.toString(16).padStart(2,'0')).join('');
+    const asset=artifact.stepAsset;
+    let step,hash;
+    if(asset){hash=asset.sha256;}
+    else {
+      const {blob}=await cadClient.request('export',{format:'step',fingerprint:artifact.fingerprint,name:snapshot.name});
+      step=await blob.text();
+      hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(step))),b=>b.toString(16).padStart(2,'0')).join('');
+    }
     if(volumeMeshPreparing!==token)return;
     volumeMeshJob={snapshot,hash,volume:artifact.volume};volumeMeshPreparing=null;
-    jobs.start('volume-mesh',snapshot,{request:{kind:'gmsh-tetra',step,settings,expectedVolume:artifact.volume}});
+    jobs.start('volume-mesh',snapshot,{request:{kind:'gmsh-tetra',...(asset?{stepAsset:asset}:{step}),settings,expectedVolume:artifact.volume}});
     message('Gmsh is generating tetrahedra on this computer. You can continue editing or cancel the job.');
   }catch(error){if(volumeMeshPreparing===token){volumeMeshPreparing=null;volumeMeshJob=null;$('jobState').textContent='Failed';$('cancelJob').disabled=true;syncStudyControls();throw error;}}
 }
@@ -2316,6 +2367,7 @@ async function replaceProject(next, description, importIsCurrent) {
       "The project changed while saving. Your newer edits were kept; open the file again.",
     );
   jobs.cancel();
+  stepUploadController?.abort();
   cadImport.cancel();
   cadClient.reset();
   cadState = { key: null, artifact: null, status: "idle", error: "" };
@@ -2497,6 +2549,7 @@ async function start() {
     });
   $("cancelImport").onclick = () => {
     importGeneration++;
+    stepUploadController?.abort();
     cadImport.cancel();
     $("importSTEP").disabled = false;
     $("cancelImport").hidden = true;
@@ -2504,33 +2557,39 @@ async function start() {
   };
   $("stepFile").onchange = (e) =>
     attempt(async () => {
-      const file = e.target.files[0];
+      const files = [...e.target.files];
       e.target.value = "";
-      if (!file) return;
-      if (file.size > MAX_STEP_BYTES)
-        throw Error("STEP files must be no larger than 1 MiB in this release.");
+      if (!files.length) return;
+      files.forEach(file=>validateSTEPFileSize(file.size));
       if (!flushDraft()) return;
-      const guard = unchangedProject(),
-        base = clone(project().source);
-      const candidate = stepSource(
-        base,
-        await file.text(),
-        file.name.slice(0, 160),
-      );
-      if (!guard())
-        throw Error(
-          "The project changed while reading the file. Import it again to replace the current model.",
-        );
+      const mode=$('stepImportMode').value,guard=unchangedProject();
+      let candidate=clone(project().source);
+      if((mode==='replace'?files.length:candidate.features.length+files.length)>25)throw Error('Import at most 25 source files in a new model, or keep the history within 24 downstream features.');
+      const controller=new AbortController();stepUploadController=controller;
+      $("importSTEP").disabled=true;$("cancelImport").hidden=false;
+      try {
+        for(const [index,file] of files.entries()){
+          if(controller.signal.aborted)throw Error('STEP import cancelled. The current model was kept.');
+          message(`Reading STEP ${index+1}/${files.length}: ${file.name}${file.size>MAX_INLINE_STEP_BYTES?' · uploading to local service':''}…`);
+          const data=file.size>MAX_INLINE_STEP_BYTES ? await uploadSTEP(file,controller.signal) : await file.text();
+          if(mode==='replace'&&index===0)candidate=stepSource(candidate,data,file.name.slice(0,160));
+          else selectedOperationId=appendSTEP(candidate,data,file.name.slice(0,160));
+        }
+        if(controller.signal.aborted)throw Error('STEP import cancelled. The current model was kept.');
+      } finally {
+        if(stepUploadController===controller){stepUploadController=null;$("importSTEP").disabled=false;$("cancelImport").hidden=true;}
+      }
+      if (!guard())throw Error('The project changed during import. Your newer edits were kept; import the files again.');
       await acceptCADImport(candidate, guard, (source) => {
         history.update(source);
         draft = false;
         selectedFace = null;
         workspace = "Design";
-        node = "body";
+        node = candidate.features.length>1 ? "operations" : "body";
         scheduleSave();
         render();
         message(
-          `Imported “${file.name}” as one validated solid. Undo restores the previous design; prior results remain available in Analyze.`,
+          `Imported ${files.length} STEP file${files.length===1?'':'s'}. Position parts in Solid operations. Undo restores the previous design.`,
         );
       });
     });
@@ -2555,7 +2614,7 @@ async function start() {
           "Project opened. Imported numerical results are retained as unverified; solve again to verify.",
           importIsCurrent,
         );
-      if (next.source.features[0].type === "imported-step")
+      if (next.source.features.some(f=>["imported-step","step-part"].includes(f.type)&&!f.suppressed))
         await acceptCADImport(next.source, guard, replace);
       else await replace();
     });

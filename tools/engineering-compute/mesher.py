@@ -14,9 +14,13 @@ def validate_request(data):
     if not isinstance(data, dict) or data.get('kind') != 'gmsh-tetra':
         raise ValueError('Unsupported compute job.')
     step = data.get('step')
-    if not isinstance(step, str) or len(step.encode('utf-8')) > MAX_STEP or not step.lstrip('\ufeff \r\n\t').startswith('ISO-10303-21;') or not step.rstrip().endswith('END-ISO-10303-21;'):
+    if data.get('stepPath'):
+        from cad_step import asset_path
+        asset_path(data)
+        step = None
+    if not data.get('stepPath') and (not isinstance(step, str) or len(step.encode('utf-8')) > MAX_STEP or not step.lstrip('\ufeff \r\n\t').startswith('ISO-10303-21;') or not step.rstrip().endswith('END-ISO-10303-21;')):
         raise ValueError('Provide a complete text STEP solid, at most 8 MiB.')
-    if any(ord(c) < 32 and c not in '\r\n\t' for c in step):
+    if any(ord(c) < 32 and c not in '\r\n\t' for c in (step or '')):
         raise ValueError('STEP contains unsupported control characters.')
     settings = data.get('settings', {})
     if not isinstance(settings, dict):
@@ -45,7 +49,10 @@ def mesh_step(data, status=lambda state: None):
     settings = data['settings']
     with tempfile.TemporaryDirectory(prefix='hc-gmsh-') as folder:
         path = Path(folder) / 'solid.step'
-        path.write_text(data['step'], encoding='utf-8')
+        if data.get('stepPath'):
+            from cad_step import asset_path
+            path=asset_path(data)
+        else:path.write_text(data['step'], encoding='utf-8')
         gmsh.initialize(['hc-mesher', '-nopopup'], readConfigFiles=False)
         try:
             gmsh.option.setNumber('General.Terminal', 0)
@@ -106,7 +113,7 @@ def mesh_step(data, status=lambda state: None):
                     'area':gmsh.model.occ.getMass(2,tag),'center':list(gmsh.model.occ.getCenterOfMass(2,tag)),
                     'triangles':[lookup[int(i)] for i in surface_nodes[0]]})
             return {'nodes':points.flatten().tolist(),'tetrahedra':cells.flatten().tolist(),'boundary':boundary,
-                'cadVolume':volume,'stepSha256':hashlib.sha256(data['step'].encode()).hexdigest(),
+                'cadVolume':volume,'stepSha256':data['stepAsset']['sha256'] if data.get('stepPath') else hashlib.sha256(data['step'].encode()).hexdigest(),
                 'mesher':{'id':'gmsh-tetra-1','version':gmsh.__version__,'algorithm':'Delaunay','order':1,'threads':1}}
         finally:
             gmsh.finalize()

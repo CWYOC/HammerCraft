@@ -7,6 +7,9 @@ on:
       - "tools/engineering-rust/**"
       - "tests/engineering-rust.test.mjs"
       - "tests/engineering-rust-structural.test.mjs"
+      - "tests/engineering-step-upload.test.mjs"
+      - "tests/engineering-parts.test.mjs"
+      - "tests/fixtures/engineering-step/**"
       - "tests/fixtures/engineering-rust/**"
       - "docs/engineering/**"
       - "docs/engineering-studio.*"
@@ -36,6 +39,9 @@ on:
       - "tools/engineering-rust/**"
       - "tests/engineering-rust.test.mjs"
       - "tests/engineering-rust-structural.test.mjs"
+      - "tests/engineering-step-upload.test.mjs"
+      - "tests/engineering-parts.test.mjs"
+      - "tests/fixtures/engineering-step/**"
       - "tests/fixtures/engineering-rust/**"
       - "docs/engineering/**"
       - "docs/engineering-studio.*"
@@ -86,4 +92,4 @@ jobs:
       - run: cargo test --manifest-path engineering-rust/Cargo.toml --workspace --locked
       - run: cargo clippy --manifest-path engineering-rust/Cargo.toml --workspace --all-targets --locked -- -D warnings
       - run: python -m unittest discover -s tools/engineering-compute -p 'test_*.py'
-      - run: node --test tests/engineering.test.mjs tests/engineering-cad.test.mjs tests/engineering-sweep.test.mjs tests/engineering-convergence.test.mjs tests/engineering-measurement.test.mjs tests/engineering-convection.test.mjs tests/engineering-sketch.test.mjs tests/engineering-operations.test.mjs tests/engineering-constraints.test.mjs tests/engineering-edges.test.mjs tests/engineering-materials.test.mjs tests/engineering-volume-mesh.test.mjs tests/engineering-fem.test.mjs tests/engineering-structural.test.mjs tests/engineering-modal.test.mjs tests/engineering-harmonic.test.mjs tests/engineering-rust.test.mjs tests/engineering-rust-structural.test.mjs
+      - run: node --test tests/engineering.test.mjs tests/engineering-cad.test.mjs tests/engineering-sweep.test.mjs tests/engineering-convergence.test.mjs tests/engineering-measurement.test.mjs tests/engineering-convection.test.mjs tests/engineering-sketch.test.mjs tests/engineering-operations.test.mjs tests/engineering-constraints.test.mjs tests/engineering-edges.test.mjs tests/engineering-materials.test.mjs tests/engineering-volume-mesh.test.mjs tests/engineering-fem.test.mjs tests/engineering-structural.test.mjs tests/engineering-modal.test.mjs tests/engineering-harmonic.test.mjs tests/engineering-rust.test.mjs tests/engineering-rust-structural.test.mjs tests/engineering-step-upload.test.mjs tests/engineering-parts.test.mjs

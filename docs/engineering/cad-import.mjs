@@ -1,5 +1,5 @@
 import { validateSource } from "./project.mjs";
-import { validateSTEPText } from "./step-input.mjs";
+import { validateSTEPText, validateSTEPAsset } from "./step-input.mjs";
 import { CadClient } from "./cad-client.mjs";
 
 export function stepSource(
@@ -18,7 +18,7 @@ export function stepSource(
       type: "imported-step",
       name: "Imported STEP solid",
       fileName,
-      stepText: validateSTEPText(stepText),
+      ...(typeof stepText === "string" ? {stepText:validateSTEPText(stepText)} : {stepAsset:validateSTEPAsset(stepText)}),
       materialId: base.materialId,
     },
   ];

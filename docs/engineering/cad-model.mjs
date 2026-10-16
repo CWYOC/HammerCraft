@@ -17,7 +17,7 @@ function sketchDefinition(sk, operation) {
 const holeDefinition = (h) => ({ id: h.id, axis: h.axis, plane: h.plane, center: scale(h.center), diameter: h.diameter * 1000 });
 export function cadDefinition(source) {
   const model = validateSource(source);
-  const definition = model.imported ? { stepText: model.source.features[0].stepText }
+  const definition = model.imported ? (model.source.features[0].stepAsset ? {stepAsset:model.source.features[0].stepAsset} : { stepText: model.source.features[0].stepText })
     : model.sketchBased ? { sketch: sketchDefinition(model.sketch, model.operation) }
       : { size: scale(model.size), holes: model.holes.filter((h) => !h.suppressed).map(holeDefinition) };
   // In a mixed history, cylinder cuts must stay in their original order too.
@@ -26,6 +26,7 @@ export function cadDefinition(source) {
     definition.steps = model.source.features.slice(1).filter((f) => !f.suppressed).map((f) => {
       if (f.type === 'through-hole') return { id: f.id, type: 'hole', hole: holeDefinition(model.holes.find((h) => h.id === f.id)) };
       const op = model.operations.find((op) => op.id === f.id);
+      if (op.definition) return {id:op.id,type:op.type,...op.definition};
       if (EDGE_KINDS.includes(op.type)) return {id:op.id,type:op.type,size:op.size*1000,selection:op.selection,support:edgeSupport(model.source,op.id)};
       return { id: op.id, type: op.operation, sketch: sketchDefinition(op.sketch, op.solid) };
     });

@@ -2,13 +2,14 @@
 import json
 from pathlib import Path
 import sys
+from cad_step import preview_step, validate_request as validate_cad
 from harmonic_fem import solve_harmonic, validate_request as validate_harmonic
 from modal_fem import solve_modal, validate_request as validate_modal
 from mesher import mesh_step, validate_request as validate_mesh
 from structural_fem import solve_structural, validate_request as validate_structural
 from thermal_fem import solve_thermal, validate_request as validate_thermal
 
-MODULES={'harmonic-tetra':(validate_harmonic,solve_harmonic,'solution'),'modal-tetra':(validate_modal,solve_modal,'solution'),'gmsh-tetra':(validate_mesh,mesh_step,'mesh'),'thermal-tetra':(validate_thermal,solve_thermal,'solution'),'structural-tetra':(validate_structural,solve_structural,'solution')}
+MODULES={'cad-step':(validate_cad,preview_step,'artifact'),'harmonic-tetra':(validate_harmonic,solve_harmonic,'solution'),'modal-tetra':(validate_modal,solve_modal,'solution'),'gmsh-tetra':(validate_mesh,mesh_step,'mesh'),'thermal-tetra':(validate_thermal,solve_thermal,'solution'),'structural-tetra':(validate_structural,solve_structural,'solution')}
 
 def module(data):
     if not isinstance(data,dict) or data.get('kind') not in MODULES:raise ValueError('Unsupported compute job.')

@@ -1,4 +1,5 @@
 //! Loopback compute supervisor. Native Rust scalar FEM; explicit adapters for unmigrated kernels.
+mod assets;
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, Path, State},
@@ -33,18 +34,21 @@ struct Job {
     folder: TempDir,
     child: Child,
     started: Instant,
+    timeout: Duration,
     result_key: &'static str,
     terminal: Option<(&'static str, String)>,
 }
 pub struct Service {
     pub config: Config,
     jobs: Mutex<BTreeMap<String, Job>>,
+    upload: tokio::sync::Semaphore,
 }
 impl Service {
     pub fn new(config: Config) -> Arc<Self> {
         Arc::new(Self {
             config,
             jobs: Mutex::new(BTreeMap::new()),
+            upload: tokio::sync::Semaphore::new(1),
         })
     }
     pub fn collect(&self) {
@@ -52,7 +56,7 @@ impl Service {
             for job in jobs.values_mut() {
                 if job.terminal.is_none()
                     && job.child.try_wait().ok().flatten().is_none()
-                    && job.started.elapsed() > self.config.timeout
+                    && job.started.elapsed() > job.timeout
                 {
                     let _ = job.child.kill();
                     let _ = job.child.wait();
@@ -60,7 +64,7 @@ impl Service {
                 }
             }
             jobs.retain(|_, job| {
-                job.started.elapsed() < self.config.retention
+                job.started.elapsed() < self.config.retention + job.timeout
                     || job.child.try_wait().ok().flatten().is_none()
             });
         }
@@ -74,17 +78,65 @@ impl Service {
             jobs.clear();
         }
     }
-    fn start(&self, data: Value) -> Result<Value, (StatusCode, String)> {
+    fn start(&self, mut data: Value) -> Result<Value, (StatusCode, String)> {
         let kind = data
             .get("kind")
             .and_then(Value::as_str)
-            .ok_or((StatusCode::BAD_REQUEST, "Missing compute kind.".into()))?;
-        if !self.config.capabilities.iter().any(|s| s == kind) {
+            .ok_or((StatusCode::BAD_REQUEST, "Missing compute kind.".into()))?
+            .to_string();
+        if !self.config.capabilities.iter().any(|s| s == &kind) {
             return Err((StatusCode::BAD_REQUEST, "Unsupported compute job.".into()));
         }
         if kind == "thermal-tetra" {
             serde_json::from_value::<engineering_core::conduction::ThermalRequest>(data.clone())
                 .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+        }
+        // Never accept a client-selected filesystem path. Resolve only a stored digest.
+        if data.get("stepPath").is_some() {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Filesystem paths are not accepted.".into(),
+            ));
+        }
+        if let Some(asset) = data.get("stepAsset") {
+            if !["cad-step", "gmsh-tetra"].contains(&kind.as_str()) {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    "This job does not accept STEP assets.".into(),
+                ));
+            }
+            let path = assets::resolve(self, asset)?;
+            data["stepPath"] = json!(path);
+        }
+        if let Some(operations) = data.get_mut("operations") {
+            if kind != "cad-step" {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    "CAD operations require a CAD job.".into(),
+                ));
+            }
+            let operations = operations.as_array_mut().filter(|v| v.len() <= 24).ok_or((
+                StatusCode::BAD_REQUEST,
+                "Use at most 24 CAD operations.".into(),
+            ))?;
+            for operation in operations {
+                if operation.get("stepPath").is_some() {
+                    return Err((
+                        StatusCode::BAD_REQUEST,
+                        "Filesystem paths are not accepted.".into(),
+                    ));
+                }
+                if let Some(asset) = operation.get("stepAsset") {
+                    let path = assets::resolve(self, asset)?;
+                    operation["stepPath"] = json!(path);
+                }
+            }
+        }
+        if kind == "cad-step" && data.get("stepPath").is_none() {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Upload the STEP file first.".into(),
+            ));
         }
         self.collect();
         let mut jobs = self
@@ -117,16 +169,16 @@ impl Service {
         let result = folder.path().join("result.json");
         let status = folder.path().join("status.json");
         std::fs::write(&request, serde_json::to_vec(&data).map_err(internal)?).map_err(internal)?;
-        let mut command = if ["thermal-tetra", "electric-tetra", "structural-tetra"].contains(&kind)
-        {
-            let mut c = Command::new(std::env::current_exe().map_err(internal)?);
-            c.arg("--worker");
-            c
-        } else {
-            let mut c = Command::new(&self.config.python);
-            c.arg(&self.config.runner);
-            c
-        };
+        let mut command =
+            if ["thermal-tetra", "electric-tetra", "structural-tetra"].contains(&kind.as_str()) {
+                let mut c = Command::new(std::env::current_exe().map_err(internal)?);
+                c.arg("--worker");
+                c
+            } else {
+                let mut c = Command::new(&self.config.python);
+                c.arg(&self.config.runner);
+                c
+            };
         command
             .arg(&request)
             .arg(&result)
@@ -144,7 +196,9 @@ impl Service {
         }
         let child = command.spawn().map_err(internal)?;
         let id = uuid::Uuid::new_v4().to_string();
-        let result_key = if kind == "gmsh-tetra" {
+        let result_key = if kind == "cad-step" {
+            "artifact"
+        } else if kind == "gmsh-tetra" {
             "mesh"
         } else {
             "solution"
@@ -155,6 +209,11 @@ impl Service {
                 folder,
                 child,
                 started: Instant::now(),
+                timeout: if kind == "cad-step" {
+                    Duration::from_secs(900)
+                } else {
+                    self.config.timeout
+                },
                 result_key,
                 terminal: None,
             },
@@ -315,7 +374,7 @@ async fn guard(
 }
 async fn health(State(s): State<Arc<Service>>) -> Json<Value> {
     Json(
-        json!({"service":"hc-engineering-compute","version":1,"runtime":{"language":"Rust","version":env!("CARGO_PKG_VERSION")},"mesher":if s.config.capabilities.iter().any(|k|k=="gmsh-tetra"){Some("4.15.2")}else{None},"capabilities":s.config.capabilities,"nativeSolvers":["thermal-tetra","electric-tetra","structural-tetra"],"adapters":s.config.capabilities.iter().filter(|k|!["thermal-tetra","electric-tetra","structural-tetra"].contains(&k.as_str())).collect::<Vec<_>>(),"maxTetrahedra":100000,"thermalSolver":engineering_core::conduction::thermal_settings()}),
+        json!({"service":"hc-engineering-compute","version":1,"runtime":{"language":"Rust","version":env!("CARGO_PKG_VERSION")},"mesher":if s.config.capabilities.iter().any(|k|k=="gmsh-tetra"){Some("4.15.2")}else{None},"capabilities":s.config.capabilities,"nativeSolvers":["thermal-tetra","electric-tetra","structural-tetra"],"adapters":s.config.capabilities.iter().filter(|k|!["thermal-tetra","electric-tetra","structural-tetra"].contains(&k.as_str())).collect::<Vec<_>>(),"maxTetrahedra":100000,"maxStepBytes":assets::MAX_STEP,"thermalSolver":engineering_core::conduction::thermal_settings()}),
     )
 }
 async fn start(
@@ -362,6 +421,11 @@ pub fn router(service: Arc<Service>) -> Router {
         .route("/jobs", axum::routing::post(start))
         .route("/jobs/{id}", get(read).delete(cancel))
         .layer(DefaultBodyLimit::max(MAX_INPUT))
+        .route(
+            "/step-assets",
+            axum::routing::post(assets::upload).layer(DefaultBodyLimit::disable()),
+        )
+        .route("/step-assets/{hash}", get(assets::download))
         .layer(middleware::from_fn_with_state(service.clone(), guard))
         .with_state(service)
 }

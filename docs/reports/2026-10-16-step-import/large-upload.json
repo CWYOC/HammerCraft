@@ -1,0 +1,10 @@
+{
+  "bytes": 1500000000,
+  "uploadMs": 2941,
+  "parseMs": 5021,
+  "sha256": "f04a01c050aa8ffc433cac89eae464cba0f0b2cbf54030733bf00fdce1d30cbc",
+  "triangles": 2890,
+  "volume": 0.000007402203300817288,
+  "declaredOverLimitStatus": 413,
+  "note": "Valid torus STEP padded with whitespace to exactly 1.5 GB. Tests transfer/storage/parser path, not the complexity of a 1.5 GB geometric model."
+}

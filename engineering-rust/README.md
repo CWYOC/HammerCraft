@@ -81,6 +81,22 @@ Structural checks compare complete fields against independently assembled scikit
 1. Port shared project schema, materials, history, persistence and validation into Rust with backwards-compatible fixtures; expand Rust-owned UI beyond parameters.
 2. Port modal/harmonic assembly and numerical methods with independent continuum and dense-reference benchmarks. Choose maintained sparse/eigen/complex libraries before replacing validated adapters.
 3. Retain explicit foreign-kernel interfaces for CAD/constraints/meshing, or undertake a separately benchmarked kernel replacement. “Rust application” does not make OpenCascade or Gmsh Rust libraries.
-4. Complete original platform scope: multi-body CAD/assemblies and advanced features/surfaces, acoustic/fluid/magnetic/electrostatic domains, circuits, generic coupled/transient/nonlinear studies, adaptive/high-order meshing, broader optimization, manufacturing and collaborative production infrastructure.
+4. Complete original platform scope: assembly hierarchy/mates and advanced features/surfaces, acoustic/fluid/magnetic/electrostatic domains, circuits, generic coupled/transient/nonlinear studies, adaptive/high-order meshing, broader optimization, manufacturing and collaborative production infrastructure.
 
 The complete feature ledger is [ENGINEERING_PROGRESS.md](../docs/ENGINEERING_PROGRESS.md). A working migration milestone must not be described as “everything rebuilt” or the whole platform finished.
+
+## Large STEP imports
+
+The Rust service accepts streamed text STEP uploads up to **1.5 GB (1,500,000,000 bytes)** through `POST /step-assets` (`application/octet-stream`, `X-HC-Compute: 1`). The normal JSON job cap stays 10 MiB. Content length and actual received bytes are checked; interrupted uploads remove their temporary files. Completed assets are addressed by SHA-256 and stored in `tools/engineering-compute/.step-assets/`, outside Git. They persist across service restarts and are not evicted with job results. Keep/back up the original STEP files and this directory.
+
+`cad-step` jobs use the existing native Gmsh/Open CASCADE adapter, with a 15-minute watchdog. STEP data never enters a browser string or repeated project snapshots. Large-source project exports contain `{sha256, bytes}` references; importing identical originals restores missing assets. The browser explains this difference. Large imports support STEP-part Booleans, move/rotate, linear patterns, STEP/STL export and single-body tetrahedral FEM studies. Native downstream sketch/edge features remain unavailable. Native preview geometry is limited to 200,000 nodes and 150,000 triangles. File-size acceptance does not guarantee arbitrary geometry complexity can be processed.
+
+The service remains loopback-only. To use it with the hosted website, explicitly start it with that permitted origin:
+
+```sh
+engineering-rust/target/release/engineering-server --origin https://www.hammer-craft.co.uk
+```
+
+Browser local-network access policy still applies. No public upload server or cloud storage was added. Small STEP imports continue to work in the browser without this service. [Verification evidence](../docs/reports/2026-10-16-step-import/README.md).
+
+Multi-part CAD jobs accept bounded `operations` for STEP part add/union/subtract/intersect, XYZ placement and linear patterns. Nested sources use stored SHA-256 assets; the service rejects client `stepPath` values and resolves each digest before running the adapter. Generated STEP assets describe the final geometry and are used for export/FEM. CAD supports up to 64 closed bodies; FEM remains single-body.

@@ -17,8 +17,8 @@ export function renderVolumeMeshEditor(panel,model,context,ui){
   preset.onchange=()=>{if(preset.value==='Custom')return;const next=defaultVolumeMesh(settings.bodyId,context.size,preset.value);min.value=next.minSize;max.value=next.maxSize;curvature.value=next.curvature;markDraft();};
   f.finish();
   note(panel,'First-order tetrahedra · Delaunay · one CPU thread. Size limits guide Gmsh; geometric features may require smaller elements. Maximum 50,000 nodes / 100,000 cells and a 90-second meshing limit.');
-  const generate=button('Generate tetrahedral mesh',context.generate,'primary full');generate.id='generateVolumeMesh';generate.disabled=context.busy||!context.cadReady;panel.append(generate);
-  const waiting=element('p','Wait for a valid CAD solid before meshing.','callout');waiting.id='cadMeshWait';waiting.hidden=context.cadReady;panel.append(waiting);
+  const generate=button('Generate tetrahedral mesh',context.generate,'primary full');generate.id='generateVolumeMesh';generate.disabled=context.busy||!context.cadReady||!!context.cadIssue;generate.title=context.cadIssue||'';panel.append(generate);
+  const waiting=element('p',context.cadIssue||'Wait for a valid CAD solid before meshing.','callout');waiting.id='cadMeshWait';waiting.hidden=context.cadReady&&!context.cadIssue;panel.append(waiting);
   note(panel,'Use CAD thermal study to assign surface conditions and solve this mesh. The block study uses its own structured grid.','callout');
   if(!context.records.length)return;
   panel.append(element('h3','Saved volume meshes'));

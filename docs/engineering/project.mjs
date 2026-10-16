@@ -1,3 +1,4 @@
+import {ADVANCED_FEATURES,resolveAdvancedFeature} from './part-features.mjs';
 import {resolveElectricPhysics,validateElectricRecord} from './electric-fem-data.mjs';
 import {resolveHarmonicPhysics,validateHarmonicRecord,harmonicSweep} from './harmonic-fem-data.mjs';
 import {resolveModalPhysics,validateModalRecord,modalCount} from './modal-fem-data.mjs';
@@ -7,7 +8,7 @@ import {assertStudy} from './physics-registry.mjs';
 import { resolveVolumeMesh, validateVolumeMeshRecord } from './volume-mesh.mjs';
 import { parameters, quantity, dimensions } from "./units.mjs";
 import { resolveSketch, resolveSketchOperation } from "./sketch.mjs";
-import { validateSTEPText } from "./step-input.mjs";
+import { validateSTEPText, validateSTEPAsset } from "./step-input.mjs";
 import { validateSweepRecord } from "./sweep-data.mjs";
 import { validateConvergenceRecord } from "./convergence-data.mjs";
 import { validateMeasurement } from "./measurement-data.mjs";
@@ -157,6 +158,7 @@ export function validateSource(input) {
     study = one((input.studies || []).filter(s=>s.solverId===SOLVER), "block study");
   if(!Array.isArray(input.studies)||input.studies.length>6)throw Error("Use at most six implemented studies.");
   const imported = feature?.type === "imported-step";
+  if(imported && feature.stepAsset && feature.stepText!==undefined)throw Error("A STEP source must use either embedded text or a stored asset.");
   const sketchBased = ["extrude", "revolve"].includes(feature?.type);
   if (
     !feature ||
@@ -193,7 +195,7 @@ export function validateSource(input) {
         ...(imported
           ? {
               fileName: text(feature.fileName, "STEP file name"),
-              stepText: validateSTEPText(feature.stepText),
+              ...(feature.stepAsset ? {stepAsset:validateSTEPAsset(feature.stepAsset)} : {stepText:validateSTEPText(feature.stepText)}),
             }
           : sketchBased ? { sketchId: identity(feature.sketchId), ...(feature.type === "extrude" ? { distance: expression(feature.distance) } : { angle: expression(feature.angle) }) }
           : { dimensions: feature.dimensions.map(expression) }),
@@ -321,6 +323,12 @@ export function validateSource(input) {
   if (input.features.slice(1).filter((f) => f?.type === "through-hole").length > 8)
     throw Error("Use at most eight through-hole features.");
   for (const f of input.features.slice(1)) {
+    if(ADVANCED_FEATURES.includes(f?.type)) {
+      if(f.bodyId!==feature.bodyId||typeof f.suppressed!=='boolean')throw Error('A CAD feature needs the base body and a suppression state.');
+      const advanced=resolveAdvancedFeature(f,values);
+      const normalized={id:identity(f.id),bodyId:feature.bodyId,type:f.type,name:text(f.name,'Feature name'),suppressed:f.suppressed,...advanced.source};
+      source.features.push(normalized);operations.push({...normalized,definition:advanced.definition});continue;
+    }
     if (EDGE_KINDS.includes(f?.type)) {
       if (f.bodyId !== feature.bodyId || typeof f.suppressed !== 'boolean')
         throw Error('An edge treatment needs the base body and a suppression state.');

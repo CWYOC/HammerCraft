@@ -1,3 +1,7 @@
+import {usesNativeCAD} from './part-features.mjs';
+import {cadDefinition,cadFingerprint,pruneSketches} from './cad-model.mjs';
+import {uploadSTEP} from './native-cad.mjs';
+import {NativeCadClient} from "./native-cad.mjs";
 // One operation at a time. A new geometry build terminates obsolete work so that
 // a late result can never replace the current geometry or produce a wrong export.
 export class CadClient {
@@ -13,8 +17,14 @@ export class CadClient {
     this.timeout = timeout;
     this.label = label;
     this.sequence = 0;
+    this.native = new NativeCadClient();
+    this.nativeActive = false;
   }
   reset() {
+    this.preparing?.reset(); this.preparing=null;
+    this.prepareController?.abort(); this.prepareController=null;
+    this.native?.reset();
+    this.nativeActive = false;
     this.worker?.terminate();
     this.worker = null;
     if (this.pending) {
@@ -23,8 +33,32 @@ export class CadClient {
       this.pending = null;
     }
   }
+  async prepareNative(source) {
+    const controller=new AbortController();this.prepareController=controller;
+    const index=source.features.findIndex(f=>!f.suppressed&&f.stepAsset);
+    let stepAsset=source.features[0].stepAsset;
+    const definition=cadDefinition(source);
+    let steps=definition.steps||[];
+    if(index>0){
+      const prefix=structuredClone(source);prefix.features=prefix.features.slice(0,index);pruneSketches(prefix);
+      const client=new CadClient(this.factory,this.timeout,this.label);this.preparing=client;
+      try {
+        await client.request('build',{source:prefix});
+        const {blob}=await client.request('export',{format:'step',fingerprint:cadFingerprint(prefix),name:'Assembly base'});
+        stepAsset=await uploadSTEP(blob,controller.signal);
+      }finally{client.reset();if(this.preparing===client)this.preparing=null;}
+      const first=source.features[index].id;steps=steps.slice(steps.findIndex(s=>s.id===first));
+    }
+    if(controller.signal.aborted)throw Error('CAD operation superseded by a newer model.');
+    return this.native.request('build',{source,stepAsset,steps});
+  }
   request(action, data) {
-    if (action === "build") this.reset();
+    if (action === "build") {
+      this.reset();
+      this.nativeActive = usesNativeCAD(data.source);
+      if(this.nativeActive)return this.prepareNative(data.source);
+    }
+    if(this.nativeActive)return this.native.request(action,data);
     if (this.pending)
       return Promise.reject(Error(`A ${this.label} operation is already running.`));
     return new Promise((resolve, reject) => {

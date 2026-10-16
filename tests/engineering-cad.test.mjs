@@ -33,7 +33,7 @@ import { CadClient } from "../docs/engineering/cad-client.mjs";
 import { CadImport, stepSource } from "../docs/engineering/cad-import.mjs";
 import {
   validateSTEPText,
-  MAX_STEP_BYTES,
+  MAX_INLINE_STEP_BYTES,
 } from "../docs/engineering/step-input.mjs";
 import * as cad from "../docs/engineering/vendor/replicad.mjs";
 
@@ -333,7 +333,7 @@ test("text STEP screening rejects oversized, binary and truncated data", () => {
     "solid stl\nendsolid stl",
     "ISO-10303-21;\nHEADER;",
     "ISO-10303-21;\u0000END-ISO-10303-21;",
-    "x".repeat(MAX_STEP_BYTES + 1),
+    "x".repeat(MAX_INLINE_STEP_BYTES + 1),
   ])
     assert.throws(() => validateSTEPText(text), /STEP/);
   assert.equal(
@@ -420,7 +420,7 @@ test("STEP solid is self-contained in project versions, history, duplicate and p
     shape.delete();
   }
 });
-test("STEP parser rejects malformed content, multi-solid assemblies and open surfaces", async () => {
+test("STEP parser accepts closed multi-solid files and rejects malformed content and open surfaces", async () => {
   await loadKernel();
   const first = cad.makeBox([0, 0, 0], [10, 10, 10]),
     second = cad.makeBox([20, 0, 0], [30, 10, 10]);
@@ -433,9 +433,11 @@ test("STEP parser rejects malformed content, multi-solid assemblies and open sur
     const mixed = await cad
       .exportSTEP([{ shape: first }, { shape: faces[6] }])
       .text();
+    const multiSource=stepSource(createProject().source,multi,'assembly.step');
+    const assembly=await buildSolid(multiSource);
+    try {assert.equal(describeSolid(assembly,multiSource).solidCount,2);}finally{assembly.delete();}
     for (const [text, message] of [
-      [multi, /exactly one closed solid/],
-      [surface, /exactly one closed solid/],
+      [surface, /closed solid/],
       [mixed, /loose surfaces/],
     ])
       await assert.rejects(

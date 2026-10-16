@@ -39,7 +39,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         "structural-tetra".into(),
     ];
     if runner.is_file() && probe.is_ok_and(|p| p.status.success()) {
-        capabilities.extend(["gmsh-tetra", "modal-tetra", "harmonic-tetra"].map(String::from));
+        capabilities
+            .extend(["gmsh-tetra", "modal-tetra", "harmonic-tetra", "cad-step"].map(String::from));
     } else {
         eprintln!(
             "CAD and mechanics adapters unavailable: install the pinned Python requirements. Native Rust thermal, electrical and static structural FEM remain available."

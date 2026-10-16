@@ -12,7 +12,9 @@ axum = "0.8"
 tokio = { version = "1", features = ["full"] }
 uuid = { version = "1", features = ["v4"] }
 tempfile = "3"
+sha2 = "0.10"
+http-body-util = "0.1"
+futures-util = "0.3"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
-http-body-util = "0.1"

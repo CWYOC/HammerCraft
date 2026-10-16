@@ -30,6 +30,7 @@ class Jobs:
                 if job['process'].poll() is not None and time.monotonic()-job['started']>RETENTION:
                     shutil.rmtree(job['folder'],ignore_errors=True);del self.records[key]
     def start(self,data):
+        if isinstance(data,dict) and ("stepPath" in data or "stepAsset" in data or data.get("kind")=="cad-step"):raise ValueError("Stored STEP assets require the Rust service.")
         validate_request(data)
         with self.lock:
             self.collect()
